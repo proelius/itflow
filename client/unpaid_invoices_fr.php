@@ -1,0 +1,212 @@
+<?php
+/*
+ * Client Portal
+ * Invoices for PTC
+ */
+
+$bulk_payment_enabled = 0; // Not Yet Enabled
+
+header("Content-Security-Policy: default-src 'self'");
+
+require_once "includes/inc_all.php";
+require_once "../lang/fr/common_strings.php";
+
+
+enforceContactCan('accounting');
+
+$invoices_sql = mysqli_query($mysqli, "SELECT invoice_amount, invoice_date, invoice_due, invoice_id, invoice_number, invoice_prefix,
+    invoice_scope, invoice_status, invoice_url_key FROM invoices WHERE invoice_client_id = $session_client_id AND (invoice_status = 'Viewed' OR invoice_status = 'Sent' OR invoice_status = 'Partial') ORDER BY invoice_date DESC");
+
+
+// Payment Provider Active Query
+$sql_payment_provider = mysqli_query($mysqli, "SELECT payment_provider_active, payment_provider_id, payment_provider_threshold FROM payment_providers WHERE payment_provider_active = 1 LIMIT 1;");
+$row = mysqli_fetch_assoc($sql_payment_provider);
+$payment_provider_id = intval($row['payment_provider_id']);
+$payment_provider_active = intval($row['payment_provider_active']);
+$payment_provider_threshold = floatval($row['payment_provider_threshold']);
+
+// Saved Payment Methods
+$sql_saved_payment_methods = mysqli_query($mysqli, "
+    SELECT payment_provider_name, saved_payment_description, saved_payment_id FROM client_saved_payment_methods
+    LEFT JOIN payment_providers
+        ON client_saved_payment_methods.saved_payment_provider_id = payment_providers.payment_provider_id
+    WHERE saved_payment_client_id = $session_client_id
+    AND payment_provider_active = 1;
+");
+
+// Get Balance
+// Billing Card Queries
+ //Add up all the payments for the invoice and get the total amount paid to the invoice
+$sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Draft' AND invoice_status != 'Cancelled' AND invoice_status != 'Non-Billable'");
+$row = mysqli_fetch_assoc($sql_invoice_amounts);
+
+$invoice_amounts = floatval($row['invoice_amounts']);
+
+$sql_amount_paid = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS amount_paid FROM payments, invoices WHERE payment_invoice_id = invoice_id AND invoice_client_id = $session_client_id");
+$row = mysqli_fetch_assoc($sql_amount_paid);
+
+$amount_paid = floatval($row['amount_paid']);
+
+$balance = $invoice_amounts - $amount_paid;
+
+?>
+
+<div class="row">
+    <div class="col-5">
+        <h3>Unpaid Invoices</h3>
+    </div>
+    <div class="col-5">
+        <?php if ($payment_provider_active && $bulk_payment_enabled) { // Currently not implmented fully ?>
+        <button type="button" class="btn btn-outline-success dropdown-toggle float-end" data-bs-toggle="dropdown"><i class="fa fa-fw fa-credit-card me-2"></i>Pay Balance <strong>(<?= numfmt_format_currency($currency_format, $balance, $session_company_currency) ?>)</strong></button>
+        <div class="dropdown-menu">
+            <a class="dropdown-item" href="//<?= $config_base_url ?>/guest/guest_pay_invoice_stripe.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>">Enter Card Manually</a>
+            <?php
+            if (mysqli_num_rows($sql_saved_payment_methods) > 0) { ?>
+                <h6 class="dropdown-header text-start">Pay with a Saved Card</h6>
+            <?php
+            while ($row = mysqli_fetch_assoc($sql_saved_payment_methods)) {
+                $saved_payment_id = intval($row['saved_payment_id']);
+                $saved_payment_description = escapeHtml($row['saved_payment_description']);
+                $payment_provider_name = escapeHtml($row['payment_provider_name']);
+                ?>
+
+                <a class="dropdown-item confirm-link" href="post.php?add_payment_by_provider=<?= $saved_payment_provider_id ?>&invoice_id=<?= $invoice_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>"><?= "$payment_provider_name | $saved_payment_description" ?></a>
+            <?php }
+            } ?>
+        </div>
+        <?php } // End Payment Provider Active Check ?>
+    </div>
+</div>
+<div class="row">
+
+    <div class="col-md-10">
+
+        <?php if (mysqli_num_rows($invoices_sql) == 0) { ?>
+            <?= portalEmptyState('There is nothing unpaid on this account.', 'fa-check', 'success') ?>
+        <?php } else { ?>
+        <table class="table table-bordered border border-dark">
+            <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Scope</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Due</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <?php
+            while ($row = mysqli_fetch_assoc($invoices_sql)) {
+                $invoice_id = intval($row['invoice_id']);
+                $invoice_prefix = escapeHtml($row['invoice_prefix']);
+                $invoice_number = intval($row['invoice_number']);
+                $invoice_scope = escapeHtml($row['invoice_scope']);
+                $invoice_status = escapeHtml($row['invoice_status']);
+                $invoice_date = escapeHtml($row['invoice_date']);
+                $invoice_due = escapeHtml($row['invoice_due']);
+                $invoice_amount = floatval($row['invoice_amount']);
+                $invoice_url_key = escapeHtml($row['invoice_url_key']);
+
+                if (empty($invoice_scope)) {
+                    $invoice_scope_display = "-";
+                } else {
+                    $invoice_scope_display = $invoice_scope;
+                }
+
+                $now = time();
+                if (($invoice_status == "Sent" || $invoice_status == "Partial" || $invoice_status == "Viewed") && strtotime($invoice_due) + 86400 < $now) {
+                    $overdue_color = "text-danger fw-bold";
+                } else {
+                    $overdue_color = "";
+                }
+
+                if ($invoice_status == "Sent") {
+                    $invoice_badge_color = "warning";
+                } elseif ($invoice_status == "Viewed") {
+                    $invoice_badge_color = "info";
+                } elseif ($invoice_status == "Partial") {
+                    $invoice_badge_color = "primary";
+                } elseif ($invoice_status == "Paid") {
+                    $invoice_badge_color = "success";
+                } elseif ($invoice_status == "Cancelled") {
+                    $invoice_badge_color = "danger";
+                } else{
+                    $invoice_badge_color = "secondary";
+                }
+                ?>
+
+                <tr>
+                    <td><a target="_blank" href="//<?= $config_base_url ?>/guest/guest_view_invoice.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>"> <?= "$invoice_prefix$invoice_number" ?></a></td>
+                    <td><?= $invoice_scope_display ?></td>
+                    <td><?= numfmt_format_currency($currency_format, $invoice_amount, $session_company_currency) ?></td>
+                    <td><?= $invoice_date ?></td>
+                    <td class="<?= $overdue_color ?>"><?= $invoice_due ?></td>
+                    <td>
+                        <?php
+                        if ($invoice_status !== "Paid" &&
+                            $invoice_status  !== "Cancelled" &&
+                            $invoice_status !== "Draft" &&
+                            $payment_provider_id &&
+                            (
+                                $payment_provider_threshold == 0 ||
+                                $payment_provider_threshold > $invoice_amount
+                            )
+                        ){ ?>
+                        <button type="button" class="btn btn-sm btn-outline-success dropdown-toggle" data-bs-toggle="dropdown"><i class="fa fa-fw fa-credit-card me-2"></i>Pay</button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="//<?= $config_base_url ?>/guest/guest_pay_invoice_stripe.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>">Enter Card Manually</a>
+
+                            <?php
+                            // Saved Payment Methods
+                            $sql_saved_payment_methods = mysqli_query($mysqli, "
+                                SELECT payment_provider_name, saved_payment_description, saved_payment_id FROM client_saved_payment_methods
+                                LEFT JOIN payment_providers
+                                    ON client_saved_payment_methods.saved_payment_provider_id = payment_providers.payment_provider_id
+                                WHERE saved_payment_client_id = $session_client_id
+                                AND payment_provider_active = 1;
+                            ");
+                            if (mysqli_num_rows($sql_saved_payment_methods) > 0) { ?>
+                                <h6 class="dropdown-header text-start">Pay with a Saved Card</h6>
+                            <?php
+                            while ($row = mysqli_fetch_assoc($sql_saved_payment_methods)) {
+                                $saved_payment_id = intval($row['saved_payment_id']);
+                                $saved_payment_description = escapeHtml($row['saved_payment_description']);
+                                $payment_icon = "fas fa-credit-card"; // default icon
+                                if (strpos($saved_payment_description, "visa") !== false) {
+                                    $payment_icon = "fab fa-cc-visa";
+                                } elseif (strpos($saved_payment_description, "mastercard") !== false) {
+                                    $payment_icon = "fab fa-cc-mastercard";
+                                } elseif (strpos($saved_payment_description, "american express") !== false || strpos($saved_payment_description, "amex") !== false) {
+                                    $payment_icon = "fab fa-cc-amex";
+                                } elseif (strpos($saved_payment_description, "discover") !== false) {
+                                    $payment_icon = "fab fa-cc-discover";
+                                }
+                                $payment_provider_name = escapeHtml($row['payment_provider_name']);
+                                ?>
+
+                                <a class="dropdown-item confirm-link"
+                                    href="post.php?add_payment_by_provider=<?= $saved_payment_id ?>&invoice_id=<?= $invoice_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
+                                    <i class="<?= $payment_icon ?> text-secondary me-2"></i><?= $saved_payment_description ?>
+                                </a>
+                            <?php }
+                            } ?>
+                        </div>
+                    <?php } ?>
+                    </td>
+
+                </tr>
+            <?php } ?>
+
+            </tbody>
+        </table>
+        <?php } ?>
+
+    </div>
+
+</div>
+
+
+<?php
+require_once "includes/footer.php";

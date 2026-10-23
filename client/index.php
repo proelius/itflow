@@ -286,4 +286,7 @@ if (contactCan('itdoc')) {
     <?php } ?>
 </div>
 
-<?php require_once "includes/footer.php"; ?>
+<?php require_once "includes/footer.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
+ ?>

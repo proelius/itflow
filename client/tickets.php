@@ -7,6 +7,8 @@
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 
 
 // Ticket status from GET
