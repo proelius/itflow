@@ -1,6 +1,8 @@
 <?php 
 
 require_once "includes/inc_all.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 
 ?>
 	

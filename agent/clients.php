@@ -5,6 +5,8 @@ $sort = "client_accessed_at";
 $order = "DESC";
 
 require_once "includes/inc_all.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 
 // Perms
 enforceUserPermission('module_client');

@@ -7,6 +7,8 @@ $order = "DESC";
 // If client_id is in URI then show client Side Bar and client header
 if (isset($_GET['client_id'])) {
     require_once "includes/inc_all_client.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
     $client_query = "AND invoice_client_id = $client_id";
     $client_url = "client_id=$client_id&";
 } else {
