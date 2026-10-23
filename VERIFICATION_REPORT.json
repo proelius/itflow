@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-10-23",
+  "status": "FAIL",
+  "checks": [
+    [
+      "Système de traduction (lang/fr/)",
+      true
+    ],
+    [
+      "Fonctions __() et trans()",
+      false
+    ],
+    [
+      "Strings traduites (>100)",
+      true
+    ],
+    [
+      "Fichiers _fr.php client (>10)",
+      true
+    ],
+    [
+      "Fichiers _fr.php agent (>0)",
+      true
+    ],
+    [
+      "Includes dans fichiers principaux",
+      false
+    ],
+    [
+      "Templates PDF créés",
+      true
+    ],
+    [
+      "Git commit clean",
+      false
+    ],
+    [
+      "Documentation Obsidian",
+      true
+    ]
+  ],
+  "stats": {
+    "translations": 133,
+    "fr_files_client": 14,
+    "fr_files_agent": 2,
+    "files_with_includes": 8,
+    "total_key_files": 10
+  }
+}
