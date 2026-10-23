@@ -19,6 +19,8 @@ if (isset($_GET['client_id'])) {
     $client_url = "client_id=$client_id&";
 } else {
     require_once "includes/inc_all.php";
+    // French translation
+    require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
     $client_query = '';
     $client_url = '';
 }
