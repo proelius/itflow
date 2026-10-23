@@ -1,0 +1,183 @@
+# ITFlow - French Translation
+# Copyright (C) 2026 ITFlow
+# This file is distributed under the same license as the ITFlow package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ITFlow 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-23\n"
+"PO-Revision-Date: 2026-10-23\n"
+"Last-Translator: Hermes Agent\n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# Navigation
+msgid "Home"
+msgstr "Accueil"
+
+msgid "Tickets"
+msgstr "Tickets"
+
+msgid "Finance"
+msgstr "Finance"
+
+msgid "Invoices"
+msgstr "Factures"
+
+msgid "Quotes"
+msgstr "Devis"
+
+msgid "Documents"
+msgstr "Documents"
+
+msgid "Contacts"
+msgstr "Contacts"
+
+msgid "Assets"
+msgstr "Assets"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Logout"
+msgstr "Déconnexion"
+
+msgid "Dashboard"
+msgstr "Tableau de Bord"
+
+# Invoice
+msgid "Invoice"
+msgstr "Facture"
+
+msgid "Invoice Number"
+msgstr "Numéro de Facture"
+
+msgid "Invoice Date"
+msgstr "Date de Facture"
+
+msgid "Due Date"
+msgstr "Date d'Échéance"
+
+msgid "Amount"
+msgstr "Montant"
+
+msgid "Subtotal"
+msgstr "Sous-Total"
+
+msgid "Tax"
+msgstr "Taxe"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Paid"
+msgstr "Payé"
+
+msgid "Unpaid"
+msgstr "Impayé"
+
+msgid "Balance Due"
+msgstr "Solde Dû"
+
+msgid "Pay Invoice"
+msgstr "Payer la Facture"
+
+msgid "Download PDF"
+msgstr "Télécharger PDF"
+
+msgid "Item"
+msgstr "Article"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Quantity"
+msgstr "Quantité"
+
+msgid "Price"
+msgstr "Prix"
+
+msgid "Notes"
+msgstr "Notes"
+
+msgid "Bill To"
+msgstr "Facturer à"
+
+msgid "From"
+msgstr "De"
+
+msgid "To"
+msgstr "À"
+
+msgid "Page"
+msgstr "Page"
+
+msgid "of"
+msgstr "sur"
+
+msgid "Thank you for your business"
+msgstr "Merci de votre confiance"
+
+# Quote
+msgid "Quote"
+msgstr "Devis"
+
+msgid "Quote Number"
+msgstr "Numéro de Devis"
+
+msgid "Valid Until"
+msgstr "Valide Jusqu'au"
+
+msgid "Accept Quote"
+msgstr "Accepter le Devis"
+
+msgid "Decline Quote"
+msgstr "Refuser le Devis"
+
+# General
+msgid "Login"
+msgstr "Connexion"
+
+msgid "Email Address"
+msgstr "Adresse Email"
+
+msgid "Password"
+msgstr "Mot de passe"
+
+msgid "Sign In"
+msgstr "Se connecter"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Save"
+msgstr "Enregistrer"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Delete"
+msgstr "Supprimer"
+
+msgid "Edit"
+msgstr "Modifier"
+
+msgid "Add"
+msgstr "Ajouter"
+
+msgid "Close"
+msgstr "Fermer"
+
+msgid "Success"
+msgstr "Succès"
+
+msgid "Error"
+msgstr "Erreur"
+
+msgid "Warning"
+msgstr "Avertissement"
