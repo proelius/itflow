@@ -1,5 +1,7 @@
 <?php
 require_once "includes/inc_all_admin.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 
 
 $sql = mysqli_query($mysqli,"SELECT company_currency, company_locale FROM companies, settings WHERE companies.company_id = settings.company_id AND companies.company_id = 1");

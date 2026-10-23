@@ -5,6 +5,8 @@ $sort = "user_name";
 $order = "ASC";
 
 require_once "includes/inc_all_admin.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 
 $sql = mysqli_query(
     $mysqli,
