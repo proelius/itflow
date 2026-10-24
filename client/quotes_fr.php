@@ -1,0 +1,93 @@
+<?php
+/*
+ * Client Portal
+ * Devis for PTC / billing contacts
+ */
+
+header("Content-Security-Policy: default-src 'self'");
+
+require_once "includes/inc_all.php";
+
+enforceContactCan('accounting');
+
+$quotes_sql = mysqli_query($mysqli, "SELECT quote_amount, quote_date, quote_id, quote_number, quote_prefix, quote_scope, quote_status,
+    quote_url_key FROM quotes WHERE quote_client_id = $session_client_id AND quote_status != 'Brouillon' ORDER BY quote_date DESC");
+?>
+
+<h3>Devis</h3>
+<div class="row">
+
+    <div class="col-md-10">
+
+        <?php if (mysqli_num_rows($quotes_sql) == 0) { ?>
+            <?= portalEmptyState('There are no quotes on this account yet.') ?>
+        <?php } else { ?>
+        <table class="table table-bordered border border-dark">
+            <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Scope</th>
+                <th>Montant</th>
+                <th>Date</th>
+                <th>Statut</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <?php
+            while ($row = mysqli_fetch_assoc($quotes_sql)) {
+                $quote_id = intval($row['quote_id']);
+                $quote_prefix = escapeHtml($row['quote_prefix']);
+                $quote_number = intval($row['quote_number']);
+                $quote_scope = escapeHtml($row['quote_scope']);
+                $quote_status = escapeHtml($row['quote_status']);
+                $quote_date = escapeHtml($row['quote_date']);
+                $quote_amount = floatval($row['quote_amount']);
+                $quote_url_key = escapeHtml($row['quote_url_key']);
+
+                if (empty($quote_scope)) {
+                    $quote_scope_display = "-";
+                } else {
+                    $quote_scope_display = $quote_scope;
+                }
+
+                if ($quote_status == "Envoyé") {
+                    $quote_badge_color = "warning";
+                } elseif ($quote_status == "Voired") {
+                    $quote_badge_color = "primary";
+                } elseif ($quote_status == "Accepteré") {
+                    $quote_badge_color = "success";
+                } elseif ($quote_status == "Refusé") {
+                    $quote_badge_color = "danger";
+                } elseif ($quote_status == "Invoiced") {
+                    $quote_badge_color = "info";
+                } else {
+                    $quote_badge_color = "secondary";
+                }
+
+                ?>
+
+                <tr>
+                    <td><a target="_blank" href="//<?= $config_base_url ?>/guest/guest_view_quote.php?quote_id=<?= "$quote_id&url_key=$quote_url_key" ?>"> <?= "$quote_prefix$quote_number" ?></a></td>
+                    <td><?= $quote_scope_display ?></td>
+                    <td><?= numfmt_format_currency($currency_format, $quote_amount, $session_company_currency) ?></td>
+                    <td><?= $quote_date ?></td>
+                    <td>
+                        <span class="p-2 badge text-bg-<?= $quote_badge_color ?>">
+                            <?= $quote_status ?>
+                        </span>
+                    </td>
+
+                </tr>
+            <?php } ?>
+
+            </tbody>
+        </table>
+        <?php } ?>
+
+    </div>
+
+</div>
+
+<?php
+require_once "includes/footer.php";
