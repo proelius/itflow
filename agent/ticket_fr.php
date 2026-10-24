@@ -20,7 +20,7 @@ require_once "../libs/htmlpurifier/HTMLPurifier.standalone.php";
 
 $purifier_config = HTMLPurifier_Config::createDefault();
 $purifier_config->set('Cache.DefinitionImpl', null); // Disable cache by setting a non-existent directory or an invalid one
-$purifier_config->set('URI.TousowedSchemes', ['data' => true, 'src' => true, 'http' => true, 'https' => true]);
+$purifier_config->set('URI.AllowedSchemes', ['data' => true, 'src' => true, 'http' => true, 'https' => true]);
 $purifier = new HTMLPurifier($purifier_config);
 
 if (isset($_GET['ticket_id'])) {
@@ -130,7 +130,7 @@ if (isset($_GET['ticket_id'])) {
         $ticket_is_open = !$ticket_is_resolved && !$ticket_is_closed;
         $can_edit_ticket = lookupUserPermission("module_support") >= 2;
 
-        $ticket_assigned_to_display = formatAssigneree($ticket['ticket_assigned_to'], $ticket['user_name'], $ticket['user_avatar'], $ticket_is_open);
+        $ticket_assigned_to_display = formatAssignee($ticket['ticket_assigned_to'], $ticket['user_name'], $ticket['user_avatar'], $ticket_is_open);
 
         // Tab Title // No Sanitizing needed
         $page_title = $ticket['ticket_subject'];
@@ -201,7 +201,7 @@ if (isset($_GET['ticket_id'])) {
 
         /*
          * How much else this contact has open. The old queries compared the
-         * integer ticket_status column against the string 'Fermerd', which MesSQL
+         * integer ticket_status column against the string 'Fermerd', which MySQL
          * casts to 0 - so "open" matched every ticket and "closed" matched none.
          * Resolution state lives in ticket_resolved_at, same as the ticket list.
          */
@@ -216,7 +216,7 @@ if (isset($_GET['ticket_id'])) {
             ))[0]);
         }
 
-        // Répondre counts, one pass - these drive the conversation filter
+        // Reply counts, one pass - these drive the conversation filter
         $reply_counts = array('total' => 0, 'public' => 0, 'internal' => 0);
         $sql_reply_counts = mysqli_query(
             $mysqli,
@@ -289,7 +289,7 @@ if (isset($_GET['ticket_id'])) {
             }
         }
 
-        // Get Surveillerers
+        // Get Watchers
         $sql_ticket_watchers = mysqli_query($mysqli, "SELECT watcher_email, watcher_id FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id ORDER BY watcher_email DESC");
         $watcher_count = mysqli_num_rows($sql_ticket_watchers);
 
@@ -319,7 +319,7 @@ if (isset($_GET['ticket_id'])) {
         $tasks_block_resolve = $task_count !== $completed_task_count;
 
         /*
-         * Tous approvals for this ticket's tasks in one query. The task loop used
+         * All approvals for this ticket's tasks in one query. The task loop used
          * to run two approval queries per row.
          */
         $task_approvals = array();
@@ -474,7 +474,7 @@ if (isset($_GET['ticket_id'])) {
 
                                 <?php if ($show_quote_button) { ?>
                                     <a href="#" class="btn btn-light ajax-modal" data-modal-url="modals/ticket/ticket_quote_add.php?ticket_id=<?= $ticket_id ?>" data-modal-size="lg">
-                                        <i class="fas fa-fw fa-comment-dollar me-2"></i>Devis
+                                        <i class="fas fa-fw fa-comment-dollar me-2"></i>Quote
                                     </a>
                                 <?php } ?>
 
@@ -488,7 +488,7 @@ if (isset($_GET['ticket_id'])) {
 
                                     <?php if ($ticket_is_resolved) { ?>
                                         <a href="post.php?reopen_ticket=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-light">
-                                            <i class="fas fa-fw fa-redo me-2"></i>Rouvrir
+                                            <i class="fas fa-fw fa-redo me-2"></i>Reopen
                                         </a>
                                     <?php } ?>
 
@@ -501,7 +501,7 @@ if (isset($_GET['ticket_id'])) {
                                                 onclick="return false;"
                                             <?php } ?>
                                         >
-                                            <i class="fas fa-fw fa-check me-2"></i>Résoudre
+                                            <i class="fas fa-fw fa-check me-2"></i>Resolve
                                         </a>
                                     <?php } else { ?>
                                         <a href="post.php?close_ticket=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-dark confirm-link" id="ticket_close">
@@ -560,7 +560,7 @@ if (isset($_GET['ticket_id'])) {
                     </div>
 
                     <div class="ticket-field">
-                        <div class="ticket-field-label">Priorité</div>
+                        <div class="ticket-field-label">Priority</div>
                         <div class="ticket-field-value">
                             <a href="#" title="Change priority"
                                 class="text-decoration-none<?php if ($can_edit_ticket && !$ticket_is_closed) { echo " ajax-modal"; } ?>"
@@ -596,7 +596,7 @@ if (isset($_GET['ticket_id'])) {
                     <?php } ?>
 
                     <div class="ticket-field">
-                        <div class="ticket-field-label">Assignered to</div>
+                        <div class="ticket-field-label">Assigned to</div>
                         <div class="ticket-field-value">
                             <?php if ($can_edit_ticket && !$ticket_is_closed) { ?>
                                 <a class="ajax-modal text-decoration-none" href="#" data-modal-url="modals/ticket/ticket_assign.php?id=<?= $ticket_id ?>" title="Change assignment"><?= $ticket_assigned_to_display ?></a>
@@ -700,7 +700,7 @@ if (isset($_GET['ticket_id'])) {
                     </div>
                 </div>
 
-                <!-- Répondre composer - only while the ticket is still being worked -->
+                <!-- Reply composer - only while the ticket is still being worked -->
                 <?php if ($can_edit_ticket && $ticket_is_open) { ?>
 
                     <form action="post.php" method="post" enctype="multipart/form-data" autocomplete="off">
@@ -767,7 +767,7 @@ if (isset($_GET['ticket_id'])) {
                                                         </optgroup>
                                                     <?php } ?>
                                                     <?php if ($canned_responses_general) { ?>
-                                                        <optgroup label="Tous categories">
+                                                        <optgroup label="All categories">
                                                             <?php foreach ($canned_responses_general as $canned_row) { ?>
                                                                 <option value="<?= intval($canned_row['canned_response_id']) ?>"><?= escapeHtml($canned_row['canned_response_name']) ?></option>
                                                             <?php } ?>
@@ -827,7 +827,7 @@ if (isset($_GET['ticket_id'])) {
                                                     <button type="submit" id="ticket_add_reply" name="add_ticket_reply" class="btn btn-success flex-grow-1">
                                                         <i class="fas fa-fw fa-paper-plane me-2"></i>Send
                                                     </button>
-                                                    <button type="button" id="cancelRépondre" class="btn btn-light" title="Fermer without replying">
+                                                    <button type="button" id="cancelReply" class="btn btn-light" title="Fermer without replying">
                                                         <i class="fas fa-fw fa-times"></i>
                                                     </button>
                                                 </div>
@@ -848,7 +848,7 @@ if (isset($_GET['ticket_id'])) {
                     <div class="d-flex flex-wrap align-items-center mb-2 d-print-none">
                         <h6 class="mb-0 me-3"><i class="fas fa-fw fa-comments me-2"></i>Conversation</h6>
                         <div class="btn-group btn-group-sm" id="replyFiltrer">
-                            <button type="button" class="btn btn-dark active" data-reply-filter="all">Tous <?= $reply_counts['total'] ?></button>
+                            <button type="button" class="btn btn-dark active" data-reply-filter="all">All <?= $reply_counts['total'] ?></button>
                             <button type="button" class="btn btn-outline-dark" data-reply-filter="public">Public <?= $reply_counts['public'] ?></button>
                             <button type="button" class="btn btn-outline-dark" data-reply-filter="internal">Internal <?= $reply_counts['internal'] ?></button>
                         </div>
@@ -1004,10 +1004,10 @@ if (isset($_GET['ticket_id'])) {
                                         </button>
                                         <div class="dropdown-menu">
                                             <a class="dropdown-item text-success" href="post.php?complete_all_tasks=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
-                                                <i class="fas fa-fw fa-check-double me-2"></i>Mark Tous Complete
+                                                <i class="fas fa-fw fa-check-double me-2"></i>Mark All Complete
                                             </a>
                                             <a class="dropdown-item" href="post.php?undo_complete_all_tasks=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
-                                                <i class="far fa-fw fa-square me-2"></i>Mark Tous Incomplete
+                                                <i class="far fa-fw fa-square me-2"></i>Mark All Incomplete
                                             </a>
                                         </div>
                                     </div>
@@ -1246,7 +1246,7 @@ if (isset($_GET['ticket_id'])) {
                                                 <div class="dropdown-divider"></div>
                                             <?php } ?>
                                             <a class="dropdown-item ajax-modal" href="#" data-modal-url="modals/ticket/ticket_add_watcher.php?ticket_id=<?= $ticket_id ?>">
-                                                <i class="fas fa-fw fa-users me-2"></i>Ajouter Surveillerer
+                                                <i class="fas fa-fw fa-users me-2"></i>Ajouter Watcher
                                             </a>
                                         </div>
                                     </div>
@@ -1320,7 +1320,7 @@ if (isset($_GET['ticket_id'])) {
                             <?php } ?>
 
                             <?php if ($watcher_count) { ?>
-                                <div class="text-secondary small text-uppercase <?= ($asset_id || $vendor_id || $project_id) ? 'mt-3 pt-2 border-top' : '' ?>">Surveillerers</div>
+                                <div class="text-secondary small text-uppercase <?= ($asset_id || $vendor_id || $project_id) ? 'mt-3 pt-2 border-top' : '' ?>">Watchers</div>
                                 <?php while ($watcher_row = mysqli_fetch_assoc($sql_ticket_watchers)) {
                                     $watcher_id = intval($watcher_row['watcher_id']);
                                     $ticket_watcher_email = escapeHtml($watcher_row['watcher_email']);
@@ -1372,7 +1372,7 @@ if (isset($_GET['ticket_id'])) {
 
                         <?php if ($ticket_sla_id && $ticket_resolution_due_at) { ?>
                             <div class="mt-2">
-                                <i class="fas fa-fw fa-flag-checkered text-secondary me-1"></i><strong class="me-1">Résoudre by:</strong>
+                                <i class="fas fa-fw fa-flag-checkered text-secondary me-1"></i><strong class="me-1">Resolve by:</strong>
                                 <?php if ($ticket_sla_paused && $ticket_is_open) { ?>
                                     <span class="text-warning"><i class="fas fa-fw fa-pause-circle me-1"></i>Paused</span>
                                 <?php } else { ?>
@@ -1390,7 +1390,7 @@ if (isset($_GET['ticket_id'])) {
 
                         <?php if ($ticket_resolved_at) { ?>
                             <div class="mt-2" title="<?= $ticket_resolved_at ?>">
-                                <i class="fas fa-fw fa-check text-secondary me-1"></i><strong class="me-1">Résoudred:</strong><?= date('M d, Y • g:i A', strtotime($ticket_resolved_at)) ?>
+                                <i class="fas fa-fw fa-check text-secondary me-1"></i><strong class="me-1">Resolved:</strong><?= date('M d, Y • g:i A', strtotime($ticket_resolved_at)) ?>
                                 <span class="text-muted small">(<?= $ticket_resolved_at_ago ?>)</span>
                             </div>
                         <?php } ?>
@@ -1467,13 +1467,13 @@ require_once "../includes/footer.php";
             handle: '.drag-handle',
             animation: 150,
             onEnd: function () {
-                const rows = document.querySelectorTous('table#tasks tbody tr');
+                const rows = document.querySelectorAll('table#tasks tbody tr');
                 const positions = Array.from(rows).map((row, index) => ({
                     id: row.dataset.taskId,
                     order: index
                 }));
 
-                itflowPublierForm('ajax.php', {
+                itflowPostForm('ajax.php', {
                     update_ticket_tasks_order: true,
                     csrf_token: '<?= $_SESSION['csrf_token'] ?>',
                     ticket_id: <?= $ticket_id ?>,
@@ -1520,13 +1520,13 @@ require_once "../includes/footer.php";
         });
     }
 
-    // Répondre composer - the type buttons above are the entry point. The composer stays
+    // Reply composer - the type buttons above are the entry point. The composer stays
     // collapsed until one is picked, so the conversation is not pushed down the page and
     // a public reply is never the default.
     const replyComposer = document.getElementById('replyComposer');
     if (replyComposer) {
         const replyComposerCollapse = bootstrap.Collapse.getOrCréerInstance(replyComposer, { toggle: false });
-        const replyTypes = document.querySelectorTous('input[name="public_reply_type"]');
+        const replyTypes = document.querySelectorAll('input[name="public_reply_type"]');
 
         // Only ever opens. Switching Internal -> Public mid-draft must not throw the draft away.
         replyTypes.forEach(radio => radio.addEventListener('change', () => replyComposerCollapse.show()));
@@ -1545,9 +1545,9 @@ require_once "../includes/footer.php";
             }
         });
 
-        const cancelRépondre = document.getElementById('cancelRépondre');
-        if (cancelRépondre) {
-            cancelRépondre.addEventListener('click', function () {
+        const cancelReply = document.getElementById('cancelReply');
+        if (cancelReply) {
+            cancelReply.addEventListener('click', function () {
                 replyComposerCollapse.hide();
                 replyTypes.forEach(radio => { radio.checked = false; });
             });
@@ -1576,13 +1576,13 @@ require_once "../includes/footer.php";
 
             const wanted = button.dataset.replyFiltrer;
 
-            replyFiltrer.querySelectorTous('[data-reply-filter]').forEach(b => {
+            replyFiltrer.querySelectorAll('[data-reply-filter]').forEach(b => {
                 b.classList.toggle('btn-dark', b === button);
                 b.classList.toggle('active', b === button);
                 b.classList.toggle('btn-outline-dark', b !== button);
             });
 
-            document.querySelectorTous('.ticket-reply').forEach(card => {
+            document.querySelectorAll('.ticket-reply').forEach(card => {
                 card.hidden = wanted !== 'all' && card.dataset.replyGroup !== wanted;
             });
         });

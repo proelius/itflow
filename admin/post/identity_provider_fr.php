@@ -1,0 +1,20 @@
+<?php
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_POST['edit_identity_provider'])) {
+
+    validateCSRFToken();
+
+    $azure_client_id = escapeSql($_POST['azure_client_id']);
+    $azure_client_secret = escapeSql($_POST['azure_client_secret']);
+
+    mysqli_query($mysqli,"UPDATE settings SET config_azure_client_id = '$azure_client_id', config_azure_client_secret = '$azure_client_secret' WHERE company_id = 1");
+
+    logAudit("Paramètres", "Modifier", "$session_name edited identity provider settings");
+
+    flashAlert("Identity Provider Paramètres updated");
+
+    redirect();
+
+}

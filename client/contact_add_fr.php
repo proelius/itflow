@@ -27,10 +27,10 @@ enforceContactCan('contacts');
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
             <div class="mb-3">
-                <label>Nom <strong class="text-danger">*</strong></label>
+                <label>Name <strong class="text-danger">*</strong></label>
                 <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
-                    <input type="text" class="form-control" name="contact_name" placeholder="Nom" required maxlength="200">
+                    <input type="text" class="form-control" name="contact_name" placeholder="Name" required maxlength="200">
                 </div>
             </div>
 

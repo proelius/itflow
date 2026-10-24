@@ -73,7 +73,7 @@ function enforceContactCan($capability) {
 }
 
 /*
- * Confirmers the person at the keyboard is the account holder, before a change
+ * Confirms the person at the keyboard is the account holder, before a change
  * that would let someone who hijacked a session take the account over or
  * defeat phone verification.
  *
@@ -150,7 +150,7 @@ function portalDateTime($datetime) {
  * Default is neutral, for a list that simply has nothing in it yet. Pass
  * 'success' where empty is genuinely good news (nothing owed, nothing unpaid).
  */
-function portalEmptyÉtat($message, $icon = 'fa-inbox', $type = 'secondary') {
+function portalEmptyState($message, $icon = 'fa-inbox', $type = 'secondary') {
     return '<div class="alert alert-' . $type . '"><i class="fa fa-fw ' . $icon . ' me-2"></i>' . $message . '</div>';
 }
 

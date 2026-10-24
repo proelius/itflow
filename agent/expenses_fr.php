@@ -65,7 +65,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
     <div class="card">
         <div class="card-header bg-dark py-2">
-            <h3 class="card-title mt-2"><i class="fas fa-fw fa-shopping-cart me-2"></i>Dépenses</h3>
+            <h3 class="card-title mt-2"><i class="fas fa-fw fa-shopping-cart me-2"></i>Expenses</h3>
             <div class="card-tools">
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/expense/expense_add.php" data-modal-size="lg"><i class="fas fa-plus me-2"></i>Nouveau Expense</button>
@@ -85,7 +85,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <div class="row g-2 align-items-end">
                     <div class="col-sm-4">
                         <div class="input-group">
-                            <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Dépenses">
+                            <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Expenses">
                                 <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFiltrer"><i class="fas fa-filter"></i></button>
                                 <button class="btn btn-primary"><i class="fa fa-search"></i></button>
                         </div>
@@ -142,7 +142,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                             <div>
                                 <label class="form-label">Vendor</label>
                                 <select class="form-select select2" name="vendor" onchange="this.form.submit()">
-                                    <option value="">- Tous Fournisseurs -</option>
+                                    <option value="">- All Vendors -</option>
 
                                     <?php
                                     $sql_vendors_filter = mysqli_query($mysqli, "SELECT vendor_id, vendor_name FROM vendors WHERE EXISTS (SELECT 1 FROM expenses WHERE expense_vendor_id = vendor_id) ORDER BY vendor_name ASC");
@@ -163,7 +163,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                             <div>
                                 <label class="form-label">Category</label>
                                 <select class="form-select select2" name="category" onchange="this.form.submit()">
-                                    <option value="">- Tous Catégories -</option>
+                                    <option value="">- All Categories -</option>
 
                                     <?php
                                     $sql_categories_filter = mysqli_query($mysqli, "SELECT category_id, category_name FROM categories WHERE category_type = 'Expense' AND EXISTS (SELECT 1 FROM expenses WHERE expense_category_id = category_id) ORDER BY category_name ASC");
@@ -183,7 +183,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                             <div>
                                 <label class="form-label">Account</label>
                                 <select class="form-select select2" name="account" onchange="this.form.submit()">
-                                    <option value="">- Tous Accounts -</option>
+                                    <option value="">- All Accounts -</option>
 
                                     <?php
                                     $sql_accounts_filter = mysqli_query($mysqli, "SELECT account_id, account_name FROM accounts WHERE EXISTS (SELECT 1 FROM expenses WHERE expense_account_id = account_id) ORDER BY account_name ASC");
@@ -210,7 +210,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <tr>
                     <td class="checkbox-column border-end">
                         <div class="form-check">
-                            <input class="form-check-input" id="selectTousCheckbox" type="checkbox" onclick="checkTous(this)">
+                            <input class="form-check-input" id="selectAllCheckbox" type="checkbox" onclick="checkAll(this)">
                         </div>
                     </td>
                     <th>
@@ -234,7 +234,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     </th>
                     <th class="text-end">
                         <a class="text-dark" href="?<?= $url_query_strings_sort ?>&sort=expense_amount&order=<?= $disp ?>">
-                            Montant <?php if ($sort == 'expense_amount') { echo $order_icon; } ?>
+                            Amount <?php if ($sort == 'expense_amount') { echo $order_icon; } ?>
                         </a>
                     </th>
                     <th>

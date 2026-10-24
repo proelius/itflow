@@ -14,7 +14,7 @@ require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 enforceContactCan('accounting');
 
 $invoices_sql = mysqli_query($mysqli, "SELECT invoice_amount, invoice_date, invoice_due, invoice_id, invoice_number, invoice_prefix,
-    invoice_scope, invoice_status, invoice_url_key FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Brouillon' ORDER BY invoice_date DESC");
+    invoice_scope, invoice_status, invoice_url_key FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Draft' ORDER BY invoice_date DESC");
 ?>
 
 <h3>Factures</h3>
@@ -23,16 +23,16 @@ $invoices_sql = mysqli_query($mysqli, "SELECT invoice_amount, invoice_date, invo
     <div class="col-md-10">
 
         <?php if (mysqli_num_rows($invoices_sql) == 0) { ?>
-            <?= portalEmptyÉtat('There are no invoices on this account yet.') ?>
+            <?= portalEmptyState('There are no invoices on this account yet.') ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
                 <th>#</th>
                 <th>Scope</th>
-                <th>Montant</th>
+                <th>Amount</th>
                 <th>Date</th>
-                <th>Échéance</th>
+                <th>Due</th>
                 <th>Statut</th>
             </tr>
             </thead>
@@ -57,19 +57,19 @@ $invoices_sql = mysqli_query($mysqli, "SELECT invoice_amount, invoice_date, invo
                 }
 
                 $now = time();
-                if (($invoice_status == "Envoyée" || $invoice_status == "Partial" || $invoice_status == "Voired") && strtotime($invoice_due) + 86400 < $now) {
+                if (($invoice_status == "Sent" || $invoice_status == "Partial" || $invoice_status == "Voired") && strtotime($invoice_due) + 86400 < $now) {
                     $overdue_color = "text-danger fw-bold";
                 } else {
                     $overdue_color = "";
                 }
 
-                if ($invoice_status == "Envoyée") {
+                if ($invoice_status == "Sent") {
                     $invoice_badge_color = "warning";
                 } elseif ($invoice_status == "Voired") {
                     $invoice_badge_color = "info";
                 } elseif ($invoice_status == "Partial") {
                     $invoice_badge_color = "primary";
-                } elseif ($invoice_status == "Payée") {
+                } elseif ($invoice_status == "Paid") {
                     $invoice_badge_color = "success";
                 } elseif ($invoice_status == "Annulerled") {
                     $invoice_badge_color = "danger";

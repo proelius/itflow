@@ -103,10 +103,10 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
             </div>
 
             <div class="card-body prettyContent">
-                <h5><strong>Sujet:</strong> <?= $ticket_subject ?></h5>
+                <h5><strong>Subject:</strong> <?= $ticket_subject ?></h5>
                 <p>
-                    <strong>État:</strong> <?= $ticket_status ?><br>
-                    <strong>Priorité:</strong> <?= $ticket_priority ?><br>
+                    <strong>State:</strong> <?= $ticket_status ?><br>
+                    <strong>Priority:</strong> <?= $ticket_priority ?><br>
                     <?php if (!empty($ticket_category)) { ?>
                         <strong>Category:</strong> <?= $ticket_category ?><br>
                     <?php } ?>
@@ -208,7 +208,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
         <!-- Either show the reply comments box, option to re-open ticket, show ticket smiley feedback or thanks for feedback -->
 
         <?php if (empty($ticket_resolved_at)) { ?>
-            <!-- Répondre -->
+            <!-- Reply -->
 
             <form action="post.php" enctype="multipart/form-data" method="post">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
@@ -219,7 +219,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                 <div class="mb-3">
                     <input type="file" class="form-control" name="file[]" multiple id="fileInput" accept=".jpg, .jpeg, .gif, .png, .webp, .pdf, .txt, .md, .doc, .docx, .odt, .csv, .xls, .xlsx, .ods, .pptx, .odp, .zip, .tar, .gz, .xml, .msg, .json, .wav, .mp3, .ogg, .mov, .mp4, .av1, .ovpn">
                 </div>
-                <button type="submit" class="btn btn-primary" name="add_ticket_comment">Répondre</button>
+                <button type="submit" class="btn btn-primary" name="add_ticket_comment">Reply</button>
             </form>
 
         <?php } elseif (empty($ticket_closed_at)) { ?>

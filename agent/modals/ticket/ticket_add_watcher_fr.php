@@ -1,0 +1,72 @@
+<?php
+
+require_once '../../../includes/modal_header.php';
+
+enforceUserPermission('module_support', 2);
+
+$ticket_id = intval($_GET['ticket_id']);
+$client_id = intval(getFieldById('tickets', $ticket_id, 'ticket_client_id'));
+
+if ($client_id) {
+    enforceClientAccess();
+}
+
+ob_start();
+
+?>
+
+<div class="modal-header bg-dark">
+    <h5 class="modal-title"><i class="fa fa-fw fa-eye me-2"></i>Ajoutering a ticket Watcher</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form action="post.php" method="post" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="ticket_id" value="<?= $ticket_id ?>">
+    <div class="modal-body">
+
+        <div class="mb-3">
+            <label>Watcher Email</label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-envelope"></i></span>
+                <select class="form-select select2" data-tags="true" name="watcher_email">
+                    <option value="">- Select a contact or enter an email(s) -</option>
+                    <?php
+
+                    $sql_client_contacts_select = mysqli_query($mysqli, "SELECT contact_id, contact_name, contact_email FROM contacts WHERE contact_client_id = $client_id AND contact_email <> '' ORDER BY contact_name ASC");
+                    while ($row = mysqli_fetch_assoc($sql_client_contacts_select)) {
+                        $contact_id_select = intval($row['contact_id']);
+                        $contact_name_select = escapeHtml($row['contact_name']);
+                        $contact_email_select = escapeHtml($row['contact_email']);
+                        ?>
+                        <option value="<?= $contact_email_select ?>"><?= "$contact_name_select - $contact_email_select" ?></option>
+
+                        <?php
+                    }
+                    ?>
+                </select>
+            </div>
+        </div>
+
+        <?php if (!empty($config_smtp_host)) { ?>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="watcher_notify" value="1" id="checkNotifyWatcher">
+                    <label class="form-check-label" for="checkNotifyWatcher">
+                        Send email notification
+                    </label>
+                </div>
+            </div>
+        <?php } ?>
+
+    </div>
+
+    <div class="modal-footer">
+        <button type="submit" name="add_ticket_watcher" class="btn btn-primary text-bold"><i class="fa fa-check me-2"></i>Ajouter</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Annuler</button>
+    </div>
+
+</form>
+
+<?php
+
+require_once '../../../includes/modal_footer.php';

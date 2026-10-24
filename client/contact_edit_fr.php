@@ -58,7 +58,7 @@ if ($row) {
             <input type="hidden" name="contact_id" value="<?= $contact_id ?>">
 
             <div class="mb-3">
-                <label>Nom <strong class="text-danger">*</strong></label>
+                <label>Name <strong class="text-danger">*</strong></label>
                 <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
                     <input type="text" class="form-control" name="contact_name" value="<?= escapeHtml($contact_name) ?>" required maxlength="200">

@@ -1,0 +1,67 @@
+<?php
+
+require_once '../../../includes/modal_header.php';
+
+enforceUserPermission('module_support', 2);
+
+$ticket_id = intval($_GET['id']);
+
+$sql = mysqli_query($mysqli, "SELECT client_name, ticket_client_id, ticket_number, ticket_prefix, ticket_project_id FROM tickets LEFT JOIN clients ON client_id = ticket_client_id WHERE ticket_id = $ticket_id LIMIT 1");
+
+$row = mysqli_fetch_assoc($sql);
+$client_name = escapeHtml($row['client_name']);
+$ticket_prefix = escapeHtml($row['ticket_prefix']);
+$ticket_number = intval($row['ticket_number']);
+$ticket_project_id = intval($row['ticket_project_id']);
+$client_id = intval($row['ticket_client_id']);
+
+if ($client_id) {
+    enforceClientAccess();
+}
+
+// Select box arrays
+$sql_projects = mysqli_query($mysqli, "SELECT project_id, project_name FROM projects WHERE (project_client_id = $client_id OR project_client_id = 0) AND project_completed_at IS NULL AND project_archived_at IS NULL ORDER BY project_name ASC");
+
+ob_start();
+
+?>
+
+<div class="modal-header bg-dark">
+    <h5 class="modal-title"><i class="fas fa-fw fa-project-diagram me-2"></i>Project: <strong><?= "$ticket_prefix$ticket_number" ?></strong> - <?= $client_name ?></h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form action="post.php" method="post" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="ticket_id" value="<?= $ticket_id ?>">
+    <div class="modal-body">
+
+        <div class="mb-3">
+            <label>Project</label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-project-diagram"></i></span>
+                <select class="form-select select2" name="project">
+                    <option value="0">- None -</option>
+                    <?php
+                    while ($row = mysqli_fetch_assoc($sql_projects)) {
+                        $project_id = intval($row['project_id']);
+                        $project_name = escapeHtml($row['project_name']); ?>
+                        <option <?php if ($ticket_project_id == $project_id) { echo "selected"; } ?>
+                            value="<?= $project_id ?>"><?= $project_name ?>
+                        </option>
+
+                    <?php } ?>
+                </select>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-footer">
+        <button type="submit" name="edit_ticket_project" class="btn btn-primary text-bold"><i class="fa fa-check me-2"></i>Enregistrer</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Annuler</button>
+    </div>
+
+</form>
+
+<?php
+require_once '../../../includes/modal_footer.php';

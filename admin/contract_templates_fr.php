@@ -21,10 +21,10 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 <div class="card">
     <div class="card-header bg-dark py-2">
-        <h3 class="card-title mt-2"><i class="fa fa-fw fa-file-contract me-2"></i>Modèles de Contrats</h3>
+        <h3 class="card-title mt-2"><i class="fa fa-fw fa-file-contract me-2"></i>Contract Templates</h3>
         <div class="card-tools">
             <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/contract_template/contract_template_add.php" data-modal-size="lg">
-                <i class="fas fa-plus me-2"></i>Nouveau Template
+                <i class="fas fa-plus me-2"></i>Nonuveau Template
             </button>
         </div>
     </div>

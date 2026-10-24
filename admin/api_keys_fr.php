@@ -20,9 +20,9 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 <div class="card">
     <div class="card-header bg-dark py-2">
-        <h3 class="card-title mt-2"><i class="fas fa-fw fa-key me-2"></i>Clés API</h3>
+        <h3 class="card-title mt-2"><i class="fas fa-fw fa-key me-2"></i>API Keys</h3>
         <div class="card-tools">
-            <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/api/api_key_add.php"><i class="fas fa-plus me-2"></i>Nouveau API Key</button>
+            <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/api/api_key_add.php"><i class="fas fa-plus me-2"></i>Nonuveau API Key</button>
         </div>
     </div>
 
@@ -69,7 +69,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <tr>
                     <td class="checkbox-column border-end">
                         <div class="form-check">
-                            <input class="form-check-input" id="selectAllCheckbox" type="checkbox" onclick="checkAll(this)">
+                            <input class="form-check-input" id="selectTousCheckbox" type="checkbox" onclick="checkTous(this)">
                         </div>
                     </td>
                     <th>
@@ -79,7 +79,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     </th>
                     <th>
                         <a class="text-dark" href="?<?= $url_query_strings_sort ?>&sort=api_key_user_id&order=<?= $disp ?>">
-                            Utilisateur <?php if ($sort == 'api_key_user_id') { echo $order_icon; } ?>
+                            User <?php if ($sort == 'api_key_user_id') { echo $order_icon; } ?>
                         </a>
                     </th>
                     <th>
@@ -113,7 +113,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         $api_key_expire = $api_key_expire . " (Expired)";
                     }
 
-                    $api_key_user = !empty($row['user_name']) ? escapeHtml($row['user_name']) : "<i>None</i>";
+                    $api_key_user = !empty($row['user_name']) ? escapeHtml($row['user_name']) : "<i>Nonne</i>";
 
                     ?>
                     <tr>

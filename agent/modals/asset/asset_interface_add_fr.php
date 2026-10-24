@@ -1,0 +1,216 @@
+<?php
+
+require_once '../../../includes/modal_header.php';
+
+$asset_id = intval($_GET['asset_id'] ?? 0);
+$client_id = intval(getFieldById('assets', $asset_id, 'asset_client_id') ?? 0);
+
+ob_start();
+
+?>
+<div class="modal-header bg-dark">
+    <h5 class="modal-title"><i class="fa fa-fw fa-ethernet me-2"></i>Nouveau Network Interface</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+
+<form action="post.php" method="post" autocomplete="off">
+    <input type="hidden" name="asset_id" value="<?= $asset_id ?>">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+
+    <div class="modal-body">
+
+        <ul class="nav nav-pills nav-justified mb-3">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="pill" href="#pills-interface-details">Details</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#pills-interface-network">Network</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#pills-interface-notes">Notes</a>
+            </li>
+        </ul>
+
+        <hr>
+
+        <div class="tab-content">
+
+            <div class="tab-pane fade show active" id="pills-interface-details">
+
+                <!-- Interface Name -->
+                <div class="mb-3">
+                    <label>Interface Name or Port / <span class="text-secondary">Primary</span></label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-ethernet"></i></span>
+                        <input type="text" class="form-control" name="name" placeholder="Interface name or port number" maxlength="200" required>
+                            <div class="input-group-text">
+                                <input class="form-check-input" type="checkbox" name="primary_interface" value="1" title="Mark Interface as primary">
+                            </div>
+                    </div>
+                </div>
+
+                <!-- Type -->
+                <div class="mb-3">
+                    <label for="interface_type">Interface Type</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-plug"></i></span>
+                        <select class="form-select select2" id="interface_type" name="type">
+                            <option value="">- Select Type -</option>
+                            <?php
+                            $sql_interface_types_select = mysqli_query($mysqli, "
+                                SELECT category_name FROM categories
+                                WHERE category_type = 'network_interface'
+                                AND category_archived_at IS NULL
+                                ORDER BY category_order ASC, category_name ASC
+                            ");
+                            while ($row = mysqli_fetch_assoc($sql_interface_types_select)) {
+                                $interface_type_select = escapeHtml($row['category_name']);
+                                ?>
+                                <option><?= $interface_type_select ?></option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Interface Description -->
+                <div class="mb-3">
+                    <label>Description</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-tag"></i></span>
+                        <input
+                            type="text"
+                            class="form-control"
+                            name="description"
+                            placeholder="Short Description"
+                            maxlength="200"
+                        >
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="tab-pane fade" id="pills-interface-network">
+
+                <!-- Network -->
+                <div class="mb-3">
+                    <label>Network</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-network-wired"></i></span>
+                        <select class="form-select select2" name="network">
+                            <option value="">- Select Network -</option>
+                            <?php
+                            $sql_network_select = mysqli_query($mysqli, "SELECT network, network_id, network_name FROM networks WHERE network_archived_at IS NULL AND network_client_id = $client_id ORDER BY network_name ASC");
+                            while ($row = mysqli_fetch_assoc($sql_network_select)) {
+                                $network_id = $row['network_id'];
+                                $network_name = escapeHtml($row['network_name']);
+                                $network = escapeHtml($row['network']);
+                                ?>
+                                <option value="<?= $network_id ?>">
+                                    <?= "$network_name - $network" ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- IP (with optional DHCP checkbox) -->
+                <div class="mb-3">
+                    <label>IPv4 Ajouterress / <span class="text-muted">DHCP</span></label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-ethernet"></i></span>
+                        <input type="text" class="form-control font-monospace" name="ip" placeholder="e.g. 192.168.1.10" data-inputmask="'alias': 'ip'" maxlength="200" data-mask>
+                            <div class="input-group-text">
+                                <input class="form-check-input" type="checkbox" name="dhcp" value="1" title="Check to mark address as DHCP controlled">
+                            </div>
+                    </div>
+                </div>
+
+                <!-- MAC Ajouterress -->
+                <div class="mb-3">
+                    <label>MAC Ajouterress</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-ethernet"></i></span>
+                        <input type="text" class="form-control font-monospace" name="mac" placeholder="e.g. 00:1A:2B:3C:4D:5E" data-inputmask="'alias': 'mac'" maxlength="200" data-mask>
+                    </div>
+                </div>
+
+                <!-- IPv6 -->
+                <div class="mb-3">
+                    <label>IPv6 Ajouterress</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-ethernet"></i></span>
+                        <input type="text" class="form-control font-monospace" name="ipv6" placeholder="e.g. 2001:db8::1" maxlength="200">
+                    </div>
+                </div>
+
+                <!-- NAT IP -->
+                <div class="mb-3">
+                    <label>NAT Ajouterress</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-exchange-alt"></i></span>
+                        <input
+                            type="text"
+                            class="form-control font-monospace"
+                            name="nat_ip"
+                            placeholder="e.g. 203.0.113.10 or 10.0.0.5"
+                            maxlength="200"
+                            data-inputmask="'alias': 'ip'"
+                            data-mask
+                        >
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Connected to</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-plug"></i></span>
+                        <select class="form-select select2" name="connected_to">
+                            <option value="">- Select Asset and Interface -</option>
+                            <?php
+                            $sql_interfaces_select = mysqli_query($mysqli, "
+                                SELECT interface_id, interface_name, asset_name
+                                FROM asset_interfaces
+                                LEFT JOIN assets ON asset_id = interface_asset_id
+                                WHERE asset_archived_at IS NULL
+                                  AND asset_client_id = $client_id
+                                  AND asset_id != $asset_id
+                                  AND interface_id NOT IN (SELECT interface_a_id FROM asset_interface_links)
+                                  AND interface_id NOT IN (SELECT interface_b_id FROM asset_interface_links)
+                                ORDER BY asset_name ASC, interface_name ASC
+                            ");
+
+                            while ($row = mysqli_fetch_assoc($sql_interfaces_select)) {
+                                $interface_id_select = intval($row['interface_id']);
+                                $interface_name_select = escapeHtml($row['interface_name']);
+                                $asset_name_select = escapeHtml($row['asset_name']);
+                                ?>
+                                <option value="<?= $interface_id_select ?>">
+                                    <?= "$asset_name_select - $interface_name_select" ?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="tab-pane fade" id="pills-interface-notes">
+                <!-- Notes -->
+                <div class="mb-3">
+                    <textarea class="form-control" rows="8" placeholder="Enter some notes" name="notes"></textarea>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="submit" name="add_asset_interface" class="btn btn-primary text-bold">
+            <i class="fas fa-check me-2"></i>Créer
+        </button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Fermer</button>
+    </div>
+</form>
+
+<?php
+require_once '../../../includes/modal_footer.php';

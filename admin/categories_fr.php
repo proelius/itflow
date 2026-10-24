@@ -30,11 +30,11 @@ $category_types = [
     'Referral'          => ['label' => 'Referral',          'icon' => 'fa-share-alt'],
     'Ticket'            => ['label' => 'Ticket',            'icon' => 'fa-life-ring'],
     'network_interface' => ['label' => 'Network Interface', 'icon' => 'fa-ethernet'],
-    'asset_status'      => ['label' => 'Asset Status',      'icon' => 'fa-heartbeat'],
+    'asset_status'      => ['label' => 'Asset Statut',      'icon' => 'fa-heartbeat'],
     'software_type'     => ['label' => 'Software Type',     'icon' => 'fa-cube'],
     'rack_type'         => ['label' => 'Rack Type',         'icon' => 'fa-server'],
-    'contact_note_type' => ['label' => 'Contact Note Type', 'icon' => 'fa-address-book'],
-    'asset_note_type'   => ['label' => 'Asset Note Type',   'icon' => 'fa-desktop'],
+    'contact_note_type' => ['label' => 'Contact Nonte Type', 'icon' => 'fa-address-book'],
+    'asset_note_type'   => ['label' => 'Asset Nonte Type',   'icon' => 'fa-desktop'],
 ];
 
 // Label for the selected type, falling back for anything not in the map
@@ -68,14 +68,14 @@ $archive_toggle_url = '?' . http_build_query($archive_toggle_query);
 <div class="card card-dark">
     <div class="card-header py-2">
         <h3 class="card-title mt-2"><i class="fa fa-fw fa-list-ul me-2"></i>
-            <?= escapeHtml($category_label) ?> Catégories
+            <?= escapeHtml($category_label) ?> Categories
         </h3>
         <?php
             if (!isset($_GET['archived'])) {
         ?>
         <div class="card-tools">
             <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/category/category_add.php?category=<?= escapeHtml($category) ?>"><i
-                    class="fas fa-plus me-2"></i>Nouveau <?= escapeHtml($category_label) ?> Category</button>
+                    class="fas fa-plus me-2"></i>Nonuveau <?= escapeHtml($category_label) ?> Category</button>
         </div>
         <?php
             }
@@ -100,7 +100,7 @@ $archive_toggle_url = '?' . http_build_query($archive_toggle_query);
                 </ul>
             </div>
 
-            <!-- Catégories -->
+            <!-- Categories -->
             <div class="col-md-9">
                 <form autocomplete="off">
                     <input type="hidden" name="category" value="<?= escapeHtml($category) ?>">
@@ -114,7 +114,7 @@ $archive_toggle_url = '?' . http_build_query($archive_toggle_query);
                                     value="<?php if (isset($q)) {
                                         echo stripslashes(escapeHtml($q));
                                     } ?>"
-                                    placeholder="Rechercher <?= escapeHtml($category_label) ?> Catégories ">
+                                    placeholder="Rechercher <?= escapeHtml($category_label) ?> Categories ">
                                     <button class="btn btn-primary"><i class="fa fa-search"></i></button>
                             </div>
                         </div>

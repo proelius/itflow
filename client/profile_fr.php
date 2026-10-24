@@ -11,7 +11,6 @@ $portal_load_phone_inputs = true;
 header("Content-Security-Policy: default-src 'self'");
 
 require_once 'includes/inc_all.php';
-require_once "../lang/fr/common_strings.php";
 
 /*
  * check_login.php runs these through escapeSql(), which is for writing to the
@@ -79,7 +78,7 @@ if (!empty($contact_location_id)) {
     ));
     if ($location) {
         $contact_location = escapeHtml($location['location_name']);
-        $contact_location_address = nl2br(escapeHtml(formatAddress(
+        $contact_location_address = nl2br(escapeHtml(formatAjouterress(
             $location['location_address'],
             $location['location_city'],
             $location['location_state'],
@@ -112,8 +111,8 @@ if ($login_method === 'local') {
  */
 $contact_roles = [
     ['Primary', (bool) $session_contact_primary, 'Everything in the portal'],
-    ['Billing', (bool) $session_contact_is_billing_contact, 'Invoices, quotes and payments'],
-    ['Technical', (bool) $session_contact_is_technical_contact, 'Assets, documents, domains and contacts'],
+    ['Billing', (bool) $session_contact_is_billing_contact, 'Factures, quotes and payments'],
+    ['Technical', (bool) $session_contact_is_technical_contact, 'Actifs, documents, domains and contacts'],
 ];
 
 /*
@@ -123,7 +122,7 @@ $contact_roles = [
  * that file), so both the sign-ins and the actions carry it. An agent working
  * on this client writes their own user id, so their work never appears here.
  *
- * Successful sign-ins only. Failed attempts are logged without a reliable user
+ * Succèsful sign-ins only. Failed attempts are logged without a reliable user
  * id - login.php cannot always resolve one from a bad email - so they cannot
  * honestly be attributed to this contact.
  */
@@ -131,7 +130,7 @@ $sql_logins = mysqli_query(
     $mysqli,
     "SELECT log_created_at, log_ip FROM logs
     WHERE log_type = 'Client Login'
-    AND log_action = 'Success'
+    AND log_action = 'Succès'
     AND log_user_id = $session_user_id
     AND log_client_id = $session_client_id
     ORDER BY log_id DESC
@@ -211,7 +210,7 @@ $sql_actions = mysqli_query(
                         <?php } ?>
                     <?php } ?>
                     <button type="button" class="btn btn-sm btn-outline-secondary float-end"
-                        data-bs-toggle="modal" data-bs-target="#phoneModal">Edit</button>
+                        data-bs-toggle="modal" data-bs-target="#phoneModal">Modifier</button>
                 </td>
             </tr>
             <tr>
@@ -223,7 +222,7 @@ $sql_actions = mysqli_query(
                         <?= $contact_mobile ?>
                     <?php } ?>
                     <button type="button" class="btn btn-sm btn-outline-secondary float-end"
-                        data-bs-toggle="modal" data-bs-target="#phoneModal">Edit</button>
+                        data-bs-toggle="modal" data-bs-target="#phoneModal">Modifier</button>
                 </td>
             </tr>
             </tbody>
@@ -350,7 +349,7 @@ $sql_actions = mysqli_query(
             </tbody>
         </table>
 
-        <a href="activity.php"><i class="fa fa-fw fa-list me-2"></i>View all your activity</a>
+        <a href="activity.php"><i class="fa fa-fw fa-list me-2"></i>Voir all your activity</a>
 
     </div>
 
@@ -369,7 +368,7 @@ $sql_actions = mysqli_query(
 
                 <div class="modal-header bg-dark">
                     <h5 class="modal-title text-white"><i class="fa fa-fw fa-phone me-2"></i>Your phone numbers</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
 
@@ -410,10 +409,10 @@ $sql_actions = mysqli_query(
                 </div>
                 <div class="modal-footer">
                     <button type="submit" name="set_contact_phone" class="btn btn-primary text-bold">
-                        <i class="fas fa-check me-2"></i>Save
+                        <i class="fas fa-check me-2"></i>Enregistrer
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancel
+                        <i class="fas fa-times me-2"></i>Annuler
                     </button>
                 </div>
             </form>
@@ -431,7 +430,7 @@ $sql_actions = mysqli_query(
                     <h5 class="modal-title text-white">
                         <i class="fa fa-fw fa-key me-2"></i><?= empty($contact_pin) ? 'Set a phone PIN' : 'Change your phone PIN' ?>
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
 
@@ -452,7 +451,7 @@ $sql_actions = mysqli_query(
                     <?php } ?>
 
                     <div class="mb-3">
-                        <label for="contactPin"><?= empty($contact_pin) ? 'New PIN' : 'Replace with' ?></label>
+                        <label for="contactPin"><?= empty($contact_pin) ? 'Nouveau PIN' : 'Replace with' ?></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-key"></i></span>
                             <input type="text" class="form-control" id="contactPin" name="pin"
@@ -464,10 +463,10 @@ $sql_actions = mysqli_query(
                 </div>
                 <div class="modal-footer">
                     <button type="submit" name="set_contact_pin" class="btn btn-primary text-bold">
-                        <i class="fas fa-check me-2"></i><?= empty($contact_pin) ? 'Save PIN' : 'Update PIN' ?>
+                        <i class="fas fa-check me-2"></i><?= empty($contact_pin) ? 'Enregistrer PIN' : 'Mettre à jour PIN' ?>
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancel
+                        <i class="fas fa-times me-2"></i>Annuler
                     </button>
                 </div>
             </form>
@@ -484,7 +483,7 @@ $sql_actions = mysqli_query(
 
                 <div class="modal-header bg-dark">
                     <h5 class="modal-title text-white"><i class="fa fa-fw fa-lock me-2"></i>Change your password</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
                 </div>
                 <div class="modal-body">
 
@@ -498,7 +497,7 @@ $sql_actions = mysqli_query(
                     </div>
 
                     <div class="mb-3">
-                        <label for="newPassword">New password</label>
+                        <label for="newPassword">Nouveau password</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
                             <input type="password" class="form-control" id="newPassword" name="new_password"
@@ -509,10 +508,10 @@ $sql_actions = mysqli_query(
                 </div>
                 <div class="modal-footer">
                     <button type="submit" name="edit_profile" class="btn btn-primary text-bold">
-                        <i class="fas fa-check me-2"></i>Save password
+                        <i class="fas fa-check me-2"></i>Enregistrer password
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancel
+                        <i class="fas fa-times me-2"></i>Annuler
                     </button>
                 </div>
             </form>

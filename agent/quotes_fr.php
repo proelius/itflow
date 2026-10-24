@@ -44,7 +44,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
         <div class="card-tools">
         <?php if (lookupUserPermission("module_sales") >= 2) { ?>
             <div class="btn-group">
-                <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/quote/quote_add.php?<?= $client_url ?>"><i class="fas fa-plus me-2"></i>Nouveau Devis</button>
+                <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/quote/quote_add.php?<?= $client_url ?>"><i class="fas fa-plus me-2"></i>Nouveau Quote</button>
                 <?php if ($num_rows[0] > 0) { ?>
                     <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></button>
                     <div class="dropdown-menu">
@@ -116,7 +116,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <?php } ?>
                 <th class="text-end">
                     <a class="text-dark" href="?<?= $url_query_strings_sort ?>&sort=quote_amount&order=<?= $disp ?>">
-                        Montant <?php if ($sort == 'quote_amount') { echo $order_icon; } ?>
+                        Amount <?php if ($sort == 'quote_amount') { echo $order_icon; } ?>
                     </a>
                 </th>
                 <th>
@@ -172,13 +172,13 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     $client_net_terms = $config_default_net_terms;
                 }
 
-                if ($quote_status == "Envoyée") {
+                if ($quote_status == "Sent") {
                     $quote_badge_color = "warning";
                 } elseif ($quote_status == "Voired") {
                     $quote_badge_color = "primary";
-                } elseif ($quote_status == "Accepté") {
+                } elseif ($quote_status == "Accepted") {
                     $quote_badge_color = "success";
-                } elseif ($quote_status == "Refusé") {
+                } elseif ($quote_status == "Declined") {
                     $quote_badge_color = "danger";
                 } elseif ($quote_status == "Invoiced") {
                     $quote_badge_color = "info";
@@ -226,7 +226,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                     </a>
                                     <?php if (!empty($config_smtp_provider)) { ?>
                                         <div class="dropdown-divider"></div>
-                                        <button type="submit" class="dropdown-item confirm-link" form="quickSendDevis"
+                                        <button type="submit" class="dropdown-item confirm-link" form="quickSendQuote"
                                             data-confirm-title="Send this quote now?"
                                             data-confirm-text="It goes to the default contacts without opening the picker."
                                             data-confirm-button="Send"
@@ -274,7 +274,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
      * a submit button contributes to the submission.
      */
     ?>
-    <form id="quickSendDevis" action="post.php" method="post" class="d-none">
+    <form id="quickSendQuote" action="post.php" method="post" class="d-none">
         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
         <input type="hidden" name="email_quote" value="1">
         <input type="hidden" name="quick_send" value="1">

@@ -17,9 +17,9 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 <div class="card">
     <div class="card-header bg-dark py-2">
-        <h3 class="card-title mt-2"><i class="fas fa-fw fa-credit-card me-2"></i>Paiement Methods</h3>
+        <h3 class="card-title mt-2"><i class="fas fa-fw fa-credit-card me-2"></i>Payment Methods</h3>
         <div class="card-tools">
-            <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/payment_method/payment_method_add.php"><i class="fas fa-plus me-2"></i>Ajouter Paiement Method</button>
+            <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/payment_method/payment_method_add.php"><i class="fas fa-plus me-2"></i>Ajouter Payment Method</button>
         </div>
     </div>
     <div class="card-header py-3">
@@ -27,7 +27,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Paiement Methods">
+                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Payment Methods">
                         <button class="btn btn-primary"><i class="fa fa-search"></i></button>
                     </div>
                 </div>

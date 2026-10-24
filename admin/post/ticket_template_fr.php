@@ -1,0 +1,118 @@
+<?php
+
+// Ticket Templates
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+// Importer shared code from user-side tickets/tasks as we reuse functions
+require_once '../agent/post/ticket.php';
+require_once '../agent/post/task.php';
+
+if (isset($_POST['add_ticket_template'])) {
+
+    validateCSRFToken();
+
+    $name = escapeSql($_POST['name']);
+    $description = escapeSql($_POST['description']);
+    $subject = escapeSql($_POST['subject']);
+    $details = mysqli_real_escape_string($mysqli, $_POST['details']);
+    $project_template_id = intval($_POST['project_template']);
+
+    mysqli_query($mysqli, "INSERT INTO ticket_templates SET ticket_template_name = '$name', ticket_template_description = '$description', ticket_template_subject = '$subject', ticket_template_details = '$details'");
+
+    $ticket_template_id = mysqli_insert_id($mysqli);
+
+    if($project_template_id) {
+        mysqli_query($mysqli, "INSERT INTO project_template_ticket_templates SET project_template_id = $project_template_id, ticket_template_id = $ticket_template_id");
+    }
+
+    logAudit("Ticket Template", "Créer", "$session_name created ticket template $name", 0, $ticket_template_id);
+
+    flashAlert("Ticket Template <strong>$name</strong> created");
+
+    redirect();
+
+}
+
+if (isset($_POST['edit_ticket_template'])) {
+
+    validateCSRFToken();
+
+    $ticket_template_id = intval($_POST['ticket_template_id']);
+    $name = escapeSql($_POST['name']);
+    $description = escapeSql($_POST['description']);
+    $subject = escapeSql($_POST['subject']);
+    $details = mysqli_real_escape_string($mysqli, $_POST['details']);
+
+    mysqli_query($mysqli, "UPDATE ticket_templates SET ticket_template_name = '$name', ticket_template_description = '$description', ticket_template_subject = '$subject', ticket_template_details = '$details' WHERE ticket_template_id = $ticket_template_id");
+
+    logAudit("Ticket Template", "Modifier", "$session_name edited ticket template $name", 0, $ticket_template_id);
+
+    flashAlert("Ticket Template <strong>$name</strong> edited");
+
+    redirect();
+
+}
+
+if (isset($_GET['delete_ticket_template'])) {
+
+    validateCSRFToken();
+
+    $ticket_template_id = intval($_GET['delete_ticket_template']);
+
+    $ticket_template_name = escapeSql(getFieldById('ticket_templates', $ticket_template_id, 'ticket_template_name'));
+
+    mysqli_query($mysqli, "DELETE FROM ticket_templates WHERE ticket_template_id = $ticket_template_id");
+
+    // Supprimer Associations
+    mysqli_query($mysqli, "DELETE FROM task_templates WHERE task_template_ticket_template_id = $ticket_template_id");
+    mysqli_query($mysqli, "DELETE FROM project_template_ticket_templates WHERE ticket_template_id = $ticket_template_id");
+
+    // Unlink from recurring tickets rather than deleting them - the schedule is still
+    // wanted, it just stops contributing tasks to the tickets it raises
+    mysqli_query($mysqli, "UPDATE recurring_tickets SET recurring_ticket_ticket_template_id = 0 WHERE recurring_ticket_ticket_template_id = $ticket_template_id");
+
+    logAudit("Ticket Template", "Supprimer", "$session_name deleted ticket template $ticket_template_name");
+
+    flashAlert("Ticket Template <strong>$ticket_template_name</strong> and its associated tasks deleted", 'error');
+
+    redirect();
+
+}
+
+if (isset($_POST['add_ticket_template_task'])) {
+
+    validateCSRFToken();
+
+    $ticket_template_id = intval($_POST['ticket_template_id']);
+    $task_name = escapeSql($_POST['task_name']);
+
+    mysqli_query($mysqli, "INSERT INTO task_templates SET task_template_name = '$task_name', task_template_ticket_template_id = $ticket_template_id");
+
+    $task_template_id = mysqli_insert_id($mysqli);
+
+    logAudit("Ticket Template", "Créer", "$session_name created task $task_name for ticket template", 0, $ticket_template_id);
+
+    flashAlert("Ajoutered Task <strong>$task_name</strong>");
+
+    redirect();
+
+}
+
+if (isset($_GET['delete_task_template'])) {
+
+    validateCSRFToken();
+
+    $task_template_id = intval($_GET['delete_task_template']);
+
+    $task_template_name = escapeSql(getFieldById('task_templates', $task_template_id, 'task_template_name'));
+
+    mysqli_query($mysqli, "DELETE FROM task_templates WHERE task_template_id = $task_template_id");
+
+    logAudit("Ticket Template", "Modifier", "$session_name deleted task $task_template_name from ticket template");
+
+    flashAlert("Task <strong>$task_template_name</strong> deleted", 'error');
+
+    redirect();
+
+}

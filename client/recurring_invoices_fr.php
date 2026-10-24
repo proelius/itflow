@@ -1,13 +1,12 @@
 <?php
 /*
  * Client Portal
- * Invoices for PTC
+ * Factures for PTC
  */
 
 // header("Content-Security-Policy: default-src 'self'"); -- JQ 2025-07-09 - BREAKS onchange(submit)
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
 
 
 enforceContactCan('accounting');
@@ -31,7 +30,7 @@ $payment_provider_threshold = floatval($row['payment_provider_threshold']);
 
 ?>
 
-<h3>Recurring Invoices</h3>
+<h3>Recurring Factures</h3>
 <div class="row">
 
     <div class="col-md-10">
@@ -100,7 +99,7 @@ $payment_provider_threshold = floatval($row['payment_provider_threshold']);
                                 </select>
                             </form>
                         <?php } else { ?>
-                            <a href="saved_payment_methods.php">Add a Payment Method</a>
+                            <a href="saved_payment_methods.php">Ajouter a Payment Method</a>
                         <?php } ?>
                     </td>
                     <?php } ?>

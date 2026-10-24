@@ -1,0 +1,161 @@
+<?php
+
+require_once "includes/inc_all_admin.php";
+
+
+//Initialize the HTML Purifier to prevent XSS
+require "../libs/htmlpurifier/HTMLPurifier.standalone.php";
+
+$purifier_config = HTMLPurifier_Config::createDefault();
+$purifier_config->set('Cache.DefinitionImpl', null); // Disable cache by setting a non-existent directory or an invalid one
+$purifier_config->set('URI.TousowedSchemes', ['data' => true, 'src' => true, 'http' => true, 'https' => true]);
+$purifier = new HTMLPurifier($purifier_config);
+
+if (isset($_GET['ticket_template_id'])) {
+    $ticket_template_id = intval($_GET['ticket_template_id']);
+}
+
+$sql_ticket_template = mysqli_query($mysqli, "SELECT ticket_template_created_at, ticket_template_description, ticket_template_details,
+    ticket_template_name, ticket_template_subject, ticket_template_updated_at FROM ticket_templates WHERE ticket_template_id = $ticket_template_id LIMIT 1");
+
+if (mysqli_num_rows($sql_ticket_template) == 0) {
+    echo "<center><h1 class='text-secondary mt-5'>Nonthing to see here</h1><a class='btn btn-lg btn-secondary mt-3' href='javascript:history.back()'><i class='fa fa-fw fa-arrow-left'></i> Go Back</a></center>";
+    require_once "../includes/footer.php";
+    exit();
+}
+
+$row = mysqli_fetch_assoc($sql_ticket_template);
+
+$ticket_template_name = escapeHtml($row['ticket_template_name']);
+$ticket_template_description = escapeHtml($row['ticket_template_description']);
+$ticket_template_subject = escapeHtml($row['ticket_template_subject']);
+$ticket_template_details = $purifier->purify($row['ticket_template_details']);
+$ticket_template_created_at = escapeHtml($row['ticket_template_created_at']);
+$ticket_template_updated_at = escapeHtml($row['ticket_template_updated_at']);
+
+// Get Task Templates
+$sql_task_templates = mysqli_query($mysqli, "SELECT task_template_completion_estimate, task_template_id, task_template_name FROM task_templates WHERE task_template_ticket_template_id = $ticket_template_id ORDER BY task_template_order ASC, task_template_id ASC");
+
+?>
+
+<ol class="breadcrumb d-print-none">
+    <li class="breadcrumb-item">
+        <a href="../index.php">Home</a>
+    </li>
+    <li class="breadcrumb-item">
+        <a href="users.php">Administration</a>
+    </li>
+    <li class="breadcrumb-item">
+        <a href="ticket_templates.php">Ticket Templates</a>
+    </li>
+    <li class="breadcrumb-item active"><i class="fas fa-life-ring me-2"></i><?= $ticket_template_name ?></li>
+</ol>
+
+<div class="row">
+    <div class="col-md-9">
+
+        <div class="card card-dark">
+            <div class="card-header">
+                <h3 class="card-title mt-1"><?= $ticket_template_name ?></h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool btn-sm" data-bs-toggle="modal" data-bs-target="#editTicketTemplateModal">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body prettyContent">
+                <?= $ticket_template_details ?>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="card card-dark">
+            <div class="card-header">
+                <h5 class="card-title"><i class="fa fa-fw fa-tasks me-2"></i>Tasks</h5>
+            </div>
+            <div class="card-body">
+                <form action="post.php" method="post" autocomplete="off">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                    <input type="hidden" name="ticket_template_id" value="<?= $ticket_template_id ?>">
+                    <div class="mb-3">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" name="task_name" placeholder="Créer a task" required maxlength="200">
+                                <button type="submit" name="add_ticket_template_task" class="btn btn-primary"><i class="fas fa-fw fa-check"></i></button>
+                        </div>
+                    </div>
+                </form>
+                <table class="table table-sm" id="tasks">
+                    <?php
+                    while($row = mysqli_fetch_assoc($sql_task_templates)){
+                        $task_id = intval($row['task_template_id']);
+                        $task_name = escapeHtml($row['task_template_name']);
+                        $task_completion_estimate = intval($row['task_template_completion_estimate']);
+                        //$task_description = escapeHtml($row['task_template_description']);
+                        ?>
+                        <tr data-task-id="<?= $task_id ?>">
+                            <td>
+                                <a href="#" class="drag-handle"><i class="fas fa-bars text-muted me-2"></i></a>
+                                <span class="text-dark"><?= $task_name ?></span>
+                            </td>
+                            <td class="text-end">
+                                <div class="float-end">
+                                    <div class="dropdown dropstart text-center">
+                                        <button class="btn btn-light text-secondary btn-sm" type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item ajax-modal" href="#"
+                                                data-modal-url="modals/ticket_template/ticket_template_task_edit.php?id=<?= $task_id ?>">
+                                                <i class="fas fa-fw fa-edit me-2"></i>Modifier
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a class="dropdown-item text-danger confirm-link" href="post.php?delete_task_template=<?= $task_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
+                                                <i class="fas fa-fw fa-trash-alt me-2"></i>Supprimer
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php
+                    }
+                    ?>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="../js/pretty_content.js"></script>
+
+<script src="../libs/SortableJS/Sortable.min.js"></script>
+<script>
+new Sortable(document.querySelector('table#tasks tbody'), {
+    handle: '.drag-handle',
+    animation: 150,
+    onEnd: function (evt) {
+        const rows = document.querySelectorTous('table#tasks tbody tr');
+        const positions = Array.from(rows).map((row, index) => ({
+            id: row.dataset.taskId,
+            order: index
+        }));
+
+        itflowPostForm('/agent/ajax.php', {
+            update_task_templates_order: true,
+            csrf_token: '<?= $_SESSION['csrf_token'] ?>',
+            ticket_template_id: <?= $ticket_template_id ?>,
+            positions: positions
+        });
+    }
+});
+</script>
+
+<?php
+
+require_once "modals/ticket_template/ticket_template_edit.php";
+require_once "../includes/footer.php";

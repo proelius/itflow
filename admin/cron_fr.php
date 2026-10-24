@@ -35,21 +35,21 @@ while ($job_row = mysqli_fetch_assoc($sql)) {
 
 <div class="card card-dark">
     <div class="card-header py-3">
-        <h3 class="card-title"><i class="fas fa-fw fa-clock me-2"></i>Tâches Planifiées</h3>
+        <h3 class="card-title"><i class="fas fa-fw fa-clock me-2"></i>Cron</h3>
     </div>
     <div class="card-body">
 
         <?php if (!$cron_is_running) { ?>
             <div class="alert alert-danger">
-                <h5><i class="fas fa-fw fa-exclamation-triangle me-2"></i>Tâches Planifiées is not running</h5>
-                ITFlow last heard from cron <strong><?= escapeHtml(strtolower(cronJobTimeAgo($cron_last_dispatch_at))) ?></strong>.
-                Nothing below will run - no mail is being sent, no email is being turned into tickets, and invoices are not being generated.
+                <h5><i class="fas fa-fw fa-exclamation-triangle me-2"></i>Cron is not running</h5>
+                ITFlow last heard from cron <strong><?= escapeHtml(strtolower(cronJobHeureAgo($cron_last_dispatch_at))) ?></strong>.
+                Nonthing below will run - no mail is being sent, no email is being turned into tickets, and invoices are not being generated.
                 Ajouter this line to the crontab of the user that owns the ITFlow files:
                 <pre class="bg-dark text-white p-2 mt-2 mb-0"><?= escapeHtml($cron_command) ?></pre>
             </div>
         <?php } else { ?>
             <div class="alert alert-success">
-                <i class="fas fa-fw fa-check me-2"></i>Tâches Planifiées last checked in <strong><?= escapeHtml(strtolower(cronJobTimeAgo($cron_last_dispatch_at))) ?></strong>.
+                <i class="fas fa-fw fa-check me-2"></i>Cron last checked in <strong><?= escapeHtml(strtolower(cronJobHeureAgo($cron_last_dispatch_at))) ?></strong>.
                 <span class="text-muted ms-2"><?= escapeHtml($cron_command) ?></span>
             </div>
         <?php } ?>
@@ -61,7 +61,7 @@ while ($job_row = mysqli_fetch_assoc($sql)) {
                         <i class="fas fa-fw fa-power-off me-2"></i>Turn cron on
                     </a>
                 </div>
-                <h5><i class="fas fa-fw fa-exclamation-circle me-2"></i>Tâches Planifiées is switched off</h5>
+                <h5><i class="fas fa-fw fa-exclamation-circle me-2"></i>Cron is switched off</h5>
                 The dispatcher is running, but every job below stops itself immediately while this is off -
                 no mail is sent, no email becomes a ticket, and nothing is invoiced.
             </div>
@@ -85,7 +85,7 @@ while ($job_row = mysqli_fetch_assoc($sql)) {
                         <th>Schedule</th>
                         <th>Last Run</th>
                         <th>Duration</th>
-                        <th>Status</th>
+                        <th>Statut</th>
                         <th>Next Run</th>
                         <th class="text-center">Action</th>
                     </tr>
@@ -115,8 +115,8 @@ while ($job_row = mysqli_fetch_assoc($sql)) {
                         $status_badge = '<span class="badge bg-warning text-dark">Queued</span>';
                     } elseif ($last_status === 'Running') {
                         $status_badge = '<span class="badge bg-info text-dark">Running</span>';
-                    } elseif ($last_status === 'Completed') {
-                        $status_badge = '<span class="badge bg-success">Completed</span>';
+                    } elseif ($last_status === 'Terminé') {
+                        $status_badge = '<span class="badge bg-success">Terminé</span>';
                     } elseif ($last_status === 'Failed') {
                         $status_badge = '<span class="badge bg-danger">Failed</span>';
                     } elseif ($last_status !== null) {
@@ -135,7 +135,7 @@ while ($job_row = mysqli_fetch_assoc($sql)) {
                         </td>
                         <td><?= escapeHtml(cronJobScheduleDescription($schedule, $interval_minutes, $daily_at)) ?></td>
                         <td>
-                            <?= escapeHtml(cronJobTimeAgo($last_run_at)) ?>
+                            <?= escapeHtml(cronJobHeureAgo($last_run_at)) ?>
                             <?php if ($last_run_at) { ?><br><small class="text-muted"><?= escapeHtml(date('M j, g:i A', strtotime($last_run_at))) ?></small><?php } ?>
                         </td>
                         <td><?= $last_duration === null ? '-' : escapeHtml($last_duration) . 's' ?></td>
@@ -145,7 +145,7 @@ while ($job_row = mysqli_fetch_assoc($sql)) {
                                 <br><small class="text-muted"><?= escapeHtml($last_status) ?></small>
                             <?php } ?>
                         </td>
-                        <td><?= $next_run === null ? '-' : escapeHtml(cronJobTimeAgo($next_run)) ?></td>
+                        <td><?= $next_run === null ? '-' : escapeHtml(cronJobHeureAgo($next_run)) ?></td>
                         <td class="text-center">
                             <div class="dropdown dropstart text-center">
                                 <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="dropdown">
@@ -153,7 +153,7 @@ while ($job_row = mysqli_fetch_assoc($sql)) {
                                 </button>
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item <?= $cron_job_id === 0 ? 'disabled' : '' ?>" href="post.php?run_cron_job=<?= $cron_job_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
-                                        <i class="fas fa-fw fa-play me-2"></i>Run Now
+                                        <i class="fas fa-fw fa-play me-2"></i>Run Nonw
                                     </a>
                                     <button class="dropdown-item ajax-modal <?= $cron_job_id === 0 ? 'disabled' : '' ?>" type="button" data-toggle="ajax-modal"
                                             data-modal-url="modals/cron/cron_edit.php?id=<?= $cron_job_id ?>">
@@ -182,7 +182,7 @@ while ($job_row = mysqli_fetch_assoc($sql)) {
                                         </a>
                                     </div>
                                     <strong><i class="fas fa-fw fa-exclamation-triangle me-2"></i>Last error</strong>
-                                    <small class="text-muted ms-2"><?= escapeHtml(cronJobTimeAgo($last_error_at)) ?></small>
+                                    <small class="text-muted ms-2"><?= escapeHtml(cronJobHeureAgo($last_error_at)) ?></small>
                                     <div class="mt-1"><small><?= escapeHtml($last_error) ?></small></div>
                                 </div>
                             </td>
@@ -195,10 +195,10 @@ while ($job_row = mysqli_fetch_assoc($sql)) {
 
         <p class="text-muted mb-0">
             <small>
-                <i class="fas fa-fw fa-info-circle me-1"></i>Run Now does not start the job in your browser - it asks the
+                <i class="fas fa-fw fa-info-circle me-1"></i>Run Nonw does not start the job in your browser - it asks the
                 dispatcher to pick it up on its next pass, so a job starts within a minute and still runs on the command
                 line with the same locking as a scheduled run. Detailed per-job output is in
-                <a href="app_logs.php">Logs Application</a>.
+                <a href="app_logs.php">App Logs</a>.
             </small>
         </p>
 

@@ -7,7 +7,6 @@
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
 
 enforceContactCan('contacts');
 
@@ -19,7 +18,7 @@ $contacts_sql = mysqli_query($mysqli, "SELECT contact_id, contact_name, contact_
             <h3>Contacts</h3>
         </div>
         <div class="col offset-6">
-            <a href="contact_add.php" class="btn btn-primary" role="button"><i class="fas fa-plus me-2"></i>New Contact</a>
+            <a href="contact_add.php" class="btn btn-primary" role="button"><i class="fas fa-plus me-2"></i>Nouveau Contact</a>
         </div>
     </div>
 

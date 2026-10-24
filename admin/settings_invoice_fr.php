@@ -4,19 +4,19 @@ require_once "includes/inc_all_admin.php";
 
     <div class="card card-dark">
         <div class="card-header py-3">
-            <h3 class="card-title"><i class="fas fa-fw fa-file-invoice me-2"></i>Facture Paramètres</h3>
+            <h3 class="card-title"><i class="fas fa-fw fa-file-invoice me-2"></i>Invoice Paramètres</h3>
         </div>
         <div class="card-body">
             <form action="post.php" method="post" autocomplete="off">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
-                <h4>Facture</h4>
+                <h4>Invoice</h4>
 
                 <div class="mb-3">
-                    <label>Facture Prefix</label>
+                    <label>Invoice Prefix</label>
                     <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-barcode"></i></span>
-                        <input type="text" class="form-control" name="config_invoice_prefix" placeholder="Facture Prefix" maxlength="200" value="<?= escapeHtml($config_invoice_prefix) ?>" required>
+                        <input type="text" class="form-control" name="config_invoice_prefix" placeholder="Invoice Prefix" maxlength="200" value="<?= escapeHtml($config_invoice_prefix) ?>" required>
                     </div>
                 </div>
 
@@ -24,12 +24,12 @@ require_once "includes/inc_all_admin.php";
                     <label>Next Number</label>
                     <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-barcode"></i></span>
-                        <input type="number" min="0" class="form-control" name="config_invoice_next_number" placeholder="Next Facture Number" value="<?= intval($config_invoice_next_number) ?>" required>
+                        <input type="number" min="0" class="form-control" name="config_invoice_next_number" placeholder="Next Invoice Number" value="<?= intval($config_invoice_next_number) ?>" required>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label>Facture Footer</label>
+                    <label>Invoice Footer</label>
                     <textarea class="form-control" rows="4" name="config_invoice_footer"><?= escapeHtml($config_invoice_footer) ?></textarea>
                 </div>
 
@@ -42,7 +42,7 @@ require_once "includes/inc_all_admin.php";
                     </div>
                 </div>
 
-                <h5>Facture Late Fees</h5>
+                <h5>Invoice Late Fees</h5>
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
@@ -70,13 +70,13 @@ require_once "includes/inc_all_admin.php";
 
                 <hr>
 
-                <h4>Recurring Facture</h4>
+                <h4>Recurring Invoice</h4>
 
                 <div class="mb-3">
                     <label>Recurring Prefix</label>
                     <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-barcode"></i></span>
-                        <input type="text" class="form-control" name="config_recurring_invoice_prefix" placeholder="Recurring Facture Prefix" maxlength="200" value="<?= escapeHtml($config_recurring_invoice_prefix) ?>" required>
+                        <input type="text" class="form-control" name="config_recurring_invoice_prefix" placeholder="Recurring Invoice Prefix" maxlength="200" value="<?= escapeHtml($config_recurring_invoice_prefix) ?>" required>
                     </div>
                 </div>
 
@@ -84,7 +84,7 @@ require_once "includes/inc_all_admin.php";
                     <label>Next Number</label>
                     <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-barcode"></i></span>
-                        <input type="number" min="0" class="form-control" name="config_recurring_invoice_next_number" placeholder="Next Recurring Facture Number" value="<?= intval($config_recurring_invoice_next_number) ?>" required>
+                        <input type="number" min="0" class="form-control" name="config_recurring_invoice_next_number" placeholder="Next Recurring Invoice Number" value="<?= intval($config_recurring_invoice_next_number) ?>" required>
                     </div>
                 </div>
 

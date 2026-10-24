@@ -1,0 +1,99 @@
+<?php
+
+/*
+ * ITFlow - GET/POST request handler for payment Providers ('payment_providers')
+ */
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_POST['add_payment_provider'])) {
+
+    validateCSRFToken();
+
+    $provider = escapeSql($_POST['provider']);
+    require_once 'payment_provider_model.php';
+
+    // Check to ensure provider isn't added twice
+    $sql = mysqli_query($mysqli, "SELECT 1 FROM payment_providers WHERE payment_provider_name = '$provider' LIMIT 1");
+    if (mysqli_num_rows($sql) > 0) {
+        flashAlert("Payment Provider <strong>$provider</strong> already exists", 'error');
+        redirect();
+    }
+
+    mysqli_query($mysqli,"INSERT INTO payment_providers SET payment_provider_name = '$provider', payment_provider_public_key = '$public_key', payment_provider_private_key = '$private_key', payment_provider_threshold = $threshold, payment_provider_account = $account, payment_provider_expense_vendor = $expense_vendor, payment_provider_expense_category = $expense_category");
+
+    $provider_id = mysqli_insert_id($mysqli);
+
+    logAudit("Payment Provider", "Créer", "$session_name created Payment Provider $provider");
+
+    // Check Stripe sk
+    if ($provider === 'Stripe') {
+        try {
+            require_once '../includes/stripe_init.php';
+            $stripe = new \Stripe\StripeClient($private_key);
+            $account = $stripe->accounts->retrieve();
+        } catch (Exception $e) {
+            flashAlert("Erreur checking Stripe key: " . $e->getMessage(), 'error');
+            redirect();
+        }
+    }
+
+    flashAlert("Payment provider <strong>$provider</strong> created");
+
+    redirect();
+
+}
+
+if (isset($_POST['edit_payment_provider'])) {
+
+    validateCSRFToken();
+
+    require_once 'payment_provider_model.php';
+
+    $provider_id = intval($_POST['provider_id']);
+
+    mysqli_query($mysqli,"UPDATE payment_providers SET payment_provider_public_key = '$public_key', payment_provider_private_key = '$private_key', payment_provider_threshold = $threshold, payment_provider_account = $account, payment_provider_expense_vendor = $expense_vendor, payment_provider_expense_category = $expense_category WHERE payment_provider_id = $provider_id");
+
+    logAudit("Payment Provider", "Modifier", "$session_name edited Payment Provider $provider");
+
+    // Check Stripe sk
+    if ($_POST['provider'] === 'Stripe') {
+        try {
+            require_once '../includes/stripe_init.php';
+            $stripe = new \Stripe\StripeClient($private_key);
+            $account = $stripe->accounts->retrieve();
+        } catch (Exception $e) {
+            flashAlert("Erreur checking Stripe key: " . $e->getMessage(), 'error');
+            redirect();
+        }
+    }
+
+    flashAlert("Payment Provider <strong>$provider</strong> edited");
+
+    redirect();
+
+}
+
+if (isset($_GET['delete_payment_provider'])) {
+
+    validateCSRFToken();
+
+    $provider_id = intval($_GET['delete_payment_provider']);
+
+    // When deleted it cascades deletes
+    // all Recurring payments related to payment provider
+    // Supprimer all Enregistrerd Cards related
+    // Supprimer Client Payment Provider Releation
+
+    $provider_name = escapeSql(getFieldById('payment_providers', $provider_id, 'payment_provider_name'));
+
+    // Supprimer provider
+    mysqli_query($mysqli,"DELETE FROM payment_providers WHERE payment_provider_id = $provider_id");
+
+    logAudit("Payment Provider", "Supprimer", "$session_name deleted Payment Provider $provider_name");
+
+    flashAlert("Payment Provider <strong>$provider_name</strong> deleted", 'error');
+
+    redirect();
+
+}

@@ -39,7 +39,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 <div class="card">
     <div class="card-header bg-dark py-2">
         <h3 class="card-title mt-2">
-            <i class="fas fa-fw fa-building me-2"></i>Fournisseurs
+            <i class="fas fa-fw fa-building me-2"></i>Vendors
         </h3>
         <div class="card-tools">
             <div class="btn-group">
@@ -73,7 +73,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Fournisseurs">
+                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Vendors">
                             <button class="btn btn-dark"><i class="fa fa-search"></i></button>
                     </div>
                 </div>
@@ -123,7 +123,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <tr>
                     <td class="checkbox-column border-end">
                         <div class="form-check">
-                            <input class="form-check-input" id="selectTousCheckbox" type="checkbox" onclick="checkTous(this)">
+                            <input class="form-check-input" id="selectAllCheckbox" type="checkbox" onclick="checkAll(this)">
                         </div>
                     </td>
                     <th>

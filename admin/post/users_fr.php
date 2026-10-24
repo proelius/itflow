@@ -1,0 +1,435 @@
+<?php
+
+/*
+ * ITFlow - GET/POST request handler for user (agent) management
+ */
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_POST['add_user'])) {
+
+    validateCSRFToken();
+
+    require_once 'user_model.php';
+
+    $password = password_hash(trim($_POST['password']), PASSWORD_DEFAULT);
+    $user_specific_encryption_ciphertext = encryptUserSpecificKey(trim($_POST['password']));
+
+    mysqli_query($mysqli, "INSERT INTO users SET user_name = '$name', user_email = '$email', user_password = '$password', user_specific_encryption_ciphertext = '$user_specific_encryption_ciphertext', user_role_id = $role");
+
+    $user_id = mysqli_insert_id($mysqli);
+
+    // Ajouter Client Access (allow / deny per client)
+    if (isset($_POST['client_permission'])) {
+        foreach ($_POST['client_permission'] as $perm_client_id => $perm_type) {
+            $perm_client_id = intval($perm_client_id);
+            if ($perm_type === 'allow' || $perm_type === 'deny') {
+                mysqli_query($mysqli, "INSERT INTO user_client_permissions SET user_id = $user_id, client_id = $perm_client_id, permission_type = '$perm_type'");
+            }
+        }
+    }
+
+    if (!file_exists("../uploads/users/$user_id/")) {
+        mkdir("../uploads/users/$user_id");
+    }
+
+    // Check for and process image/photo
+    $extended_alert_description = '';
+    if (isset($_FILES['file']['tmp_name'])) {
+        if ($new_file_name = checkFileTéléverser($_FILES['file'], array('jpg', 'jpeg', 'gif', 'png', 'webp'))) {
+
+            $file_tmp_path = $_FILES['file']['tmp_name'];
+
+            // directory in which the uploaded file will be moved
+            $upload_file_dir = "../uploads/users/$user_id/";
+            $dest_path = $upload_file_dir . $new_file_name;
+            move_uploaded_file($file_tmp_path, $dest_path);
+
+            // Set Avatar
+            mysqli_query($mysqli, "UPDATE users SET user_avatar = '$new_file_name' WHERE user_id = $user_id");
+            $extended_alert_description = '. File successfully uploaded.';
+        }
+    }
+
+    // Créer Paramètres
+    mysqli_query($mysqli, "INSERT INTO user_settings SET user_id = $user_id, user_config_force_mfa = $force_mfa");
+
+    $sql = mysqli_query($mysqli,"SELECT company_name FROM companies WHERE company_id = 1");
+    $row = mysqli_fetch_assoc($sql);
+    $company_name = escapeSql($row['company_name']);
+
+    // Sanitize Config vars from load_global_settings.php
+    $config_mail_from_name = escapeSql($config_mail_from_name);
+    $config_mail_from_email = escapeSql($config_mail_from_email);
+    $config_ticket_from_email = escapeSql($config_ticket_from_email);
+    $config_login_key_secret = mysqli_real_escape_string($mysqli, $config_login_key_secret);
+    $config_base_url = escapeSql($config_base_url);
+
+    // Send user e-mail, if specified
+    if (isset($_POST['send_email']) && !empty($config_smtp_host) && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+        $password = mysqli_real_escape_string($mysqli, $_POST['password']);
+
+        // Only hand out the login key when the gate is actually enabled - same test as post/logout.php
+        $login_url = "https://$config_base_url/login.php";
+        if ($config_login_key_required == 1) {
+            $login_url .= "?key=$config_login_key_secret";
+        }
+
+        $subject = "Your new $company_name ITFlow account";
+        $body = "Hello $name,<br><br>An ITFlow account has been setup for you. Please change your password upon login. <br><br>Username: $email <br>Password: $password<br>Login URL: $login_url<br><br>--<br>$company_name - Support<br>$config_ticket_from_email";
+
+        $data = [
+            [
+                'from' => $config_mail_from_email,
+                'from_name' => $config_mail_from_name,
+                'recipient' => $email,
+                'recipient_name' => $name,
+                'subject' => $subject,
+                'body' => $body
+            ]
+        ];
+        $mail = addToMailQueue($data);
+
+        if ($mail !== true) {
+            mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Mail', notification = 'Failed to send email to $email'");
+            mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'Mail', log_action = 'Erreur', log_description = 'Failed to send email to $email regarding $subject. $mail', log_ip = '$session_ip', log_user_agent = '$session_user_agent',  log_user_id = $session_user_id, log_entity_id = $user_id");
+        }
+
+    }
+
+    logAudit("User", "Créer", "$session_name created user $name", 0, $user_id);
+
+    flashAlert("User <strong>$name</strong> created" . $extended_alert_description);
+
+    redirect();
+
+}
+
+if (isset($_POST['edit_user'])) {
+
+    validateCSRFToken();
+
+    require_once 'user_model.php';
+
+    $user_id = intval($_POST['user_id']);
+    $new_password = trim($_POST['new_password']);
+
+    // Mettre à jour Client Access (allow / deny per client)
+    mysqli_query($mysqli,"DELETE FROM user_client_permissions WHERE user_id = $user_id");
+    if (isset($_POST['client_permission'])) {
+        foreach ($_POST['client_permission'] as $perm_client_id => $perm_type) {
+            $perm_client_id = intval($perm_client_id);
+            if ($perm_type === 'allow' || $perm_type === 'deny') {
+                mysqli_query($mysqli, "INSERT INTO user_client_permissions SET user_id = $user_id, client_id = $perm_client_id, permission_type = '$perm_type'");
+            }
+        }
+    }
+
+    // Get current Avatar
+    $sql = mysqli_query($mysqli, "SELECT user_avatar FROM users WHERE user_id = $user_id");
+    $row = mysqli_fetch_assoc($sql);
+    $existing_file_name = escapeSql($row['user_avatar']);
+
+    $extended_log_description = '';
+    if (!empty($_POST['2fa'])) {
+        $two_fa = $_POST['2fa'];
+    }
+
+    if (!file_exists("../uploads/users/$user_id/")) {
+        mkdir("../uploads/users/$user_id");
+    }
+
+    // Check for and process image/photo
+    $extended_alert_description = '';
+    if (isset($_FILES['file']['tmp_name'])) {
+        if ($new_file_name = checkFileTéléverser($_FILES['file'], array('jpg', 'jpeg', 'gif', 'png', 'webp'))) {
+
+            $file_tmp_path = $_FILES['file']['tmp_name'];
+
+            // directory in which the uploaded file will be moved
+            $upload_file_dir = "../uploads/users/$user_id/";
+            $dest_path = $upload_file_dir . $new_file_name;
+            move_uploaded_file($file_tmp_path, $dest_path);
+
+            // Supprimer old file
+            unlink("../uploads/users/$user_id/$existing_file_name");
+
+            // Set Avatar
+            mysqli_query($mysqli, "UPDATE users SET user_avatar = '$new_file_name' WHERE user_id = $user_id");
+            $extended_alert_description = '. File successfully uploaded.';
+
+        }
+    }
+
+    mysqli_query($mysqli, "UPDATE users SET user_name = '$name', user_email = '$email', user_role_id = $role WHERE user_id = $user_id");
+
+    if (!empty($new_password)) {
+        $new_password = password_hash($new_password, PASSWORD_DEFAULT);
+        $user_specific_encryption_ciphertext = encryptUserSpecificKey(trim($_POST['new_password']));
+        mysqli_query($mysqli, "UPDATE users SET user_password = '$new_password', user_specific_encryption_ciphertext = '$user_specific_encryption_ciphertext' WHERE user_id = $user_id");
+        //Extended Logging
+        $extended_log_description .= ", password changed";
+    }
+
+    if (!empty($two_fa) && $two_fa == 'disable') {
+        mysqli_query($mysqli, "UPDATE users SET user_token = '' WHERE user_id = '$user_id'");
+        mysqli_query($mysqli, "INSERT INTO logs SET log_type = 'User', log_action = 'Modify', log_description = '$session_name disabled 2FA for $name', log_ip = '$session_ip', log_user_agent = '$session_user_agent', log_user_id = $session_user_id");
+    }
+
+    //Mettre à jour User Paramètres
+    mysqli_query($mysqli, "UPDATE user_settings SET user_config_force_mfa = $force_mfa WHERE user_id = $user_id");
+
+    logAudit("User", "Modifier", "$session_name edited user $name", 0, $user_id);
+
+    flashAlert("User <strong>$name</strong> updated" . $extended_alert_description);
+
+    redirect();
+
+}
+
+if (isset($_GET['activate_user'])) {
+
+    validateCSRFToken();
+
+    $user_id = intval($_GET['activate_user']);
+
+    $user_name = escapeSql(getFieldById('users', $user_id, 'user_name'));
+
+    mysqli_query($mysqli, "UPDATE users SET user_status = 1 WHERE user_id = $user_id");
+
+    logAudit("User", "Activate", "$session_name activated user $user_name", 0, $user_id);
+
+    flashAlert("User <strong>$user_name</strong> activated");
+
+    redirect();
+
+}
+
+if (isset($_GET['disable_user'])) {
+
+    validateCSRFToken();
+
+    $user_id = intval($_GET['disable_user']);
+
+    $user_name = escapeSql(getFieldById('users', $user_id, 'user_name'));
+
+    mysqli_query($mysqli, "UPDATE users SET user_status = 0 WHERE user_id = $user_id");
+
+    // Un-assign tickets. Collect them first so each one gets a history entry -
+    // otherwise a whole queue silently goes unassigned with nothing to explain it
+    $affected_ticket_ids = array();
+    $sql_affected_tickets = mysqli_query($mysqli, "SELECT ticket_id FROM tickets WHERE ticket_assigned_to = $user_id AND ticket_closed_at IS NULL");
+    while ($affected_ticket_row = mysqli_fetch_assoc($sql_affected_tickets)) {
+        $affected_ticket_ids[] = intval($affected_ticket_row['ticket_id']);
+    }
+
+    mysqli_query($mysqli, "UPDATE tickets SET ticket_assigned_to = 0 WHERE ticket_assigned_to = $user_id AND ticket_closed_at IS NULL");
+    mysqli_query($mysqli, "UPDATE recurring_tickets SET recurring_ticket_assigned_to = 0 WHERE recurring_ticket_assigned_to = $user_id");
+
+    foreach ($affected_ticket_ids as $affected_ticket_id) {
+        logTicketHistory($affected_ticket_id, "$session_name unassigned the ticket when $user_name was disabled");
+    }
+
+    logAudit("User", "Disable", "$session_name disabled user $name", 0, $user_id);
+
+    flashAlert("User <strong>$user_name</strong> disabled", 'error');
+
+    redirect();
+
+}
+
+if (isset($_GET['revoke_remember_me'])) {
+
+    validateCSRFToken();
+
+    $user_id = intval($_GET['revoke_remember_me']);
+
+    $user_name = escapeSql(getFieldById('users', $user_id, 'user_name'));
+
+    mysqli_query($mysqli, "DELETE FROM remember_tokens WHERE remember_token_user_id = $user_id");
+
+    logAudit("User", "Modifier", "$session_name revoked all remember me tokens for user $user_name", 0, $user_id);
+
+    flashAlert("User <strong>$user_name</strong> remember me tokens revoked", 'error');
+
+    redirect();
+
+}
+
+if (isset($_POST['archive_user'])) {
+
+    validateCSRFToken();
+
+    $user_id = intval($_POST['user_id']);
+    $ticket_assign = intval($_POST['ticket_assign']);
+    $password = password_hash(randomString(), PASSWORD_DEFAULT);
+
+    $user_name = escapeSql(getFieldById('users', $user_id, 'user_name'));
+
+    // Un-assign / Re-assign tickets. Same as above - collect them first so the
+    // move shows up on each ticket's history
+    $affected_ticket_ids = array();
+    $sql_affected_tickets = mysqli_query($mysqli, "SELECT ticket_id FROM tickets WHERE ticket_assigned_to = $user_id AND ticket_closed_at IS NULL AND ticket_resolved_at IS NULL");
+    while ($affected_ticket_row = mysqli_fetch_assoc($sql_affected_tickets)) {
+        $affected_ticket_ids[] = intval($affected_ticket_row['ticket_id']);
+    }
+
+    mysqli_query($mysqli, "UPDATE tickets SET ticket_assigned_to = $ticket_assign WHERE ticket_assigned_to = $user_id AND ticket_closed_at IS NULL AND ticket_resolved_at IS NULL");
+    mysqli_query($mysqli, "UPDATE recurring_tickets SET recurring_ticket_assigned_to = $ticket_assign WHERE recurring_ticket_assigned_to = $user_id");
+
+    $reassigned_to_name = $ticket_assign ? escapeSql(getFieldById('users', $ticket_assign, 'user_name')) : '';
+    foreach ($affected_ticket_ids as $affected_ticket_id) {
+        if ($reassigned_to_name) {
+            logTicketHistory($affected_ticket_id, "$session_name reassigned the ticket to $reassigned_to_name when $user_name was archived");
+        } else {
+            logTicketHistory($affected_ticket_id, "$session_name unassigned the ticket when $user_name was archived");
+        }
+    }
+
+    // Archive user query
+    mysqli_query($mysqli, "UPDATE users SET user_name = '$user_name (archived)', user_password = '$password', user_status = 0, user_specific_encryption_ciphertext = '', user_archived_at = NOW() WHERE user_id = $user_id");
+
+    logAudit("User", "Archive", "$session_name archived user $user_name", 0, $user_id);
+
+    flashAlert("User <strong>$user_name</strong> archived", 'error');
+
+    redirect();
+
+}
+
+if (isset($_POST['restore_user'])) {
+
+    validateCSRFToken();
+
+    $user_id = intval($_POST['user_id']);
+    $new_password = trim($_POST['new_password']);
+    $role = intval($_POST['role']);
+
+    $user_name = getFieldById('users', $user_id, 'user_name');
+    $user_name = escapeSql(str_replace(" (archived)", "", $user_name)); //Removed (archived) from user_name
+
+    // Restore user query
+    mysqli_query($mysqli, "UPDATE users SET user_name = '$user_name', user_status = 1, user_role_id = $role, user_archived_at = NULL WHERE user_id = $user_id");
+
+    if (!empty($new_password)) {
+        $new_password = password_hash($new_password, PASSWORD_DEFAULT);
+        $user_specific_encryption_ciphertext = encryptUserSpecificKey(trim($_POST['new_password']));
+        mysqli_query($mysqli, "UPDATE users SET user_password = '$new_password', user_specific_encryption_ciphertext = '$user_specific_encryption_ciphertext' WHERE user_id = $user_id");
+        //Extended Logging
+        $extended_log_description .= ", password changed";
+    }
+
+    logAudit("User", "Restored", "$session_name restored user $user_name", 0, $user_id);
+
+    flashAlert("User <strong>$user_name</strong> restored");
+
+    redirect();
+
+}
+
+if (isExporterRequest('export_users')) {
+
+    validateCSRFToken();
+
+    enforceAdministrationPermission();
+
+    $format = resolveExporterFormat($_POST['export_users']);
+
+    // Filtrers inherited from the users page - mirrors admin/users.php
+    $filter_summary = [];
+
+    // Archived Filtrer
+    if (isset($_POST['archived']) && $_POST['archived'] == 1) {
+        $archive_query = "user_archived_at IS NOT NULL";
+        $filter_summary['Archived'] = 'Archived only';
+    } else {
+        $archive_query = "user_archived_at IS NULL";
+    }
+
+    // Rechercher Filtrer
+    $q = escapeSql($_POST['q'] ?? '');
+    if (!empty($q)) {
+        $filter_summary['Rechercher'] = $_POST['q'];
+    }
+
+    $sql = mysqli_query(
+        $mysqli,
+        "SELECT role_name, user_created_at, user_email, user_name, user_status FROM users
+        LEFT JOIN user_roles ON user_role_id = role_id
+        WHERE (user_name LIKE '%$q%' OR user_email LIKE '%$q%')
+        AND user_type = 1
+        AND $archive_query
+        ORDER BY user_name ASC"
+    );
+
+    $num_rows = mysqli_num_rows($sql);
+
+    if ($num_rows > 0) {
+
+        guardExporterPdfRowCount($format, $num_rows);
+
+        $export = beginExporter('users', $format, "$session_company_name-Users", 'Users', summarizeExporterFiltrers($filter_summary));
+
+        while ($row = mysqli_fetch_assoc($sql)) {
+
+            $user_status = intval($row['user_status']);
+            if ($user_status == 2) {
+                $row['user_status_display'] = "Invited";
+            } elseif ($user_status == 1) {
+                $row['user_status_display'] = "Actif";
+            } else {
+                $row['user_status_display'] = "Disabled";
+            }
+
+            addExporterRow($export, $row);
+        }
+
+        finishExporter($export);
+    }
+
+    logAudit("User", "Exporter", "$session_name exported $num_rows user(s) to a " . strtoupper($format) . " file");
+
+    exit;
+
+}
+
+if (isset($_POST['ir_reset_user_password'])) {
+
+    // Incident response: allow mass reset of agent passwords
+
+    validateCSRFToken();
+
+    // Confirmer logged-in user password, for security
+    $admin_password = $_POST['admin_password'];
+    $sql = mysqli_query($mysqli, "SELECT user_password FROM users WHERE user_id = $session_user_id");
+    $userRow = mysqli_fetch_assoc($sql);
+
+    if (!password_verify($admin_password, $userRow['user_password'])) {
+        flashAlert("Incorrect password.", 'error');
+        redirect();
+    }
+
+    // Get agents/users, other than the current user
+    $sql_users = mysqli_query($mysqli, "SELECT user_email, user_id FROM users WHERE (user_archived_at IS NULL AND user_id != $session_user_id)");
+
+    // Reset passwords
+    while ($row = mysqli_fetch_assoc($sql_users)) {
+        $user_id = intval($row['user_id']);
+        $user_email = escapeSql($row['user_email']);
+        $new_password = randomString();
+        $user_specific_encryption_ciphertext = encryptUserSpecificKey(trim($new_password));
+
+        echo $user_email . " -- " . $new_password; // Show
+        $new_password = password_hash($new_password, PASSWORD_DEFAULT);
+
+        mysqli_query($mysqli, "UPDATE users SET user_password = '$new_password', user_specific_encryption_ciphertext = '$user_specific_encryption_ciphertext' WHERE user_id = $user_id");
+
+        echo "<br><br>";
+    }
+
+    logAudit("User", "Modifier", "$session_name reset ALL user passwords");
+
+    exit; // Stay on the plain text password page
+
+}

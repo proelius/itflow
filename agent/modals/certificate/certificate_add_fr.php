@@ -1,0 +1,157 @@
+<?php
+
+require_once '../../../includes/modal_header.php';
+
+$client_id = intval($_GET['client_id'] ?? 0);
+
+ob_start();
+
+?>
+<div class="modal-header bg-dark">
+    <h5 class="modal-title"><i class="fa fa-fw fa-lock me-2"></i>Nouveau Certificate</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form action="post.php" method="post" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+
+    <div class="modal-body">
+
+        <ul class="nav nav-pills nav-justified mb-3">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="pill" href="#pills-details">Details</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#pills-certificate">Certificate</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="pill" href="#pills-notes">Notes</a>
+            </li>
+        </ul>
+
+        <hr>
+
+        <div class="tab-content">
+
+            <div class="tab-pane fade show active" id="pills-details">
+
+                <?php if ($client_id) { ?>
+                    <input type="hidden" name="client_id" value="<?= $client_id ?>">
+                <?php } else { ?>
+
+                    <div class="mb-3">
+                        <label>Client <strong class="text-danger">*</strong></label>
+                        <div class="input-group">
+                                <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
+                            <select class="form-select select2" name="client_id" required>
+                                <option value="">- Select Client -</option>
+                                <?php
+
+                                $sql = mysqli_query($mysqli, "SELECT client_id, client_name FROM clients WHERE client_archived_at IS NULL " . clientScopeSql('clients.client_id') . " ORDER BY client_name ASC");
+                                while ($row = mysqli_fetch_assoc($sql)) {
+                                    $client_id_select = intval($row['client_id']);
+                                    $client_name = escapeHtml($row['client_name']); ?>
+                                    <option <?php if ($client_id == $client_id_select) { echo "selected"; } ?> value="<?= $client_id_select ?>"><?= $client_name ?></option>
+
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+
+                <?php } ?>
+
+                <div class="mb-3">
+                    <label>Certificate Name <strong class="text-danger">*</strong></label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
+                        <input type="text" class="form-control" name="name" placeholder="Certificate name" maxlength="200" required autofocus>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Description</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-align-left"></i></span>
+                        <input type="text" class="form-control" name="description" placeholder="Short Description">
+                    </div>
+                </div>
+
+                <?php if ($client_id) { ?>
+                <div class="mb-3">
+                    <label>Domain</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-globe"></i></span>
+                        <select class="form-select select2" name="domain_id">
+                            <option value="">- Domain -</option>
+                            <?php
+                            $domains_sql = mysqli_query($mysqli, "SELECT domain_id, domain_name FROM domains WHERE domain_archived_at IS NULL AND domain_client_id = $client_id ORDER BY domain_name ASC");
+                            while ($domain_row = mysqli_fetch_assoc($domains_sql)) {
+                                $domain_id = intval($domain_row['domain_id']);
+                                $domain_name = escapeHtml($domain_row['domain_name']);
+                                echo "<option value=\"$domain_id\">$domain_name</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <?php } ?>
+
+            </div>
+
+            <div class="tab-pane fade" id="pills-certificate">
+
+                <div class="mb-3">
+                    <label>Domain <strong class="text-danger">*</strong></label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-globe"></i>&nbsp;https://</span>
+                        <input type="text" class="form-control" name="domain" id="domain" placeholder="FQDN" maxlength="200" required>
+                            <button type="button" class="btn btn-secondary" onclick="fetchSSL('new')"><i class="fas fa-fw fa-sync-alt"></i></button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Issued By </label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-building"></i></span>
+                        <input type="text" class="form-control" name="issued_by" id="issuedBy" placeholder="Issued By" maxlength="200">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Expire Date</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-calendar-times"></i></span>
+                        <input type="date" class="form-control" name="expire" id="expire" max="2999-12-31">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Public Key </label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-key"></i></span>
+                        <textarea class="form-control" rows="8" name="public_key" id="publicKey" placeholder="-----BEGIN CERTIFICATE-----"></textarea>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="tab-pane fade" id="pills-notes">
+                <div class="mb-3">
+                    <textarea class="form-control" rows="12" placeholder="Enter some notes" name="notes"></textarea>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="modal-footer">
+        <button type="submit" name="add_certificate" class="btn btn-primary text-bold"><i class="fa fa-check"></i> Créer</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Annuler</button>
+    </div>
+</form>
+
+<script src="/agent/js/certificate_fetch_ssl.js"></script>
+
+<?php
+
+require_once '../../../includes/modal_footer.php';

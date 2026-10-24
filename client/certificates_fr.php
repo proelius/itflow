@@ -13,18 +13,18 @@ enforceContactCan('itdoc');
 $certificates_sql = mysqli_query($mysqli, "SELECT certificate_id, certificate_name, certificate_domain, certificate_issued_by, certificate_expire FROM certificates WHERE certificate_client_id = $session_client_id AND certificate_archived_at IS NULL ORDER BY certificate_expire ASC");
 ?>
 
-    <h3>Web Certificats</h3>
+    <h3>Web Certificates</h3>
     <div class="row">
 
         <div class="col-md-10">
 
             <?php if (mysqli_num_rows($certificates_sql) == 0) { ?>
-                <?= portalEmptyÉtat('There are no web certificates on this account yet.') ?>
+                <?= portalEmptyState('There are no web certificates on this account yet.') ?>
             <?php } else { ?>
             <table class="table table-bordered border border-dark">
                 <thead class="table-dark">
                 <tr>
-                    <th>Certificate Nom</th>
+                    <th>Certificate Name</th>
                     <th>FQDN</th>
                     <th>Issuer</th>
                     <th>Expiry</th>

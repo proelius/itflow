@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 enforceContactCan('accounting');
 
 $quotes_sql = mysqli_query($mysqli, "SELECT quote_amount, quote_date, quote_id, quote_number, quote_prefix, quote_scope, quote_status,
-    quote_url_key FROM quotes WHERE quote_client_id = $session_client_id AND quote_status != 'Brouillon' ORDER BY quote_date DESC");
+    quote_url_key FROM quotes WHERE quote_client_id = $session_client_id AND quote_status != 'Draft' ORDER BY quote_date DESC");
 ?>
 
 <h3>Devis</h3>
@@ -22,14 +22,14 @@ $quotes_sql = mysqli_query($mysqli, "SELECT quote_amount, quote_date, quote_id, 
     <div class="col-md-10">
 
         <?php if (mysqli_num_rows($quotes_sql) == 0) { ?>
-            <?= portalEmptyÉtat('There are no quotes on this account yet.') ?>
+            <?= portalEmptyState('There are no quotes on this account yet.') ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
                 <th>#</th>
                 <th>Scope</th>
-                <th>Montant</th>
+                <th>Amount</th>
                 <th>Date</th>
                 <th>Statut</th>
             </tr>
@@ -53,13 +53,13 @@ $quotes_sql = mysqli_query($mysqli, "SELECT quote_amount, quote_date, quote_id, 
                     $quote_scope_display = $quote_scope;
                 }
 
-                if ($quote_status == "Envoyée") {
+                if ($quote_status == "Sent") {
                     $quote_badge_color = "warning";
                 } elseif ($quote_status == "Voired") {
                     $quote_badge_color = "primary";
-                } elseif ($quote_status == "Accepté") {
+                } elseif ($quote_status == "Accepted") {
                     $quote_badge_color = "success";
-                } elseif ($quote_status == "Refusé") {
+                } elseif ($quote_status == "Declined") {
                     $quote_badge_color = "danger";
                 } elseif ($quote_status == "Invoiced") {
                     $quote_badge_color = "info";

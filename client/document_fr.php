@@ -7,7 +7,6 @@
 header("Content-Security-Policy: default-src 'self'; img-src 'self' data:");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
 
 enforceContactCan('itdoc');
 
@@ -96,10 +95,10 @@ if (mysqli_num_rows($sql_files) > 0) {
                     </div>
                     <div class="col-auto">
                         <a href="<?= $file_view_url ?>" target="_blank" class="btn btn-primary">
-                            <i class="fas fa-external-link-alt me-2"></i>Open in New Tab
+                            <i class="fas fa-external-link-alt me-2"></i>Ouvert in Nouveau Tab
                         </a>
                         <a href="<?= $file_download_url ?>" class="btn btn-secondary">
-                            <i class="fas fa-download me-2"></i>Download
+                            <i class="fas fa-download me-2"></i>Télécharger
                         </a>
                     </div>
                 </div>
@@ -124,10 +123,10 @@ if (mysqli_num_rows($sql_files) > 0) {
                     </div>
                     <div class="col-auto">
                         <a href="<?= $file_view_url ?>" target="_blank" class="btn btn-primary">
-                            <i class="fas fa-external-link-alt me-2"></i>View Full Size
+                            <i class="fas fa-external-link-alt me-2"></i>Voir Full Size
                         </a>
                         <a href="<?= $file_download_url ?>" class="btn btn-secondary">
-                            <i class="fas fa-download me-2"></i>Download
+                            <i class="fas fa-download me-2"></i>Télécharger
                         </a>
                     </div>
                 </div>
@@ -153,10 +152,10 @@ if (mysqli_num_rows($sql_files) > 0) {
                     </div>
                     <div class="col-auto">
                         <a href="<?= $file_download_url ?>" class="btn btn-primary">
-                            <i class="fas fa-external-link-alt me-2"></i>Open File
+                            <i class="fas fa-external-link-alt me-2"></i>Ouvert File
                         </a>
                         <a href="<?= $file_download_url ?>" class="btn btn-secondary">
-                            <i class="fas fa-download me-2"></i>Download
+                            <i class="fas fa-download me-2"></i>Télécharger
                         </a>
                     </div>
                 </div>
@@ -172,7 +171,7 @@ if (mysqli_num_rows($sql_files) > 0) {
                             <strong>Type:</strong> <?= strtoupper($file_ext) ?> File<br>
                             <strong>Size:</strong> <?= $file_size_formatted ?>
                         </p>
-                        <?php if (!empty($document_content) && $document_content != "<p>Uploaded file: <strong>$file_name</strong></p><p>$document_description</p>") { ?>
+                        <?php if (!empty($document_content) && $document_content != "<p>Téléversered file: <strong>$file_name</strong></p><p>$document_description</p>") { ?>
                             <div class="mt-3">
                                 <?= $document_content ?>
                             </div>

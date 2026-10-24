@@ -7,7 +7,6 @@
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
 
 enforceContactCan('itdoc');
 
@@ -18,7 +17,7 @@ $assets_sql = mysqli_query($mysqli, "SELECT asset_description, asset_id, asset_m
 
     <div class="row">
         <div class="col">
-            <h3>Assets</h3>
+            <h3>Actifs</h3>
         </div>
     </div>
 
@@ -39,7 +38,7 @@ $assets_sql = mysqli_query($mysqli, "SELECT asset_description, asset_id, asset_m
                     <th>Assigned</th>
                     <th>Purchase</th>
                     <th>Warranty</th>
-                    <th>Status</th>
+                    <th>Statut</th>
                     <th>URI</th>
                 </tr>
                 </thead>

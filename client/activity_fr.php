@@ -52,7 +52,7 @@ $sql_activity = mysqli_query(
 
         <?php if ($total_records == 0) { ?>
 
-            <?= portalEmptyÉtat('Nothing has been recorded on your account yet.') ?>
+            <?= portalEmptyState('Nothing has been recorded on your account yet.') ?>
 
         <?php } else { ?>
 
@@ -83,7 +83,7 @@ $sql_activity = mysqli_query(
                     // Sign-ins are the rows people scan this page for, so they
                     // get the accent rather than sitting in the same grey as
                     // every password change
-                    if ($row['log_type'] === 'Client Connexion') {
+                    if ($row['log_type'] === 'Client Login') {
                         $log_badge_color = 'primary';
                         $log_label = 'Sign-in';
                     } else {

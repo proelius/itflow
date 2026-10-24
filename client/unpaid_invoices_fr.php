@@ -1,7 +1,7 @@
 <?php
 /*
  * Client Portal
- * Invoices for PTC
+ * Factures for PTC
  */
 
 $bulk_payment_enabled = 0; // Not Yet Enabled
@@ -9,23 +9,22 @@ $bulk_payment_enabled = 0; // Not Yet Enabled
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
 
 
 enforceContactCan('accounting');
 
 $invoices_sql = mysqli_query($mysqli, "SELECT invoice_amount, invoice_date, invoice_due, invoice_id, invoice_number, invoice_prefix,
-    invoice_scope, invoice_status, invoice_url_key FROM invoices WHERE invoice_client_id = $session_client_id AND (invoice_status = 'Viewed' OR invoice_status = 'Sent' OR invoice_status = 'Partial') ORDER BY invoice_date DESC");
+    invoice_scope, invoice_status, invoice_url_key FROM invoices WHERE invoice_client_id = $session_client_id AND (invoice_status = 'Voired' OR invoice_status = 'Sent' OR invoice_status = 'Partial') ORDER BY invoice_date DESC");
 
 
-// Payment Provider Active Query
+// Payment Provider Actif Query
 $sql_payment_provider = mysqli_query($mysqli, "SELECT payment_provider_active, payment_provider_id, payment_provider_threshold FROM payment_providers WHERE payment_provider_active = 1 LIMIT 1;");
 $row = mysqli_fetch_assoc($sql_payment_provider);
 $payment_provider_id = intval($row['payment_provider_id']);
 $payment_provider_active = intval($row['payment_provider_active']);
 $payment_provider_threshold = floatval($row['payment_provider_threshold']);
 
-// Saved Payment Methods
+// Enregistrerd Payment Methods
 $sql_saved_payment_methods = mysqli_query($mysqli, "
     SELECT payment_provider_name, saved_payment_description, saved_payment_id FROM client_saved_payment_methods
     LEFT JOIN payment_providers
@@ -36,8 +35,8 @@ $sql_saved_payment_methods = mysqli_query($mysqli, "
 
 // Get Balance
 // Billing Card Queries
- //Add up all the payments for the invoice and get the total amount paid to the invoice
-$sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Draft' AND invoice_status != 'Cancelled' AND invoice_status != 'Non-Billable'");
+ //Ajouter up all the payments for the invoice and get the total amount paid to the invoice
+$sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Draft' AND invoice_status != 'Annulerled' AND invoice_status != 'Non-Billable'");
 $row = mysqli_fetch_assoc($sql_invoice_amounts);
 
 $invoice_amounts = floatval($row['invoice_amounts']);
@@ -53,7 +52,7 @@ $balance = $invoice_amounts - $amount_paid;
 
 <div class="row">
     <div class="col-5">
-        <h3>Unpaid Invoices</h3>
+        <h3>Unpaid Factures</h3>
     </div>
     <div class="col-5">
         <?php if ($payment_provider_active && $bulk_payment_enabled) { // Currently not implmented fully ?>
@@ -62,7 +61,7 @@ $balance = $invoice_amounts - $amount_paid;
             <a class="dropdown-item" href="//<?= $config_base_url ?>/guest/guest_pay_invoice_stripe.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>">Enter Card Manually</a>
             <?php
             if (mysqli_num_rows($sql_saved_payment_methods) > 0) { ?>
-                <h6 class="dropdown-header text-start">Pay with a Saved Card</h6>
+                <h6 class="dropdown-header text-start">Pay with a Enregistrerd Card</h6>
             <?php
             while ($row = mysqli_fetch_assoc($sql_saved_payment_methods)) {
                 $saved_payment_id = intval($row['saved_payment_id']);
@@ -74,7 +73,7 @@ $balance = $invoice_amounts - $amount_paid;
             <?php }
             } ?>
         </div>
-        <?php } // End Payment Provider Active Check ?>
+        <?php } // End Payment Provider Actif Check ?>
     </div>
 </div>
 <div class="row">
@@ -116,7 +115,7 @@ $balance = $invoice_amounts - $amount_paid;
                 }
 
                 $now = time();
-                if (($invoice_status == "Sent" || $invoice_status == "Partial" || $invoice_status == "Viewed") && strtotime($invoice_due) + 86400 < $now) {
+                if (($invoice_status == "Sent" || $invoice_status == "Partial" || $invoice_status == "Voired") && strtotime($invoice_due) + 86400 < $now) {
                     $overdue_color = "text-danger fw-bold";
                 } else {
                     $overdue_color = "";
@@ -124,13 +123,13 @@ $balance = $invoice_amounts - $amount_paid;
 
                 if ($invoice_status == "Sent") {
                     $invoice_badge_color = "warning";
-                } elseif ($invoice_status == "Viewed") {
+                } elseif ($invoice_status == "Voired") {
                     $invoice_badge_color = "info";
                 } elseif ($invoice_status == "Partial") {
                     $invoice_badge_color = "primary";
                 } elseif ($invoice_status == "Paid") {
                     $invoice_badge_color = "success";
-                } elseif ($invoice_status == "Cancelled") {
+                } elseif ($invoice_status == "Annulerled") {
                     $invoice_badge_color = "danger";
                 } else{
                     $invoice_badge_color = "secondary";
@@ -146,7 +145,7 @@ $balance = $invoice_amounts - $amount_paid;
                     <td>
                         <?php
                         if ($invoice_status !== "Paid" &&
-                            $invoice_status  !== "Cancelled" &&
+                            $invoice_status  !== "Annulerled" &&
                             $invoice_status !== "Draft" &&
                             $payment_provider_id &&
                             (
@@ -159,7 +158,7 @@ $balance = $invoice_amounts - $amount_paid;
                             <a class="dropdown-item" href="//<?= $config_base_url ?>/guest/guest_pay_invoice_stripe.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>">Enter Card Manually</a>
 
                             <?php
-                            // Saved Payment Methods
+                            // Enregistrerd Payment Methods
                             $sql_saved_payment_methods = mysqli_query($mysqli, "
                                 SELECT payment_provider_name, saved_payment_description, saved_payment_id FROM client_saved_payment_methods
                                 LEFT JOIN payment_providers
@@ -168,7 +167,7 @@ $balance = $invoice_amounts - $amount_paid;
                                 AND payment_provider_active = 1;
                             ");
                             if (mysqli_num_rows($sql_saved_payment_methods) > 0) { ?>
-                                <h6 class="dropdown-header text-start">Pay with a Saved Card</h6>
+                                <h6 class="dropdown-header text-start">Pay with a Enregistrerd Card</h6>
                             <?php
                             while ($row = mysqli_fetch_assoc($sql_saved_payment_methods)) {
                                 $saved_payment_id = intval($row['saved_payment_id']);

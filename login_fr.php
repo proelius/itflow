@@ -14,8 +14,6 @@ require_once "functions.php";
 require_once "libs/totp/totp.php";
 
 require_once __DIR__ . "/includes/session_init.php";
-require_once "lang/fr/common_strings.php";
-
 
 if (!isset($config_enable_setup) || $config_enable_setup == 1) {
     header("Location: /setup");
@@ -73,7 +71,7 @@ if ($failed_login_count >= 15) {
     exit("<h2>$config_app_name</h2>Your IP address has been blocked due to repeated failed login attempts. Please try again later. <br><br>This action has been logged.");
 }
 
-// Settings
+// Paramètres
 $sql_settings = mysqli_query($mysqli, "
     SELECT settings.*, companies.company_name, companies.company_logo
     FROM settings
@@ -428,7 +426,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                             SELECT COUNT(log_id) AS ip_previous_logins
                             FROM logs
                             WHERE log_type = 'Login'
-                              AND log_action = 'Success'
+                              AND log_action = 'Succès'
                               AND log_ip = '$session_ip'
                               AND log_user_id = $user_id
                         "));
@@ -438,7 +436,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                             SELECT COUNT(log_id) AS ua_previous_logins
                             FROM logs
                             WHERE log_type = 'Login'
-                              AND log_action = 'Success'
+                              AND log_action = 'Succès'
                               AND log_user_agent = '$session_user_agent'
                               AND log_user_id = $user_id
                         "));
@@ -446,7 +444,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
                         if (!empty($config_smtp_provider) && $ip_previous_logins == 0 && $ua_prev_logins == 0) {
                             $subject = "$config_app_name new login for $user_name";
-                            $body    = "Hi $user_name, <br><br>A recent successful login to your $config_app_name account was considered a little unusual. If this was you, you can safely ignore this email!<br><br>IP Address: $session_ip<br> User Agent: $session_user_agent <br><br>If you did not perform this login, your credentials may be compromised. <br><br>Thanks, <br>ITFlow";
+                            $body    = "Hi $user_name, <br><br>A recent successful login to your $config_app_name account was considered a little unusual. If this was you, you can safely ignore this email!<br><br>IP Ajouterress: $session_ip<br> User Agent: $session_user_agent <br><br>If you did not perform this login, your credentials may be compromised. <br><br>Thanks, <br>ITFlow";
 
                             $data = [[
                                 'from'           => $config_mail_from_email,
@@ -461,9 +459,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
                         // Option B: set session_user_id BEFORE logAudit()
                         $session_user_id = $user_id;
-                        logAudit("Login", "Success", "$user_name successfully logged in $extended_log", 0, $user_id);
+                        logAudit("Login", "Succès", "$user_name successfully logged in $extended_log", 0, $user_id);
 
-                        // New session ID for the authenticated session (CWE-384)
+                        // Nonuveau session ID for the authenticated session (CWE-384)
                         session_regenerate_id(true);
 
                         $_SESSION['user_id']    = $user_id;
@@ -546,7 +544,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                                                     : time()
                         ];
 
-                        // Now that we've transferred what we need, it's safe to clear the dual-role pending session.
+                        // Nonw that we've transferred what we need, it's safe to clear the dual-role pending session.
                         unset($_SESSION['pending_dual_login']);
 
                         $token_field = "
@@ -561,7 +559,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
                         if ($mfa_locked) {
 
-                            // No log row and no email while locked out. Both are
+                            // Non log row and no email while locked out. Both are
                             // per-request writes the attacker controls, and logging here
                             // would keep pushing the 10 minute window forward so the
                             // lockout could never clear. The MFA Failed rows that
@@ -580,7 +578,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                             logAudit("Login", "MFA Failed", "$user_email failed MFA", 0, $user_id);
 
                             if (!empty($config_smtp_provider)) {
-                                $subject = "Important: $config_app_name failed 2FA login attempt for $user_name";
+                                $subject = "Importerant: $config_app_name failed 2FA login attempt for $user_name";
                                 $body    = "Hi $user_name, <br><br>A recent login to your $config_app_name account was unsuccessful due to an incorrect 2FA code. If you did not attempt this login, your credentials may be compromised. <br><br>Thanks, <br>ITFlow";
                                 $data    = [[
                                     'from'           => $config_mail_from_email,
@@ -629,7 +627,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
                         if ($client_id && $contact_id && $user_auth_method === 'local') {
 
-                            // New session ID for the authenticated session (CWE-384)
+                            // Nonuveau session ID for the authenticated session (CWE-384)
                             session_regenerate_id(true);
 
                             $_SESSION['client_logged_in'] = true;
@@ -645,7 +643,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
                             // Option B: set session_user_id BEFORE logAudit()
                             $session_user_id = $user_id;
-                            logAudit("Client Login", "Success", "Client contact $user_email successfully logged in locally", $client_id, $user_id);
+                            logAudit("Client Login", "Succès", "Client contact $user_email successfully logged in locally", $client_id, $user_id);
 
                             // Clear any pending sessions (avoid stale dual-role/MFA state)
                             unset($_SESSION['pending_dual_login']);

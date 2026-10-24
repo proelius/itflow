@@ -1,0 +1,47 @@
+<?php
+
+require_once '../../../includes/modal_header.php';
+
+$invoice_id = intval($_GET['invoice_id']);
+
+$sql = mysqli_query($mysqli, "SELECT invoice_client_id, invoice_number, invoice_prefix FROM invoices WHERE invoice_id = $invoice_id LIMIT 1");
+
+$row = mysqli_fetch_assoc($sql);
+$invoice_prefix = escapeHtml($row['invoice_prefix']);
+$invoice_number = intval($row['invoice_number']);
+$client_id = intval($row['invoice_client_id']);
+
+enforceClientAccess();
+
+ob_start();
+
+?>
+
+<div class="modal-header bg-dark">
+    <h5 class="modal-title"><i class="fas fa-fw fa-copy me-2"></i>Invoice <?= "$invoice_prefix$invoice_number" ?> to Recurring Invoice</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form action="post.php" method="post" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="invoice_id" value="<?= $invoice_id ?>">
+    <div class="modal-body">
+        <div class="mb-3">
+            <label>Frequency <strong class="text-danger">*</strong></label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-clock"></i></span>
+                <select class="form-select select2" name="frequency" required>
+                    <option value="">- Frequency -</option>
+                    <option value="month">Monthly</option>
+                    <option value="year">Yearly</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="submit" name="add_invoice_recurring" class="btn btn-primary text-bold"><i class="fas fa-check me-2"></i>Créer Recurring Invoice</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i>Annuler</button>
+    </div>
+</form>
+
+<?php
+require_once '../../../includes/modal_footer.php';

@@ -1,11 +1,10 @@
 <?php
 /*
  * Client Portal
- * New ticket form
+ * Nouveau ticket form
  */
 
 require_once 'includes/inc_all.php';
-require_once "../lang/fr/common_strings.php";
 
 // Allow clients to select a related asset when raising a ticket
 $sql_assets = mysqli_query($mysqli, "SELECT asset_id, asset_name, asset_type FROM assets WHERE asset_contact_id = $session_contact_id AND asset_client_id = $session_client_id AND asset_archived_at IS NULL ORDER BY asset_name ASC");
@@ -19,7 +18,7 @@ $sql_assets = mysqli_query($mysqli, "SELECT asset_id, asset_name, asset_type FRO
         <li class="breadcrumb-item">
             <a href="tickets.php">Tickets</a>
         </li>
-        <li class="breadcrumb-item active">New Ticket</li>
+        <li class="breadcrumb-item active">Nouveau Ticket</li>
     </ol>
 
     <h3>Raise a new ticket</h3>

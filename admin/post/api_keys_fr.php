@@ -1,0 +1,123 @@
+<?php
+
+/*
+ * ITFlow - GET/POST request handler for API settings
+ */
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_POST['add_api_key'])) {
+
+    validateCSRFToken();
+
+    $name = escapeSql($_POST['name']);
+    $expire = escapeSql($_POST['expire']);
+    $user_id = intval($_POST['run_as_user']);
+    $secret = escapeSql($_POST['key']); // API Key
+
+    // Credential decryption password
+    $apikey_specific_encryption_ciphertext = encryptUserSpecificKey(trim($_POST['password']));
+
+    mysqli_query($mysqli,"INSERT INTO api_keys SET api_key_name = '$name', api_key_secret = '$secret', api_key_decrypt_hash = '$apikey_specific_encryption_ciphertext', api_key_expire = '$expire', api_key_user_id = $user_id");
+
+    $api_key_id = mysqli_insert_id($mysqli);
+
+    logAudit("API Key", "Créer", "$session_name created API key $name set to expire on $expire", 0, $api_key_id);
+
+    flashAlert("API Key <strong>$name</strong> created");
+
+    redirect();
+
+}
+
+if (isset($_POST['edit_api_key'])) {
+
+    validateCSRFToken();
+
+    $api_key_id = intval($_POST['api_key_id']);
+    $name = escapeSql($_POST['name']);
+    $expire = escapeSql($_POST['expire']);
+    $user_id = intval($_POST['run_as_user']);
+
+    mysqli_query($mysqli,"UPDATE api_keys SET api_key_name = '$name', api_key_expire = '$expire', api_key_user_id = $user_id WHERE api_key_id = $api_key_id");
+
+    logAudit("API Key", "Modifier", "$session_name edited API key $name", 0, $api_key_id);
+
+    flashAlert("API Key <strong>$name</strong> updated");
+
+    redirect();
+
+}
+
+if (isset($_GET['revoke_api_key'])) {
+
+    validateCSRFToken();
+
+    $api_key_id = intval($_GET['revoke_api_key']);
+
+    // Get API Key Name
+    $row = mysqli_fetch_assoc(mysqli_query($mysqli,"SELECT api_key_name FROM api_keys WHERE api_key_id = $api_key_id"));
+    $api_key_name = escapeSql($row['api_key_name']);
+
+    mysqli_query($mysqli,"UPDATE api_keys SET api_key_expire = NOW() WHERE api_key_id = $api_key_id");
+
+    logAudit("API Key", "Revoke", "$session_name revoked API key $name", 0);
+
+    flashAlert("API Key <strong>$name</strong> revoked", 'error');
+
+    redirect();
+
+}
+
+if (isset($_GET['delete_api_key'])) {
+
+    validateCSRFToken();
+
+    $api_key_id = intval($_GET['delete_api_key']);
+
+    // Get API Key Name
+    $row = mysqli_fetch_assoc(mysqli_query($mysqli,"SELECT api_key_name FROM api_keys WHERE api_key_id = $api_key_id"));
+    $api_key_name = escapeSql($row['api_key_name']);
+
+    mysqli_query($mysqli,"DELETE FROM api_keys WHERE api_key_id = $api_key_id");
+
+    logAudit("API Key", "Supprimer", "$session_name deleted API key $name", 0);
+
+    flashAlert("API Key <strong>$name</strong> deleted", 'error');
+
+    redirect();
+
+}
+
+if (isset($_POST['bulk_delete_api_keys'])) {
+
+    validateCSRFToken();
+
+    if (isset($_POST['api_key_ids'])) {
+
+        $count = count($_POST['api_key_ids']);
+
+        // Cycle through array and delete each record
+        foreach ($_POST['api_key_ids'] as $api_key_id) {
+
+            $api_key_id = intval($api_key_id);
+
+            // Get API Key Name
+            $row = mysqli_fetch_assoc(mysqli_query($mysqli,"SELECT api_key_name FROM api_keys WHERE api_key_id = $api_key_id"));
+            $api_key_name = escapeSql($row['api_key_name']);
+
+            mysqli_query($mysqli, "DELETE FROM api_keys WHERE api_key_id = $api_key_id");
+
+            logAudit("API Key", "Supprimer", "$session_name deleted API key $name", 0);
+
+        }
+
+        logAudit("API Key", "Bulk Supprimer", "$session_name deleted $count API key(s)");
+
+        flashAlert("Supprimerd <strong>$count</strong> API keys(s)", 'error');
+
+    }
+
+    redirect();
+
+}

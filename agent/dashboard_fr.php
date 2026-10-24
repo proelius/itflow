@@ -15,7 +15,7 @@ if (isset($_GET['enable_technical'])) {
     mysqli_query($mysqli, "UPDATE user_settings SET user_config_dashboard_technical_enable = $enable_technical WHERE user_id = $session_user_id");
 }
 
-// Fetch User Tableau de bord Settings
+// Fetch User Tableau de bord Paramètres
 $sql_user_dashboard_settings = mysqli_query($mysqli, "SELECT user_config_dashboard_financial_enable, user_config_dashboard_technical_enable FROM user_settings WHERE user_id = $session_user_id");
 $row = mysqli_fetch_assoc($sql_user_dashboard_settings);
 $user_config_dashboard_financial_enable = intval($row['user_config_dashboard_financial_enable']);
@@ -101,7 +101,7 @@ if ($user_config_dashboard_financial_enable == 1) {
     $row = mysqli_fetch_assoc($sql_total_expenses);
     $total_expenses = floatval($row['total_expenses']);
 
-    $sql_invoice_totals = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_totals FROM invoices WHERE invoice_status != 'Brouillon' AND invoice_status != 'Annulerled' AND invoice_status != 'Non-Billable' AND YEAR(invoice_date) = $year");
+    $sql_invoice_totals = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_totals FROM invoices WHERE invoice_status != 'Draft' AND invoice_status != 'Annulerled' AND invoice_status != 'Non-Billable' AND YEAR(invoice_date) = $year");
     $row = mysqli_fetch_assoc($sql_invoice_totals);
     $invoice_totals = floatval($row['invoice_totals']);
 
@@ -109,7 +109,7 @@ if ($user_config_dashboard_financial_enable == 1) {
     $row = mysqli_fetch_assoc($sql_total_payments_to_invoices_all_years);
     $total_payments_to_invoices_all_years = floatval($row['total_payments_to_invoices_all_years']);
 
-    $sql_invoice_totals_all_years = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_totals_all_years FROM invoices WHERE invoice_status != 'Brouillon' AND invoice_status != 'Annulerled' AND invoice_status != 'Non-Billable'");
+    $sql_invoice_totals_all_years = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_totals_all_years FROM invoices WHERE invoice_status != 'Draft' AND invoice_status != 'Annulerled' AND invoice_status != 'Non-Billable'");
     $row = mysqli_fetch_assoc($sql_invoice_totals_all_years);
     $invoice_totals_all_years = floatval($row['invoice_totals_all_years']);
 
@@ -198,7 +198,7 @@ if ($user_config_dashboard_financial_enable == 1) {
             <a class="small-box bg-danger" href="expenses.php?dtf=<?= $year ?>-01-01&dtt=<?= $year ?>-12-31">
                 <div class="inner">
                     <h3><?= numfmt_format_currency($currency_format, $total_expenses, "$session_company_currency") ?></h3>
-                    <p>Dépenses</p>
+                    <p>Expenses</p>
                 </div>
                 <div class="icon">
                     <i class="fa fa-shopping-cart"></i>
@@ -310,7 +310,7 @@ if ($user_config_dashboard_financial_enable == 1) {
             <a class="small-box bg-secondary" href="vendors.php?dtf=<?= $year ?>-01-01&dtt=<?= $year ?>-12-31">
                 <div class="inner">
                     <h3><?= $vendors_added ?></h3>
-                    <p>Nouveau Fournisseurs</p>
+                    <p>Nouveau Vendors</p>
                 </div>
                 <div class="icon">
                     <i class="fa fa-building"></i>
@@ -375,7 +375,7 @@ if ($user_config_dashboard_financial_enable == 1) {
         <div class="col-lg-4">
             <div class="card card-dark mb-3">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fa fa-fw fa-shopping-cart me-2"></i>Dépenses by Category <small>(Top 5)</small></h3>
+                    <h3 class="card-title"><i class="fa fa-fw fa-shopping-cart me-2"></i>Expenses by Category <small>(Top 5)</small></h3>
                     <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
                             <i class="fas fa-times"></i>
@@ -393,7 +393,7 @@ if ($user_config_dashboard_financial_enable == 1) {
         <div class="col-lg-4">
             <div class="card card-dark mb-3">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fa fa-fw fa-building me-2"></i>Dépenses by Vendor <small>(Top 5)</small></h3>
+                    <h3 class="card-title"><i class="fa fa-fw fa-building me-2"></i>Expenses by Vendor <small>(Top 5)</small></h3>
                     <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
                             <i class="fas fa-times"></i>
@@ -411,7 +411,7 @@ if ($user_config_dashboard_financial_enable == 1) {
         <div class="col-md-4">
             <div class="card card-dark mb-3">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fa fa-fw fa-piggy-bank me-2"></i>Account Soldes</h3>
+                    <h3 class="card-title"><i class="fa fa-fw fa-piggy-bank me-2"></i>Account Balances</h3>
                     <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
                             <i class="fas fa-times"></i>
@@ -473,7 +473,7 @@ if ($user_config_dashboard_financial_enable == 1) {
                                 <th>Date</th>
                                 <th>Customer</th>
                                 <th>Invoice</th>
-                                <th class="text-end">Montant</th>
+                                <th class="text-end">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -500,7 +500,7 @@ if ($user_config_dashboard_financial_enable == 1) {
         <div class="col-md-4">
             <div class="card card-dark mb-3">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="fas fa-fw fa-shopping-cart me-2"></i>Latest Dépenses</h3>
+                    <h3 class="card-title"><i class="fas fa-fw fa-shopping-cart me-2"></i>Latest Expenses</h3>
                     <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-lte-toggle="card-remove">
                             <i class="fas fa-times"></i>
@@ -514,7 +514,7 @@ if ($user_config_dashboard_financial_enable == 1) {
                                 <th>Date</th>
                                 <th>Vendor</th>
                                 <th>Category</th>
-                                <th class="text-end">Montant</th>
+                                <th class="text-end">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -671,7 +671,7 @@ if ($user_config_dashboard_technical_enable == 1) {
             <a class="small-box bg-warning" href="domains.php?expire_days=30&sort=domain_expire&order=ASC">
                 <div class="inner">
                     <h3><?= $expiring_domains ?></h3>
-                    <p>Expiring Domaines <small>30 Day</small></p>
+                    <p>Expiring Domains <small>30 Day</small></p>
                 </div>
                 <div class="icon">
                     <i class="fa fa-globe"></i>
@@ -737,10 +737,10 @@ if ($user_config_dashboard_technical_enable == 1) {
                             <thead>
                                 <tr>
                                     <th>Number</th>
-                                    <th>Sujet</th>
+                                    <th>Subject</th>
                                     <th>Client</th>
                                     <th>Contact</th>
-                                    <th>Priorité</th>
+                                    <th>Priority</th>
                                     <th>Statut</th>
                                     <th>Last Response</th>
                                 </tr>
@@ -891,7 +891,7 @@ if ($user_config_dashboard_technical_enable == 1) {
                             <?php
                             $largest_invoice_month = 0;
                             for ($month = 1; $month <= 12; $month++) {
-                                $sql_projected = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amount_for_month FROM invoices WHERE YEAR(invoice_due) = $year AND MONTH(invoice_due) = $month AND invoice_status != 'Annulerled' AND invoice_status != 'Brouillon' AND invoice_status != 'Non-Billable'");
+                                $sql_projected = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amount_for_month FROM invoices WHERE YEAR(invoice_due) = $year AND MONTH(invoice_due) = $month AND invoice_status != 'Annulerled' AND invoice_status != 'Draft' AND invoice_status != 'Non-Billable'");
                                 $row = mysqli_fetch_assoc($sql_projected);
                                 $invoice_for_month = floatval($row['invoice_amount_for_month']);
 
@@ -1027,9 +1027,9 @@ if ($user_config_dashboard_technical_enable == 1) {
                     <?php
                     // Cash basis, matching the Cash Flow chart above and the Income Summary
                     // report - payments carry their invoice's category, and standalone
-                    // revenues count too. Keying off invoice_status = 'Payée' instead would
+                    // revenues count too. Keying off invoice_status = 'Paid' instead would
                     // drop every partially paid invoice and every revenue from the chart.
-                    mysqli_query($mysqli, "CREATE TEMPORARY TABLE TopCatégories
+                    mysqli_query($mysqli, "CREATE TEMPORARY TABLE TopCategories
                         SELECT category_name, category_id, SUM(income.amount) AS total_income
                         FROM (SELECT invoice_category_id AS income_category_id, payment_amount AS amount
                               FROM payments
@@ -1042,7 +1042,7 @@ if ($user_config_dashboard_technical_enable == 1) {
                         INNER JOIN categories ON category_id = income.income_category_id
                         GROUP BY category_name, category_id
                         ORDER BY total_income DESC LIMIT 5");
-                    $sql_categories = mysqli_query($mysqli, "SELECT category_name FROM TopCatégories");
+                    $sql_categories = mysqli_query($mysqli, "SELECT category_name FROM TopCategories");
                     while ($row = mysqli_fetch_assoc($sql_categories)) {
                         $category_name = json_encode($row['category_name']);
                         echo "$category_name,";
@@ -1057,8 +1057,8 @@ if ($user_config_dashboard_technical_enable == 1) {
                               SELECT revenue_category_id AS income_category_id, revenue_amount AS amount
                               FROM revenues
                               WHERE YEAR(revenue_date) = $year AND revenue_category_id > 0) AS income
-                        LEFT JOIN TopCatégories ON TopCatégories.category_id = income.income_category_id
-                        WHERE TopCatégories.category_id IS NULL");
+                        LEFT JOIN TopCategories ON TopCategories.category_id = income.income_category_id
+                        WHERE TopCategories.category_id IS NULL");
                     $row = mysqli_fetch_assoc($sql_other_categories);
                     $other_income = floatval($row['other_income']);
                     if ($other_income > 0) {
@@ -1069,7 +1069,7 @@ if ($user_config_dashboard_technical_enable == 1) {
                 datasets: [{
                     data: [
                         <?php
-                        $sql_categories = mysqli_query($mysqli, "SELECT total_income FROM TopCatégories");
+                        $sql_categories = mysqli_query($mysqli, "SELECT total_income FROM TopCategories");
                         while ($row = mysqli_fetch_assoc($sql_categories)) {
                             $total_income = floatval($row['total_income']);
                             echo "$total_income,";
@@ -1081,7 +1081,7 @@ if ($user_config_dashboard_technical_enable == 1) {
                     ],
                     backgroundColor: [
                         <?php
-                        $sql_categories = mysqli_query($mysqli, "SELECT category_color FROM TopCatégories JOIN categories ON TopCatégories.category_id = categories.category_id");
+                        $sql_categories = mysqli_query($mysqli, "SELECT category_color FROM TopCategories JOIN categories ON TopCategories.category_id = categories.category_id");
                         while ($row = mysqli_fetch_assoc($sql_categories)) {
                             $category_color = json_encode($row['category_color']);
                             echo "$category_color,";
@@ -1116,14 +1116,14 @@ if ($user_config_dashboard_technical_enable == 1) {
             data: {
                 labels: [
                     <?php
-                    mysqli_query($mysqli, "CREATE TEMPORARY TABLE TopExpenseCatégories SELECT category_name, category_id, SUM(expense_amount) AS total_expense FROM categories, expenses WHERE expense_category_id = category_id AND expense_vendor_id > 0 AND YEAR(expense_date) = $year GROUP BY category_name, category_id ORDER BY total_expense DESC LIMIT 5");
-                    $sql_categories = mysqli_query($mysqli, "SELECT category_name FROM TopExpenseCatégories");
+                    mysqli_query($mysqli, "CREATE TEMPORARY TABLE TopExpenseCategories SELECT category_name, category_id, SUM(expense_amount) AS total_expense FROM categories, expenses WHERE expense_category_id = category_id AND expense_vendor_id > 0 AND YEAR(expense_date) = $year GROUP BY category_name, category_id ORDER BY total_expense DESC LIMIT 5");
+                    $sql_categories = mysqli_query($mysqli, "SELECT category_name FROM TopExpenseCategories");
                     while ($row = mysqli_fetch_assoc($sql_categories)) {
                         $category_name = json_encode($row['category_name']);
                         echo "$category_name,";
                     }
 
-                    $sql_other_categories = mysqli_query($mysqli, "SELECT SUM(expenses.expense_amount) AS other_expense FROM categories LEFT JOIN TopExpenseCatégories ON categories.category_id = TopExpenseCatégories.category_id INNER JOIN expenses ON categories.category_id = expenses.expense_category_id WHERE TopExpenseCatégories.category_id IS NULL AND expense_vendor_id > 0 AND YEAR(expense_date) = $year");
+                    $sql_other_categories = mysqli_query($mysqli, "SELECT SUM(expenses.expense_amount) AS other_expense FROM categories LEFT JOIN TopExpenseCategories ON categories.category_id = TopExpenseCategories.category_id INNER JOIN expenses ON categories.category_id = expenses.expense_category_id WHERE TopExpenseCategories.category_id IS NULL AND expense_vendor_id > 0 AND YEAR(expense_date) = $year");
                     $row = mysqli_fetch_assoc($sql_other_categories);
                     $other_expense = floatval($row['other_expense']);
                     if ($other_expense > 0) {
@@ -1134,7 +1134,7 @@ if ($user_config_dashboard_technical_enable == 1) {
                 datasets: [{
                     data: [
                         <?php
-                        $sql_categories = mysqli_query($mysqli, "SELECT total_expense FROM TopExpenseCatégories");
+                        $sql_categories = mysqli_query($mysqli, "SELECT total_expense FROM TopExpenseCategories");
                         while ($row = mysqli_fetch_assoc($sql_categories)) {
                             $total_expense = floatval($row['total_expense']);
                             echo "$total_expense,";
@@ -1146,7 +1146,7 @@ if ($user_config_dashboard_technical_enable == 1) {
                     ],
                     backgroundColor: [
                         <?php
-                        $sql_categories = mysqli_query($mysqli, "SELECT category_color FROM TopExpenseCatégories JOIN categories ON TopExpenseCatégories.category_id = categories.category_id");
+                        $sql_categories = mysqli_query($mysqli, "SELECT category_color FROM TopExpenseCategories JOIN categories ON TopExpenseCategories.category_id = categories.category_id");
                         while ($row = mysqli_fetch_assoc($sql_categories)) {
                             $category_color = json_encode($row['category_color']);
                             echo "$category_color,";
@@ -1181,14 +1181,14 @@ if ($user_config_dashboard_technical_enable == 1) {
             data: {
                 labels: [
                     <?php
-                    mysqli_query($mysqli, "CREATE TEMPORARY TABLE TopFournisseurs SELECT vendor_name, vendor_id, SUM(expense_amount) AS total_expense FROM vendors, expenses WHERE expense_vendor_id = vendor_id AND YEAR(expense_date) = $year GROUP BY vendor_name, vendor_id ORDER BY total_expense DESC LIMIT 5");
-                    $sql_vendors = mysqli_query($mysqli, "SELECT vendor_name FROM TopFournisseurs");
+                    mysqli_query($mysqli, "CREATE TEMPORARY TABLE TopVendors SELECT vendor_name, vendor_id, SUM(expense_amount) AS total_expense FROM vendors, expenses WHERE expense_vendor_id = vendor_id AND YEAR(expense_date) = $year GROUP BY vendor_name, vendor_id ORDER BY total_expense DESC LIMIT 5");
+                    $sql_vendors = mysqli_query($mysqli, "SELECT vendor_name FROM TopVendors");
                     while ($row = mysqli_fetch_assoc($sql_vendors)) {
                         $vendor_name = json_encode($row['vendor_name']);
                         echo "$vendor_name,";
                     }
 
-                    $sql_other_vendors = mysqli_query($mysqli, "SELECT SUM(expenses.expense_amount) AS other_expense FROM vendors LEFT JOIN TopFournisseurs ON vendors.vendor_id = TopFournisseurs.vendor_id INNER JOIN expenses ON vendors.vendor_id = expenses.expense_vendor_id WHERE TopFournisseurs.vendor_id IS NULL AND YEAR(expense_date) = $year");
+                    $sql_other_vendors = mysqli_query($mysqli, "SELECT SUM(expenses.expense_amount) AS other_expense FROM vendors LEFT JOIN TopVendors ON vendors.vendor_id = TopVendors.vendor_id INNER JOIN expenses ON vendors.vendor_id = expenses.expense_vendor_id WHERE TopVendors.vendor_id IS NULL AND YEAR(expense_date) = $year");
                     $row = mysqli_fetch_assoc($sql_other_vendors);
                     $other_expense = floatval($row['other_expense']);
                     if ($other_expense > 0) {
@@ -1199,7 +1199,7 @@ if ($user_config_dashboard_technical_enable == 1) {
                 datasets: [{
                     data: [
                         <?php
-                        $sql_vendors = mysqli_query($mysqli, "SELECT total_expense FROM TopFournisseurs");
+                        $sql_vendors = mysqli_query($mysqli, "SELECT total_expense FROM TopVendors");
                         while ($row = mysqli_fetch_assoc($sql_vendors)) {
                             $total_expense = floatval($row['total_expense']);
                             echo "$total_expense,";
@@ -1211,7 +1211,7 @@ if ($user_config_dashboard_technical_enable == 1) {
                     ],
                     backgroundColor: [
                         <?php
-                        $sql_vendors = mysqli_query($mysqli, "SELECT vendor_id FROM TopFournisseurs");
+                        $sql_vendors = mysqli_query($mysqli, "SELECT vendor_id FROM TopVendors");
                         while ($row = mysqli_fetch_assoc($sql_vendors)) {
                             // Generate random color for each vendor
                             echo "'#" . substr(md5(rand()), 0, 6) . "',";

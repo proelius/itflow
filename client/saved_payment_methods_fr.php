@@ -1,0 +1,141 @@
+<?php
+/*
+ * Client Portal - AutoPay Configuration (multi-provider - assumes Stripe for now)
+ */
+
+require_once "includes/inc_all.php";
+
+enforceContactCan('accounting');
+
+// Initialize Stripe
+require_once '../includes/stripe_init.php';
+
+// Get Stripe provider info
+$stripe_provider_query = mysqli_query($mysqli, "
+    SELECT payment_provider_id, payment_provider_private_key, payment_provider_public_key FROM payment_providers WHERE payment_provider_name = 'Stripe' LIMIT 1
+");
+$stripe_provider = mysqli_fetch_assoc($stripe_provider_query);
+
+if (!$stripe_provider) {
+    echo "Stripe payment error - Stripe provider is not configured.";
+    include_once 'includes/footer.php';
+    exit();
+}
+
+$stripe_provider_id = intval($stripe_provider['payment_provider_id']);
+$stripe_public_key = escapeHtml($stripe_provider['payment_provider_public_key']);
+$stripe_secret_key = escapeHtml($stripe_provider['payment_provider_private_key']);
+
+// Get client's Stripe customer ID
+$stripe_customer_query = mysqli_query($mysqli, "
+    SELECT payment_provider_client FROM client_payment_provider
+    WHERE client_id = $session_client_id AND payment_provider_id = $stripe_provider_id
+    LIMIT 1
+");
+$stripe_customer = mysqli_fetch_assoc($stripe_customer_query);
+$stripe_customer_id = $stripe_customer ? escapeSql($stripe_customer['payment_provider_client']) : null;
+
+// Get saved payment methods
+$saved_methods_query = mysqli_query($mysqli, "
+    SELECT * FROM client_saved_payment_methods
+    WHERE saved_payment_client_id = $session_client_id
+    AND saved_payment_provider_id = $stripe_provider_id
+");
+
+$saved_methods = [];
+while ($row = mysqli_fetch_assoc($saved_methods_query)) {
+    $saved_methods[] = $row;
+}
+
+// Stripe not properly configured
+if (!$stripe_public_key || !$stripe_secret_key) {
+    echo "Stripe payment error - Stripe credentials missing. Please contact support.";
+    include_once 'includes/footer.php';
+    exit();
+}
+?>
+
+<h3>Enregistrerd Payment Methods</h3>
+<hr>
+<div class="row">
+    <div class="col-md-6">
+
+        <?php if (!$stripe_customer_id) { ?>
+            In order to set up automatic payments, you must create a Stripe customer record.
+            <br>
+            By saving your card details, you grant consent for automatic payments.
+            <small class="text-muted d-block mt-2">Stripe processes your information in accordance with its Privacy Policy and Terms.</small>
+            <br>
+
+            <form action="post.php" method="POST">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+
+                <div class="mb-3">
+                    <button type="submit" class="btn btn-success" name="create_stripe_customer"><strong><i class="fas fa-check me-2"></i>Continue</strong></button>
+                </div>
+            </form>
+
+        <?php } else { ?>
+
+            <b>Manage saved payment methods</b><br><br>
+
+            <?php if (empty($saved_methods)) { ?>
+                <p>You currently have no saved payment methods. Please add one below.</p>
+            <?php } else { ?>
+                <p>Payment methods you've authorized us to save for future payments:</p>
+                <ul class="list-unstyled">
+                    <?php
+                    try {
+                        $stripe = new \Stripe\StripeClient($stripe_secret_key);
+
+                        foreach ($saved_methods as $method) {
+                            $stripe_pm_id = $method['saved_payment_provider_method'];
+                            $description = escapeHtml($method['saved_payment_description']);
+                            $payment_icon = "fas fa-credit-card"; // default icon
+                            if (strpos($description, "visa") !== false) {
+                                $payment_icon = "fab fa-cc-visa";
+                            } elseif (strpos($description, "mastercard") !== false) {
+                                $payment_icon = "fab fa-cc-mastercard";
+                            } elseif (strpos($description, "american express") !== false || strpos($description, "amex") !== false) {
+                                $payment_icon = "fab fa-cc-amex";
+                            } elseif (strpos($description, "discover") !== false) {
+                                $payment_icon = "fab fa-cc-discover";
+                            }
+
+                            $pm = $stripe->paymentMethods->retrieve($stripe_pm_id, []);
+                            $brand = escapeHtml($pm->card->brand);
+                            $last4 = escapeHtml($pm->card->last4);
+                            $exp_month = escapeHtml($pm->card->exp_month);
+                            $exp_year = escapeHtml($pm->card->exp_year);
+
+                            echo "<li><i class='$payment_icon fa-2x me-2'></i>$brand x<strong>$last4</strong> | Exp. $exp_month/$exp_year";
+                            echo " – <a class='text-danger' href='post.php?delete_saved_payment={$method['saved_payment_id']}&csrf_token={$_SESSION['csrf_token']}'>Remove</a></li>";
+                        }
+                    } catch (Exception $e) {
+                        $error = $e->getMessage();
+                        error_log("Stripe payment error: $error");
+                        logApp("Stripe", "error", "Exception retrieving payment methods: $error");
+                        echo "<p class='text-danger'>Unable to retrieve payment methods from Stripe.</p>";
+                    }
+                    ?>
+                </ul>
+            <?php } ?>
+        </div>
+        <div class="col-md-6">
+            <b>Ajouter a new payment method</b>
+            <p>If you save payment details, you grant consent for automatic payments.</p>
+            <br><br>
+
+            <input type="hidden" id="stripe_publishable_key" value="<?= $stripe_public_key ?>">
+            <script src="https://js.stripe.com/v3/"></script>
+            <script src="../js/autopay_setup_stripe.js"></script>
+            <div id="checkout">
+                <!-- Checkout form dynamically loaded -->
+            </div>
+
+        <?php } ?>
+
+    </div>
+</div>
+
+<?php require_once "includes/footer.php"; ?>

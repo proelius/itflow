@@ -1,0 +1,19 @@
+<?php
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_POST['edit_telemetry_settings'])) {
+
+    validateCSRFToken();
+
+    $config_telemetry = intval($_POST['config_telemetry']);
+
+    mysqli_query($mysqli,"UPDATE settings SET config_telemetry = $config_telemetry WHERE company_id = 1");
+
+    logAudit("Paramètres", "Modifier", "$session_name edited telemetry settings");
+
+    flashAlert("Telemetry Paramètres updated");
+
+    redirect();
+
+}

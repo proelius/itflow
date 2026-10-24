@@ -1,0 +1,83 @@
+<?php
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_POST['edit_company'])) {
+
+    validateCSRFToken();
+
+    $name = escapeSql($_POST['name']);
+    $address = escapeSql($_POST['address']);
+    $city = escapeSql($_POST['city']);
+    $state = escapeSql($_POST['state']);
+    $zip = escapeSql($_POST['zip']);
+    $country = escapeSql($_POST['country']);
+    $phone_country_code = preg_replace("/[^0-9]/", '',$_POST['phone_country_code']);
+    $phone = preg_replace("/[^0-9]/", '',$_POST['phone']);
+    $email = escapeSql($_POST['email']);
+    $website = escapeSql($_POST['website']);
+    $tax_id = escapeSql($_POST['tax_id']);
+
+    $sql = mysqli_query($mysqli,"SELECT company_logo FROM companies WHERE company_id = 1");
+    $row = mysqli_fetch_assoc($sql);
+    $existing_file_name = escapeSql($row['company_logo']);
+
+    // Company logo
+    if (isset($_FILES['file']['tmp_name'])) {
+        if ($new_file_name = checkFileTéléverser($_FILES['file'], array('jpg', 'jpeg', 'png'))) {
+            $file_tmp_path = $_FILES['file']['tmp_name'];
+
+            // directory in which the uploaded file will be moved
+            $upload_file_dir = "../uploads/settings/";
+            $dest_path = $upload_file_dir . $new_file_name;
+
+            move_uploaded_file($file_tmp_path, $dest_path);
+
+            // Supprimer old file
+            unlink("../uploads/settings/$existing_file_name");
+
+            // Set Logo
+            mysqli_query($mysqli,"UPDATE companies SET company_logo = '$new_file_name' WHERE company_id = 1");
+
+        }
+    }
+
+    // The client record standing in for this company. Verified against the clients table
+    // rather than trusted from the POST, so a stale or hand-made value cannot leave the
+    // sidebar pointing at a client that no longer exists. 0 clears the designation.
+    $internal_client_id = intval($_POST['internal_client_id'] ?? 0);
+    if ($internal_client_id !== 0 && !mysqli_num_rows(mysqli_query($mysqli, "SELECT client_id FROM clients WHERE client_id = $internal_client_id LIMIT 1"))) {
+        $internal_client_id = 0;
+    }
+
+    mysqli_query($mysqli,"UPDATE companies SET company_name = '$name', company_address = '$address', company_city = '$city', company_state = '$state', company_zip = '$zip', company_country = '$country', company_phone_country_code = '$phone_country_code', company_phone = '$phone', company_email = '$email', company_website = '$website', company_tax_id = '$tax_id' WHERE company_id = 1");
+
+    mysqli_query($mysqli,"UPDATE settings SET config_internal_client_id = $internal_client_id WHERE company_id = 1");
+
+    logAudit("Paramètres", "Modifier", "$session_name edited company details");
+
+    flashAlert("Company <strong>$name</strong> edited");
+
+    redirect();
+
+}
+
+if (isset($_GET['remove_company_logo'])) {
+
+    validateCSRFToken();
+
+    $sql = mysqli_query($mysqli,"SELECT company_logo FROM companies");
+    $row = mysqli_fetch_assoc($sql);
+    $company_logo = $row['company_logo']; // FileSystem Operation Logo is already sanitized
+
+    unlink("../uploads/settings/$company_logo");
+
+    mysqli_query($mysqli,"UPDATE companies SET company_logo = NULL WHERE company_id = 1");
+
+    logAudit("Paramètres", "Modifier", "$session_name deleted company logo");
+
+    flashAlert("Removed company logo", 'error');
+
+    redirect();
+
+}

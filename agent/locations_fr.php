@@ -79,7 +79,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 <div class="card">
     <div class="card-header bg-dark py-2">
-        <h3 class="card-title mt-2"><i class="fa fa-fw fa-map-marker-alt me-2"></i>Lieux</h3>
+        <h3 class="card-title mt-2"><i class="fa fa-fw fa-map-marker-alt me-2"></i>Locations</h3>
         <div class="card-tools">
             <div class="btn-group">
                 <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/location/location_add.php?<?= $client_url ?>">
@@ -112,7 +112,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Lieux">
+                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Locations">
                             <button class="btn btn-dark"><i class="fa fa-search"></i></button>
                     </div>
                 </div>
@@ -147,7 +147,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <div class="col-md-2">
                     <div class="input-group">
                         <select class="form-select select2" name="client" onchange="this.form.submit()">
-                            <option value="" <?php if ($client == "") { echo "selected"; } ?>>- Tous Clients -</option>
+                            <option value="" <?php if ($client == "") { echo "selected"; } ?>>- All Clients -</option>
 
                             <?php
                             $sql_clients_filter = mysqli_query($mysqli, "
@@ -186,7 +186,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                 <a class="dropdown-item ajax-modal" href="#"
                                     data-modal-url="modals/location/location_bulk_assign_tags.php"
                                     data-bulk="true">
-                                    <i class="fas fa-fw fa-tags me-2"></i>Assigner Tags
+                                    <i class="fas fa-fw fa-tags me-2"></i>Assign Tags
                                 </a>
                                 <?php if ($archived) { ?>
                                 <div class="dropdown-divider"></div>
@@ -223,7 +223,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <tr>
                     <td class="checkbox-column border-end">
                         <div class="form-check">
-                            <input class="form-check-input" id="selectTousCheckbox" type="checkbox" onclick="checkTous(this)">
+                            <input class="form-check-input" id="selectAllCheckbox" type="checkbox" onclick="checkAll(this)">
                         </div>
                     </td>
                     <th>

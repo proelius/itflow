@@ -1,0 +1,50 @@
+<?php
+
+require_once '../../../includes/modal_header.php';
+
+enforceUserPermission('module_financial', 2);
+
+$account_id = intval($_GET['id']);
+
+$sql = mysqli_query($mysqli, "SELECT account_name, account_notes FROM accounts WHERE account_id = $account_id LIMIT 1");
+
+$row = mysqli_fetch_assoc($sql);
+$account_name = escapeHtml($row['account_name']);
+$account_notes = escapeHtml($row['account_notes']);
+
+// Generate the HTML form content using output buffering.
+ob_start();
+?>
+
+<div class="modal-header bg-dark">
+    <h5 class="modal-title"><i class="fa fa-fw fa-piggy-bank me-2"></i>Modifiering account: <strong><?= $account_name ?></strong></h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form action="post.php" method="post" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="account_id" value="<?= $account_id ?>">
+
+    <div class="modal-body">
+        <div class="mb-3">
+            <label>Account Name <strong class="text-danger">*</strong></label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-piggy-bank"></i></span>
+                <input type="text" class="form-control" name="name" maxlength="200" value="<?= $account_name ?>" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>Notes</label>
+            <textarea class="form-control" rows="5" placeholder="Enter some notes" name="notes"><?= $account_notes ?></textarea>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="submit" name="edit_account" class="btn btn-primary text-bold"><i class="fa fa-check me-2"></i>Enregistrer</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Annuler</button>
+    </div>
+</form>
+
+<?php
+
+require_once '../../../includes/modal_footer.php';

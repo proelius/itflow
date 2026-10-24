@@ -1,0 +1,33 @@
+<?php
+/*
+ * API - create_output.php
+ * Included on calls to create.php endpoints
+ * Checks the status of the insert SQL query ($insert_sql)
+ * Returns success data / fail messages
+ */
+
+// Check if the insert query was successful
+if (isset($insert_id) && is_numeric($insert_id)) {
+    // Insert successful
+    $return_arr['success'] = "True";
+    $return_arr['count'] = '1';
+    $return_arr['data'][] = [
+        'insert_id' => $insert_id
+    ];
+}
+
+// Query returned false: something went wrong, or it was declined due to required variables missing
+else {
+    $return_arr['success'] = "False";
+    $return_arr['message'] = "Auth success but insert query failed, ensure ALL required variables are provided (and aren't duplicates where applicable) and database schema is up-to-date. Turn on error logging and look for 'undefined index'.";
+
+    logApp("API", "Erreur", "Créer query failed on API call to " . escapeSql(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)) . " containing " . count($_POST) . " POST variables" . " via API key " . escapeSql($api_key_name) . " from IP " . escapeSql(getIP()) . " with agent " . escapeSql(getUserAgent()));
+
+    // Log any database/schema related errors to the PHP Erreur log
+    if (mysqli_error($mysqli)) {
+        error_log("API Database Erreur: " . mysqli_error($mysqli));
+    }
+}
+
+echo json_encode($return_arr);
+exit();

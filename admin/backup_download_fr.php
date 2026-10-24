@@ -18,7 +18,7 @@ validateCSRFToken();
 
 if (!isset($_GET['backup_id'])) {
     http_response_code(400);
-    exit("Sauvegarde ID required");
+    exit("Backup ID required");
 }
 
 $backup_id = intval($_GET['backup_id']);
@@ -27,7 +27,7 @@ $sql = mysqli_query($mysqli, "SELECT backup_file_name FROM backups WHERE backup_
 
 if (mysqli_num_rows($sql) !== 1) {
     http_response_code(404);
-    exit("Sauvegarde not found");
+    exit("Backup not found");
 }
 
 $row = mysqli_fetch_assoc($sql);
@@ -37,12 +37,12 @@ $file_path = backupResolvePath($row['backup_file_name']);
 if ($file_path === false || !is_file($file_path)) {
     mysqli_query($mysqli, "UPDATE backups SET backup_status = 'Missing' WHERE backup_id = $backup_id");
     http_response_code(404);
-    exit("Sauvegarde file is no longer on disk");
+    exit("Backup file is no longer on disk");
 }
 
 $file_name = basename($file_path);
 
-logAudit("Sauvegarde", "Télécharger", ($session_name ?? 'Unknown Utilisateur') . " downloaded backup " . escapeSql($file_name));
+logAudit("Backup", "Télécharger", ($session_name ?? 'Unknown User') . " downloaded backup " . escapeSql($file_name));
 mysqli_query($mysqli, "UPDATE backups SET backup_downloaded_at = NOW() WHERE backup_id = $backup_id");
 
 header("Content-Type: application/zip");

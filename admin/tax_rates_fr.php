@@ -19,7 +19,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 <div class="card">
     <div class="card-header bg-dark py-2">
-        <h3 class="card-title mt-2"><i class="fas fa-fw fa-balance-scale me-2"></i>Taux de TVA</h3>
+        <h3 class="card-title mt-2"><i class="fas fa-fw fa-balance-scale me-2"></i>Tax Rates</h3>
         <div class="card-tools">
             <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/tax/tax_add.php"><i class="fas fa-plus me-2"></i>Nouveau Tax Rate</button>
         </div>
@@ -29,7 +29,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Taux de TVA">
+                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Tax Rates">
                         <button class="btn btn-primary"><i class="fa fa-search"></i></button>
                     </div>
                 </div>

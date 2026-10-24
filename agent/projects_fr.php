@@ -51,7 +51,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 <div class="card">
     <div class="card-header bg-dark py-2">
-        <h3 class="card-title mt-2"><i class="fas fa-fw fa-project-diagram me-2"></i>Projets</h3>
+        <h3 class="card-title mt-2"><i class="fas fa-fw fa-project-diagram me-2"></i>Projects</h3>
         <?php if (lookupUserPermission("module_support") >= 2) { ?>
             <div class="card-tools">
                 <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/project/project_add.php?<?= $client_url ?>"><i class="fas fa-plus"></i><span class="d-none d-lg-inline ms-2">Nouveau Project</span></button>
@@ -69,7 +69,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
             <div class="row g-2 align-items-end">
                 <div class="col-sm-4">
                     <div class="input-group">
-                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) {echo stripslashes(escapeHtml($q));} ?>" placeholder="Rechercher Projets">
+                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) {echo stripslashes(escapeHtml($q));} ?>" placeholder="Rechercher Projects">
                             <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedFiltrer"><i class="fas fa-filter"></i></button>
                             <button class="btn btn-primary"><i class="fa fa-search"></i></button>
                     </div>
@@ -123,7 +123,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <th>Tickets / Tasks</th>
                 <th>
                     <a class="text-dark" href="?<?= $url_query_strings_sort ?>&sort=project_due&order=<?= $disp ?>">
-                        Échéance <?php if ($sort == 'project_due') { echo $order_icon; } ?>
+                        Due <?php if ($sort == 'project_due') { echo $order_icon; } ?>
                     </a>
                 </th>
                 <?php if ($status == 1) { ?>
@@ -199,7 +199,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 if($ticket_count) {
                     $tickets_closed_percent = round(($closed_ticket_count / $ticket_count) * 100);
                 }
-                // Get Tous Tasks
+                // Get All Tasks
                 $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT('task_id') AS count FROM tickets, tasks WHERE ticket_id = task_ticket_id AND ticket_project_id = $project_id"));
                 $task_count = $row['count'];
 

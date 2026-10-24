@@ -29,7 +29,7 @@ require_once "includes/inc_all_admin.php";
                 <div class="mb-3">
                     <div class="form-check form-switch">
                         <input type="checkbox" class="form-check-input" name="config_ticket_email_parse" <?php if($config_ticket_email_parse == 1){ echo "checked"; } ?> value="1" id="emailToTicketParseSwitch">
-                        <label class="form-check-label" for="emailToTicketParseSwitch">Email-to-ticket parsing <small class="text-secondary">(the Ticket Email Parser cron job must also be enabled - see <a href="cron.php">Maintenance &gt; Tâches Planifiées</a>)</small></label>
+                        <label class="form-check-label" for="emailToTicketParseSwitch">Email-to-ticket parsing <small class="text-secondary">(the Ticket Email Parser cron job must also be enabled - see <a href="cron.php">Maintenance &gt; Cron</a>)</small></label>
                     </div>
                 </div>
 
@@ -51,8 +51,8 @@ require_once "includes/inc_all_admin.php";
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
-                        <input type="checkbox" class="form-check-input" name="config_ticket_timer_autostart" <?php if ($config_ticket_timer_autostart == 1) { echo "checked"; } ?> value="1" id="ticketTimerSwitch">
-                        <label class="form-check-label" for="ticketTimerSwitch">Autostart Ticket Timer <small class="text-secondary">(This option will control if the timer starts automatically or manually)</small></label>
+                        <input type="checkbox" class="form-check-input" name="config_ticket_timer_autostart" <?php if ($config_ticket_timer_autostart == 1) { echo "checked"; } ?> value="1" id="ticketHeurerSwitch">
+                        <label class="form-check-label" for="ticketHeurerSwitch">Autostart Ticket Heurer <small class="text-secondary">(This option will control if the timer starts automatically or manually)</small></label>
                     </div>
                 </div>
 
@@ -87,11 +87,11 @@ require_once "includes/inc_all_admin.php";
                 <label>Kanban Paramètres</label>
                     <div class="form-check form-switch">
                         <input type="checkbox" class="form-check-input" name="config_ticket_ordering" <?php if ($config_ticket_ordering == 1) { echo "checked"; } ?> value="1" id="ticketOrderingSwitch">
-                        <label class="form-check-label" for="ticketOrderingSwitch">Allow ticket ordering within its column<small class="text-secondary"> (unchecked = order by priority and id)</small></label>
+                        <label class="form-check-label" for="ticketOrderingSwitch">Tousow ticket ordering within its column<small class="text-secondary"> (unchecked = order by priority and id)</small></label>
                     </div>
                     <div class="form-check form-switch">
                     <input type="checkbox" class="form-check-input" name="config_ticket_moving_columns" <?php if ($config_ticket_moving_columns == 1) { echo "checked"; } ?> value="1" id="ticketMovingColumnsSwitch">
-                        <label class="form-check-label" for="ticketMovingColumnsSwitch">Allow moving columns</label>
+                        <label class="form-check-label" for="ticketMovingColumnsSwitch">Tousow moving columns</label>
                     </div>
                 </div>
 

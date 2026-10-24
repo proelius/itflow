@@ -5,7 +5,7 @@ require_once "includes/inc_all_admin.php";
 
 <div class="card card-dark">
     <div class="card-header py-3">
-        <h3 class="card-title"><i class="fas fa-fw fa-shield-alt me-2"></i>Sécurité</h3>
+        <h3 class="card-title"><i class="fas fa-fw fa-shield-alt me-2"></i>Security</h3>
     </div>
     <div class="card-body">
         <form action="post.php" method="post" autocomplete="off">

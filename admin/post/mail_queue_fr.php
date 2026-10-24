@@ -1,0 +1,99 @@
+<?php
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_GET['send_failed_mail'])) {
+
+    validateCSRFToken();
+
+    $email_id = intval($_GET['send_failed_mail']);
+
+    // Delivered mail has had its body cleared on send, so resending would deliver an empty message
+    $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT email_status FROM email_queue WHERE email_id = $email_id LIMIT 1"));
+
+    if (!$row || intval($row['email_status']) === 3) {
+        flashAlert("That email has already been delivered and cannot be resent.", 'error');
+        redirect();
+    }
+
+    mysqli_query($mysqli,"UPDATE email_queue SET email_status = 0, email_attempts = 3 WHERE email_id = $email_id");
+
+    logAudit("Email", "Send", "$session_name attempted to force send email id: $email_id in the mail queue", 0, $email_id);
+
+    flashAlert("Email Force Sent, give it a minute to resend");
+
+    redirect();
+
+}
+
+if (isset($_GET['cancel_mail'])) {
+
+    validateCSRFToken();
+
+    $email_id = intval($_GET['cancel_mail']);
+
+    mysqli_query($mysqli,"UPDATE email_queue SET email_status = 2, email_attempts = 99, email_failed_at = NOW() WHERE email_id = $email_id");
+
+    logAudit("Email", "Send", "$session_name canceled send email id: $email_id in the mail queue", 0, $email_id);
+
+    flashAlert("Email cancelled and marked as failed.", 'error');
+
+    redirect();
+
+}
+
+if (isset($_POST['bulk_cancel_emails'])) {
+
+    validateCSRFToken();
+
+    if (isset($_POST['email_ids'])) {
+
+        $count = count($_POST['email_ids']);
+
+        // Cycle through array and mark each email as failed
+        foreach ($_POST['email_ids'] as $email_id) {
+
+            $email_id = intval($email_id);
+            mysqli_query($mysqli,"UPDATE email_queue SET email_status = 2, email_attempts = 99, email_failed_at = NOW() WHERE email_id = $email_id");
+
+            logAudit("Email", "Annuler", "$session_name cancelled email id: $email_id in the mail queue", 0, $email_id);
+
+        }
+
+        logAudit("Email", "Bulk Annuler", "$session_name cancelled $count email(s) in the mail queue");
+
+        flashAlert("Annulerled <strong>$count</strong> email(s)", 'error');
+
+    }
+
+    redirect();
+
+}
+
+if (isset($_POST['bulk_delete_emails'])) {
+
+    validateCSRFToken();
+
+    if (isset($_POST['email_ids'])) {
+
+        $count = count($_POST['email_ids']);
+
+        // Cycle through array and delete each email
+        foreach ($_POST['email_ids'] as $email_id) {
+
+            $email_id = intval($email_id);
+            mysqli_query($mysqli,"DELETE FROM email_queue WHERE email_id = $email_id");
+
+            logAudit("Email", "Supprimer", "$session_name deleted email id: $email_id from the mail queue");
+
+        }
+
+        logAudit("Email", "Bulk Supprimer", "$session_name deleted $count email(s) from the mail queue");
+
+        flashAlert("Supprimerd <strong>$count</strong> email(s)", 'error');
+
+    }
+
+    redirect();
+
+}

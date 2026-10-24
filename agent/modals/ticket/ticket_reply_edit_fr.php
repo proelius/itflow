@@ -1,0 +1,70 @@
+<?php
+
+require_once '../../../includes/modal_header.php';
+
+$ticket_reply_id = intval($_GET['id']);
+
+$sql = mysqli_query($mysqli, "SELECT ticket_client_id, ticket_reply, ticket_reply_time_worked, ticket_reply_type FROM ticket_replies
+    LEFT JOIN tickets ON ticket_id = ticket_reply_ticket_id
+    WHERE ticket_reply_id = $ticket_reply_id
+    LIMIT 1"
+);
+
+$row = mysqli_fetch_assoc($sql);
+$ticket_reply_type = escapeHtml($row['ticket_reply_type']);
+$ticket_reply_time_worked = date_create($row['ticket_reply_time_worked']);
+$ticket_reply_time_worked_formatted = date_format($ticket_reply_time_worked, 'H:i:s');
+$ticket_reply = escapeHtml($row['ticket_reply']);
+$client_id = intval($row['ticket_client_id']);
+
+if ($client_id) {
+    enforceClientAccess();
+}
+
+// Generate the HTML form content using output buffering.
+ob_start();
+
+?>
+
+<div class="modal-header bg-dark">
+    <h5 class="modal-title"><i class="fa fa-fw fa-edit me-2"></i>Modifiering Ticket Reply</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form action="post.php" method="post" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="ticket_reply_id" value="<?= $ticket_reply_id ?>">
+
+    <div class="modal-body">
+
+        <div class="mb-3">
+            <div class="btn-group w-100" role="group">
+                <input class="btn-check" id="ticket_reply_type_opt0" type="radio" name="ticket_reply_type" value="Internal" <?php if ($ticket_reply_type == 'Internal') { echo "checked"; } ?>>
+                <label class="btn btn-outline-secondary" for="ticket_reply_type_opt0">Internal Note</label>
+                <input class="btn-check" id="ticket_reply_type_opt1" type="radio" name="ticket_reply_type" value="Public" <?php if ($ticket_reply_type == 'Public') { echo "checked"; } ?>>
+                <label class="btn btn-outline-secondary" for="ticket_reply_type_opt1">Public Comment</label>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <textarea class="form-control tinymce" name="ticket_reply"><?= $ticket_reply ?></textarea>
+        </div>
+
+        <?php if (!empty($ticket_reply_time_worked)) { ?>
+            <div class="col-3">
+                <div class="mb-3">
+                    <label>Time worked</label>
+                    <input class="form-control" name="time" type="text" placeholder="HH:MM:SS" pattern="([01]?[0-9]|2[0-3]):([0-5]?[0-9]):([0-5]?[0-9])" value="<?= $ticket_reply_time_worked_formatted ?>" required>
+                </div>
+            </div>
+        <?php } ?>
+
+    </div>
+    <div class="modal-footer">
+        <button type="submit" name="edit_ticket_reply" class="btn btn-primary text-bold"><i class="fa fa-check me-2"></i>Enregistrer</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Annuler</button>
+    </div>
+</form>
+
+<?php
+
+require_once '../../../includes/modal_footer.php';

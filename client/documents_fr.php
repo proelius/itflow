@@ -7,7 +7,6 @@
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
 
 enforceContactCan('itdoc');
 
@@ -21,10 +20,10 @@ $documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, docum
     <div class="col-auto">
         <div class="btn-group">
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
-                <i class="fas fa-plus me-2"></i>New Document
+                <i class="fas fa-plus me-2"></i>Nouveau Document
             </button>
             <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#uploadFileDocumentModal">
-                <i class="fas fa-upload me-2"></i>Upload File
+                <i class="fas fa-upload me-2"></i>Téléverser File
             </button>
         </div>
     </div>
@@ -39,7 +38,7 @@ $documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, docum
             <thead class="table-dark">
             <tr>
                 <th>Name</th>
-                <th>Created</th>
+                <th>Créerd</th>
                 <th class="text-center">Actions</th>
             </tr>
             </thead>
@@ -81,12 +80,12 @@ $documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, docum
     </div>
 </div>
 
-<!-- New Document Modal -->
+<!-- Nouveau Document Modal -->
 <div class="modal" id="uploadDocumentModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content bg-dark">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fa fa-fw fa-file-alt me-2"></i>Create New Document</h5>
+                <h5 class="modal-title"><i class="fa fa-fw fa-file-alt me-2"></i>Créer Nouveau Document</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="post.php" method="post" autocomplete="off">
@@ -114,20 +113,20 @@ $documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, docum
                     </div>
                 </div>
                 <div class="modal-footer bg-white">
-                    <button type="submit" name="client_add_document" class="btn btn-primary"><i class="fa fa-check me-2"></i>Create Document</button>
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Cancel</button>
+                    <button type="submit" name="client_add_document" class="btn btn-primary"><i class="fa fa-check me-2"></i>Créer Document</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Annuler</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Upload File Document Modal -->
+<!-- Téléverser File Document Modal -->
 <div class="modal" id="uploadFileDocumentModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content bg-dark">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fa fa-fw fa-upload me-2"></i>Upload Document File</h5>
+                <h5 class="modal-title"><i class="fa fa-fw fa-upload me-2"></i>Téléverser Document File</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="post.php" method="post" enctype="multipart/form-data" autocomplete="off">
@@ -150,15 +149,15 @@ $documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, docum
                     </div>
 
                     <div class="mb-3">
-                        <label>Upload File <strong class="text-danger">*</strong></label>
+                        <label>Téléverser File <strong class="text-danger">*</strong></label>
                         <input type="file" class="form-control" name="document_file" id="documentFileInput"
                                accept=".pdf,.doc,.docx,.txt,.md,.odt,.rtf" required>
                         <small class="text-secondary">Supported formats: PDF, Word documents, text files</small>
                     </div>
                 </div>
                 <div class="modal-footer bg-white">
-                    <button type="submit" name="client_upload_document" class="btn btn-primary"><i class="fa fa-upload me-2"></i>Upload Document</button>
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Cancel</button>
+                    <button type="submit" name="client_upload_document" class="btn btn-primary"><i class="fa fa-upload me-2"></i>Téléverser Document</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Annuler</button>
                 </div>
             </form>
         </div>

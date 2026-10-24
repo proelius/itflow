@@ -29,17 +29,17 @@ if (isset($_GET['accept_quote'], $_GET['url_key'])) {
 
         // Claim the response - only a quote still awaiting one can be accepted,
         // and only the first request through wins
-        mysqli_query($mysqli, "UPDATE quotes SET quote_status = 'Accepté' WHERE quote_id = $quote_id AND quote_status IN ('Envoyée', 'Vue')");
+        mysqli_query($mysqli, "UPDATE quotes SET quote_status = 'Accepted' WHERE quote_id = $quote_id AND quote_status IN ('Sent', 'Voired')");
 
         if (mysqli_affected_rows($mysqli) !== 1) {
             flashAlert("This quote is no longer awaiting a response", 'error');
             redirect();
         }
 
-        mysqli_query($mysqli, "INSERT INTO history SET history_status = 'Accepté', history_description = 'Client accepted Devis!', history_quote_id = $quote_id");
+        mysqli_query($mysqli, "INSERT INTO history SET history_status = 'Accepted', history_description = 'Client accepted Quote!', history_quote_id = $quote_id");
 
         // Notification
-        appNotify("Devis Accepté", "Devis $quote_prefix$quote_number has been accepted by $client_name", "/agent/quote.php?quote_id=$quote_id", $client_id);
+        appNotify("Quote Accepted", "Quote $quote_prefix$quote_number has been accepted by $client_name", "/agent/quote.php?quote_id=$quote_id", $client_id);
         triggerCustomAction('quote_accept', $quote_id);
 
         // Internal email notification
@@ -63,8 +63,8 @@ if (isset($_GET['accept_quote'], $_GET['url_key'])) {
         $config_base_url = escapeSql($config_base_url);
 
         if (!empty($config_smtp_host) && !empty($config_quote_notification_email)) {
-            $subject = "Devis Accepté - $client_name - Devis $quote_prefix$quote_number";
-            $body = "Hello, <br><br>This is a notification that a quote has been accepted in ITFlow. <br><br>Client: $client_name<br>Devis: <a href=\'https://$config_base_url/quote.php?quote_id=$quote_id\'>$quote_prefix$quote_number</a><br><br>~<br>$company_name - Billing<br>$config_quote_from_email";
+            $subject = "Quote Accepted - $client_name - Quote $quote_prefix$quote_number";
+            $body = "Hello, <br><br>This is a notification that a quote has been accepted in ITFlow. <br><br>Client: $client_name<br>Quote: <a href=\'https://$config_base_url/quote.php?quote_id=$quote_id\'>$quote_prefix$quote_number</a><br><br>~<br>$company_name - Billing<br>$config_quote_from_email";
 
             $data[] = [
                 'from' => $config_quote_from_email,
@@ -77,7 +77,7 @@ if (isset($_GET['accept_quote'], $_GET['url_key'])) {
             $mail = addToMailQueue($data);
         }
 
-        flashAlert("Devis Accepté");
+        flashAlert("Quote Accepted");
 
         redirect();
 
@@ -104,17 +104,17 @@ if (isset($_GET['decline_quote'], $_GET['url_key'])) {
 
         // Claim the response - only a quote still awaiting one can be declined,
         // and only the first request through wins
-        mysqli_query($mysqli, "UPDATE quotes SET quote_status = 'Refusé' WHERE quote_id = $quote_id AND quote_status IN ('Envoyée', 'Vue')");
+        mysqli_query($mysqli, "UPDATE quotes SET quote_status = 'Declined' WHERE quote_id = $quote_id AND quote_status IN ('Sent', 'Voired')");
 
         if (mysqli_affected_rows($mysqli) !== 1) {
             flashAlert("This quote is no longer awaiting a response", 'error');
             redirect();
         }
 
-        mysqli_query($mysqli, "INSERT INTO history SET history_status = 'Refusé', history_description = 'Client declined Devis!', history_quote_id = $quote_id");
+        mysqli_query($mysqli, "INSERT INTO history SET history_status = 'Declined', history_description = 'Client declined Quote!', history_quote_id = $quote_id");
 
         // Notification
-        appNotify("Devis Refusé", "Devis $quote_prefix$quote_number has been declined by $client_name", "/agent/quote.php?quote_id=$quote_id", $client_id);
+        appNotify("Quote Declined", "Quote $quote_prefix$quote_number has been declined by $client_name", "/agent/quote.php?quote_id=$quote_id", $client_id);
         triggerCustomAction('quote_decline', $quote_id);
 
         // Internal email notification
@@ -138,8 +138,8 @@ if (isset($_GET['decline_quote'], $_GET['url_key'])) {
         $config_base_url = escapeSql($config_base_url);
 
         if (!empty($config_smtp_host) && !empty($config_quote_notification_email)) {
-            $subject = "Devis Refusé - $client_name - Devis $quote_prefix$quote_number";
-            $body = "Hello, <br><br>This is a notification that a quote has been declined in ITFlow. <br><br>Client: $client_name<br>Devis: <a href=\'https://$config_base_url/quote.php?quote_id=$quote_id\'>$quote_prefix$quote_number</a><br><br>~<br>$company_name - Billing<br>$config_quote_from_email";
+            $subject = "Quote Declined - $client_name - Quote $quote_prefix$quote_number";
+            $body = "Hello, <br><br>This is a notification that a quote has been declined in ITFlow. <br><br>Client: $client_name<br>Quote: <a href=\'https://$config_base_url/quote.php?quote_id=$quote_id\'>$quote_prefix$quote_number</a><br><br>~<br>$company_name - Billing<br>$config_quote_from_email";
 
             $data[] = [
                 'from' => $config_quote_from_email,
@@ -151,7 +151,7 @@ if (isset($_GET['decline_quote'], $_GET['url_key'])) {
 
             $mail = addToMailQueue($data);
         }
-        flashAlert("Devis Refusé", 'danger');
+        flashAlert("Quote Declined", 'danger');
 
         redirect();
 
@@ -170,11 +170,11 @@ if (isset($_GET['reopen_ticket'], $_GET['url_key'])) {
     $sql = mysqli_query($mysqli, "SELECT ticket_id FROM tickets WHERE ticket_id = $ticket_id AND ticket_url_key = '$url_key' AND ticket_resolved_at IS NOT NULL AND ticket_closed_at IS NULL");
 
     if (mysqli_num_rows($sql) == 1) {
-        // Update the ticket
+        // Mettre à jour the ticket
         mysqli_query($mysqli, "UPDATE tickets SET ticket_status = 2, ticket_resolved_at = NULL WHERE ticket_id = $ticket_id AND ticket_url_key = '$url_key'");
         logTicketHistory($ticket_id, "The client reopened the ticket from the guest link");
 
-        // Add reply
+        // Ajouter reply
         mysqli_query($mysqli, "INSERT INTO ticket_replies SET ticket_reply = 'Ticket reopened by client (guest URL).', ticket_reply_type = 'Internal', ticket_reply_by = 0, ticket_reply_ticket_id = $ticket_id");
 
         triggerCustomAction('ticket_update', $ticket_id);
@@ -199,11 +199,11 @@ if (isset($_GET['close_ticket'], $_GET['url_key'])) {
 
     if (mysqli_num_rows($sql) == 1) {
 
-        // Update the ticket
+        // Mettre à jour the ticket
         mysqli_query($mysqli, "UPDATE tickets SET ticket_status = 5, ticket_closed_at = NOW() WHERE ticket_id = $ticket_id AND ticket_url_key = '$url_key'");
         logTicketHistory($ticket_id, "The client closed the ticket from the guest link");
 
-        // Add reply
+        // Ajouter reply
         mysqli_query($mysqli, "INSERT INTO ticket_replies SET ticket_reply = 'Ticket closed by client (guest URL).', ticket_reply_type = 'Internal', ticket_reply_by = 0, ticket_reply_ticket_id = $ticket_id");
 
         triggerCustomAction('ticket_close', $ticket_id);
@@ -227,7 +227,7 @@ if (isset($_GET['add_ticket_feedback'], $_GET['url_key'])) {
     $sql = mysqli_query($mysqli, "SELECT ticket_id FROM tickets WHERE ticket_id = $ticket_id AND ticket_url_key = '$url_key' AND ticket_closed_at IS NOT NULL");
 
     if (mysqli_num_rows($sql) == 1) {
-        // Add feedback
+        // Ajouter feedback
         mysqli_query($mysqli, "UPDATE tickets SET ticket_feedback = '$feedback' WHERE ticket_id = $ticket_id AND ticket_url_key = '$url_key'");
 
         // Notify on bad feedback
@@ -236,7 +236,7 @@ if (isset($_GET['add_ticket_feedback'], $_GET['url_key'])) {
             $ticket_prefix = escapeSql($ticket_details['ticket_prefix']);
             $ticket_number = intval($ticket_details['ticket_number']);
 
-            appNotify("Feedback", "Invité rated ticket number $ticket_prefix$ticket_number (ID: $ticket_id) as bad", "/agent/ticket.php?ticket_id=$ticket_id");
+            appNotify("Feedback", "Guest rated ticket number $ticket_prefix$ticket_number (ID: $ticket_id) as bad", "/agent/ticket.php?ticket_id=$ticket_id");
         }
 
         flashAlert("Feedback recorded - thank you");
@@ -275,10 +275,10 @@ if (isset($_GET['approve_ticket_task'])) {
     mysqli_query($mysqli, "UPDATE task_approvals SET approval_status = 'approved', approval_approved_by = $required_user WHERE approval_id = $approval_id AND approval_task_id = $task_id AND approval_url_key = '$url_key' AND approval_status = 'pending'");
 
     // Notify tech
-    mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket', notification = 'Invité approved ticket task $task_name', notification_action = 'ticket.php?ticket_id=$ticket_id', notification_user_id = $created_by");
+    mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'Ticket', notification = 'Guest approved ticket task $task_name', notification_action = 'ticket.php?ticket_id=$ticket_id', notification_user_id = $created_by");
 
     // Logging
-    logAudit("Task", "Edit", "Invité user approved task $task_name via link (approval $approval_id)", 0, $task_id);
+    logAudit("Task", "Modifier", "Guest user approved task $task_name via link (approval $approval_id)", 0, $task_id);
 
     flashAlert("Task Approved");
     redirect();
@@ -368,9 +368,9 @@ if (isset($_GET['export_quote_pdf'])) {
         // Start TCPDF
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetMargins(10, 10, 10);
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-        $pdf->AddPage();
+        $pdf->setImprimerHeader(false);
+        $pdf->setImprimerFooter(false);
+        $pdf->AjouterPage();
         $pdf->SetFont('helvetica', '', 10);
 
         // Logo + Right Columns
@@ -401,8 +401,8 @@ if (isset($_GET['export_quote_pdf'])) {
             <td width="50%" align="right" style="font-size:14pt; font-weight:bold;">' . $client_name . '</td>
         </tr>
         <tr>
-            <td style="font-size:10pt; line-height:1.4;">' . nl2br(formatAddress($company_address, $company_city, $company_state, $company_zip, $company_country) . "\n$company_phone\n$company_website") . '</td>
-            <td style="font-size:10pt; line-height:1.4;" align="right">' . nl2br(formatAddress($location_address, $location_city, $location_state, $location_zip, $location_country) . "\n$contact_email\n$contact_phone") . '</td>
+            <td style="font-size:10pt; line-height:1.4;">' . nl2br(formatAjouterress($company_address, $company_city, $company_state, $company_zip, $company_country) . "\n$company_phone\n$company_website") . '</td>
+            <td style="font-size:10pt; line-height:1.4;" align="right">' . nl2br(formatAjouterress($location_address, $location_city, $location_state, $location_zip, $location_country) . "\n$contact_email\n$contact_phone") . '</td>
         </tr>
         </table><br>';
 
@@ -415,7 +415,7 @@ if (isset($_GET['export_quote_pdf'])) {
         </tr>
         <tr>
             <td></td>
-            <td style="font-size:10pt;"><strong>Expire le:</strong></td>
+            <td style="font-size:10pt;"><strong>Expires:</strong></td>
             <td style="font-size:10pt;" align="right">' . $quote_expire . '</td>
         </tr>
         </table><br><br>';
@@ -427,8 +427,8 @@ if (isset($_GET['export_quote_pdf'])) {
             <th align="left" width="40%"><strong>Item</strong></th>
             <th align="center" width="10%"><strong>Qty</strong></th>
             <th align="right" width="15%"><strong>Price</strong></th>
-            <th align="right" width="15%"><strong>TVA</strong></th>
-            <th align="right" width="20%"><strong>Montant</strong></th>
+            <th align="right" width="15%"><strong>Tax</strong></th>
+            <th align="right" width="20%"><strong>Amount</strong></th>
         </tr>';
 
         // Load items
@@ -467,12 +467,12 @@ if (isset($_GET['export_quote_pdf'])) {
             <td width="60%"><i style="font-size:9pt;">' . nl2br($quote_note) . '</i></td>
             <td width="40%">
                 <table width="100%" cellpadding="3" cellspacing="0">
-                    <tr><td>Sous-total:</td><td align="right">' . numfmt_format_currency($currency_format, $sub_total, $quote_currency_code) . '</td></tr>';
+                    <tr><td>Subtotal:</td><td align="right">' . numfmt_format_currency($currency_format, $sub_total, $quote_currency_code) . '</td></tr>';
         if ($quote_discount > 0) {
-            $html .= '<tr><td>Remise:</td><td align="right">-' . numfmt_format_currency($currency_format, $quote_discount, $quote_currency_code) . '</td></tr>';
+            $html .= '<tr><td>Discount:</td><td align="right">-' . numfmt_format_currency($currency_format, $quote_discount, $quote_currency_code) . '</td></tr>';
         }
         if ($total_tax > 0) {
-            $html .= '<tr><td>TVA:</td><td align="right">' . numfmt_format_currency($currency_format, $total_tax, $quote_currency_code) . '</td></tr>';
+            $html .= '<tr><td>Tax:</td><td align="right">' . numfmt_format_currency($currency_format, $total_tax, $quote_currency_code) . '</td></tr>';
         }
         $html .= '
         <tr><td><h3><strong>Total:</strong></h3></td><td align="right"><h3><strong>' . numfmt_format_currency($currency_format, $quote_amount, $quote_currency_code) . '</strong></h3></td></tr>
@@ -486,7 +486,7 @@ if (isset($_GET['export_quote_pdf'])) {
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', "{$quote_date}_{$company_name}_{$client_name}_Devis_{$quote_prefix}{$quote_number}");
+        $filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', "{$quote_date}_{$company_name}_{$client_name}_Quote_{$quote_prefix}{$quote_number}");
         $pdf->Output("$filename.pdf", 'I');
     }
     exit;
@@ -568,7 +568,7 @@ if (isset($_GET['export_invoice_pdf'])) {
         $company_website = escapeHtml($row['company_website']);
         $company_tax_id = escapeHtml($row['company_tax_id']);
         if ($config_invoice_show_tax_id && !empty($company_tax_id)) {
-            $company_tax_id_display = "TVA ID: $company_tax_id";
+            $company_tax_id_display = "Tax ID: $company_tax_id";
         } else {
             $company_tax_id_display = "";
         }
@@ -579,7 +579,7 @@ if (isset($_GET['export_invoice_pdf'])) {
 
         $sql_payments = mysqli_query($mysqli, "SELECT * FROM payments, accounts WHERE payment_account_id = account_id AND payment_invoice_id = $invoice_id ORDER BY payments.payment_id DESC");
 
-        //Add up all the payments for the invoice and get the total amount paid to the invoice
+        //Ajouter up all the payments for the invoice and get the total amount paid to the invoice
         $sql_amount_paid = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS amount_paid FROM payments WHERE payment_invoice_id = $invoice_id");
         $row = mysqli_fetch_assoc($sql_amount_paid);
         $amount_paid = floatval($row['amount_paid']);
@@ -587,24 +587,24 @@ if (isset($_GET['export_invoice_pdf'])) {
         $balance = $invoice_amount - $amount_paid;
 
         //check to see if overdue
-        if ($invoice_status !== "Payée" && $invoice_status !== "Brouillon" && $invoice_status !== "Cancelled" && $invoice_status !== "Non-Billable") {
+        if ($invoice_status !== "Paid" && $invoice_status !== "Draft" && $invoice_status !== "Annulerled" && $invoice_status !== "Non-Billable") {
             $unixtime_invoice_due = strtotime($invoice_due) + 86400;
             if ($unixtime_invoice_due < time()) {
-                $invoice_overdue = "En Retard";
+                $invoice_overdue = "Overdue";
             }
         }
 
         //Set Badge color based off of invoice status
-        $invoice_badge_color = getFactureBadgeColor($invoice_status);
+        $invoice_badge_color = getInvoiceBadgeColor($invoice_status);
 
         require_once("../libs/TCPDF/tcpdf.php");
 
         // Start TCPDF
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetMargins(10, 10, 10);
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-        $pdf->AddPage();
+        $pdf->setImprimerHeader(false);
+        $pdf->setImprimerFooter(false);
+        $pdf->AjouterPage();
         $pdf->SetFont('helvetica', '', 10);
 
         // Logo + Right Columns
@@ -616,7 +616,7 @@ if (isset($_GET['export_invoice_pdf'])) {
         }
         $html .= '</td>
             <td width="60%" align="right">
-                <span style="font-size:18pt; font-weight:bold;">Facture</span><br>
+                <span style="font-size:18pt; font-weight:bold;">Invoice</span><br>
                 <span style="font-size:14pt;">' . $invoice_prefix . $invoice_number . '</span><br>';
         if (strtolower($invoice_status) === 'paid') {
             $html .= '<span style="color:green; font-weight:bold;">PAID</span><br>';
@@ -632,8 +632,8 @@ if (isset($_GET['export_invoice_pdf'])) {
             <td width="50%" align="right" style="font-size:14pt; font-weight:bold;">' . $client_name . '</td>
         </tr>
         <tr>
-            <td style="font-size:10pt; line-height:1.4;">' . nl2br(formatAddress($company_address, $company_city, $company_state, $company_zip, $company_country) . "\n$company_phone\n$company_website\n$company_tax_id_display") . '</td>
-            <td style="font-size:10pt; line-height:1.4;" align="right">' . nl2br(formatAddress($location_address, $location_city, $location_state, $location_zip, $location_country) . "\n$contact_email\n$contact_phone") . '</td>
+            <td style="font-size:10pt; line-height:1.4;">' . nl2br(formatAjouterress($company_address, $company_city, $company_state, $company_zip, $company_country) . "\n$company_phone\n$company_website\n$company_tax_id_display") . '</td>
+            <td style="font-size:10pt; line-height:1.4;" align="right">' . nl2br(formatAjouterress($location_address, $location_city, $location_state, $location_zip, $location_country) . "\n$contact_email\n$contact_phone") . '</td>
         </tr>
         </table><br>';
 
@@ -646,7 +646,7 @@ if (isset($_GET['export_invoice_pdf'])) {
         </tr>
         <tr>
             <td></td>
-            <td style="font-size:10pt;"><strong>Échéance:</strong></td>
+            <td style="font-size:10pt;"><strong>Due:</strong></td>
             <td style="font-size:10pt;" align="right">' . $invoice_due . '</td>
         </tr>
         </table><br><br>';
@@ -658,8 +658,8 @@ if (isset($_GET['export_invoice_pdf'])) {
             <th align="left" width="40%"><strong>Item</strong></th>
             <th align="center" width="10%"><strong>Qty</strong></th>
             <th align="right" width="15%"><strong>Price</strong></th>
-            <th align="right" width="15%"><strong>TVA</strong></th>
-            <th align="right" width="20%"><strong>Montant</strong></th>
+            <th align="right" width="15%"><strong>Tax</strong></th>
+            <th align="right" width="20%"><strong>Amount</strong></th>
         </tr>';
 
         // Load items
@@ -698,20 +698,20 @@ if (isset($_GET['export_invoice_pdf'])) {
             <td width="60%"><i style="font-size:9pt;">' . nl2br($invoice_note) . '</i></td>
             <td width="40%">
                 <table width="100%" cellpadding="3" cellspacing="0">
-                    <tr><td>Sous-total:</td><td align="right">' . numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code) . '</td></tr>';
+                    <tr><td>Subtotal:</td><td align="right">' . numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code) . '</td></tr>';
         if ($invoice_discount > 0) {
-            $html .= '<tr><td>Remise:</td><td align="right">-' . numfmt_format_currency($currency_format, $invoice_discount, $invoice_currency_code) . '</td></tr>';
+            $html .= '<tr><td>Discount:</td><td align="right">-' . numfmt_format_currency($currency_format, $invoice_discount, $invoice_currency_code) . '</td></tr>';
         }
         if ($total_tax > 0) {
-            $html .= '<tr><td>TVA:</td><td align="right">' . numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code) . '</td></tr>';
+            $html .= '<tr><td>Tax:</td><td align="right">' . numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code) . '</td></tr>';
         }
         $html .= '
         <tr><td>Total:</td><td align="right">' . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . '</td></tr>';
         if ($amount_paid > 0) {
-            $html .= '<tr><td>Payée:</td><td align="right">' . numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) . '</td></tr>';
+            $html .= '<tr><td>Paid:</td><td align="right">' . numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) . '</td></tr>';
         }
         $html .= '
-        <tr><td><h3><strong>Solde:</strong></h3></td><td align="right"><h3><strong>' . numfmt_format_currency($currency_format, $balance, $invoice_currency_code) . '</strong></h3></td></tr>
+        <tr><td><h3><strong>Balance:</strong></h3></td><td align="right"><h3><strong>' . numfmt_format_currency($currency_format, $balance, $invoice_currency_code) . '</strong></h3></td></tr>
         </table>
             </td>
         </tr>
@@ -722,7 +722,7 @@ if (isset($_GET['export_invoice_pdf'])) {
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', "{$invoice_date}_{$company_name}_{$client_name}_Facture_{$invoice_prefix}{$invoice_number}");
+        $filename = preg_replace('/[^A-Za-z0-9_\-]/', '_', "{$invoice_date}_{$company_name}_{$client_name}_Invoice_{$invoice_prefix}{$invoice_number}");
         $pdf->Output("$filename.pdf", 'I');
     }
 
@@ -761,7 +761,7 @@ if (isset($_POST['guest_quote_upload_file'])) {
                     'size' => $_FILES['file']['size'][$i]
                 ];
 
-                if ($file_reference_name = checkFichierUpload($single_file, array('pdf'))) {
+                if ($file_reference_name = checkFileTéléverser($single_file, array('pdf'))) {
 
                     $file_tmp_path = $_FILES['file']['tmp_name'][$i];
 
@@ -776,42 +776,42 @@ if (isset($_POST['guest_quote_upload_file'])) {
                     // Define destination file path
                     $dest_path = $upload_file_dir . $file_reference_name;
 
-                    // Get/Create a top-level folder called Client Uploads
-                    $folder_sql = mysqli_query($mysqli, "SELECT folder_id FROM folders WHERE folder_name = 'Client Uploads' AND parent_folder = 0 AND folder_client_id = $client_id LIMIT 1");
+                    // Get/Créer a top-level folder called Client Téléversers
+                    $folder_sql = mysqli_query($mysqli, "SELECT folder_id FROM folders WHERE folder_name = 'Client Téléversers' AND parent_folder = 0 AND folder_client_id = $client_id LIMIT 1");
                     if (mysqli_num_rows($folder_sql) == 1) {
                         // Get
                         $row = mysqli_fetch_assoc($folder_sql);
                         $folder_id = $row['folder_id'];
                     } else {
-                        // Create
-                        mysqli_query($mysqli,"INSERT INTO folders SET folder_name = 'Client Uploads', parent_folder = 0, folder_location = 1, folder_client_id = $client_id");
+                        // Créer
+                        mysqli_query($mysqli,"INSERT INTO folders SET folder_name = 'Client Téléversers', parent_folder = 0, folder_location = 1, folder_client_id = $client_id");
                         $folder_id = mysqli_insert_id($mysqli);
-                        logAudit("Folder", "Create", "Automatically created folder Client Uploads", $client_id, $folder_id);
+                        logAudit("Folder", "Créer", "Automatically created folder Client Téléversers", $client_id, $folder_id);
                     }
 
                     // Do move/upload
                     move_uploaded_file($file_tmp_path, $dest_path);
 
-                    // Create reference in files
-                    mysqli_query($mysqli,"INSERT INTO files SET file_reference_name = '$file_reference_name', file_name = '$file_name', file_description = 'Uploaded via $quote_prefix$quote_number', file_ext = '$file_extension', file_mime_type = '$file_mime_type', file_size = $file_size, file_folder_id = $folder_id, file_client_id = $client_id");
+                    // Créer reference in files
+                    mysqli_query($mysqli,"INSERT INTO files SET file_reference_name = '$file_reference_name', file_name = '$file_name', file_description = 'Téléversered via $quote_prefix$quote_number', file_ext = '$file_extension', file_mime_type = '$file_mime_type', file_size = $file_size, file_folder_id = $folder_id, file_client_id = $client_id");
                     $file_id = mysqli_insert_id($mysqli);
 
                     // Associate file with quote
                     mysqli_query($mysqli, "INSERT INTO quote_files SET quote_id = $quote_id, file_id = $file_id");
 
                     // Logging & feedback
-                    flashAlert('Fichier uploaded!');
+                    flashAlert('File uploaded!');
 
-                    appNotify("Devis Fichier", "$file_name was uploaded to quote $quote_prefix$quote_number", "/agent/quote.php?quote_id=$quote_id", $client_id);
+                    appNotify("Quote File", "$file_name was uploaded to quote $quote_prefix$quote_number", "/agent/quote.php?quote_id=$quote_id", $client_id);
 
-                    mysqli_query($mysqli, "INSERT INTO history SET history_status = 'Upload', history_description = 'Client uploaded file $file_name', history_quote_id = $quote_id");
+                    mysqli_query($mysqli, "INSERT INTO history SET history_status = 'Téléverser', history_description = 'Client uploaded file $file_name', history_quote_id = $quote_id");
 
-                    logAudit("Fichier", "Upload", "Invité uploaded file $file_name to quote $quote_prefix$quote_number", $client_id);
+                    logAudit("File", "Téléverser", "Guest uploaded file $file_name to quote $quote_prefix$quote_number", $client_id);
 
                 } else {
                     flashAlert('Something went wrong uploading the file - please let the support team know.', 'error');
 
-                    logApp("Invité", "error", "Error uploading file to invoice");
+                    logApp("Guest", "error", "Erreur uploading file to invoice");
                 }
 
             }
@@ -841,7 +841,7 @@ if (isset($_POST['create_stripe_customer'])) {
          LEFT JOIN clients ON invoice_client_id = client_id
          WHERE invoice_id = $invoice_id
          AND invoice_url_key = '$invoice_url_key'
-         AND invoice_status NOT IN ('Brouillon', 'Payée', 'Cancelled')
+         AND invoice_status NOT IN ('Draft', 'Paid', 'Annulerled')
          LIMIT 1"
     );
 
@@ -849,7 +849,7 @@ if (isset($_POST['create_stripe_customer'])) {
     if (!$sql || mysqli_num_rows($sql) !== 1) {
         echo "<br><h2>Oops, something went wrong! Please ensure you have the correct URL and have not already paid this invoice.</h2>";
         require_once 'includes/guest_footer.php';
-        error_log("Stripe payment error - Facture with ID $invoice_id not found or not eligible.");
+        error_log("Stripe payment error - Invoice with ID $invoice_id not found or not eligible.");
         exit();
     }
 
@@ -898,7 +898,7 @@ if (isset($_POST['create_stripe_customer'])) {
             require_once '../includes/stripe_init.php';
             $stripe = new \Stripe\StripeClient($stripe_secret_key);
 
-            // Create new customer in Stripe
+            // Créer new customer in Stripe
             $customer = $stripe->customers->create([
                 'name' => $client_name,
                 'email' => $email,
@@ -919,9 +919,9 @@ if (isset($_POST['create_stripe_customer'])) {
                     client_payment_provider_created_at = NOW()
             ");
 
-            logAudit("Stripe", "Create", "Invité $name created Stripe customer for $client_name as $stripe_customer_id and authorized future automatic payments", $client_id);
+            logAudit("Stripe", "Créer", "Guest $name created Stripe customer for $client_name as $stripe_customer_id and authorized future automatic payments", $client_id);
 
-            flashAlert("Stripe customer created. Merci for your consent.");
+            flashAlert("Stripe customer created. Thank you for your consent.");
 
         } catch (Exception $e) {
             $error = $e->getMessage();

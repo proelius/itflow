@@ -91,31 +91,31 @@ $config_quote_footer = escapeHtml($row['config_quote_footer']);
 $currency_format = numfmt_create($company_locale, NumberFormatter::CURRENCY);
 
 //Set Badge color based off of quote status
-if ($quote_status == "Envoyée") {
+if ($quote_status == "Sent") {
     $quote_badge_color = "warning";
-} elseif ($quote_status == "Vue") {
+} elseif ($quote_status == "Voired") {
     $quote_badge_color = "primary";
-} elseif ($quote_status == "Accepté") {
+} elseif ($quote_status == "Accepted") {
     $quote_badge_color = "success";
-} elseif ($quote_status == "Refusé") {
+} elseif ($quote_status == "Declined") {
     $quote_badge_color = "danger";
-} elseif ($quote_status == "Factured") {
+} elseif ($quote_status == "Invoiced") {
     $quote_badge_color = "info";
 } else {
     $quote_badge_color = "secondary";
 }
 
-//Update status to Vue only if invoice_status = "Envoyée"
-if ($quote_status == 'Envoyée') {
-    mysqli_query($mysqli, "UPDATE quotes SET quote_status = 'Vue' WHERE quote_id = $quote_id");
+//Mettre à jour status to Voired only if invoice_status = "Sent"
+if ($quote_status == 'Sent') {
+    mysqli_query($mysqli, "UPDATE quotes SET quote_status = 'Voired' WHERE quote_id = $quote_id");
 }
 
 //Mark viewed in history
-mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status', history_description = 'Devis viewed - $ip - $os - $browser', history_quote_id = $quote_id");
+mysqli_query($mysqli, "INSERT INTO history SET history_status = '$quote_status', history_description = 'Quote viewed - $ip - $os - $browser', history_quote_id = $quote_id");
 
-if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status == "Vue") {
+if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Voired") {
 
-    appNotify("Devis Vue", "Devis $quote_prefix$quote_number has been viewed by $client_name_escaped - $ip - $os - $browser", "/agent/quote.php?quote_id=$quote_id", $client_id);
+    appNotify("Quote Voired", "Quote $quote_prefix$quote_number has been viewed by $client_name_escaped - $ip - $os - $browser", "/agent/quote.php?quote_id=$quote_id", $client_id);
 }
 
 ?>
@@ -125,7 +125,7 @@ if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status
     <div class="card-header d-print-none">
 
         <div class="float-end">
-            <a class="btn btn-primary" href="#" onclick="window.print();"><i class="fas fa-fw fa-print me-2"></i>Print</a>
+            <a class="btn btn-primary" href="#" onclick="window.print();"><i class="fas fa-fw fa-print me-2"></i>Imprimer</a>
             <a class="btn btn-primary" href="guest_post.php?export_quote_pdf=<?= $quote_id ?>&url_key=<?= $url_key ?>">
                 <i class="fa fa-fw fa-download me-2"></i>Télécharger
             </a>
@@ -142,7 +142,7 @@ if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status
             <div class="col-sm-6 <?php if (!file_exists("../uploads/settings/$company_logo")) { echo "col-sm-8"; } ?>">
                 <ul class="list-unstyled">
                     <li><h4><strong><?= $company_name ?></strong></h4></li>
-                    <li><?= formatAddress($company_address, $company_city, $company_state, $company_zip, $company_country, '<br>') ?></li>
+                    <li><?= formatAjouterress($company_address, $company_city, $company_state, $company_zip, $company_country, '<br>') ?></li>
                     <li><?= "$company_email | $company_phone" ?></li>
                     <li><?= $company_website ?></li>
                 </ul>
@@ -155,7 +155,7 @@ if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status
                 </h5>
                 <table class="table table-sm table-borderless">
                     <tr>
-                        <th>Devis #:</th>
+                        <th>Quote #:</th>
                         <td class="text-end"><?= "$quote_prefix$quote_number" ?></td>
                     </tr>
                     <tr>
@@ -163,7 +163,7 @@ if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status
                         <td class="text-end"><?= $quote_date ?></td>
                     </tr>
                     <tr>
-                        <th>Expire le:</th>
+                        <th>Expires:</th>
                         <td class="text-end"><?= $quote_expire ?></td>
                     </tr>
                 </table>
@@ -175,7 +175,7 @@ if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status
                 <h6><strong>To:</strong></h6>
                 <ul class="list-unstyled mb-0">
                     <li><?= $client_name ?></li>
-                    <li><?= formatAddress($location_address, $location_city, $location_state, $location_zip, $location_country, '<br>') ?></li>
+                    <li><?= formatAjouterress($location_address, $location_city, $location_state, $location_zip, $location_country, '<br>') ?></li>
                     <li><?= "$contact_email | $contact_phone $contact_extension" ?></li>
                 </ul>
             </div>
@@ -194,8 +194,8 @@ if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status
                                 <th>Description</th>
                                 <th class="text-center">Qty</th>
                                 <th class="text-end">Unit Price</th>
-                                <th class="text-end">TVA</th>
-                                <th class="text-end">Montant</th>
+                                <th class="text-end">Tax</th>
+                                <th class="text-end">Amount</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -253,18 +253,18 @@ if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status
                 <table class="table table-hover mb-0">
                     <tbody>
                     <tr>
-                        <td>Sous-total:</td>
+                        <td>Subtotal:</td>
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $sub_total, $quote_currency_code) ?></td>
                     </tr>
                     <?php if ($quote_discount > 0) { ?>
                         <tr>
-                            <td>Remise:</td>
+                            <td>Discount:</td>
                             <td class="text-end"><?= numfmt_format_currency($currency_format, -$quote_discount, $quote_currency_code) ?></td>
                         </tr>
                     <?php } ?>
                     <?php if ($total_tax > 0) { ?>
                         <tr>
-                            <td>TVA:</td>
+                            <td>Tax:</td>
                             <td class="text-end"><?= numfmt_format_currency($currency_format, $total_tax, $quote_currency_code) ?></td>
                         </tr>
                     <?php } ?>
@@ -282,7 +282,7 @@ if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status
         <div class="text-center"><?= nl2br($config_quote_footer) ?></div>
         <div class="">
             <?php
-                if ($quote_status == "Envoyée" || $quote_status == "Vue" && strtotime($quote_expire) > strtotime("now")) { ?>
+                if ($quote_status == "Sent" || $quote_status == "Voired" && strtotime($quote_expire) > strtotime("now")) { ?>
                     <a class="btn btn-success confirm-link" href="guest_post.php?accept_quote=<?= $quote_id ?>&url_key=<?= $url_key ?>">
                         <i class="fas fa-fw fa-thumbs-up me-2"></i>Accept
                     </a>
@@ -290,9 +290,9 @@ if ($quote_status == "Brouillon" || $quote_status == "Envoyée" || $quote_status
                         <i class="fas fa-fw fa-thumbs-down me-2"></i>Decline
                     </a>
                 <?php } ?>
-                <?php if ($quote_status == "Accepté") { ?>
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadFichierModal">
-                        <i class="fas fa-fw fa-cloud-upload-alt me-2"></i>Upload Fichier
+                <?php if ($quote_status == "Accepted") { ?>
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadFileModal">
+                        <i class="fas fa-fw fa-cloud-upload-alt me-2"></i>Téléverser File
                     </button>
                 <?php } ?>
         </div>

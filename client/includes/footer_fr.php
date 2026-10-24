@@ -5,7 +5,7 @@
  */
 ?>
 
-<!-- Close container -->
+<!-- Fermer container -->
 </div>
 
 <?php /* This portal has no .app-wrapper grid - it is a plain navbar over a
@@ -15,7 +15,7 @@
          list, the statement) the bar lands on the bottom of the window rather
          than directly under the content.
 
-         .app-footer is AdminLTE's own bar styling - border-top, body-bg,
+         .app-footer is AdministrationLTE's own bar styling - border-top, body-bg,
          min-height 3rem - which is what the old rule was standing in for, so
          the trailing br and hr go with it. Its grid-area is inert outside a
          grid.

@@ -1,0 +1,79 @@
+<?php
+
+/*
+ * ITFlow - GET/POST request handler for revenue
+ */
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_POST['add_revenue'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_sales', 2);
+
+    $date = escapeSql($_POST['date']);
+    $amount = floatval($_POST['amount']);
+    $account = intval($_POST['account']);
+    $category = intval($_POST['category']);
+    $payment_method = escapeSql($_POST['payment_method']);
+    $description = escapeSql($_POST['description']);
+    $reference = escapeSql($_POST['reference']);
+
+    mysqli_query($mysqli,"INSERT INTO revenues SET revenue_date = '$date', revenue_amount = $amount, revenue_currency_code = '$session_company_currency', revenue_payment_method = '$payment_method', revenue_reference = '$reference', revenue_description = '$description', revenue_category_id = $category, revenue_account_id = $account");
+
+    $revenue_id = mysqli_insert_id($mysqli);
+
+    logAudit("Revenue", "Créer", "$session_name added revenue $description", 0, $revenue_id);
+
+    flashAlert("Revenue added");
+
+    redirect();
+
+}
+
+if (isset($_POST['edit_revenue'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_sales', 2);
+
+    $revenue_id = intval($_POST['revenue_id']);
+    $date = escapeSql($_POST['date']);
+    $amount = floatval($_POST['amount']);
+    $account = intval($_POST['account']);
+    $category = intval($_POST['category']);
+    $payment_method = escapeSql($_POST['payment_method']);
+    $description = escapeSql($_POST['description']);
+    $reference = escapeSql($_POST['reference']);
+
+    mysqli_query($mysqli,"UPDATE revenues SET revenue_date = '$date', revenue_amount = $amount, revenue_payment_method = '$payment_method', revenue_reference = '$reference', revenue_description = '$description', revenue_category_id = $category, revenue_account_id = $account WHERE revenue_id = $revenue_id");
+
+    logAudit("Revenue", "Modifier", "$session_name edited revenue $description", 0, $revenue_id);
+
+    flashAlert("Revenue edited");
+
+    redirect();
+
+}
+
+if (isset($_GET['delete_revenue'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_sales', 3);
+
+    $revenue_id = intval($_GET['delete_revenue']);
+
+    // Get Revenue Details
+    $revenue_description = escapeSql(getFieldById('revenues', $revenue_id, 'revenue_description'));
+
+    mysqli_query($mysqli,"DELETE FROM revenues WHERE revenue_id = $revenue_id");
+
+    logAudit("Revenue", "Supprimer", "$session_name deleted revenue $revenue_description");
+
+    flashAlert("Revenue removed", 'error');
+
+    redirect();
+
+}

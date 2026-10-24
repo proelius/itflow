@@ -97,7 +97,7 @@ function ticketsFiltrerUrl($overrides = [])
 // Voir - list or kanban
 $view = ($_GET['view'] ?? '') === 'kanban' ? 'kanban' : (($_GET['view'] ?? '') === 'list' ? 'list' : '');
 if (!$view) {
-    // Admin default (0 = list, 2 = kanban)
+    // Administration default (0 = list, 2 = kanban)
     $view = $config_ticket_default_view === 2 ? 'kanban' : 'list';
 }
 
@@ -175,13 +175,13 @@ if (!empty($_GET['category'])) {
     $active_filters[] = array('label' => 'Category', 'value' => escapeHtml(getFieldById('categories', $category_filter, 'category_name')), 'drop' => 'category');
 }
 
-// Priorité Filtrer
+// Priority Filtrer
 $ticket_priority_query = '';
 $priority_filter = '';
 if (!empty($_GET['priority']) && in_array($_GET['priority'], array('Low', 'Medium', 'High', 'Urgent'), true)) {
     $priority_filter = $_GET['priority'];
     $ticket_priority_query = "AND ticket_priority = '$priority_filter'";
-    $active_filters[] = array('label' => 'Priorité', 'value' => $priority_filter, 'drop' => 'priority');
+    $active_filters[] = array('label' => 'Priority', 'value' => $priority_filter, 'drop' => 'priority');
 }
 
 // SLA state filter - breached / at risk / paused / met / no SLA
@@ -201,7 +201,7 @@ if (!empty($_GET['sla']) && isset($sla_filter_labels[$_GET['sla']])) {
     } elseif ($ticket_sla_filter == 'at_risk') {
         $ticket_sla_query = 'AND ticket_sla_id > 0 AND COALESCE(ticket_status_pauses_sla, 0) = 0 AND (ticket_response_sla_alert_stage = 1 OR ticket_resolution_sla_alert_stage = 1)';
     } elseif ($ticket_sla_filter == 'paused') {
-        // Résoudred and Fermerd pause the clock as well, but they are finished, not parked
+        // Resolved and Fermerd pause the clock as well, but they are finished, not parked
         $ticket_sla_query = 'AND ticket_sla_id > 0 AND ticket_status_pauses_sla = 1 AND ticket_resolved_at IS NULL AND ticket_closed_at IS NULL';
     } elseif ($ticket_sla_filter == 'met') {
         $ticket_sla_query = 'AND ticket_sla_id > 0 AND ticket_response_sla_met = 1 AND (ticket_resolution_sla_met = 1 OR ticket_resolution_due_at IS NULL)';
@@ -218,12 +218,12 @@ if (!empty($_GET['assigned'])) {
     if ($_GET['assigned'] == 'unassigned') {
         $ticket_assigned_query = 'AND ticket_assigned_to = 0';
         $ticket_assigned_filter_id = 0;
-        $active_filters[] = array('label' => 'Assignered', 'value' => 'Désassignered', 'drop' => 'assigned');
+        $active_filters[] = array('label' => 'Assigned', 'value' => 'Unassigned', 'drop' => 'assigned');
     } else {
         $ticket_assigned_filter_id = intval($_GET['assigned']);
         $ticket_assigned_query = "AND ticket_assigned_to = $ticket_assigned_filter_id";
         $assigned_name = $ticket_assigned_filter_id === intval($session_user_id) ? 'Me' : escapeHtml(getFieldById('users', $ticket_assigned_filter_id, 'user_name'));
-        $active_filters[] = array('label' => 'Assignered', 'value' => $assigned_name, 'drop' => 'assigned');
+        $active_filters[] = array('label' => 'Assigned', 'value' => $assigned_name, 'drop' => 'assigned');
     }
 }
 
@@ -331,7 +331,7 @@ if ($date_filter_active) {
             <small class="ms-3">
                 <a href="<?= ticketsFiltrerUrl(['state' => 'open', 'status' => null]) ?>" class="badge rounded-pill p-1 <?= (!$status_filter && $state == 'open') ? 'bg-light text-dark' : 'text-light' ?>"><strong><?= $total_tickets_open ?></strong> Ouvert</a> |
                 <a href="<?= ticketsFiltrerUrl(['state' => 'closed', 'status' => null]) ?>" class="badge rounded-pill p-1 <?= (!$status_filter && $state == 'closed') ? 'bg-light text-dark' : 'text-light' ?>"><strong><?= $total_tickets_closed ?></strong> Fermerd</a> |
-                <a href="<?= ticketsFiltrerUrl(['state' => 'all', 'status' => null]) ?>" class="badge rounded-pill p-1 <?= (!$status_filter && $state == 'all') ? 'bg-light text-dark' : 'text-light' ?>">Tous</a>
+                <a href="<?= ticketsFiltrerUrl(['state' => 'all', 'status' => null]) ?>" class="badge rounded-pill p-1 <?= (!$status_filter && $state == 'all') ? 'bg-light text-dark' : 'text-light' ?>">All</a>
             </small>
         </h3>
         <?php if (lookupUserPermission("module_support") >= 2) { ?>
@@ -387,7 +387,7 @@ if ($date_filter_active) {
                         </a>
                         <a href="<?= $ticket_assigned_filter_id === 0 ? ticketsFiltrerUrl(['assigned' => null]) : ticketsFiltrerUrl(['assigned' => 'unassigned']) ?>"
                             class="btn <?= $ticket_assigned_filter_id === 0 ? 'btn-danger' : 'btn-outline-danger' ?>">
-                            <i class="fas fa-fw fa-user-slash"></i><span class="d-none d-xl-inline ms-2">Désassignered</span> | <strong><?= $total_tickets_unassigned ?></strong>
+                            <i class="fas fa-fw fa-user-slash"></i><span class="d-none d-xl-inline ms-2">Unassigned</span> | <strong><?= $total_tickets_unassigned ?></strong>
                         </a>
                         <a href="<?= ticketsFiltrerUrl(['view' => $view == 'kanban' ? 'list' : 'kanban']) ?>" class="btn btn-outline-dark ms-2" title="Switch to the <?= $view == 'kanban' ? 'list' : 'kanban' ?> view">
                             <i class="fa fa-fw <?= $view == 'kanban' ? 'fa-list' : 'fa-columns' ?>"></i>
@@ -419,10 +419,10 @@ if ($date_filter_active) {
 
                     <div class="col-md-3">
                         <div>
-                            <label>Assignered to</label>
+                            <label>Assigned to</label>
                             <select onchange="this.form.submit()" class="form-select select2" name="assigned">
                                 <option value="">Anyone</option>
-                                <option value="unassigned" <?php if ($ticket_assigned_filter_id === 0) { echo "selected"; } ?>>Désassignered</option>
+                                <option value="unassigned" <?php if ($ticket_assigned_filter_id === 0) { echo "selected"; } ?>>Unassigned</option>
 
                                 <?php
                                 $sql_assign_to = mysqli_query($mysqli, "SELECT user_id, user_name FROM users WHERE user_type = 1 AND user_archived_at IS NULL ORDER BY user_name ASC");
@@ -440,7 +440,7 @@ if ($date_filter_active) {
 
                     <div class="col-md-3">
                         <div>
-                            <label>Priorité</label>
+                            <label>Priority</label>
                             <select onchange="this.form.submit()" class="form-select select2" name="priority">
                                 <option value="">Any priority</option>
                                 <?php foreach (array('Urgent', 'High', 'Medium', 'Low') as $priority_option) { ?>

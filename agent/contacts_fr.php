@@ -160,7 +160,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <div class="col-md-2">
                     <div class="input-group">
                         <select class="form-select select2" name="location" onchange="this.form.submit()">
-                            <option value="">- Tous Lieux -</option>
+                            <option value="">- All Locations -</option>
 
                             <?php
                             $sql_locations_filter = mysqli_query($mysqli, "
@@ -186,7 +186,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <div class="col-md-2">
                     <div class="input-group">
                         <select class="form-select select2" name="client" onchange="this.form.submit()">
-                            <option value="" <?php if ($client == "") { echo "selected"; } ?>>- Tous Clients -</option>
+                            <option value="" <?php if ($client == "") { echo "selected"; } ?>>- All Clients -</option>
 
                             <?php
                             $sql_clients_filter = mysqli_query($mysqli, "
@@ -226,7 +226,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                 <a class="dropdown-item ajax-modal" href="#"
                                     data-modal-url="modals/contact/contact_bulk_assign_location.php?<?= $client_url ?>"
                                     data-bulk="true">
-                                    <i class="fas fa-fw fa-map-marker-alt me-2"></i>Assigner Location
+                                    <i class="fas fa-fw fa-map-marker-alt me-2"></i>Assign Location
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <?php } ?>
@@ -251,7 +251,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                 <a class="dropdown-item ajax-modal" href="#"
                                     data-modal-url="modals/contact/contact_bulk_assign_tags.php"
                                     data-bulk="true">
-                                    <i class="fas fa-fw fa-tags me-2"></i>Assigner Tags
+                                    <i class="fas fa-fw fa-tags me-2"></i>Assign Tags
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item ajax-modal" href="#"
@@ -295,7 +295,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <tr>
                     <td class="checkbox-column border-end">
                         <div class="form-check">
-                            <input class="form-check-input" id="selectTousCheckbox" type="checkbox" onclick="checkTous(this)">
+                            <input class="form-check-input" id="selectAllCheckbox" type="checkbox" onclick="checkAll(this)">
                         </div>
                     </td>
                     <th>

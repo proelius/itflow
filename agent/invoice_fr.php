@@ -100,7 +100,7 @@ if (isset($_GET['invoice_id'])) {
     $company_website = escapeHtml($row['company_website']);
     $company_tax_id = escapeHtml($row['company_tax_id']);
     if ($config_invoice_show_tax_id && !empty($company_tax_id)) {
-        $company_tax_id_display = "TVA ID: $company_tax_id";
+        $company_tax_id_display = "Tax ID: $company_tax_id";
     } else {
         $company_tax_id_display = "";
     }
@@ -161,17 +161,17 @@ if (isset($_GET['invoice_id'])) {
 
     $balance = $invoice_amount - $amount_paid;
 
-    // Get Credit Solde
+    // Get Credit Balance
     $sql_credit_balance = mysqli_query($mysqli, "SELECT SUM(credit_amount) AS credit_balance FROM credits WHERE credit_client_id = $client_id");
     $row = mysqli_fetch_assoc($sql_credit_balance);
 
     $credit_balance = floatval($row['credit_balance']);
 
     //check to see if overdue
-    if ($invoice_status !== "Payée" && $invoice_status !== "Brouillon" && $invoice_status !== "Annulerled" && $invoice_status !== "Non-Billable") {
+    if ($invoice_status !== "Paid" && $invoice_status !== "Draft" && $invoice_status !== "Annulerled" && $invoice_status !== "Non-Billable") {
         $unixtime_invoice_due = strtotime($invoice_due) + 86400;
         if ($unixtime_invoice_due < time()) {
-            $invoice_overdue = "En Retard";
+            $invoice_overdue = "Overdue";
         }
     }
 
@@ -194,7 +194,7 @@ if (isset($_GET['invoice_id'])) {
 
     <ol class="breadcrumb d-print-none">
         <li class="breadcrumb-item">
-            <a href="invoices.php">Tous Factures</a>
+            <a href="invoices.php">All Factures</a>
         </li>
         <li class="breadcrumb-item">
             <a href="invoices.php?client_id=<?= $client_id ?>"><?= $client_name ?> Factures</a>
@@ -214,7 +214,7 @@ if (isset($_GET['invoice_id'])) {
                     <div class="col-8">
                         <?php if (lookupUserPermission("module_sales") >= 2) { ?>
 
-                            <?php if ($invoice_status == 'Brouillon') { ?>
+                            <?php if ($invoice_status == 'Draft') { ?>
                                 <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-fw fa-paper-plane me-2"></i>Send
                                 </button>
@@ -235,17 +235,17 @@ if (isset($_GET['invoice_id'])) {
                                     <?php } ?>
                                     <a class="dropdown-item ajax-modal" href="#"
                                         data-modal-url="modals/invoice/invoice_mark_sent.php?invoice_id=<?= $invoice_id ?>">
-                                        <i class="fas fa-fw fa-check me-2"></i>Mark Envoyée
+                                        <i class="fas fa-fw fa-check me-2"></i>Mark Sent
                                     </a>
                                 </div>
                             <?php } ?>
 
-                            <?php if ($invoice_status !== 'Payée' && $invoice_status !== 'Annulerled' && $invoice_status !== 'Brouillon' && $invoice_status !== 'Non-Billable' && $invoice_amount != 0) { ?>
+                            <?php if ($invoice_status !== 'Paid' && $invoice_status !== 'Annulerled' && $invoice_status !== 'Draft' && $invoice_status !== 'Non-Billable' && $invoice_amount != 0) { ?>
 
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-success ajax-modal" data-modal-url="modals/payment/payment_add.php?id=<?= $invoice_id ?>"><i class="fa fa-fw fa-credit-card me-2"></i>Ajouter Payment</button>
 
-                                    <?php if (mysqli_num_rows($sql_saved_payment_methods) > 0 && ($invoice_status === 'Envoyée' || $invoice_status === 'Voired')) { ?>
+                                    <?php if (mysqli_num_rows($sql_saved_payment_methods) > 0 && ($invoice_status === 'Sent' || $invoice_status === 'Voired')) { ?>
                                     <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></button>
                                     <div class="dropdown-menu">
                                         <a class="dropdown-item ajax-modal" href="#" data-modal-url="modals/payment/payment_saved_method_add.php?id=<?= $invoice_id ?>"><i class="fas fa-fw fa-wallet me-2"></i>Pay with Enregistrerd Card</a>
@@ -256,7 +256,7 @@ if (isset($_GET['invoice_id'])) {
 
                             <?php } ?>
 
-                            <?php if (($invoice_status == 'Envoyée' || $invoice_status == 'Voired') && $invoice_amount == 0 && $invoice_status !== 'Non-Billable') { ?>
+                            <?php if (($invoice_status == 'Sent' || $invoice_status == 'Voired') && $invoice_amount == 0 && $invoice_status !== 'Non-Billable') { ?>
                                 <a class="btn btn-dark" href="post.php?mark_invoice_non-billable=<?= $invoice_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
                                     Mark Non-Billable
                                 </a>
@@ -310,7 +310,7 @@ if (isset($_GET['invoice_id'])) {
                                 <a class="dropdown-item clipboardjs" href="#" data-clipboard-text="https://<?= $config_base_url ?>/guest/guest_view_invoice.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>">
                                     <i class="fa fa-fw fa-copy text-secondary me-2"></i>Copy Guest URL
                                 </a>
-                                <?php if ($invoice_status !== 'Annulerled' && $invoice_status !== 'Payée' && $invoice_status !== 'Non-Billable') { ?>
+                                <?php if ($invoice_status !== 'Annulerled' && $invoice_status !== 'Paid' && $invoice_status !== 'Non-Billable') { ?>
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item text-danger text-bold confirm-link" href="post.php?cancel_invoice=<?= $invoice_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
                                         <i class="fa fa-fw fa-times me-2"></i>Annuler
@@ -356,7 +356,7 @@ if (isset($_GET['invoice_id'])) {
                     </h5>
                     <table class="table table-sm table-borderless">
                         <tr>
-                            <th>Facture #:</th>
+                            <th>Invoice #:</th>
                             <td class="text-end"><?= "$invoice_prefix$invoice_number" ?></td>
                         </tr>
                         <tr>
@@ -364,7 +364,7 @@ if (isset($_GET['invoice_id'])) {
                             <td class="text-end"><?= $invoice_date ?></td>
                         </tr>
                         <tr>
-                            <th>Échéance:</th>
+                            <th>Due:</th>
                             <td class="text-end"><?= $invoice_due ?></td>
                         </tr>
                     </table>
@@ -397,8 +397,8 @@ if (isset($_GET['invoice_id'])) {
                                     <th>Description</th>
                                     <th class="text-center">Qty</th>
                                     <th class="text-end">Unit Price</th>
-                                    <th class="text-end">TVA</th>
-                                    <th class="text-end">Montant</th>
+                                    <th class="text-end">Tax</th>
+                                    <th class="text-end">Amount</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -423,7 +423,7 @@ if (isset($_GET['invoice_id'])) {
                                     ?>
                                     <tr data-item-id="<?= $item_id ?>">
                                         <td class="d-print-none">
-                                            <?php if ($invoice_status !== "Payée" && $invoice_status !== "Annulerled") { ?>
+                                            <?php if ($invoice_status !== "Paid" && $invoice_status !== "Annulerled") { ?>
 
                                                 <div class="btn-group">
                                                     <button type="button" class="btn btn-sm btn-link drag-handle">
@@ -457,7 +457,7 @@ if (isset($_GET['invoice_id'])) {
                                     <?php
                                 }
                                 ?>
-                                <tr class="d-print-none" <?php if ($invoice_status == "Payée" || $invoice_status == "Annulerled" || lookupUserPermission("module_sales") <= 1) { echo "hidden"; } ?>>
+                                <tr class="d-print-none" <?php if ($invoice_status == "Paid" || $invoice_status == "Annulerled" || lookupUserPermission("module_sales") <= 1) { echo "hidden"; } ?>>
                                     <form action="post.php" method="post" autocomplete="off">
                                         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                                         <input type="hidden" name="invoice_id" value="<?= $invoice_id ?>">
@@ -478,7 +478,7 @@ if (isset($_GET['invoice_id'])) {
                                         </td>
                                         <td>
                                             <select class="form-select select2" name="tax_id" id="tax" required>
-                                                <option value="0">No TVA</option>
+                                                <option value="0">No Tax</option>
                                                 <?php
                                                 $taxes_sql = mysqli_query($mysqli, "SELECT tax_id, tax_name, tax_percent FROM taxes WHERE tax_archived_at IS NULL ORDER BY tax_name ASC");
                                                 while ($row = mysqli_fetch_assoc($taxes_sql)) {
@@ -534,14 +534,14 @@ if (isset($_GET['invoice_id'])) {
                         <tbody>
 
                         <tr>
-                            <td>Sous-total:</td>
+                            <td>Subtotal:</td>
                             <td class="text-end"><?= numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code) ?></td>
                         </tr>
                         <?php
                         if ($invoice_discount > 0) {
                             ?>
                             <tr>
-                                <td>Remise:</td>
+                                <td>Discount:</td>
                                 <td class="text-end">-<?= numfmt_format_currency($currency_format, $invoice_discount, $invoice_currency_code) ?></td>
                             </tr>
                         <?php
@@ -559,7 +559,7 @@ if (isset($_GET['invoice_id'])) {
                         ?>
                         <?php if ($total_tax > 0) { ?>
                             <tr>
-                                <td>TVA:</td>
+                                <td>Tax:</td>
                                 <td class="text-end"><?= numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code) ?></td>
                             </tr>
                         <?php } ?>
@@ -570,13 +570,13 @@ if (isset($_GET['invoice_id'])) {
                         <?php
                         if ($amount_paid > 0) { ?>
                             <tr>
-                                <td><div class="text-success">Payée:</div></td>
+                                <td><div class="text-success">Paid:</div></td>
                                 <td class="text-end text-success"><?= numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) ?></td>
                             </tr>
                         <?php } ?>
 
                         <tr class="h5 text-bold">
-                            <td>Solde:</td>
+                            <td>Balance:</td>
                             <td class="text-end"><?= numfmt_format_currency($currency_format, $balance, $invoice_currency_code) ?></td>
                         </tr>
                         </tbody>
@@ -636,7 +636,7 @@ if (isset($_GET['invoice_id'])) {
         <div class="col-sm d-print-none <?php if (mysqli_num_rows($sql_payments) == 0) { echo "d-none"; } ?>">
             <div class="card mb-3">
                 <div class="card-header text-bold">
-                    <i class="fa fa-credit-card me-2"></i>Paiements
+                    <i class="fa fa-credit-card me-2"></i>Payments
                     <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-lte-toggle="card-collapse">
                             <i class="fas fa-minus"></i>
@@ -652,7 +652,7 @@ if (isset($_GET['invoice_id'])) {
                             <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th class="text-end">Montant</th>
+                                    <th class="text-end">Amount</th>
                                     <th>Reference</th>
                                     <th>Account</th>
                                     <?php if (lookupUserPermission("module_sales") >= 3 && lookupUserPermission("module_financial") >= 3) { ?>
@@ -729,7 +729,7 @@ if (isset($_GET['invoice_id'])) {
                                 <tr>
                                     <th>#</th>
                                     <th>Date</th>
-                                    <th>Sujet</th>
+                                    <th>Subject</th>
                                     <th class="text-end">Time Worked</th>
                                     <th></th>
                                 </tr>
@@ -810,13 +810,13 @@ new Sortable(document.querySelector('table#items tbody'), {
     handle: '.drag-handle',
     animation: 150,
     onEnd: function (evt) {
-        const rows = document.querySelectorTous('table#items tbody tr');
+        const rows = document.querySelectorAll('table#items tbody tr');
         const positions = Array.from(rows).map((row, index) => ({
             id: row.dataset.itemId,
             order: index
         }));
 
-        itflowPublierForm('ajax.php', {
+        itflowPostForm('ajax.php', {
             update_invoice_items_order: true,
             csrf_token: '<?= $_SESSION['csrf_token'] ?>',
             invoice_id: <?= $invoice_id ?>,

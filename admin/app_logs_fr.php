@@ -42,7 +42,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
     <div class="card">
         <div class="card-header bg-dark py-2">
-            <h3 class="card-title"><i class="fas fa-fw fa-history me-2"></i>Logs Application</h3>
+            <h3 class="card-title"><i class="fas fa-fw fa-history me-2"></i>App Logs</h3>
         </div>
         <div class="card-header py-3">
             <form autocomplete="off">
@@ -79,7 +79,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     <div class="col-sm-2">
                         <div>
                             <select class="form-select select2" name="category" onchange="this.form.submit()">
-                                <option value="">- All Catégories -</option>
+                                <option value="">- All Categories -</option>
 
                                 <?php
                                 $sql_categories_filter = mysqli_query($mysqli, "SELECT DISTINCT app_log_category FROM app_logs ORDER BY app_log_category ASC");

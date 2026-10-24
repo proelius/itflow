@@ -1,0 +1,292 @@
+<?php
+
+/*
+ * ITFlow - GET/POST request handler for client racks
+ */
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_POST['add_rack'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 2);
+
+    $client_id = intval($_POST['client_id']);
+    $name = escapeSql($_POST['name']);
+    $description = escapeSql($_POST['description']);
+    $type = escapeSql($_POST['type']);
+    $model = escapeSql($_POST['model']);
+    $depth = escapeSql($_POST['depth']);
+    $units = intval($_POST['units']);
+    $physical_location = escapeSql($_POST['physical_location']);
+    $location = intval($_POST['location']);
+    $notes = escapeSql($_POST['notes']);
+
+    enforceClientAccess();
+
+    mysqli_query($mysqli,"INSERT INTO racks SET rack_name = '$name', rack_description = '$description', rack_type = '$type', rack_model = '$model', rack_depth = '$depth', rack_units = $units, rack_location_id = $location, rack_physical_location = '$physical_location', rack_notes = '$notes', rack_client_id = $client_id");
+
+    $rack_id = mysqli_insert_id($mysqli);
+
+    // Ajouter Photo
+    if ($new_file_name = checkFileTéléverser($_FILES['file'], array('jpg', 'jpeg', 'gif', 'png', 'webp'))) {
+
+        $file_tmp_path = $_FILES['file']['tmp_name'];
+
+        // directory in which the uploaded file will be moved
+        if (!file_exists("../uploads/clients/$client_id")) {
+            mkdir("../uploads/clients/$client_id");
+        }
+        $upload_file_dir = "../uploads/clients/$client_id/";
+        $dest_path = $upload_file_dir . $new_file_name;
+        move_uploaded_file($file_tmp_path, $dest_path);
+
+        mysqli_query($mysqli,"UPDATE racks SET rack_photo = '$new_file_name' WHERE rack_id = $rack_id");
+    }
+
+    logAudit("Rack", "Créer", "$session_name created rack $name", $client_id, $rack_id);
+
+    flashAlert("Rack <strong>$name</strong> created");
+
+    redirect();
+
+}
+
+if (isset($_POST['edit_rack'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 2);
+
+    $rack_id = intval($_POST['rack_id']);
+    $name = escapeSql($_POST['name']);
+    $description = escapeSql($_POST['description']);
+    $type = escapeSql($_POST['type']);
+    $model = escapeSql($_POST['model']);
+    $depth = escapeSql($_POST['depth']);
+    $units = intval($_POST['units']);
+    $physical_location = escapeSql($_POST['physical_location']);
+    $location = intval($_POST['location']);
+    $notes = escapeSql($_POST['notes']);
+
+    $client_id = intval(getFieldById('racks', $rack_id, 'rack_client_id'));
+
+    enforceClientAccess();
+
+    mysqli_query($mysqli,"UPDATE racks SET rack_name = '$name', rack_description = '$description', rack_type = '$type', rack_model = '$model', rack_depth = '$depth', rack_units = $units, rack_location_id = $location, rack_physical_location = '$physical_location', rack_notes = '$notes' WHERE rack_id = $rack_id");
+
+    // Ajouter Photo
+    if ($new_file_name = checkFileTéléverser($_FILES['file'], array('jpg', 'jpeg', 'gif', 'png', 'webp'))) {
+
+        $file_tmp_path = $_FILES['file']['tmp_name'];
+
+        // directory in which the uploaded file will be moved
+        if (!file_exists("../uploads/clients/$client_id")) {
+            mkdir("../uploads/clients/$client_id");
+        }
+        $upload_file_dir = "../uploads/clients/$client_id/";
+        $dest_path = $upload_file_dir . $new_file_name;
+        move_uploaded_file($file_tmp_path, $dest_path);
+
+        mysqli_query($mysqli,"UPDATE racks SET rack_photo = '$new_file_name' WHERE rack_id = $rack_id");
+    }
+
+    logAudit("Rack", "Modifier", "$session_name edited rack $name", $client_id, $rack_id);
+
+    flashAlert("Rack <strong>$name</strong> edited");
+
+    redirect();
+
+}
+
+if (isset($_GET['archive_rack'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 2);
+
+    $rack_id = intval($_GET['archive_rack']);
+
+    enforceClientAccess();
+
+    // Get Name and Client ID for logging and alert message
+    $sql = mysqli_query($mysqli,"SELECT rack_name, rack_client_id FROM racks WHERE rack_id = $rack_id");
+    $row = mysqli_fetch_assoc($sql);
+    $rack_name = escapeSql($row['rack_name']);
+    $client_id = intval($row['rack_client_id']);
+
+    mysqli_query($mysqli,"UPDATE racks SET rack_archived_at = NOW() WHERE rack_id = $rack_id");
+
+    logAudit("Rack", "Archive", "$session_name archived rack $rack_name", $client_id, $rack_id);
+
+    flashAlert("Rack <strong>$rack_name</strong> archived", 'error');
+
+    redirect();
+
+}
+
+if (isset($_GET['restore_rack'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 2);
+
+    $rack_id = intval($_GET['restore_rack']);
+
+    // Get Name and Client ID for logging and alert message
+    $sql = mysqli_query($mysqli,"SELECT rack_name, rack_client_id FROM racks WHERE rack_id = $rack_id");
+    $row = mysqli_fetch_assoc($sql);
+    $rack_name = escapeSql($row['rack_name']);
+    $client_id = intval($row['rack_client_id']);
+
+    enforceClientAccess();
+
+    mysqli_query($mysqli,"UPDATE racks SET rack_archived_at = NULL WHERE rack_id = $rack_id");
+
+    logAudit("Rack", "Restore", "$session_name restored rack $rack_name", $client_id, $rack_id);
+
+    flashAlert("Rack <strong>$rack_name</strong> Restored");
+
+    redirect();
+
+}
+
+if (isset($_GET['delete_rack'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 3);
+
+    $rack_id = intval($_GET['delete_rack']);
+
+    // Get Name and Client ID for logging and alert message
+    $sql = mysqli_query($mysqli,"SELECT rack_name, rack_client_id, rack_photo FROM racks WHERE rack_id = $rack_id");
+    $row = mysqli_fetch_assoc($sql);
+    $rack_name = escapeSql($row['rack_name']);
+    $rack_photo = escapeSql($row['rack_photo']);
+    $client_id = intval($row['rack_client_id']);
+
+    enforceClientAccess();
+
+    mysqli_query($mysqli,"DELETE FROM racks WHERE rack_id = $rack_id");
+
+    // Supprimer Photo if exists
+    if ($rack_photo) {
+        unlink("../uploads/clients/$client_id/$rack_photo");
+    }
+
+    logAudit("Rack", "Supprimer", "$session_name deleted rack $rack_name", $client_id);
+
+    flashAlert("Rack <strong>$rack_name</strong> deleted", 'error');
+
+    redirect();
+
+}
+
+if (isset($_POST['add_rack_unit'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 2);
+
+    $rack_id = intval($_POST['rack_id']);
+    $name = escapeSql($_POST['name']);
+    $unit_start = intval($_POST['unit_start']);
+    $unit_end = intval($_POST['unit_end']);
+    $asset = intval($_POST['asset']);
+
+    // Get Name and Client ID for logging and alert message
+    $sql = mysqli_query($mysqli,"SELECT rack_name, rack_client_id FROM racks WHERE rack_id = $rack_id");
+    $row = mysqli_fetch_assoc($sql);
+    $rack_name = escapeSql($row['rack_name']);
+    $client_id = intval($row['rack_client_id']);
+
+    enforceClientAccess();
+
+    // **Nouveau Validation Check**
+    if ($unit_start > $unit_end) {
+        flashAlert("Unit Start number cannot be higher than Unit End number.", 'error');
+        redirect();
+    }
+
+    // Check if the unit range is already occupied
+    $check_sql = mysqli_query($mysqli, "SELECT 1 FROM rack_units WHERE unit_rack_id = $rack_id AND unit_start_number <= $unit_end AND unit_end_number >= $unit_start");
+
+    if (mysqli_num_rows($check_sql) > 0) {
+        // If there is an overlap, return an error message;
+        flashAlert("Units $unit_start to $unit_end are already in use by another device.", 'error');
+        redirect();
+    }
+
+    // If no overlap and validation passes, proceed with the insertion
+    mysqli_query($mysqli, "INSERT INTO rack_units SET unit_device = '$name', unit_asset_id = $asset, unit_start_number = $unit_start, unit_end_number = $unit_end, unit_rack_id = $rack_id");
+
+    $unit_id = mysqli_insert_id($mysqli);
+
+    logAudit("Rack", "Modifier", "$session_name added device $name to units $unit_start - $unit_end in rack $rack_name", $client_id, $rack_id);
+
+    flashAlert("Device <strong>$name</strong> added to units $unit_start - $unit_end in rack.");
+
+    redirect();
+
+}
+
+if (isset($_POST['edit_rack_unit'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 2);
+
+    $unit_id = intval($_POST['unit_id']);
+    $rack_id = intval($_POST['rack_id']);
+    $name = escapeSql($_POST['name']);
+    $unit_start = intval($_POST['unit_start']);
+    $unit_end = intval($_POST['unit_end']);
+    $asset = intval($_POST['asset']);
+
+    // Get Name and Client ID for logging and alert message
+    $sql = mysqli_query($mysqli,"SELECT rack_name, rack_client_id FROM racks WHERE rack_id = $rack_id");
+    $row = mysqli_fetch_assoc($sql);
+    $rack_name = escapeSql($row['rack_name']);
+    $client_id = intval($row['rack_client_id']);
+
+    enforceClientAccess();
+
+    mysqli_query($mysqli,"UPDATE rack_units SET unit_device = '$name', unit_asset_id = $asset, unit_start_number = $unit_start, unit_end_number = $unit_end WHERE unit_id = $unit_id");
+
+    logAudit("Rack", "Modifier", "$session_name edited device $name in rack $rack_name", $client_id, $rack_id);
+
+    flashAlert("Device $name edited on the rack");
+
+    redirect();
+
+}
+
+if (isset($_GET['remove_rack_unit'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 2);
+
+    $unit_id = intval($_GET['remove_rack_unit']);
+
+    // Get Name and Client ID for logging and alert message
+    $sql = mysqli_query($mysqli,"SELECT rack_name, rack_id, rack_client_id, unit_device FROM racks LEFT JOIN rack_units ON unit_rack_id = rack_id WHERE unit_id = $unit_id");
+    $row = mysqli_fetch_assoc($sql);
+    $rack_name = escapeSql($row['rack_name']);
+    $unit_device = escapeSql($row['unit_device']);
+    $client_id = intval($row['rack_client_id']);
+    $rack_id = intval($row['rack_id']);
+
+    enforceClientAccess();
+
+    mysqli_query($mysqli,"DELETE FROM rack_units WHERE unit_id = $unit_id");
+
+    logAudit("Rack", "Modifier", "$session_name removed device $unit_device from rack $rack_name", $client_id, $rack_id);
+
+    flashAlert("Device <strong>$unit_device</strong> removed from rack", 'error');
+
+    redirect();
+
+}

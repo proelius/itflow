@@ -13,7 +13,7 @@ $config_backup_retention_days = intval($row['config_backup_retention_days']);
 $config_backup_retention_count = intval($row['config_backup_retention_count']);
 $config_backup_cron_type = $row['config_backup_cron_type'];
 
-// Same heartbeat rule as Maintenance > Tâches Planifiées - archives are built by the dispatcher, so a dead
+// Same heartbeat rule as Maintenance > Cron - archives are built by the dispatcher, so a dead
 // crontab means the buttons below queue work that never runs
 $cron_is_running = $cron_last_dispatch_at !== null && (time() - strtotime($cron_last_dispatch_at)) < 300;
 
@@ -22,7 +22,7 @@ $backup_job = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT cron_job_enabled,
 $backups = mysqli_query($mysqli, "SELECT backup_created_at, backup_error, backup_id, backup_size, backup_source, backup_status,
     backup_type FROM backups ORDER BY backup_created_at DESC LIMIT 100");
 
-$pending_count = intval(mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT(*) AS c FROM backups WHERE backup_status IN ('Pending','Running')"))['c']);
+$pending_count = intval(mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT(*) AS c FROM backups WHERE backup_status IN ('En Attente','Running')"))['c']);
 
 ?>
 
@@ -50,20 +50,20 @@ if (!empty($_SESSION['backup_master_key_reveal'])) {
 
 <?php if (!$cron_is_running) { ?>
     <div class="alert alert-danger">
-        <h5><i class="fas fa-fw fa-exclamation-triangle me-2"></i>Tâches Planifiées is not running</h5>
-        Sauvegardes are built by the cron dispatcher, not by your browser. Until cron is running, anything you
-        start here will sit in the queue. See <a href="cron.php">Maintenance &gt; Tâches Planifiées</a>.
+        <h5><i class="fas fa-fw fa-exclamation-triangle me-2"></i>Cron is not running</h5>
+        Backups are built by the cron dispatcher, not by your browser. Until cron is running, anything you
+        start here will sit in the queue. See <a href="cron.php">Maintenance &gt; Cron</a>.
     </div>
 <?php } elseif ($config_enable_cron == 0) { ?>
     <div class="alert alert-warning">
-        <i class="fas fa-fw fa-exclamation-circle me-2"></i>Tâches Planifiées is switched off in
-        <a href="cron.php">Maintenance &gt; Tâches Planifiées</a>.
+        <i class="fas fa-fw fa-exclamation-circle me-2"></i>Cron is switched off in
+        <a href="cron.php">Maintenance &gt; Cron</a>.
     </div>
 <?php } ?>
 
 <div class="card card-dark mb-3">
     <div class="card-header py-3">
-        <h3 class="card-title"><i class="fas fa-fw fa-cloud-upload-alt me-2"></i>Créer a Sauvegarde</h3>
+        <h3 class="card-title"><i class="fas fa-fw fa-cloud-upload-alt me-2"></i>Créer a Backup</h3>
     </div>
     <div class="card-body">
 
@@ -78,7 +78,7 @@ if (!empty($_SESSION['backup_master_key_reveal'])) {
             <div class="col-md-4 mb-3">
                 <div class="border rounded p-3 h-100 text-center">
                     <i class="fas fa-fw fa-3x fa-box-open text-dark mb-3"></i>
-                    <h5>Full Sauvegarde</h5>
+                    <h5>Full Backup</h5>
                     <p class="text-muted small">The database and everything in the uploads folder. This is the one to keep.</p>
                     <a class="btn btn-primary <?= $backup_key === '' ? 'disabled' : '' ?>" href="post.php?queue_backup=full&csrf_token=<?= $_SESSION['csrf_token'] ?>">
                         <i class="fas fa-fw fa-play me-2"></i>Start
@@ -112,7 +112,7 @@ if (!empty($_SESSION['backup_master_key_reveal'])) {
 
 <div class="card card-dark mb-3">
     <div class="card-header py-3">
-        <h3 class="card-title"><i class="fas fa-fw fa-archive me-2"></i>Sauvegardes</h3>
+        <h3 class="card-title"><i class="fas fa-fw fa-archive me-2"></i>Backups</h3>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -123,7 +123,7 @@ if (!empty($_SESSION['backup_master_key_reveal'])) {
                         <th>Créerd</th>
                         <th>Size</th>
                         <th>Source</th>
-                        <th>Status</th>
+                        <th>Statut</th>
                         <th class="text-end">Action</th>
                     </tr>
                 </thead>
@@ -140,7 +140,7 @@ if (!empty($_SESSION['backup_master_key_reveal'])) {
                     if ($status === 'Complete') { $badge = 'success'; }
                     if ($status === 'Failed') { $badge = 'danger'; }
                     if ($status === 'Missing') { $badge = 'warning'; }
-                    if ($status === 'Running' || $status === 'Pending') { $badge = 'info'; }
+                    if ($status === 'Running' || $status === 'En Attente') { $badge = 'info'; }
                 ?>
                     <tr>
                         <td><?= escapeHtml(backupTypeLabel($backup['backup_type'])) ?></td>
@@ -202,7 +202,7 @@ if (!empty($_SESSION['backup_master_key_reveal'])) {
 
 <div class="card card-dark mb-3">
     <div class="card-header py-3">
-        <h3 class="card-title"><i class="fas fa-fw fa-clock me-2"></i>Scheduled Sauvegardes &amp; Retention</h3>
+        <h3 class="card-title"><i class="fas fa-fw fa-clock me-2"></i>Scheduled Backups &amp; Retention</h3>
     </div>
     <div class="card-body">
         <form action="post.php" method="POST" autocomplete="off">
@@ -212,7 +212,7 @@ if (!empty($_SESSION['backup_master_key_reveal'])) {
                 <div class="mb-3 col-md-4">
                     <label>Scheduled backup type</label>
                     <select class="form-select" name="config_backup_cron_type">
-                        <option <?= $config_backup_cron_type === 'full' ? 'selected' : '' ?> value="full">Full Sauvegarde</option>
+                        <option <?= $config_backup_cron_type === 'full' ? 'selected' : '' ?> value="full">Full Backup</option>
                         <option <?= $config_backup_cron_type === 'database' ? 'selected' : '' ?> value="database">Database Only</option>
                     </select>
                 </div>
@@ -240,7 +240,7 @@ if (!empty($_SESSION['backup_master_key_reveal'])) {
             <?php } else { ?>
                 <i class="fas fa-fw fa-times text-danger me-2"></i>Scheduled backups are switched off.
             <?php } ?>
-            Turn them on or change the time in <a href="cron.php">Maintenance &gt; Tâches Planifiées</a>.
+            Turn them on or change the time in <a href="cron.php">Maintenance &gt; Cron</a>.
         </p>
         <p class="text-muted small mt-2 mb-0">
             Old backups are removed by the nightly job, never by the backup itself, so a failed nightly

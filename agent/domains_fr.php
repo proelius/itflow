@@ -89,7 +89,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 <div class="card">
     <div class="card-header bg-dark py-2">
-        <h3 class="card-title mt-2"><i class="fa fa-fw fa-globe me-2"></i>Domaines</h3>
+        <h3 class="card-title mt-2"><i class="fa fa-fw fa-globe me-2"></i>Domains</h3>
         <div class="card-tools">
             <div class="btn-group">
                 <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/domain/domain_add.php?<?= $client_url ?>"><i class="fas fa-plus me-2"></i>Nouveau Domain</button>
@@ -115,7 +115,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Domaines">
+                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) { echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Domains">
                             <button class="btn btn-dark"><i class="fa fa-search"></i></button>
                     </div>
                 </div>
@@ -124,7 +124,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <div class="col-md-2">
                     <div class="input-group">
                         <select class="form-select select2" name="client" onchange="this.form.submit()">
-                            <option value="" <?php if ($client == "") { echo "selected"; } ?>>- Tous Clients -</option>
+                            <option value="" <?php if ($client == "") { echo "selected"; } ?>>- All Clients -</option>
 
                             <?php
                                 $sql_clients_filter = mysqli_query($mysqli, "
@@ -219,7 +219,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <tr>
                     <td class="checkbox-column border-end">
                         <div class="form-check">
-                            <input class="form-check-input" id="selectTousCheckbox" type="checkbox" onclick="checkTous(this)">
+                            <input class="form-check-input" id="selectAllCheckbox" type="checkbox" onclick="checkAll(this)">
                         </div>
                     </td>
                     <th>
@@ -249,7 +249,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     </th>
                     <th>
                         <a class="text-secondary" href="?<?= $url_query_strings_sort ?>&sort=domain_expire&order=<?= $disp ?>">
-                            Expire le <?php if ($sort == 'domain_expire') { echo $order_icon; } ?>
+                            Expires <?php if ($sort == 'domain_expire') { echo $order_icon; } ?>
                         </a>
                     </th>
                     <?php if (!$client_url) { ?>

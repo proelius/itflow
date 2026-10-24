@@ -26,15 +26,15 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 <div class="card">
     <div class="card-header bg-dark py-2">
-        <h3 class="card-title mt-2"><i class="fas fa-fw fa-users me-2"></i>Utilisateurs</h3>
+        <h3 class="card-title mt-2"><i class="fas fa-fw fa-users me-2"></i>Users</h3>
         <div class="card-tools">
             <div class="btn-group">
                 <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/user/user_add.php">
-                    <i class="fas fa-fw fa-user-plus me-2"></i>Nouveau Utilisateur
+                    <i class="fas fa-fw fa-user-plus me-2"></i>Nonuveau User
                 </button>
                 <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></button>
                 <div class="dropdown-menu">
-                    <!--<a class="dropdown-item text-dark ajax-modal" href="#" data-modal-url="modals/user/user_invite.php"><i class="fas fa-paper-plane me-2"></i>Invite Utilisateur</a>-->
+                    <!--<a class="dropdown-item text-dark ajax-modal" href="#" data-modal-url="modals/user/user_invite.php"><i class="fas fa-paper-plane me-2"></i>Invite User</a>-->
                     <?php if ($num_rows[0] > 1) { ?>
                         <a class="dropdown-item text-dark ajax-modal" href="#"
                             data-modal-url="<?= buildExporterModalUrl('modals/user/user_export.php', ['archived', 'q']) ?>">
@@ -56,7 +56,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) {echo stripslashes(escapeHtml($q));} ?>" placeholder="Rechercher Utilisateurs">
+                        <input type="search" class="form-control" name="q" value="<?php if (isset($q)) {echo stripslashes(escapeHtml($q));} ?>" placeholder="Rechercher Users">
                             <button class="btn btn-primary"><i class="fa fa-search"></i></button>
                     </div>
                 </div>
@@ -92,7 +92,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 </th>
                 <th>
                     <a class="text-dark" href="?<?= $url_query_strings_sort ?>&sort=user_status&order=<?= $disp ?>">
-                        Status <?php if ($sort == 'user_status') { echo $order_icon; } ?>
+                        Statut <?php if ($sort == 'user_status') { echo $order_icon; } ?>
                     </a>
                 </th>
                 <th class="text-center">MFA</th>
@@ -113,7 +113,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 if ($user_status == 2) {
                     $user_status_display = "<span class='text-info'>Invited</span>";
                 } elseif ($user_status == 1) {
-                    $user_status_display = "<span class='text-success'>Active</span>";
+                    $user_status_display = "<span class='text-success'>Actif</span>";
                 } else{
                     $user_status_display = "<span class='text-danger'>Disabled</span>";
                 }
@@ -149,7 +149,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     $last_login = "$log_created_at<small class='text-secondary'><div class='mt-1'>$log_user_os</div><div class='mt-1'>$log_user_browser</div><div class='mt-1'><i class='fa fa-fw fa-globe'></i> $log_ip</div></small>";
                 }
 
-                // Get Utilisateur Client Access Permissions
+                // Get User Client Access Permissions
                 $user_client_access_sql = mysqli_query($mysqli,"SELECT client_id FROM user_client_permissions WHERE user_id = $user_id");
                 $client_access_array = [];
                 while ($row = mysqli_fetch_assoc($user_client_access_sql)) {
@@ -164,7 +164,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 ?>
                 <tr>
                     <td class="text-center">
-                        <a href="#" title="UtilisateurID: <?= $user_id ?>"
+                        <a href="#" title="UserID: <?= $user_id ?>"
                             <?php if ($user_id !== $session_user_id) { // Prevent modifying self ?>
                             class="ajax-modal"
                             data-modal-url="modals/user/user_edit.php?id=<?= $user_id ?>"

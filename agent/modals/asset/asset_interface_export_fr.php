@@ -1,0 +1,23 @@
+<div class="modal" id="exportAssetInterfaceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark">
+                <h5 class="modal-title"><i class="fas fa-fw fa-download me-2"></i>Exporter Interfaces</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="post.php" method="post" autocomplete="off">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                <input type="hidden" name="asset_id" value="<?= $asset_id ?>">
+
+                <div class="modal-body">
+
+                    <?php renderExporterColumnPicker('asset_interfaces'); ?>
+
+                </div>
+                <div class="modal-footer">
+                    <?php renderExporterButtons('export_asset_interfaces'); ?>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,105 @@
+<?php
+
+require_once '../../../includes/modal_header.php';
+
+$client_id = intval($_GET['client_id'] ?? 0);
+
+ob_start();
+
+?>
+<div class="modal-header bg-dark">
+    <h5 class="modal-title"><i class="fas fa-fw fa-file-invoice me-2"></i>Nouveau Invoice</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form action="post.php" method="post" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+
+    <div class="modal-body">
+
+        <?php if ($client_id) { ?>
+            <input type="hidden" name="client_id" value="<?= $client_id ?>">
+        <?php }else{ ?>
+
+            <div class="mb-3">
+                <label>Client <strong class="text-danger">*</strong></label>
+                <div class="input-group">
+                        <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
+                    <select class="form-select select2" name="client_id" required>
+                        <option value="">- Select a Client -</option>
+                        <?php
+                        //select unarchived clients
+                        $sql = mysqli_query($mysqli, "SELECT client_id, client_name FROM clients WHERE client_archived_at IS NULL " . clientScopeSql('clients.client_id') . " ORDER BY client_name ASC");
+                        while ($row = mysqli_fetch_assoc($sql)) {
+                            $client_id_select = intval($row['client_id']);
+                            $client_name = escapeHtml($row['client_name']);
+                            ?>
+                            <option value="<?= $client_id_select ?>"><?= "$client_name" ?></option>
+
+                            <?php
+                        }
+                        ?>
+                    </select>
+                </div>
+            </div>
+
+        <?php } ?>
+
+        <div class="mb-3">
+            <label>Scope</label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-comment"></i></span>
+                <input type="text" class="form-control" name="scope" placeholder="Quick description" maxlength="255">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>Category <strong class="text-danger">*</strong></label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-tag"></i></span>
+                <select class="form-select select2" name="category" required>
+                    <option value="">- Category -</option>
+                    <?php
+
+                    $sql = mysqli_query($mysqli, "SELECT category_id, category_name FROM categories WHERE category_type = 'Income' AND category_archived_at IS NULL ORDER BY category_name ASC");
+                    while ($row = mysqli_fetch_assoc($sql)) {
+                        $category_id = intval($row['category_id']);
+                        $category_name = escapeHtml($row['category_name']);
+                        ?>
+                        <option value="<?= $category_id ?>"><?= $category_name ?></option>
+
+                        <?php
+                    }
+                    ?>
+                </select>
+                    <button class="btn btn-secondary ajax-modal" type="button"
+                        data-modal-url="../admin/modals/category/category_add.php?category=Income">
+                        <i class="fas fa-fw fa-plus"></i>
+                    </button>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>Invoice Date <strong class="text-danger">*</strong></label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-calendar"></i></span>
+                <input type="date" class="form-control" name="date" max="2999-12-31" value="<?= date("Y-m-d") ?>" required>
+            </div>
+        </div>
+
+        <div class='mb-3'>
+            <label>Discount Amount</label>
+            <div class='input-group'>
+                    <span class='input-group-text'><i class='fa fa-fw fa-dollar-sign'></i></span>
+                <input type='text' class='form-control' inputmode="decimal" pattern="-?[0-9]*\.?[0-9]{0,2}" name='invoice_discount' placeholder='0.00'>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="submit" name="add_invoice" class="btn btn-primary text-bold"><i class="fa fa-check me-2"></i>Créer</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Annuler</button>
+    </div>
+</form>
+
+<?php
+require_once '../../../includes/modal_footer.php';

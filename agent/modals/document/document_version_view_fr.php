@@ -1,0 +1,41 @@
+<?php
+
+require_once '../../../includes/modal_header.php';
+
+enforceUserPermission('module_support');
+
+// Initialize the HTML Purifier to prevent XSS
+require_once "../../../libs/htmlpurifier/HTMLPurifier.standalone.php";
+
+$purifier_config = HTMLPurifier_Config::createDefault();
+$purifier_config->set('Cache.DefinitionImpl', null); // Disable cache by setting a non-existent directory or an invalid one
+$purifier_config->set('URI.AllowedSchemes', ['data' => true, 'src' => true, 'http' => true, 'https' => true]);
+$purifier = new HTMLPurifier($purifier_config);
+
+$document_version_id = intval($_GET['id']);
+
+$sql = mysqli_query($mysqli, "SELECT document_client_id, document_version_content, document_version_name FROM document_versions LEFT JOIN documents ON document_id = document_version_document_id WHERE document_version_id = $document_version_id LIMIT 1");
+
+$row = mysqli_fetch_assoc($sql);
+$document_version_name = escapeHtml($row['document_version_name']);
+$document_version_content = $purifier->purify($row['document_version_content']);
+$client_id = intval($row['document_client_id']);
+
+enforceClientAccess();
+
+ob_start();
+
+?>
+
+<div class="modal-header bg-dark">
+    <h5 class="modal-title text-white"><i class="fa fa-fw fa-file-alt me-2"></i><?= $document_version_name ?></h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body prettyContent">
+    <?= $document_version_content ?>
+</div>
+
+<script src="../js/pretty_content.js"></script>
+
+<?php
+require_once '../../../includes/modal_footer.php';

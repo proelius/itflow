@@ -29,9 +29,9 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
 <div class="card">
     <div class="card-header bg-dark py-2">
-        <h3 class="card-title mt-2"><i class="fas fa-fw fa-comment-dots me-2"></i>Réponses Prédéfinies</h3>
+        <h3 class="card-title mt-2"><i class="fas fa-fw fa-comment-dots me-2"></i>Canned Responses</h3>
         <div class="card-tools">
-            <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/canned_response/canned_response_add.php" data-modal-size="lg"><i class="fas fa-plus me-2"></i>Nouveau Canned Response</button>
+            <button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/canned_response/canned_response_add.php" data-modal-size="lg"><i class="fas fa-plus me-2"></i>Nonuveau Canned Response</button>
         </div>
     </div>
     <div class="card-header py-3">
@@ -40,7 +40,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
                 <div class="col-md-4">
                     <div class="input-group">
-                        <input type="search" class="form-control" name="q" value="<?php if(isset($q)){ echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Réponses Prédéfinies">
+                        <input type="search" class="form-control" name="q" value="<?php if(isset($q)){ echo stripslashes(escapeHtml($q)); } ?>" placeholder="Rechercher Canned Responses">
                             <button class="btn btn-dark"><i class="fa fa-search"></i></button>
                     </div>
                 </div>
@@ -101,7 +101,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         <?php if ($canned_response_category_id && $canned_response_category_name) { ?>
                             <span class="badge bg-secondary"><?= $canned_response_category_name ?></span>
                         <?php } else { ?>
-                            <span class="badge bg-dark">All ticket categories</span>
+                            <span class="badge bg-dark">Tous ticket categories</span>
                         <?php } ?>
                     </td>
                     <td>

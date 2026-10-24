@@ -31,9 +31,9 @@ if (isset($_GET['calendar_id'])) {
     <div class="col-md-3 d-print-none">
         <div class="card card-dark mb-3">
             <div class="card-header">
-                <h3 class="card-title">Calendriers</h3>
+                <h3 class="card-title">Calendars</h3>
                 <div class="card-tools">
-                    <button type="button" class="btn btn-tool ajax-modal" data-modal-url="modals/calendar/calendar_add.php"><i class="fas fa-plus" title="Nouveau Calendrier"></i></button>
+                    <button type="button" class="btn btn-tool ajax-modal" data-modal-url="modals/calendar/calendar_add.php"><i class="fas fa-plus" title="Nouveau Calendar"></i></button>
                 </div>
             </div>
             <div class="card-body">
@@ -107,7 +107,7 @@ if (isset($_GET['calendar_id'])) {
                 </div>
 
                 <div class="mb-3">
-                    <i class="fas fa-fw fa-circle me-2" style="color:brown;"></i>Fournisseurs
+                    <i class="fas fa-fw fa-circle me-2" style="color:brown;"></i>Vendors
                 </div>
 
                 <?php if (!isset($_GET['client_id'])) { ?>
@@ -154,7 +154,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
 <?php require_once "../includes/footer.php";
 ?>
 
-<!-- FullCalendrier v7: theme + CSS are now separate plugins, must be loaded alongside the core bundle -->
+<!-- FullCalendar v7: theme + CSS are now separate plugins, must be loaded alongside the core bundle -->
 <link href='/libs/fullcalendar/skeleton.css' rel='stylesheet' />
 <link href='/libs/fullcalendar/themes/classic/theme.css' rel='stylesheet' />
 <link href='/libs/fullcalendar/themes/classic/palette.css' rel='stylesheet' />
@@ -178,7 +178,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
 
-        var calendar = new FullCalendrier.Calendrier(calendarEl, {
+        var calendar = new FullCalendar.Calendar(calendarEl, {
             initialVoir: 'dayGridMonth',
             buttons: {
                 newEvent: {
@@ -192,7 +192,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
                             allDayToggle.checked = true;
                             allDayToggle.dispatchEvent(new Event('change', { bubbles: true }));
                         }
-                        bootstrap.Modal.getOrCréerInstance(document.getElementById('addCalendrierEventModal')).show();
+                        bootstrap.Modal.getOrCréerInstance(document.getElementById('addCalendarEventModal')).show();
                     }
                 }
             },
@@ -245,7 +245,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
                 return;
             }
 
-            // FullCalendrier reports an exclusive end for an all-day range, but the form
+            // FullCalendar reports an exclusive end for an all-day range, but the form
             // asks for the last day the event covers - step back a day so a single-day
             // click does not come back as a two-day event. A time-grid selection is not
             // exclusive in the same way, so its end date is used as-is (a slot running
@@ -272,7 +272,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
             }
 
             calendar.unselect();
-            bootstrap.Modal.getOrCréerInstance(document.getElementById('addCalendrierEventModal')).show();
+            bootstrap.Modal.getOrCréerInstance(document.getElementById('addCalendarEventModal')).show();
         },
         eventClick: function(editEvent) {
             var eventId = editEvent.event.id;
@@ -305,7 +305,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
                 event_repeat, event_start, event_title FROM calendar_events LEFT JOIN calendars ON event_calendar_id = calendar_id $client_event_query");
 
             // Repeating events are stored as a single row, so the occurrences have to
-            // be materialised here - the bundled FullCalendrier build has no rrule
+            // be materialised here - the bundled FullCalendar build has no rrule
             // plugin. Every occurrence keeps the parent event_id, so clicking any of
             // them opens the series in the edit modal.
             $recur_window_start = date('Y-m-d H:i:s', strtotime('-6 months'));
@@ -326,7 +326,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
                     $occurrence_end = $occurrence['end'];
 
                     // event_end holds the last day an all-day event covers, but
-                    // FullCalendrier's all-day end is exclusive - without this the final
+                    // FullCalendar's all-day end is exclusive - without this the final
                     // day of a multi-day event is not drawn
                     if ($event_is_all_day && !empty($occurrence_end)) {
                         $occurrence_end = date('Y-m-d H:i:s', strtotime($occurrence_end . ' +1 day'));
@@ -461,7 +461,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
                 echo "{ id: $event_id, title: $event_title, start: $event_start, color: '$event_color', url: 'ticket.php?ticket_id=$event_id$client_url' },";
             }
 
-            // Fournisseurs Ajoutered Créerd
+            // Vendors Ajoutered Créerd
             $sql = mysqli_query($mysqli, "SELECT client_id, vendor_created_at, vendor_id, vendor_name FROM clients LEFT JOIN vendors ON client_id = vendor_client_id $client_query " . clientScopeSql('clients.client_id') . "");
             while ($row = mysqli_fetch_assoc($sql)) {
                 $event_id = intval($row['vendor_id']);
@@ -488,8 +488,8 @@ while ($row = mysqli_fetch_assoc($sql)) {
         eventOrder: 'allDay,start,-duration,title',
 
         <?php
-        // User preference for Calendrier start day (Sunday/Monday)
-        // Fetch User Tableau de bord Settings
+        // User preference for Calendar start day (Sunday/Monday)
+        // Fetch User Tableau de bord Paramètres
         $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT user_config_calendar_first_day FROM user_settings WHERE user_id = $session_user_id"));
         $user_config_calendar_first_day = intval($row['user_config_calendar_first_day']);
         ?>

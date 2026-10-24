@@ -4,17 +4,17 @@ require_once "includes/inc_all_admin.php";
 
     <div class="card card-dark">
         <div class="card-header py-3">
-            <h3 class="card-title"><i class="fas fa-fw fa-comment-dollar me-2"></i>Devis Paramètres</h3>
+            <h3 class="card-title"><i class="fas fa-fw fa-comment-dollar me-2"></i>Quote Paramètres</h3>
         </div>
         <div class="card-body">
             <form action="post.php" method="post" autocomplete="off">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
                 <div class="mb-3">
-                    <label>Devis Prefix</label>
+                    <label>Quote Prefix</label>
                     <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-barcode"></i></span>
-                        <input type="text" class="form-control" name="config_quote_prefix" placeholder="Devis Prefix" maxlength="200" value="<?= escapeHtml($config_quote_prefix) ?>" required>
+                        <input type="text" class="form-control" name="config_quote_prefix" placeholder="Quote Prefix" maxlength="200" value="<?= escapeHtml($config_quote_prefix) ?>" required>
                     </div>
                 </div>
 
@@ -22,12 +22,12 @@ require_once "includes/inc_all_admin.php";
                     <label>Next Number</label>
                     <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-barcode"></i></span>
-                        <input type="number" min="0" class="form-control" name="config_quote_next_number" placeholder="Next Devis Number" value="<?= intval($config_quote_next_number) ?>" required>
+                        <input type="number" min="0" class="form-control" name="config_quote_next_number" placeholder="Next Quote Number" value="<?= intval($config_quote_next_number) ?>" required>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label>Devis Footer</label>
+                    <label>Quote Footer</label>
                     <textarea class="form-control" rows="4" name="config_quote_footer"><?= escapeHtml($config_quote_footer) ?></textarea>
                 </div>
 

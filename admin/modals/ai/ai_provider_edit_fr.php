@@ -1,0 +1,61 @@
+<?php
+
+require_once '../../includes/modal_header.php';
+
+$provider_id = intval($_GET['id']);
+
+$sql = mysqli_query($mysqli, "SELECT ai_provider_api_key, ai_provider_api_url, ai_provider_name FROM ai_providers WHERE ai_provider_id = $provider_id LIMIT 1");
+
+$row = mysqli_fetch_assoc($sql);
+$provider_name = escapeHtml($row['ai_provider_name']);
+$url = escapeHtml($row['ai_provider_api_url']);
+$key = escapeHtml($row['ai_provider_api_key']);
+
+// Generate the HTML form content using output buffering.
+ob_start();
+?>
+
+<div class="modal-header bg-dark">
+    <h5 class="modal-title"><i class="fa fa-fw fa-robot me-2"></i>Modifiering: <strong><?= $provider_name ?></strong></h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form action="post.php" method="post" autocomplete="off">
+    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="provider_id" value="<?= $provider_id ?>">
+
+    <div class="modal-body">
+
+        <div class="mb-3">
+            <label>Provider Name <strong class="text-danger">*</strong></label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-robot"></i></span>
+                <input type="text" class="form-control" name="provider" value="<?= $provider_name ?>" placeholder="ex OuvertAI" maxlength="200">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>URL <strong class="text-danger">*</strong></label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-globe"></i></span>
+                <input type="url" class="form-control" name="url" value="<?= $url ?>" placeholder="ex https://ai.company.ext/api" maxlength="200">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>API Key</label>
+            <div class="input-group">
+                    <span class="input-group-text"><i class="fa fa-fw fa-key"></i></span>
+                <input type="text" class="form-control" name="api_key" value="<?= $key ?>" placeholder="Enter API key here" maxlength="200">
+            </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <button type="submit" name="edit_ai_provider" class="btn btn-primary text-bold"><i class="fa fa-check me-2"></i>Enregistrer</button>
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Annuler</button>
+    </div>
+</form>
+
+<?php
+
+require_once '../../../includes/modal_footer.php';

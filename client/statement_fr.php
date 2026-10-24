@@ -13,7 +13,6 @@
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
 
 
 enforceContactCan('accounting');
@@ -34,7 +33,7 @@ if (empty($statement_currency_code)) {
  * Payments are summed in a derived table rather than joined directly, or an
  * invoice with two payments against it would be counted twice.
  *
- * Draft / Cancelled / Non-Billable are not money owed, and the balance test
+ * Draft / Annulerled / Non-Billable are not money owed, and the balance test
  * drops anything fully paid, so Paid invoices fall out without naming them.
  */
 $statement_sql = mysqli_query(
@@ -48,7 +47,7 @@ $statement_sql = mysqli_query(
         GROUP BY payment_invoice_id
     ) AS invoice_payments ON payment_invoice_id = invoice_id
     WHERE invoice_client_id = $session_client_id
-    AND invoice_status NOT IN ('Draft', 'Cancelled', 'Non-Billable')
+    AND invoice_status NOT IN ('Draft', 'Annulerled', 'Non-Billable')
     AND invoice_amount - IFNULL(invoice_payments.amount_paid, 0) > 0
     ORDER BY invoice_date ASC, invoice_number ASC"
 );
@@ -62,7 +61,7 @@ $statement_total = 0;
     <h3 class="mb-0">Account Statement</h3>
     <?php if ($statement_count > 0) { ?>
         <a class="btn btn-primary" href="post.php?export_statement_pdf=1&csrf_token=<?= $_SESSION['csrf_token'] ?>">
-            <i class="fa fa-fw fa-download me-2"></i>Download PDF
+            <i class="fa fa-fw fa-download me-2"></i>Télécharger PDF
         </a>
     <?php } ?>
 </div>

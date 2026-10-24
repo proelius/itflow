@@ -1,0 +1,94 @@
+<?php
+
+/*
+ * ITFlow - GET/POST request handler for folders
+ */
+
+defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
+
+if (isset($_POST['create_folder'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 2);
+
+    $client_id = intval($_POST['client_id']);
+    $folder_location = intval($_POST['folder_location']);
+    $folder_name = escapeSql($_POST['folder_name']);
+    $parent_folder = intval($_POST['parent_folder']);
+
+    enforceClientAccess();
+
+    // Document folder add query
+    $add_folder = mysqli_query($mysqli,"INSERT INTO folders SET folder_name = '$folder_name', parent_folder = $parent_folder, folder_location = $folder_location, folder_client_id = $client_id");
+    $folder_id = mysqli_insert_id($mysqli);
+
+    logAudit("Folder", "Créer", "$session_name created folder $folder_name", $client_id, $folder_id);
+
+    flashAlert("Folder <strong>$folder_name</strong> created");
+
+    redirect();
+
+}
+
+if (isset($_POST['rename_folder'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 2);
+
+    $folder_id = intval($_POST['folder_id']);
+    $folder_name = escapeSql($_POST['folder_name']);
+
+    // Get old Folder Name Client ID for Logging
+    $sql = mysqli_query($mysqli,"SELECT folder_name, folder_client_id FROM folders WHERE folder_id = $folder_id");
+    $row = mysqli_fetch_assoc($sql);
+    $old_folder_name = escapeSql($row['folder_name']);
+    $client_id = intval($row['folder_client_id']);
+
+    enforceClientAccess();
+
+    // Folder edit query
+    mysqli_query($mysqli,"UPDATE folders SET folder_name = '$folder_name' WHERE folder_id = $folder_id");
+
+    logAudit("Folder", "Rename", "$session_name renamed folder $old_folder_name to $folder_name", $client_id, $folder_id);
+
+    flashAlert("Folder <strong>$old_folder_name</strong> renamed to <strong>$folder_name</strong>");
+
+    redirect();
+
+}
+
+if (isset($_GET['delete_folder'])) {
+
+    validateCSRFToken();
+
+    enforceUserPermission('module_support', 3);
+
+    $folder_id = intval($_GET['delete_folder']);
+
+    // Get Folder Name Client ID for Logging
+    $sql = mysqli_query($mysqli,"SELECT folder_name, folder_client_id FROM folders WHERE folder_id = $folder_id");
+    $row = mysqli_fetch_assoc($sql);
+    $folder_name = escapeSql($row['folder_name']);
+    $client_id = intval($row['folder_client_id']);
+
+    enforceClientAccess();
+
+    mysqli_query($mysqli,"DELETE FROM folders WHERE folder_id = $folder_id");
+
+    // Move files in deleted folder back to the root folder /
+    $sql_documents = mysqli_query($mysqli,"SELECT document_id FROM documents WHERE document_folder_id = $folder_id");
+    while($row = mysqli_fetch_assoc($sql_documents)) {
+        $document_id = intval($row['document_id']);
+
+        mysqli_query($mysqli,"UPDATE documents SET document_folder_id = 0 WHERE document_id = $document_id");
+    }
+
+    logAudit("Folder", "Supprimer", "$session_name deleted folder $folder_name", $client_id);
+
+    flashAlert("Folder <strong>$folder_name</strong> deleted", 'error');
+
+    redirect();
+
+}

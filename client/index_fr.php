@@ -7,11 +7,10 @@
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
 
 // Billing Card Queries
- //Add up all the payments for the invoice and get the total amount paid to the invoice
-$sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Draft' AND invoice_status != 'Cancelled' AND invoice_status != 'Non-Billable'");
+ //Ajouter up all the payments for the invoice and get the total amount paid to the invoice
+$sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Draft' AND invoice_status != 'Annulerled' AND invoice_status != 'Non-Billable'");
 $row = mysqli_fetch_assoc($sql_invoice_amounts);
 
 $invoice_amounts = floatval($row['invoice_amounts']);
@@ -38,7 +37,7 @@ $recurring_yearly_total = floatval($row['recurring_yearly_total']) / 12;
 $recurring_monthly = $recurring_monthly_total + $recurring_yearly_total;
 
 // Technical Card Queries
-// 8 - 45 Day Warning
+// 8 - 45 Day Avertissement
 
 // Get Domains Expiring
 $sql_domains_expiring = mysqli_query(
@@ -88,7 +87,7 @@ $sql_asset_warranties_expiring = mysqli_query(
     ORDER BY asset_warranty_expire ASC"
 );
 
-// Get Assets Retiring 7 Year
+// Get Actifs Retiring 7 Year
 $sql_asset_retire = mysqli_query(
     $mysqli,
     "SELECT * FROM assets
@@ -148,18 +147,18 @@ $sql_asset_warranties_expired = mysqli_query(
     ORDER BY asset_warranty_expire ASC"
 );
 
-// Get Retired Assets
+// Get Retired Actifs
 $sql_asset_retired = mysqli_query(
     $mysqli,
     "SELECT * FROM assets
     WHERE asset_client_id = $session_client_id
         AND asset_install_date IS NOT NULL
         AND asset_archived_at IS NULL
-        AND asset_install_date + INTERVAL 7 YEAR < CURRENT_DATE  -- Assets retired (installed more than 7 years ago)
+        AND asset_install_date + INTERVAL 7 YEAR < CURRENT_DATE  -- Actifs retired (installed more than 7 years ago)
     ORDER BY asset_install_date ASC"
 );
 
-// Assigned Assets
+// Assigned Actifs
 $sql_assigned_assets = mysqli_query(
     $mysqli,
     "SELECT asset_name, asset_type, asset_uri_client FROM assets
@@ -171,7 +170,7 @@ $sql_assigned_assets = mysqli_query(
 ?>
 <div class="row">
     <div class="col-md-2">
-        <a href="ticket_add.php" class="btn btn-primary w-100 mb-3">New ticket</a>
+        <a href="ticket_add.php" class="btn btn-primary w-100 mb-3">Nouveau ticket</a>
     </div>
 </div>
 <?php
@@ -260,7 +259,7 @@ if (contactCan('itdoc')) {
     <div class="col-sm-3">
         <a href="assets.php" class="card text-dark">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-fw fa-desktop me-2"></i>Your Assigned Assets</h3>
+                <h3 class="card-title"><i class="fas fa-fw fa-desktop me-2"></i>Your Assigned Actifs</h3>
             </div>
             <div class="card-body">
                 <table>
@@ -287,4 +286,7 @@ if (contactCan('itdoc')) {
     <?php } ?>
 </div>
 
-<?php require_once "includes/footer.php"; ?>
+<?php require_once "includes/footer.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
+ ?>

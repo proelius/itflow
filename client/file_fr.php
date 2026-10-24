@@ -19,13 +19,13 @@ require_once 'functions.php';
 // same gate as client/document.php
 if (!contactCan('itdoc')) {
     http_response_code(404);
-    exit("Fichier not found");
+    exit("File not found");
 }
 
 // Require a file ID
 if (!isset($_GET['file_id'])) {
     http_response_code(400);
-    exit("Fichier ID required");
+    exit("File ID required");
 }
 
 $file_id = intval($_GET['file_id']);
@@ -55,7 +55,7 @@ $sql = mysqli_query($mysqli,
 
 if (mysqli_num_rows($sql) !== 1) {
     http_response_code(404);
-    exit("Fichier not found");
+    exit("File not found");
 }
 
 $row = mysqli_fetch_array($sql);
@@ -70,7 +70,7 @@ $file_path = realpath(__DIR__ . "/../uploads/clients/$session_client_id/$file_re
 // Path traversal guard - resolved path must stay inside uploads
 if ($file_path === false || $uploads_base === false || strpos($file_path, $uploads_base) !== 0) {
     http_response_code(404);
-    exit("Fichier not found");
+    exit("File not found");
 }
 
 // Detect MIME from file content - files can be uploaded by portal
@@ -107,7 +107,7 @@ if ((isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH'
 }
 
 // Audit log
-logAudit("Fichier", "Télécharger", "Client contact $session_contact_name viewed file $file_name_escaped via portal", $session_client_id);
+logAudit("File", "Télécharger", "Client contact $session_contact_name viewed file $file_name_escaped via portal", $session_client_id);
 
 // Send the file
 header("Content-Type: $file_mime_type");

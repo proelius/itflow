@@ -176,7 +176,7 @@ function displayFolders($parent_folder_id, $client_id, $indent = 0, $render_root
         // Actif or ancestor of active folder = on active path
         $on_active_path = ($get_folder_id == $folder_id) || isAncestorFolder($folder_id, $get_folder_id, $client_id);
 
-        // Option C: indent with padding (no AdminLTE sidebar CSS required)
+        // Option C: indent with padding (no AdministrationLTE sidebar CSS required)
         // Tune these numbers if you want tighter/looser indent
         $indent_px = 12 * $indent; // 12px per level
 
@@ -605,7 +605,7 @@ $num_root_items = intval($row_root_files['num']) + intval($row_root_docs['num'])
                         <div class="col-md-7">
                             <div class="float-end">
                                 <div class="btn-group me-2">
-                                    <a href="?<?= $url_query_strings_type ?>type=" class="btn <?php if($type_filter === ''){ echo "btn-primary"; } else { echo "btn-outline-secondary"; } ?>" title="Fichiers and documents">Tous</a>
+                                    <a href="?<?= $url_query_strings_type ?>type=" class="btn <?php if($type_filter === ''){ echo "btn-primary"; } else { echo "btn-outline-secondary"; } ?>" title="Fichiers and documents">All</a>
                                     <a href="?<?= $url_query_strings_type ?>type=file" class="btn <?php if($type_filter === 'file'){ echo "btn-primary"; } else { echo "btn-outline-secondary"; } ?>" title="Téléversered files only"><i class="fas fa-fw fa-file me-1"></i>Fichiers</a>
                                     <a href="?<?= $url_query_strings_type ?>type=document" class="btn <?php if($type_filter === 'document'){ echo "btn-primary"; } else { echo "btn-outline-secondary"; } ?>" title="Créerd documents only"><i class="fas fa-fw fa-file-alt me-1"></i>Docs</a>
                                 </div>
@@ -951,7 +951,7 @@ $num_root_items = intval($row_root_files['num']) + intval($row_root_docs['num'])
                                 <tr>
                                     <td class="checkbox-column border-end">
                                         <div class="form-check">
-                                            <input class="form-check-input" id="selectTousCheckbox" type="checkbox" onclick="checkTous(this)">
+                                            <input class="form-check-input" id="selectAllCheckbox" type="checkbox" onclick="checkAll(this)">
                                         </div>
                                     </td>
                                     <th>
@@ -1078,7 +1078,7 @@ $num_root_items = intval($row_root_files['num']) + intval($row_root_docs['num'])
                                             </td>
                                             <td>
                                                 <?php if ($file_shared) { ?>
-                                                    <div class="d-flex" title="Expire le <?= $item_expire_at_human ?>">
+                                                    <div class="d-flex" title="Expires <?= $item_expire_at_human ?>">
                                                         <i class="fas fa-link me-2 mt-1"></i>
                                                         <div class="flex-grow-1">Shared
                                                             <br>
@@ -1193,7 +1193,7 @@ $num_root_items = intval($row_root_files['num']) + intval($row_root_docs['num'])
                                             </td>
                                             <td>
                                                 <?php if ($doc_shared) { ?>
-                                                    <div class="d-flex" title="Expire le <?= $item_expire_at_human ?>">
+                                                    <div class="d-flex" title="Expires <?= $item_expire_at_human ?>">
                                                         <i class="fas fa-link me-2 mt-1"></i>
                                                         <div class="flex-grow-1">Shared
                                                             <br>

@@ -83,7 +83,7 @@ $company_email = escapeHtml($row['company_email']);
 $company_website = escapeHtml($row['company_website']);
 $company_tax_id = escapeHtml($row['company_tax_id']);
 if ($config_invoice_show_tax_id && !empty($company_tax_id)) {
-    $company_tax_id_display = "TVA ID: $company_tax_id";
+    $company_tax_id_display = "Tax ID: $company_tax_id";
 } else {
     $company_tax_id_display = "";
 }
@@ -117,24 +117,24 @@ $currency_format = numfmt_create($company_locale, NumberFormatter::CURRENCY);
 $invoice_tally_total = 0; // Default
 
 //Set Badge color based off of invoice status
-$invoice_badge_color = getFactureBadgeColor($invoice_status);
+$invoice_badge_color = getInvoiceBadgeColor($invoice_status);
 
-//Update status to Vue only if invoice_status = "Envoyée"
-if ($invoice_status == 'Envoyée') {
-    mysqli_query($mysqli, "UPDATE invoices SET invoice_status = 'Vue' WHERE invoice_id = $invoice_id");
+//Mettre à jour status to Voired only if invoice_status = "Sent"
+if ($invoice_status == 'Sent') {
+    mysqli_query($mysqli, "UPDATE invoices SET invoice_status = 'Voired' WHERE invoice_id = $invoice_id");
 }
 
 //Mark viewed in history
-mysqli_query($mysqli, "INSERT INTO history SET history_status = '$invoice_status', history_description = 'Facture viewed - $ip - $os - $browser', history_invoice_id = $invoice_id");
+mysqli_query($mysqli, "INSERT INTO history SET history_status = '$invoice_status', history_description = 'Invoice viewed - $ip - $os - $browser', history_invoice_id = $invoice_id");
 
-if ($invoice_status !== 'Payée') {
+if ($invoice_status !== 'Paid') {
 
-    appNotify("Facture Vue", "Facture $invoice_prefix$invoice_number has been viewed by $client_name_escaped - $ip - $os - $browser", "/agent/invoice.php?invoice_id=$invoice_id", $client_id);
+    appNotify("Invoice Voired", "Invoice $invoice_prefix$invoice_number has been viewed by $client_name_escaped - $ip - $os - $browser", "/agent/invoice.php?invoice_id=$invoice_id", $client_id);
 
 }
 $sql_payments = mysqli_query($mysqli, "SELECT * FROM payments, accounts WHERE payment_account_id = account_id AND payment_invoice_id = $invoice_id ORDER BY payments.payment_id DESC");
 
-//Add up all the payments for the invoice and get the total amount paid to the invoice
+//Ajouter up all the payments for the invoice and get the total amount paid to the invoice
 $sql_amount_paid = mysqli_query($mysqli, "SELECT SUM(payment_amount) AS amount_paid FROM payments WHERE payment_invoice_id = $invoice_id");
 $row = mysqli_fetch_assoc($sql_amount_paid);
 $amount_paid = floatval($row['amount_paid']);
@@ -144,20 +144,20 @@ $balance = $invoice_amount - $amount_paid;
 
 //check to see if overdue
 $invoice_color = $invoice_badge_color; // Default
-if ($invoice_status !== "Payée" && $invoice_status !== "Brouillon" && $invoice_status !== "Cancelled" && $invoice_status !== "Non-Billable") {
+if ($invoice_status !== "Paid" && $invoice_status !== "Draft" && $invoice_status !== "Annulerled" && $invoice_status !== "Non-Billable") {
     $unixtime_invoice_due = strtotime($invoice_due) + 86400;
     if ($unixtime_invoice_due < time()) {
         $invoice_color = "text-danger";
     }
 }
 
-// Facture individual items
+// Invoice individual items
 $sql_invoice_items = mysqli_query($mysqli, "SELECT item_description, item_id, item_name, item_price, item_quantity, item_tax, item_total FROM invoice_items WHERE item_invoice_id = $invoice_id ORDER BY item_order ASC");
 
 
-// Get Total Account Solde
-//Add up all the payments for the invoice and get the total amount paid to the invoice
-$sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $client_id AND invoice_status != 'Brouillon' AND invoice_status != 'Cancelled' AND invoice_status != 'Non-Billable'");
+// Get Total Account Balance
+//Ajouter up all the payments for the invoice and get the total amount paid to the invoice
+$sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $client_id AND invoice_status != 'Draft' AND invoice_status != 'Annulerled' AND invoice_status != 'Non-Billable'");
 $row = mysqli_fetch_assoc($sql_invoice_amounts);
 
 $account_balance = floatval($row['invoice_amounts']);
@@ -181,18 +181,18 @@ if ($balance > 0) {
     <div class="card-header bg-light d-print-none">
         <div class="row">
             <div class="col-6">
-                <h4 class="mt-1">Account Solde: <b><?= numfmt_format_currency($currency_format, $account_balance, $invoice_currency_code) ?></b></h4>
+                <h4 class="mt-1">Account Balance: <b><?= numfmt_format_currency($currency_format, $account_balance, $invoice_currency_code) ?></b></h4>
             </div>
             <div class="col-6">
                 <div class="float-end">
-                    <a class="btn btn-default" href="#" onclick="window.print();"><i class="fas fa-fw fa-print me-2"></i>Print</a>
+                    <a class="btn btn-default" href="#" onclick="window.print();"><i class="fas fa-fw fa-print me-2"></i>Imprimer</a>
                     <a class="btn btn-default" href="guest_post.php?export_invoice_pdf=<?= $invoice_id ?>&url_key=<?= $url_key ?>">
                         <i class="fa fa-fw fa-download me-2"></i>Télécharger
                     </a>
                     <?php if (
-                        $invoice_status !== "Payée" &&
-                        $invoice_status  !== "Cancelled" &&
-                        $invoice_status !== "Brouillon" &&
+                        $invoice_status !== "Paid" &&
+                        $invoice_status  !== "Annulerled" &&
+                        $invoice_status !== "Draft" &&
                         $payment_provider_id &&
                         (
                             $payment_provider_threshold == 0 ||
@@ -203,10 +203,10 @@ if ($balance > 0) {
                         // Stripe - Online payment (either setup a customer record, or pay directly if customer record already exists)
                         // Needs adjusting if we do ever add more payment providers but fine for now.
                         if ($stripe_customer_id) { ?>
-                            <a class="btn btn-success" href="guest_pay_invoice_stripe.php?invoice_id=<?= $invoice_id ?>&url_key=<?= $url_key ?>"><i class="fa fa-fw fa-credit-card me-2"></i>Payer Maintenant </a>
+                            <a class="btn btn-success" href="guest_pay_invoice_stripe.php?invoice_id=<?= $invoice_id ?>&url_key=<?= $url_key ?>"><i class="fa fa-fw fa-credit-card me-2"></i>Pay Now </a>
                         <?php }
                         else { ?>
-                            <a class="btn btn-success" href="guest_pay_setup_stripe_customer.php?invoice_id=<?= $invoice_id ?>&url_key=<?= $url_key ?>"><i class="fa fa-fw fa-credit-card me-2"></i>Payer Maintenant </a>
+                            <a class="btn btn-success" href="guest_pay_setup_stripe_customer.php?invoice_id=<?= $invoice_id ?>&url_key=<?= $url_key ?>"><i class="fa fa-fw fa-credit-card me-2"></i>Pay Now </a>
                         <?php }
                     } ?>
                 </div>
@@ -224,7 +224,7 @@ if ($balance > 0) {
             <div class="col-sm-6 <?php if (!file_exists("../uploads/settings/$company_logo")) { echo "col-sm-8"; } ?>">
                 <ul class="list-unstyled">
                     <li><h4><strong><?= $company_name ?></strong></h4></li>
-                    <li><?= formatAddress($company_address, $company_city, $company_state, $company_zip, $company_country, '<br>') ?></li>
+                    <li><?= formatAjouterress($company_address, $company_city, $company_state, $company_zip, $company_country, '<br>') ?></li>
                     <li><?= "$company_email | $company_phone" ?></li>
                     <li><?= $company_website ?></li>
                     <?php if ($company_tax_id_display) { ?>
@@ -240,7 +240,7 @@ if ($balance > 0) {
                 </h5>
                 <table class="table table-sm table-borderless">
                     <tr>
-                        <th>Facture #:</th>
+                        <th>Invoice #:</th>
                         <td class="text-end"><?= "$invoice_prefix$invoice_number" ?></td>
                     </tr>
                     <tr>
@@ -248,7 +248,7 @@ if ($balance > 0) {
                         <td class="text-end"><?= $invoice_date ?></td>
                     </tr>
                     <tr>
-                        <th>Échéance:</th>
+                        <th>Due:</th>
                         <td class="text-end"><?= $invoice_due ?></td>
                     </tr>
                 </table>
@@ -260,7 +260,7 @@ if ($balance > 0) {
                 <h6><strong>Bill To:</strong></h6>
                 <ul class="list-unstyled mb-0">
                     <li><?= $client_name ?></li>
-                    <li><?= formatAddress($location_address, $location_city, $location_state, $location_zip, $location_country, '<br>') ?></li>
+                    <li><?= formatAjouterress($location_address, $location_city, $location_state, $location_zip, $location_country, '<br>') ?></li>
                     <li><?= "$contact_email | $contact_phone $contact_extension" ?></li>
                 </ul>
             </div>
@@ -277,8 +277,8 @@ if ($balance > 0) {
                                 <th>Description</th>
                                 <th class="text-center">Qty</th>
                                 <th class="text-end">Unit Price</th>
-                                <th class="text-end">TVA</th>
-                                <th class="text-end">Montant</th>
+                                <th class="text-end">Tax</th>
+                                <th class="text-end">Amount</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -332,14 +332,14 @@ if ($balance > 0) {
                 <table class="table table-hover mb-0">
                     <tbody>
                     <tr>
-                        <td>Sous-total:</td>
+                        <td>Subtotal:</td>
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code) ?></td>
                     </tr>
                     <?php
                     if ($invoice_discount > 0) {
                         ?>
                         <tr>
-                            <td>Remise:</td>
+                            <td>Discount:</td>
                             <td class="text-end">-<?= numfmt_format_currency($currency_format, $invoice_discount, $invoice_currency_code) ?></td>
                         </tr>
                     <?php
@@ -347,7 +347,7 @@ if ($balance > 0) {
                     ?>
                     <?php if ($total_tax > 0) { ?>
                         <tr>
-                            <td>TVA:</td>
+                            <td>Tax:</td>
                             <td class="text-end"><?= numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code) ?></td>
                         </tr>
                     <?php } ?>
@@ -357,14 +357,14 @@ if ($balance > 0) {
                     </tr>
                     <?php if ($amount_paid > 0) { ?>
                         <tr>
-                            <td><div class="text-success">Payée:</div></td>
+                            <td><div class="text-success">Paid:</div></td>
                             <td class="text-end text-success"><?= numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) ?></td>
                         </tr>
                     <?php
                     }
                     ?>
                     <tr class="h5 text-bold">
-                        <td>Solde:</td>
+                        <td>Balance:</td>
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $balance, $invoice_currency_code) ?></td>
                     </tr>
 
@@ -393,8 +393,8 @@ if ($balance > 0) {
  * Payments are summed in a derived table rather than joined directly, or an
  * invoice with two payments against it would be counted twice.
  *
- * Brouillon / Cancelled / Non-Billable are not money owed, and the balance test
- * drops anything fully paid, so Payée invoices fall out without naming them.
+ * Draft / Annulerled / Non-Billable are not money owed, and the balance test
+ * drops anything fully paid, so Paid invoices fall out without naming them.
  */
 
 $sql_statement = mysqli_query(
@@ -409,7 +409,7 @@ $sql_statement = mysqli_query(
         GROUP BY payment_invoice_id
     ) AS invoice_payments ON payment_invoice_id = invoice_id
     WHERE invoice_client_id = $client_id
-    AND invoice_status NOT IN ('Brouillon', 'Cancelled', 'Non-Billable')
+    AND invoice_status NOT IN ('Draft', 'Annulerled', 'Non-Billable')
     AND invoice_amount - IFNULL(invoice_payments.amount_paid, 0) > 0
     ORDER BY invoice_date ASC, invoice_number ASC"
 );
@@ -429,13 +429,13 @@ if ($statement_count > 0) { ?>
             <table class="table table-sm mb-0">
                 <thead>
                 <tr>
-                    <th class="text-center">Facture</th>
+                    <th class="text-center">Invoice</th>
                     <th class="d-none d-md-table-cell">Scope</th>
                     <th>Date</th>
-                    <th>Échéance</th>
-                    <th class="text-end">Montant</th>
-                    <th class="text-end">Payée</th>
-                    <th class="text-end">Solde</th>
+                    <th>Due</th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end">Paid</th>
+                    <th class="text-end">Balance</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -498,7 +498,7 @@ if ($statement_count > 0) { ?>
                 </tbody>
                 <tfoot>
                 <tr>
-                    <th colspan="6" class="text-end">Total Solde Échéance</th>
+                    <th colspan="6" class="text-end">Total Balance Due</th>
                     <th class="text-end font-monospace"><?= numfmt_format_currency($currency_format, $invoice_tally_total, $client_currency_code) ?></th>
                 </tr>
                 </tfoot>

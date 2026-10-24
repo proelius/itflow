@@ -6,7 +6,7 @@ $order = "DESC";
 
 require_once "includes/inc_all_admin.php";
 
-// Utilisateur Filtrer
+// User Filtrer
 if (isset($_GET['user']) & !empty($_GET['user'])) {
     $user_query = 'AND (log_user_id = ' . intval($_GET['user']) . ')';
     $user_filter = intval($_GET['user']);
@@ -75,7 +75,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
 
     <div class="card">
         <div class="card-header bg-dark py-2">
-            <h3 class="card-title"><i class="fas fa-fw fa-history me-2"></i>Logs d'Audit</h3>
+            <h3 class="card-title"><i class="fas fa-fw fa-history me-2"></i>Audit Logs</h3>
         </div>
         <div class="card-header py-3">
             <form autocomplete="off">
@@ -91,7 +91,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     <div class="col-sm-2">
                         <div class="input-group">
                             <select class="form-select select2" name="client" onchange="this.form.submit()">
-                                <option value="">- All Clients -</option>
+                                <option value="">- Tous Clients -</option>
 
                                 <?php
                                 $sql_clients_filter = mysqli_query($mysqli, "SELECT client_id, client_name FROM clients ORDER BY client_name ASC");
@@ -111,7 +111,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     <div class="col-sm-2">
                         <div class="input-group">
                             <select class="form-select select2" name="user" onchange="this.form.submit()">
-                                <option value="">- All Utilisateurs -</option>
+                                <option value="">- Tous Users -</option>
 
                                 <?php
                                 $sql_users_filter = mysqli_query($mysqli, "SELECT user_id, user_name FROM users ORDER BY user_name ASC");
@@ -131,7 +131,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     <div class="col-sm-2">
                         <div class="input-group">
                             <select class="form-select select2" name="type" onchange="this.form.submit()">
-                                <option value="">- All Types -</option>
+                                <option value="">- Tous Types -</option>
 
                                 <?php
                                 $sql_types_filter = mysqli_query($mysqli, "SELECT DISTINCT log_type FROM logs ORDER BY log_type ASC");
@@ -150,7 +150,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     <div class="col-sm-2">
                         <div class="input-group">
                             <select class="form-select select2" name="action" onchange="this.form.submit()">
-                                <option value="">- All Actions -</option>
+                                <option value="">- Tous Actions -</option>
 
                                 <?php
                                 $sql_actions_filter = mysqli_query($mysqli, "SELECT DISTINCT log_action FROM logs ORDER BY log_action ASC");
@@ -187,12 +187,12 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <tr>
                     <th class="ps-3">
                         <a class="text-dark" href="?<?= $url_query_strings_sort ?>&sort=log_created_at&order=<?= $disp ?>">
-                            Timestamp <?php if ($sort == 'log_created_at') { echo $order_icon; } ?>
+                            Heurestamp <?php if ($sort == 'log_created_at') { echo $order_icon; } ?>
                         </a>
                     </th>
                     <th>
                         <a class="text-dark" href="?<?= $url_query_strings_sort ?>&sort=user_name&order=<?= $disp ?>">
-                            Utilisateur <?php if ($sort == 'user_name') { echo $order_icon; } ?>
+                            User <?php if ($sort == 'user_name') { echo $order_icon; } ?>
                         </a>
                     </th>
                     <?php if (empty($client)) { ?>
@@ -224,7 +224,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     </th>
                     <th>
                         <a class="text-dark" href="?<?= $url_query_strings_sort ?>&sort=log_user_agent&order=<?= $disp ?>">
-                            Utilisateur Agent <?php if ($sort == 'log_user_agent') { echo $order_icon; } ?>
+                            User Agent <?php if ($sort == 'log_user_agent') { echo $order_icon; } ?>
                         </a>
                     </th>
                 </tr>

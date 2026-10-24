@@ -171,7 +171,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                                     <a class="dropdown-item ajax-modal" href="#"
                                         data-modal-url="modals/client/client_bulk_assign_tags.php"
                                         data-bulk="true">
-                                        <i class="fas fa-fw fa-tags me-2"></i>Assigner Tags
+                                        <i class="fas fa-fw fa-tags me-2"></i>Assign Tags
                                     </a>
                                     <div class="dropdown-divider"></div>
                                     <a class="dropdown-item ajax-modal" href="#"
@@ -249,7 +249,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         <div>
                             <label class="form-label">Industry</label>
                             <select class="form-select select2" name="industry" onchange="this.form.submit()">
-                                <option value="">- Tous Industries -</option>
+                                <option value="">- All Industries -</option>
 
                                 <?php
                                 $sql_industries_filter = mysqli_query($mysqli, "SELECT DISTINCT client_type FROM clients WHERE 1 = 1 AND client_$archive_query AND client_type != '' $leads_query ORDER BY client_type ASC");
@@ -268,7 +268,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         <div>
                             <label class="form-label">Referral</label>
                             <select class="form-select select2" name="referral" onchange="this.form.submit()">
-                                <option value="">- Tous Referrals -</option>
+                                <option value="">- All Referrals -</option>
 
                                 <?php
                                 $sql_referrals_filter = mysqli_query($mysqli, "SELECT DISTINCT client_referral FROM clients WHERE 1 = 1 AND client_$archive_query AND client_referral != '' $leads_query ORDER BY client_referral ASC");
@@ -296,7 +296,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                 <tr>
                     <td class="checkbox-column border-end">
                         <div class="form-check">
-                            <input class="form-check-input" id="selectTousCheckbox" type="checkbox" onclick="checkTous(this)">
+                            <input class="form-check-input" id="selectAllCheckbox" type="checkbox" onclick="checkAll(this)">
                         </div>
                     </td>
                     <th>
@@ -389,7 +389,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                     }
 
                     //Ajouter up all the payments for the invoice and get the total amount paid to the invoice
-                    $sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $client_id AND invoice_status != 'Brouillon' AND invoice_status != 'Annulerled' AND invoice_status != 'Non-Billable' ");
+                    $sql_invoice_amounts = mysqli_query($mysqli, "SELECT SUM(invoice_amount) AS invoice_amounts FROM invoices WHERE invoice_client_id = $client_id AND invoice_status != 'Draft' AND invoice_status != 'Annulerled' AND invoice_status != 'Non-Billable' ");
                     $row = mysqli_fetch_assoc($sql_invoice_amounts);
 
                     $invoice_amounts = floatval($row['invoice_amounts']);
@@ -407,7 +407,7 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         $balance_text_color = "";
                     }
 
-                    // Get Credit Solde
+                    // Get Credit Balance
                     $sql_credit_balance = mysqli_query($mysqli, "SELECT SUM(credit_amount) AS credit_balance FROM credits WHERE credit_client_id = $client_id");
                     $row = mysqli_fetch_assoc($sql_credit_balance);
 
@@ -514,11 +514,11 @@ $num_rows = mysqli_fetch_row(mysqli_query($mysqli, "SELECT FOUND_ROWS()"));
                         <?php if ((lookupUserPermission("module_financial") >= 1) && $config_module_enable_accounting == 1) { ?>
                             <td class="text-end">
                                 <div class="d-flex justify-content-between">
-                                    <span class="text-secondary">Solde</span>
+                                    <span class="text-secondary">Balance</span>
                                     <span class="<?= $balance_text_color ?>"><?= numfmt_format_currency($currency_format, $balance, $session_company_currency) ?></span>
                                 </div>
                                 <div class="d-flex justify-content-between">
-                                    <span class="text-secondary">Payée</span>
+                                    <span class="text-secondary">Paid</span>
                                     <?= numfmt_format_currency($currency_format, $amount_paid, $session_company_currency) ?>
                                 </div>
                                 <?php if ($credit_balance > 0) { ?>
