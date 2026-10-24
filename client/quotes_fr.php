@@ -1,36 +1,37 @@
 <?php
 /*
  * Client Portal
- * Quotes for PTC / billing contacts
+ * Devis for PTC / billing contacts
  */
 
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 
 enforceContactCan('accounting');
 
 $quotes_sql = mysqli_query($mysqli, "SELECT quote_amount, quote_date, quote_id, quote_number, quote_prefix, quote_scope, quote_status,
-    quote_url_key FROM quotes WHERE quote_client_id = $session_client_id AND quote_status != 'Draft' ORDER BY quote_date DESC");
+    quote_url_key FROM quotes WHERE quote_client_id = $session_client_id AND quote_status != 'Brouillon' ORDER BY quote_date DESC");
 ?>
 
-<h3>Quotes</h3>
+<h3>Devis</h3>
 <div class="row">
 
     <div class="col-md-10">
 
         <?php if (mysqli_num_rows($quotes_sql) == 0) { ?>
-            <?= portalEmptyState('There are no quotes on this account yet.') ?>
+            <?= portalEmptyÉtat('There are no quotes on this account yet.') ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
                 <th>#</th>
                 <th>Scope</th>
-                <th>Amount</th>
+                <th>Montant</th>
                 <th>Date</th>
-                <th>Status</th>
+                <th>Statut</th>
             </tr>
             </thead>
             <tbody>
@@ -52,13 +53,13 @@ $quotes_sql = mysqli_query($mysqli, "SELECT quote_amount, quote_date, quote_id, 
                     $quote_scope_display = $quote_scope;
                 }
 
-                if ($quote_status == "Sent") {
+                if ($quote_status == "Envoyée") {
                     $quote_badge_color = "warning";
-                } elseif ($quote_status == "Viewed") {
+                } elseif ($quote_status == "Voired") {
                     $quote_badge_color = "primary";
-                } elseif ($quote_status == "Accepted") {
+                } elseif ($quote_status == "Accepté") {
                     $quote_badge_color = "success";
-                } elseif ($quote_status == "Declined") {
+                } elseif ($quote_status == "Refusé") {
                     $quote_badge_color = "danger";
                 } elseif ($quote_status == "Invoiced") {
                     $quote_badge_color = "info";

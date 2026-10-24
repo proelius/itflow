@@ -1,0 +1,52 @@
+<?php
+require_once "includes/inc_all_admin.php";
+ ?>
+
+    <div class="card card-dark">
+        <div class="card-header py-3">
+            <h3 class="card-title"><i class="fas fa-fw fa-comment-dollar me-2"></i>Devis Paramètres</h3>
+        </div>
+        <div class="card-body">
+            <form action="post.php" method="post" autocomplete="off">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+
+                <div class="mb-3">
+                    <label>Devis Prefix</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-barcode"></i></span>
+                        <input type="text" class="form-control" name="config_quote_prefix" placeholder="Devis Prefix" maxlength="200" value="<?= escapeHtml($config_quote_prefix) ?>" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Next Number</label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-barcode"></i></span>
+                        <input type="number" min="0" class="form-control" name="config_quote_next_number" placeholder="Next Devis Number" value="<?= intval($config_quote_next_number) ?>" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Devis Footer</label>
+                    <textarea class="form-control" rows="4" name="config_quote_footer"><?= escapeHtml($config_quote_footer) ?></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label>Email address to notify when quotes are accepted/declined <small class="text-secondary">(Ideally a distribution list/shared mailbox)</small></label>
+                    <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-bell"></i></span>
+                        <input type="email" class="form-control" name="config_quote_notification_email" placeholder="Ajouterress to notify for quote accept/declines, leave blank for none" maxlength="200" value="<?= escapeHtml($config_quote_notification_email) ?>">
+                    </div>
+                </div>
+
+                <hr>
+
+                <button type="submit" name="edit_quote_settings" class="btn btn-primary text-bold"><i class="fa fa-check me-2"></i>Enregistrer</button>
+
+            </form>
+        </div>
+    </div>
+
+<?php
+require_once "../includes/footer.php";
+

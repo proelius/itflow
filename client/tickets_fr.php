@@ -7,16 +7,17 @@
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 
 
 // Ticket status from GET
-if (!isset($_GET['status']) || ($_GET['status']) == 'Open') {
+if (!isset($_GET['status']) || ($_GET['status']) == 'Ouvert') {
     // Default to showing open
-    $status = 'Open';
+    $status = 'Ouvert';
     $ticket_status_snippet = "ticket_closed_at IS NULL";
-} elseif (isset($_GET['status']) && ($_GET['status']) == 'Closed') {
-    $status = 'Closed';
+} elseif (isset($_GET['status']) && ($_GET['status']) == 'Fermerd') {
+    $status = 'Fermerd';
     $ticket_status_snippet = "ticket_closed_at IS NOT NULL";
 } else {
     $status = '%';
@@ -49,14 +50,14 @@ $total_tickets = intval($row['total_tickets']);
     <div class="col-md-10">
 
         <?php if (mysqli_num_rows($contact_tickets) == 0) { ?>
-            <?= portalEmptyState($status === '%' ? 'You have no tickets.' : 'You have no ' . strtolower($status) . ' tickets.') ?>
+            <?= portalEmptyÉtat($status === '%' ? 'You have no tickets.' : 'You have no ' . strtolower($status) . ' tickets.') ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
                 <tr>
                     <th>#</th>
-                    <th>Subject</th>
-                    <th>Status</th>
+                    <th>Sujet</th>
+                    <th>Statut</th>
                 </tr>
             </thead>
             <tbody>
@@ -90,13 +91,13 @@ $total_tickets = intval($row['total_tickets']);
 
     <div class="col-md-2">
 
-        <a href="ticket_add.php" class="btn btn-primary w-100">New ticket</a>
+        <a href="ticket_add.php" class="btn btn-primary w-100">Nouveau ticket</a>
 
         <hr>
 
-        <a href="?status=Open" class="btn btn-danger w-100 p-3 mb-3 text-start">My Open tickets | <strong><?= $total_tickets_open ?></strong></a>
+        <a href="?status=Ouvert" class="btn btn-danger w-100 p-3 mb-3 text-start">My Ouvert tickets | <strong><?= $total_tickets_open ?></strong></a>
 
-        <a href="?status=Closed" class="btn btn-success w-100 p-3 mb-3 text-start">Closed tickets | <strong><?= $total_tickets_closed ?></strong></a>
+        <a href="?status=Fermerd" class="btn btn-success w-100 p-3 mb-3 text-start">Fermerd tickets | <strong><?= $total_tickets_closed ?></strong></a>
 
         <a href="?status=%" class="btn btn-secondary w-100 p-3 mb-3 text-start">All my tickets | <strong><?= $total_tickets ?></strong></a>
         <?php

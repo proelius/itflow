@@ -3,9 +3,6 @@
 // If client_id is in URI then show client Side Bar and client header
 if (isset($_GET['client_id'])) {
     require_once "includes/inc_all_client.php";
-// French translation
-require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
-
 } else {
     require_once "includes/inc_all.php";
 }
@@ -39,7 +36,7 @@ if (isset($_GET['quote_id'])) {
         } else {
             $backlink_append = '';
         }
-        echo "<h1 class='text-secondary pt-5' style='text-align: center'>There is no Quote here<br><small><a href='quotes.php$backlink_append'><i class='fas fa-arrow-left me-2'></i>Back to Quotes</a></small></h1>";
+        echo "<h1 class='text-secondary pt-5' style='text-align: center'>There is no Devis here<br><small><a href='quotes.php$backlink_append'><i class='fas fa-arrow-left me-2'></i>Back to Devis</a></small></h1>";
         require_once "../includes/footer.php";
 
         exit();
@@ -110,19 +107,19 @@ if (isset($_GET['quote_id'])) {
         AND contact_archived_at IS NULL
         AND contact_email IS NOT NULL
         AND contact_email != ''
-        " . documentContactFilterSql('quote')));
+        " . documentContactFiltrerSql('quote')));
     $emailable_contacts = intval($row['emailable_contacts']);
 
     $sql_history = mysqli_query($mysqli, "SELECT history_created_at, history_description, history_status FROM history WHERE history_quote_id = $quote_id ORDER BY history_id DESC");
 
     //Set Badge color based off of quote status
-    if ($quote_status == "Sent") {
+    if ($quote_status == "Envoyée") {
         $quote_badge_color = "warning";
-    } elseif ($quote_status == "Viewed") {
+    } elseif ($quote_status == "Voired") {
         $quote_badge_color = "primary";
-    } elseif ($quote_status == "Accepted") {
+    } elseif ($quote_status == "Accepté") {
         $quote_badge_color = "success";
-    } elseif ($quote_status == "Declined") {
+    } elseif ($quote_status == "Refusé") {
         $quote_badge_color = "danger";
     } elseif ($quote_status == "Invoiced") {
         $quote_badge_color = "info";
@@ -133,7 +130,7 @@ if (isset($_GET['quote_id'])) {
     //Product autocomplete
     $json_products = getProductsForAutocomplete($mysqli);
 
-    // Quote File Attachments
+    // Devis File Attachments
     $sql_quote_files = mysqli_query(
         $mysqli,
         "SELECT file_reference_name, file_name, file_created_at FROM quote_files LEFT JOIN files ON quote_files.file_id = files.file_id WHERE quote_id = $quote_id"
@@ -143,10 +140,10 @@ if (isset($_GET['quote_id'])) {
 
     <ol class="breadcrumb d-print-none">
         <li class="breadcrumb-item">
-            <a href="quotes.php">All Quotes</a>
+            <a href="quotes.php">Tous Devis</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="quotes.php?client_id=<?= $client_id ?>"><?= $client_name ?> Quotes</a>
+            <a href="quotes.php?client_id=<?= $client_id ?>"><?= $client_name ?> Devis</a>
         </li>
         <li class="breadcrumb-item active"><?= "$quote_prefix$quote_number" ?></li>
     </ol>
@@ -158,13 +155,13 @@ if (isset($_GET['quote_id'])) {
                 <div class="row">
 
                 <div class="col-8">
-                <?php if ($quote_status == 'Draft') { ?>
+                <?php if ($quote_status == 'Brouillon') { ?>
                     <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="fas fa-fw fa-paper-plane me-2"></i>Send
                     </button>
                     <div class="dropdown-menu">
                         <?php if (!empty($config_smtp_provider) && $emailable_contacts > 0) { ?>
-                            <button type="submit" class="dropdown-item confirm-link" form="quickSendQuote"
+                            <button type="submit" class="dropdown-item confirm-link" form="quickSendDevis"
                                 data-confirm-title="Send this quote now?"
                                 data-confirm-text="It goes to the default contacts without opening the picker."
                                 data-confirm-button="Send"
@@ -179,12 +176,12 @@ if (isset($_GET['quote_id'])) {
                         <?php } ?>
                         <a class="dropdown-item ajax-modal" href="#"
                             data-modal-url="modals/quote/quote_mark_sent.php?quote_id=<?= $quote_id ?>">
-                            <i class="fas fa-fw fa-check me-2"></i>Mark Sent
+                            <i class="fas fa-fw fa-check me-2"></i>Mark Envoyée
                         </a>
                     </div>
                 <?php } ?>
 
-                <?php if ($quote_status == 'Sent' || $quote_status == 'Viewed') { ?>
+                <?php if ($quote_status == 'Envoyée' || $quote_status == 'Voired') { ?>
                     <a class="btn btn-primary confirm-link" href="post.php?accept_quote=<?= $quote_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
                         <i class="fas fa-thumbs-up me-2"></i>Accept
                     </a>
@@ -193,7 +190,7 @@ if (isset($_GET['quote_id'])) {
                     </a>
                 <?php } ?>
 
-                <?php if ($quote_status == 'Accepted') { ?>
+                <?php if ($quote_status == 'Accepté') { ?>
                     <div class="btn-group fix-quote-dropdown">
                         <button type="button" class="btn btn-primary ajax-modal"
                             data-modal-url="modals/quote/quote_to_invoice.php?quote_id=<?= $quote_id ?>">
@@ -220,7 +217,7 @@ if (isset($_GET['quote_id'])) {
                         <div class="dropdown-menu">
                             <a class="dropdown-item ajax-modal" href="#"
                                 data-modal-url="modals/quote/quote_edit.php?id=<?= $quote_id ?>">
-                                <i class="fa fa-fw fa-edit text-secondary me-2"></i>Edit
+                                <i class="fa fa-fw fa-edit text-secondary me-2"></i>Modifier
                             </a>
                             <?php if (lookupUserPermission("module_sales") >= 2) { ?>
                                 <a class="dropdown-item ajax-modal" href="#"
@@ -230,13 +227,13 @@ if (isset($_GET['quote_id'])) {
                             <?php } ?>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="#" onclick="window.print();">
-                                <i class="fa fa-fw fa-print text-secondary me-2"></i>Print
+                                <i class="fa fa-fw fa-print text-secondary me-2"></i>Imprimer
                             </a>
                             <a class="dropdown-item" href="post.php?export_quote_pdf=<?= $quote_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" target="_blank">
-                                <i class="fa fa-fw fa-download text-secondary me-2"></i>Download PDF
+                                <i class="fa fa-fw fa-download text-secondary me-2"></i>Télécharger PDF
                             </a>
                             <?php if (!empty($config_smtp_provider) && $emailable_contacts > 0) { ?>
-                                <button type="submit" class="dropdown-item confirm-link" form="quickSendQuote"
+                                <button type="submit" class="dropdown-item confirm-link" form="quickSendDevis"
                                     data-confirm-title="Send this quote now?"
                                     data-confirm-text="It goes to the default contacts without opening the picker."
                                     data-confirm-button="Send"
@@ -254,7 +251,7 @@ if (isset($_GET['quote_id'])) {
                             <?php if (lookupUserPermission("module_sales") >= 3) { ?>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item text-danger text-bold confirm-link" href="post.php?delete_quote=<?= $quote_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
-                                    <i class="fa fa-fw fa-times me-2"></i>Delete
+                                    <i class="fa fa-fw fa-times me-2"></i>Supprimer
                                 </a>
                             <?php } ?>
                         </div>
@@ -275,7 +272,7 @@ if (isset($_GET['quote_id'])) {
                 <div class="col-sm-6 <?php if (!file_exists("../uploads/settings/$company_logo")) { echo "col-sm-8"; } ?>">
                     <ul class="list-unstyled">
                         <li><h4><strong><?= $company_name ?></strong></h4></li>
-                        <li><?= formatAddress($company_address, $company_city, $company_state, $company_zip, $company_country, '<br>') ?></li>
+                        <li><?= formatAjouterress($company_address, $company_city, $company_state, $company_zip, $company_country, '<br>') ?></li>
                         <li><?= "$company_email | $company_phone" ?></li>
                         <li><?= $company_website ?></li>
                     </ul>
@@ -288,7 +285,7 @@ if (isset($_GET['quote_id'])) {
                     </h5>
                     <table class="table table-sm table-borderless">
                         <tr>
-                            <th>Quote #:</th>
+                            <th>Devis #:</th>
                             <td class="text-end"><?= "$quote_prefix$quote_number" ?></td>
                         </tr>
                         <tr>
@@ -296,7 +293,7 @@ if (isset($_GET['quote_id'])) {
                             <td class="text-end"><?= $quote_date ?></td>
                         </tr>
                         <tr>
-                            <th>Expires:</th>
+                            <th>Expire le:</th>
                             <td class="text-end"><?= $quote_expire ?></td>
                         </tr>
                     </table>
@@ -308,7 +305,7 @@ if (isset($_GET['quote_id'])) {
                     <h6><strong>To:</strong></h6>
                     <ul class="list-unstyled mb-0">
                         <li><?= $client_name ?></li>
-                        <li><?= formatAddress($location_address, $location_city, $location_state, $location_zip, $location_country, '<br>') ?></li>
+                        <li><?= formatAjouterress($location_address, $location_city, $location_state, $location_zip, $location_country, '<br>') ?></li>
                         <li><?= "$contact_email | $contact_phone $contact_extension" ?></li>
                     </ul>
                 </div>
@@ -329,8 +326,8 @@ if (isset($_GET['quote_id'])) {
                                         <th>Description</th>
                                         <th class="text-center">Qty</th>
                                         <th class="text-end">Unit Price</th>
-                                        <th class="text-end">Tax</th>
-                                        <th class="text-end">Amount</th>
+                                        <th class="text-end">TVA</th>
+                                        <th class="text-end">Montant</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -355,7 +352,7 @@ if (isset($_GET['quote_id'])) {
 
                                         <tr data-item-id="<?= $item_id ?>">
                                             <td class="d-print-none">
-                                                <?php if ($quote_status !== "Invoiced" && $quote_status !== "Accepted" && $quote_status !== "Declined" && lookupUserPermission("module_sales") >= 2) { ?>
+                                                <?php if ($quote_status !== "Invoiced" && $quote_status !== "Accepté" && $quote_status !== "Refusé" && lookupUserPermission("module_sales") >= 2) { ?>
                                                     <div class="btn-group">
                                                         <button type="button" class="btn btn-sm btn-link drag-handle">
                                                             <i class="fas fa-bars text-muted"></i>
@@ -368,11 +365,11 @@ if (isset($_GET['quote_id'])) {
                                                             <div class="dropdown-menu">
                                                                 <a class="dropdown-item ajax-modal" href="#"
                                                                     data-modal-url="modals/quote/quote_item_edit.php?id=<?= $item_id ?>">
-                                                                    <i class="fa fa-fw fa-edit me-2"></i>Edit
+                                                                    <i class="fa fa-fw fa-edit me-2"></i>Modifier
                                                                 </a>
                                                                 <div class="dropdown-divider"></div>
                                                                 <a class="dropdown-item text-danger confirm-link" href="post.php?delete_quote_item=<?= $item_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>">
-                                                                    <i class="fa fa-fw fa-trash me-2"></i>Delete
+                                                                    <i class="fa fa-fw fa-trash me-2"></i>Supprimer
                                                                 </a>
                                                             </div>
                                                         </div>
@@ -393,7 +390,7 @@ if (isset($_GET['quote_id'])) {
 
                                     ?>
 
-                                    <tr class="d-print-none" <?php if ($quote_status == "Invoiced" || $quote_status == "Accepted" || $quote_status == "Declined" || lookupUserPermission("module_sales") <= 1) {
+                                    <tr class="d-print-none" <?php if ($quote_status == "Invoiced" || $quote_status == "Accepté" || $quote_status == "Refusé" || lookupUserPermission("module_sales") <= 1) {
                                                                     echo "hidden";
                                                                 } ?>>
                                         <form action="post.php" method="post" autocomplete="off">
@@ -422,7 +419,7 @@ if (isset($_GET['quote_id'])) {
                                             </td>
                                             <td>
                                                 <select class="form-select select2" id="tax" name="tax_id" required>
-                                                    <option value="0">No Tax</option>
+                                                    <option value="0">No TVA</option>
                                                     <?php
 
                                                     $taxes_sql = mysqli_query($mysqli, "SELECT tax_id, tax_name, tax_percent FROM taxes WHERE tax_archived_at IS NULL ORDER BY tax_name ASC");
@@ -471,7 +468,7 @@ if (isset($_GET['quote_id'])) {
 <?php } else { ?>
                             <div class="d-print-none"><?= nl2br($quote_note) ?></div>
 <?php } ?>
-                            <!-- Printed output must be plain text, not a form control -->
+                            <!-- Imprimered output must be plain text, not a form control -->
                             <div class="d-none d-print-block"><?= nl2br($quote_note) ?></div>
                         </div>
                     </div>
@@ -482,18 +479,18 @@ if (isset($_GET['quote_id'])) {
                     <table class="table table-hover mb-0">
                         <tbody>
                             <tr>
-                                <td>Subtotal:</td>
+                                <td>Sous-total:</td>
                                 <td class="text-end"><?= numfmt_format_currency($currency_format, $sub_total, $quote_currency_code) ?></td>
                             </tr>
                             <?php if ($quote_discount > 0) { ?>
                                 <tr>
-                                    <td>Discount:</td>
+                                    <td>Remise:</td>
                                     <td class="text-end">-<?= numfmt_format_currency($currency_format, $quote_discount, $quote_currency_code) ?></td>
                                 </tr>
                             <?php } ?>
                             <?php if ($total_tax > 0) { ?>
                                 <tr>
-                                    <td>Tax:</td>
+                                    <td>TVA:</td>
                                     <td class="text-end"><?= numfmt_format_currency($currency_format, $total_tax, $quote_currency_code) ?></td>
                                 </tr>
                             <?php } ?>
@@ -533,7 +530,7 @@ if (isset($_GET['quote_id'])) {
                         <thead>
                         <tr>
                             <th>File Name</th>
-                            <th>Upload date</th>
+                            <th>Téléverser date</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -580,7 +577,7 @@ if (isset($_GET['quote_id'])) {
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Status</th>
+                                <th>Statut</th>
                                 <th>Description</th>
                             </tr>
                         </thead>
@@ -621,7 +618,7 @@ if (isset($_GET['quote_id'])) {
              * path where the document was found.
              */
             ?>
-            <form id="quickSendQuote" action="post.php" method="post" class="d-none">
+            <form id="quickSendDevis" action="post.php" method="post" class="d-none">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <input type="hidden" name="email_quote" value="1">
                 <input type="hidden" name="quick_send" value="1">
@@ -654,13 +651,13 @@ new Sortable(document.querySelector('table#items tbody'), {
     handle: '.drag-handle',
     animation: 150,
     onEnd: function (evt) {
-        const rows = document.querySelectorAll('table#items tbody tr');
+        const rows = document.querySelectorTous('table#items tbody tr');
         const positions = Array.from(rows).map((row, index) => ({
             id: row.dataset.itemId,
             order: index
         }));
 
-        itflowPostForm('ajax.php', {
+        itflowPublierForm('ajax.php', {
             update_quote_items_order: true,
             csrf_token: '<?= $_SESSION['csrf_token'] ?>',
             quote_id: <?= $quote_id ?>,

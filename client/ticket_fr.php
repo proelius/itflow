@@ -5,7 +5,6 @@
  */
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
 
 //Initialize the HTML Purifier to prevent XSS
 require "../libs/htmlpurifier/HTMLPurifier.standalone.php";
@@ -63,7 +62,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
         $sql_tasks = mysqli_query( $mysqli, "SELECT 1 FROM tasks WHERE task_ticket_id = $ticket_id ORDER BY task_order ASC, task_id ASC");
         $task_count = mysqli_num_rows($sql_tasks);
 
-        // Get Completed Task Count
+        // Get Terminé Task Count
         $sql_tasks_completed = mysqli_query($mysqli,
             "SELECT 1 FROM tasks
             WHERE task_ticket_id = $ticket_id
@@ -104,10 +103,10 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
             </div>
 
             <div class="card-body prettyContent">
-                <h5><strong>Subject:</strong> <?= $ticket_subject ?></h5>
+                <h5><strong>Sujet:</strong> <?= $ticket_subject ?></h5>
                 <p>
-                    <strong>State:</strong> <?= $ticket_status ?><br>
-                    <strong>Priority:</strong> <?= $ticket_priority ?><br>
+                    <strong>État:</strong> <?= $ticket_status ?><br>
+                    <strong>Priorité:</strong> <?= $ticket_priority ?><br>
                     <?php if (!empty($ticket_category)) { ?>
                         <strong>Category:</strong> <?= $ticket_category ?><br>
                     <?php } ?>
@@ -140,7 +139,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                     <tr>
                         <td><i class='fas fa-fw fa-paperclip text-secondary me-1'></i><?= $name ?></td>
                         <td>
-                            <a target='_blank' class='me-1 ms-1' href='ticket_attachment.php?attachment_id=<?= $ticket_attachment_id; ?>&action=view'>[View]</a><a href='ticket_attachment.php?attachment_id=<?= $ticket_attachment_id; ?>'>[Download]</a>
+                            <a target='_blank' class='me-1 ms-1' href='ticket_attachment.php?attachment_id=<?= $ticket_attachment_id; ?>&action=view'>[Voir]</a><a href='ticket_attachment.php?attachment_id=<?= $ticket_attachment_id; ?>'>[Télécharger]</a>
                         </td>
                     </tr>
                     
@@ -209,18 +208,18 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
         <!-- Either show the reply comments box, option to re-open ticket, show ticket smiley feedback or thanks for feedback -->
 
         <?php if (empty($ticket_resolved_at)) { ?>
-            <!-- Reply -->
+            <!-- Répondre -->
 
             <form action="post.php" enctype="multipart/form-data" method="post">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <input type="hidden" name="ticket_id" value="<?= $ticket_id ?>">
                 <div class="mb-3">
-                    <textarea class="form-control tinymce" name="comment" placeholder="Add comments.."></textarea>
+                    <textarea class="form-control tinymce" name="comment" placeholder="Ajouter comments.."></textarea>
                 </div>
                 <div class="mb-3">
                     <input type="file" class="form-control" name="file[]" multiple id="fileInput" accept=".jpg, .jpeg, .gif, .png, .webp, .pdf, .txt, .md, .doc, .docx, .odt, .csv, .xls, .xlsx, .ods, .pptx, .odp, .zip, .tar, .gz, .xml, .msg, .json, .wav, .mp3, .ogg, .mov, .mp4, .av1, .ovpn">
                 </div>
-                <button type="submit" class="btn btn-primary" name="add_ticket_comment">Reply</button>
+                <button type="submit" class="btn btn-primary" name="add_ticket_comment">Répondre</button>
             </form>
 
         <?php } elseif (empty($ticket_closed_at)) { ?>
@@ -235,7 +234,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                     </div>
 
                     <div class="col">
-                        <a href="post.php?close_ticket=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-success btn-lg confirm-link"><i class="fas fa-fw fa-gavel text-white"></i> Close ticket</a>
+                        <a href="post.php?close_ticket=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-success btn-lg confirm-link"><i class="fas fa-fw fa-gavel text-white"></i> Fermer ticket</a>
                     </div>
                 </div>
             </div>
@@ -347,7 +346,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                         <tr>
                             <td><i class='fas fa-fw fa-paperclip text-secondary me-1'></i><?= $name ?></td>
                             <td>
-                                <a target='_blank' class='me-1 ms-1' href='ticket_attachment.php?attachment_id=<?= $ticket_attachment_id; ?>&action=view'>[View]</a><a href='ticket_attachment.php?attachment_id=<?= $ticket_attachment_id; ?>'>[Download]</a>
+                                <a target='_blank' class='me-1 ms-1' href='ticket_attachment.php?attachment_id=<?= $ticket_attachment_id; ?>&action=view'>[Voir]</a><a href='ticket_attachment.php?attachment_id=<?= $ticket_attachment_id; ?>'>[Télécharger]</a>
                             </td>
                         </tr>
                         

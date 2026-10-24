@@ -1,38 +1,39 @@
 <?php
 /*
  * Client Portal
- * Invoices for PTC
+ * Factures for PTC
  */
 
 header("Content-Security-Policy: default-src 'self'");
 
 require_once "includes/inc_all.php";
-require_once "../lang/fr/common_strings.php";
+// French translation
+require_once __DIR__ . '/../../lang/fr/itflow_integration.php';
 
 
 enforceContactCan('accounting');
 
 $invoices_sql = mysqli_query($mysqli, "SELECT invoice_amount, invoice_date, invoice_due, invoice_id, invoice_number, invoice_prefix,
-    invoice_scope, invoice_status, invoice_url_key FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Draft' ORDER BY invoice_date DESC");
+    invoice_scope, invoice_status, invoice_url_key FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Brouillon' ORDER BY invoice_date DESC");
 ?>
 
-<h3>Invoices</h3>
+<h3>Factures</h3>
 <div class="row">
 
     <div class="col-md-10">
 
         <?php if (mysqli_num_rows($invoices_sql) == 0) { ?>
-            <?= portalEmptyState('There are no invoices on this account yet.') ?>
+            <?= portalEmptyÉtat('There are no invoices on this account yet.') ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
                 <th>#</th>
                 <th>Scope</th>
-                <th>Amount</th>
+                <th>Montant</th>
                 <th>Date</th>
-                <th>Due</th>
-                <th>Status</th>
+                <th>Échéance</th>
+                <th>Statut</th>
             </tr>
             </thead>
             <tbody>
@@ -56,21 +57,21 @@ $invoices_sql = mysqli_query($mysqli, "SELECT invoice_amount, invoice_date, invo
                 }
 
                 $now = time();
-                if (($invoice_status == "Sent" || $invoice_status == "Partial" || $invoice_status == "Viewed") && strtotime($invoice_due) + 86400 < $now) {
+                if (($invoice_status == "Envoyée" || $invoice_status == "Partial" || $invoice_status == "Voired") && strtotime($invoice_due) + 86400 < $now) {
                     $overdue_color = "text-danger fw-bold";
                 } else {
                     $overdue_color = "";
                 }
 
-                if ($invoice_status == "Sent") {
+                if ($invoice_status == "Envoyée") {
                     $invoice_badge_color = "warning";
-                } elseif ($invoice_status == "Viewed") {
+                } elseif ($invoice_status == "Voired") {
                     $invoice_badge_color = "info";
                 } elseif ($invoice_status == "Partial") {
                     $invoice_badge_color = "primary";
-                } elseif ($invoice_status == "Paid") {
+                } elseif ($invoice_status == "Payée") {
                     $invoice_badge_color = "success";
-                } elseif ($invoice_status == "Cancelled") {
+                } elseif ($invoice_status == "Annulerled") {
                     $invoice_badge_color = "danger";
                 } else{
                     $invoice_badge_color = "secondary";
