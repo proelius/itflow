@@ -13,179 +13,122 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 
-$itflow_dir = realpath(__DIR__ . '/..');
-$master_branch = 'master';
+$itflow_dir = __DIR__ . '/..';
 
-// Load exceptions
-$exceptions_file = __DIR__ . '/i18n_exceptions.php';
-$exceptions = file_exists($exceptions_file) ? require $exceptions_file : [];
+echo "=== i18n Original Text Checker ===\n";
+echo "Checking that t() calls match original master texts...\n\n";
+
+// Get original texts from master
+$master_texts = [];
+exec("cd {$itflow_dir} && git show master:functions/i18n.php 2>/dev/null | grep -E \"t\\(['\\\"]\" | sed -E \"s/.*t\\(['\\\"]([^'\\\"]+)['\\\"].*/\\1/\" 2>/dev/null", $master_texts, $exit_code);
+
+// If master doesn't have functions/i18n.php, use lang/en.php as reference
+if (empty($master_texts)) {
+    $en_file = $itflow_dir . '/lang/en.php';
+    if (file_exists($en_file)) {
+        $translations = require $en_file;
+        $master_texts = array_keys($translations);
+    }
+}
 
 // Find all PHP files
 $files = [];
-$dir = new RecursiveDirectoryIterator($itflow_dir, RecursiveDirectoryIterator::SKIP_DOTS);
-$iterator = new RecursiveIteratorIterator($dir);
-
+$iterator = new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($itflow_dir, RecursiveDirectoryIterator::SKIP_DOTS)
+);
 foreach ($iterator as $file) {
-    if (!$file->isFile() || $file->getExtension() !== 'php') {
-        continue;
+    if ($file->isFile() && $file->getExtension() === 'php') {
+        $path = $file->getPathname();
+        if (strpos($path, '/vendor/') !== false ||
+            strpos($path, '/libs/') !== false ||
+            strpos($path, '/.git/') !== false ||
+            strpos($path, '/uploads/') !== false ||
+            strpos($path, '/node_modules/') !== false ||
+            strpos($path, '/scripts/i18n_') !== false) {
+            continue;
+        }
+        $files[] = $path;
     }
-    
-    $path = $file->getPathname();
-    
-    // Exclude vendor, libs, .git, uploads, node_modules, scripts
-    if (strpos($path, '/vendor/') !== false ||
-        strpos($path, '/libs/') !== false ||
-        strpos($path, '/.git/') !== false ||
-        strpos($path, '/uploads/') !== false ||
-        strpos($path, '/node_modules/') !== false ||
-        strpos($path, '/scripts/') !== false) {
-        continue;
-    }
-    
-    $files[] = $path;
 }
 
-echo "=== i18n Original Text Checker ===\n";
-echo "Checking all t() calls against master branch...\n\n";
-
-$errors = [];
-$checked = 0;
+$all_texts = [];
+$non_text_modifications = [];
 
 foreach ($files as $file) {
     $relative_path = str_replace($itflow_dir . '/', '', $file);
-    
     $content = file_get_contents($file);
+    $lines = explode("\n", $content);
     
-    // Extract t() calls
-    $pattern = '/t\([\'"]([^\'"]+)[\'"]\)/';
-    preg_match_all($pattern, $content, $matches);
-    
-    foreach ($matches[1] as $text) {
-        if (strpos($text, '$') !== false) {
-            continue;
-        }
-        
-        // Skip exceptions
-        if (in_array($text, $exceptions)) {
-            continue;
-        }
-        
-        $checked++;
-        
-        // Get master version of THIS FILE only
-        $git_cmd = 'cd ' . escapeshellarg($itflow_dir) . ' && git show ' . escapeshellarg($master_branch) . ':' . escapeshellarg($relative_path) . ' 2>/dev/null';
-        $master_content = shell_exec($git_cmd);
-        
-        if ($master_content === null || $master_content === '') {
-            // File doesn't exist in master - skip validation
-            continue;
-        }
-        
-        // Check if text exists in master file (quoted or unquoted)
-        $escaped_text = preg_quote($text, '/');
-        
-        // Check quoted version
-        $quoted_pattern = '/[\'"]' . $escaped_text . '[\'"]/';
-        $found_quoted = preg_match($quoted_pattern, $master_content);
-        
-        // Check unquoted version using strpos (simpler, no regex issues)
-        $found_unquoted = (strpos($master_content, $text) !== false);
-        
-        if (!$found_quoted && !$found_unquoted) {
-            $errors[] = [
+    // Extract all t('...') calls with line numbers
+    foreach ($lines as $line_num => $line) {
+        preg_match_all("/t\(['\"]([^'\"]+)['\"]\)/", $line, $matches);
+        foreach ($matches[1] as $text) {
+            $all_texts[] = [
                 'file' => $relative_path,
-                'text' => $text,
-                'message' => 'Text NOT found in master (quoted or unquoted)'
+                'line' => $line_num + 1,
+                'text' => $text
             ];
         }
     }
+    
+    // Check for non-t() modifications (lines that were added/removed)
+    exec("cd {$itflow_dir} && git diff master -- {$relative_path} 2>/dev/null | grep -E '^[+-]' | grep -v '^[+-]{3}' | grep -v \"t\\(['\\\"]\" 2>/dev/null", $diff_lines, $exit_code);
+    
+    if (!empty($diff_lines)) {
+        $non_text_modifications[] = [
+            'file' => $relative_path,
+            'lines' => $diff_lines
+        ];
+    }
+    
+    // Clear diff_lines for next file
+    $diff_lines = [];
 }
 
-echo "Files checked: " . count($files) . "\n";
-echo "t() calls verified: $checked\n";
-echo "\n";
+// Check for unknown texts (not in master)
+$unknown_texts = [];
+foreach ($all_texts as $item) {
+    if (!in_array($item['text'], $master_texts)) {
+        $unknown_texts[] = $item;
+    }
+}
 
-// Check for non-t() modifications in git diff
-echo "=== Checking for non-text modifications ===\n";
-$diff_cmd = 'cd ' . escapeshellarg($itflow_dir) . ' && git diff master -- "*.php" 2>/dev/null';
-$diff_output = shell_exec($diff_cmd);
+echo "=== Summary ===\n";
+echo "Total t() calls found: " . count($all_texts) . "\n";
+echo "Unknown texts (not in master): " . count($unknown_texts) . "\n";
+echo "Files with non-t() modifications: " . count($non_text_modifications) . "\n\n";
 
-$non_text_modifications = [];
-$lines = explode("\n", $diff_output);
-$current_file = null;
-$file_exists_in_master = false;
+$errors = [];
 
-foreach ($lines as $line) {
-    // Track current file
-    if (preg_match('/^diff --git a\/(.+) b\/(.+)$/', $line, $matches)) {
-        $current_file = $matches[1];
-        
-        // Check if file exists in master
-        $check_cmd = 'cd ' . escapeshellarg($itflow_dir) . ' && git cat-file -e ' . escapeshellarg($master_branch) . ':' . escapeshellarg($current_file) . ' 2>/dev/null; echo $?';
-        $result = trim(shell_exec($check_cmd));
-        // git cat-file -e returns 0 if object exists, 1 if not
-        $file_exists_in_master = (substr($result, -1) === '0');
-        continue;
+if (!empty($unknown_texts)) {
+    echo "=== Unknown texts (not in master lang/en.php) ===\n";
+    foreach ($unknown_texts as $item) {
+        $errors[] = "Unknown: {$item['file']}:{$item['line']} - '{$item['text']}'";
+        echo "  {$item['file']}:{$item['line']} - '{$item['text']}'\n";
     }
-    
-    // Skip if file doesn't exist in master (new file)
-    if (!$file_exists_in_master) {
-        continue;
-    }
-    
-    // Skip if not an added/removed line
-    if (!preg_match('/^[\+\-]/', $line) || preg_match('/^[\+\-]{3}/', $line)) {
-        continue;
-    }
-    
-    // Skip if line contains t(
-    if (strpos($line, 't(') !== false) {
-        continue;
-    }
-    
-    // Skip require_once lines (needed for i18n system)
-    if (preg_match('/^\+require_once.*i18n\.php/', $line)) {
-        continue;
-    }
-    
-    // Skip context lines (start with single + or - followed by space)
-    if (preg_match('/^[\+\-] /', $line)) {
-        continue;
-    }
-    
-    // Check if this is a real modification (not just whitespace)
-    $trimmed = trim(substr($line, 1));
-    if (empty($trimmed)) {
-        continue;
-    }
-    
-    // This is a non-t() modification
-    $non_text_modifications[] = [
-        'file' => $current_file,
-        'line' => $line
-    ];
+    echo "\n";
 }
 
 if (!empty($non_text_modifications)) {
-    echo "FAILED: " . count($non_text_modifications) . " non-text modification(s) detected:\n\n";
-    foreach ($non_text_modifications as $i => $mod) {
-        echo ($i + 1) . ". File: " . $mod['file'] . "\n";
-        echo "   Line: " . $mod['line'] . "\n\n";
+    echo "=== Non-t() modifications detected ===\n";
+    foreach ($non_text_modifications as $mod) {
+        $errors[] = "Non-t() modification: {$mod['file']}";
+        echo "  {$mod['file']}:\n";
+        foreach ($mod['lines'] as $line) {
+            echo "    {$line}\n";
+        }
     }
-    exit(1);
-} else {
-    echo "SUCCESS: All non-t() modifications match master exactly.\n";
+    echo "\n";
 }
 
 if (empty($errors)) {
-    echo "SUCCESS: All t() texts match master branch exactly.\n";
+    echo "✓ All t() calls match original master texts.\n";
+    echo "✓ No non-t() modifications detected.\n";
     exit(0);
 } else {
-    echo "FAILED: " . count($errors) . " text(s) do NOT match master:\n\n";
-    foreach ($errors as $i => $error) {
-        echo ($i + 1) . ". File: " . $error['file'] . "\n";
-        echo '   Text: "' . $error['text'] . '"' . "\n";
-        echo '   Issue: ' . $error['message'] . "\n\n";
+    echo "=== ERRORS ===\n";
+    foreach ($errors as $error) {
+        echo "  ✗ {$error}\n";
     }
     exit(1);
 }

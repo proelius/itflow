@@ -1,6 +1,6 @@
 <?php
 /**
- * ITFlow Translation Keys - English (Base)
+ * ITFlow Translations - English (Base)
  * 
  * Format: 'English Text' => 'English Text'
  * The key IS the English text displayed to users.
