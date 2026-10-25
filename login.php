@@ -257,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
             $response = "
               <div class='alert alert-danger'>
-                Incorrect username or password.
+                " . t('Incorrect username or password.') . "
               </div>";
         } else {
 
@@ -551,7 +551,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                         $token_field = "
                             <div class='input-group mb-3'>
                                 <input type='text' inputmode='numeric' pattern='[0-9]*' maxlength='6'
-                                       class='form-control' placeholder='Verify your 2FA code'
+                                       class='form-control' placeholder='" . t('Verify your 2FA code') . "'
                                        name='current_code' required autofocus>
                                   <div class='input-group-text'>
                                     <span class='fas fa-key'></span>
@@ -611,7 +611,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
                         $response = "
                           <div class='alert alert-danger'>
-                            Incorrect username or password.
+                            " . t('Incorrect username or password.') . "
                           </div>";
                     } else {
 
@@ -668,7 +668,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                             header("HTTP/1.1 401 Unauthorized");
                             $response = "
                               <div class='alert alert-danger'>
-                                Incorrect username or password.
+                                " . t('Incorrect username or password.') . "
                               </div>";
                         }
                     }
@@ -688,7 +688,7 @@ $show_login_form = (!$show_role_choice && !$show_mfa_form);
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title><?= escapeHtml($company_name) ?> | Login</title>
+    <title><?= escapeHtml($company_name) ?> | <?= t('Login') ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
 

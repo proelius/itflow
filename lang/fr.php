@@ -20,6 +20,8 @@ return [
     'Login with Microsoft Entra' => 'Se connecter avec Microsoft Entra',
     'Please enter a valid 2FA code.' => 'Veuillez entrer un code 2FA valide.',
     'Incorrect username or password.' => 'Nom d’utilisateur ou mot de passe incorrect.',
+    'Verify your 2FA code' => 'Saisissez votre code 2FA',
+    'Login' => 'Connexion',
     
     // top_nav.php
     'Search everywhere' => 'Rechercher partout',
