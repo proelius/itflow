@@ -98,7 +98,7 @@ return [
     'Billing' => 'Facturation',
     'Please click on the link below to see your invoice regarding "{scope}" marked <b>paid</b>.' => 'Veuillez cliquer sur le lien ci-dessous pour consulter votre facture concernant « {scope} », marquée <b>payée</b>.',
     'Invoice Link' => 'Lien vers la facture',
-    'Please find your account statement for {period} below.' => 'Veuillez trouver ci-dessous votre relevé de compte pour {period}.',
+    'Please find your account statement for {period} below.' => 'Veuillez trouver ci-dessous votre relevé de compte {period}.',
     'Click any invoice number above to view or pay it online.' => 'Cliquez sur un numéro de facture ci-dessus pour la consulter ou la payer en ligne.',
     'Invoice {number}' => 'Facture {number}',
     'Invoice {number} Receipt' => 'Reçu de la facture {number}',
