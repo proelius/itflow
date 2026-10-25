@@ -257,7 +257,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
             $response = "
               <div class='alert alert-danger'>
-                Incorrect username or password.
+                " . t('Incorrect username or password.') . "
               </div>";
         } else {
 
@@ -611,7 +611,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
 
                         $response = "
                           <div class='alert alert-danger'>
-                            Incorrect username or password.
+                            " . t('Incorrect username or password.') . "
                           </div>";
                     } else {
 
@@ -668,7 +668,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                             header("HTTP/1.1 401 Unauthorized");
                             $response = "
                               <div class='alert alert-danger'>
-                                Incorrect username or password.
+                                " . t('Incorrect username or password.') . "
                               </div>";
                         }
                     }
