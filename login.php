@@ -11,6 +11,7 @@ if (!file_exists('config.php')) {
 
 require_once "config.php";
 require_once "functions.php";
+i18n_set_language(client_language());
 require_once "libs/totp/totp.php";
 
 require_once __DIR__ . "/includes/session_init.php";
