@@ -494,8 +494,17 @@ if (isset($_GET['force_recurring'])) {
 
             // Email to client
 
-            $subject = "Invoice $invoice_prefix$invoice_number";
-            $body = "Hello $contact_name,<br><br>An invoice regarding \"$invoice_scope\" has been generated. Please view the details below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Total: $$invoice_amount<br>Due Date: $invoice_due<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$new_invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$company_phone";
+            $recurring_link = "https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$new_invoice_id&url_key=$invoice_url_key";
+            $subject = t_mail('Invoice {number}', ['{number}' => "$invoice_prefix$invoice_number"]);
+            $subject_audit = "Invoice $invoice_prefix$invoice_number";
+            $body = t_mail('Hello {name},', ['{name}' => $contact_name]) . "<br><br>"
+                . t_mail('An invoice regarding "{scope}" has been generated. Please view the details below.', ['{scope}' => $invoice_scope]) . "<br><br>"
+                . t_mail('Invoice:') . " $invoice_prefix$invoice_number<br>"
+                . t_mail('Issue Date:') . " $invoice_date<br>"
+                . t_mail('Total:') . " $$invoice_amount<br>"
+                . t_mail('Due Date:') . " $invoice_due<br><br><br>"
+                . t_mail('To view your invoice, please click {link}.', ['{link}' => "<a href=\'$recurring_link\'>" . t_mail('here') . "</a>"]) . "<br><br><br>--<br>"
+                . "$company_name - " . t_mail('Billing') . "<br>$company_phone";
 
 
             $data = [
@@ -521,7 +530,7 @@ if (isset($_GET['force_recurring'])) {
                 // Error reporting
                 appNotify("Mail", "Failed to send email to $contact_email");
 
-                logAudit("Mail", "Error", "Failed to send email to $contact_email regarding $subject. $mail");
+                logAudit("Mail", "Error", "Failed to send email to $contact_email regarding $subject_audit. $mail");
 
             }
 

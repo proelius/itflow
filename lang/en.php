@@ -106,4 +106,12 @@ return [
     'up to {date}' => 'up to {date}',
     '{from} to {to}' => '{from} to {to}',
     '(overdue)' => '(overdue)',
+    
+    // Email - Quote & Recurring Invoice
+    'Quote [{scope}]' => 'Quote [{scope}]',
+    'Thank you for your inquiry, we are pleased to provide you with the following estimate.' => 'Thank you for your inquiry, we are pleased to provide you with the following estimate.',
+    'Total Cost:' => 'Total Cost:',
+    'View and accept your estimate online {link}' => 'View and accept your estimate online {link}',
+    'Sales' => 'Sales',
+    'An invoice regarding "{scope}" has been generated. Please view the details below.' => 'An invoice regarding "{scope}" has been generated. Please view the details below.',
 ];
