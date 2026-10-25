@@ -186,6 +186,15 @@ function _i18n_get_lang() {
 }
 
 /**
+ * Get current language, ensuring translations are loaded first
+ * @return string Language code (e.g. 'fr', 'en')
+ */
+function i18n_current_language() {
+    _i18n_load();
+    return _i18n_get_lang();
+}
+
+/**
  * Set language permanently (for PDFs that end with exit)
  * @param string $lang Language code (e.g. 'fr', 'en')
  */
@@ -229,4 +238,51 @@ function client_language($client_id = null) {
     global $config_language_client;
     
     return _i18n_normalize_lang(isset($config_language_client) ? $config_language_client : 'en');
+}
+
+/**
+ * Get country name in current language
+ * @param string $country Country name (e.g. 'Switzerland', 'Germany')
+ * @return string Translated country name or original if not found
+ */
+function i18n_country_name($country) {
+    global $country_iso2_array;
+    
+    // Return unchanged if empty
+    if (empty($country)) {
+        return $country;
+    }
+    
+    // Return unchanged in English (no translation needed)
+    if (i18n_current_language() === 'en') {
+        return $country;
+    }
+    
+    // Return unchanged if no Locale class
+    if (!class_exists('Locale', false)) {
+        return $country;
+    }
+    
+    // Return unchanged if country_iso2_array not defined or not an array
+    if (!is_array($country_iso2_array)) {
+        return $country;
+    }
+    
+    // Direct lookup (no foreach loop)
+    $iso2 = $country_iso2_array[$country] ?? null;
+    
+    // Return unchanged if country not found
+    if ($iso2 === null) {
+        return $country;
+    }
+    
+    // Get translated country name
+    $translated = Locale::getDisplayRegion('-' . strtoupper($iso2), i18n_current_language());
+    
+    // Return original if translation is empty or same as code
+    if (empty($translated) || $translated === strtoupper($iso2)) {
+        return $country;
+    }
+    
+    return $translated;
 }
