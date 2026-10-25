@@ -2,6 +2,7 @@
 
 require_once "../config.php";
 require_once "../functions.php";
+i18n_set_language(client_language());
 require_once "../includes/load_global_settings.php";
 
 require_once __DIR__ . "/../includes/session_init.php";
