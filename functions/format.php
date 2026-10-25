@@ -212,6 +212,11 @@ function formatAddress($address, $city, $state, $zip, $country = '', $separator 
     $zip     = trim((string)$zip);
     $country = trim((string)$country);
 
+    // Translate country name if i18n is available
+    if (!empty($country)) {
+        $country = i18n_country_name($country);
+    }
+
     // "City, ST 15212" - the comma only appears when something follows the city
     $region = trim(implode(' ', array_filter([$state, $zip], 'strlen')));
     if ($city !== '' && $region !== '') {

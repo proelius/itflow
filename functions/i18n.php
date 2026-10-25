@@ -135,16 +135,14 @@ function _i18n_apply($lang) {
  * Load translations for current language from config (only once)
  */
 function _i18n_load() {
-    global $config_language;
-    
     // If already loaded, return current state
     if (!empty($GLOBALS['_i18n_loaded'])) {
         return;
     }
     
     // Determine language from config
-    $lang = isset($config_language) && is_string($config_language)
-        ? _i18n_normalize_lang($config_language)
+    $lang = isset($GLOBALS['config_language']) && is_string($GLOBALS['config_language'])
+        ? _i18n_normalize_lang($GLOBALS['config_language'])
         : 'en';
     
     _i18n_apply($lang);
@@ -186,12 +184,29 @@ function _i18n_get_lang() {
 }
 
 /**
+ * Get current language, ensuring translations are loaded first
+ * @return string Language code (e.g. 'fr', 'en')
+ */
+function i18n_current_language() {
+    _i18n_load();
+    return _i18n_get_lang();
+}
+
+/**
  * Set language permanently (for PDFs that end with exit)
  * @param string $lang Language code (e.g. 'fr', 'en')
  */
 function i18n_set_language($lang) {
     _i18n_load();
     _i18n_apply(_i18n_normalize_lang($lang));
+}
+
+/**
+ * Get language from config
+ * @return string Language code
+ */
+function _i18n_load_config_lang() {
+    return isset($GLOBALS['config_language']) ? $GLOBALS['config_language'] : 'en';
 }
 
 /**
@@ -229,4 +244,42 @@ function client_language($client_id = null) {
     global $config_language_client;
     
     return _i18n_normalize_lang(isset($config_language_client) ? $config_language_client : 'en');
+}
+
+/**
+ * Get country name in current language
+ * @param string $country Country name (e.g. 'Switzerland', 'Germany')
+ * @return string Translated country name or original if not found
+ */
+function i18n_country_name($country) {
+    global $country_iso2_array;
+    
+    // Return unchanged if empty, no Locale class, or not in array
+    if (empty($country) || !class_exists('Locale', false)) {
+        return $country;
+    }
+    
+    // Find ISO2 code for this country name (exact match)
+    $iso2 = null;
+    foreach ($country_iso2_array as $name => $code) {
+        if ($name === $country) {
+            $iso2 = strtoupper($code);
+            break;
+        }
+    }
+    
+    // Return unchanged if country not found
+    if ($iso2 === null) {
+        return $country;
+    }
+    
+    // Get translated country name
+    $translated = Locale::getDisplayRegion('-' . $iso2, i18n_current_language());
+    
+    // Return original if translation is empty or same as code
+    if (empty($translated) || $translated === $iso2) {
+        return $country;
+    }
+    
+    return $translated;
 }
