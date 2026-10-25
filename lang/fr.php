@@ -142,5 +142,5 @@ return [
     'If you have any questions or concerns, please do not hesitate to contact us at {email} or {phone}.' => 'Pour toute question, n’hésitez pas à nous contacter à {email} ou au {phone}.',
     'Kindly review the invoice details mentioned below.' => 'Veuillez consulter les détails de la facture ci-dessous.',
     'Invoice Total:' => 'Total de la facture :',
-    'Over Due By: {days} Days' => 'Retard : {days} jours',
+    'Over Due By: {days} Days' => 'Retard : {days} jour(s)',
 ];

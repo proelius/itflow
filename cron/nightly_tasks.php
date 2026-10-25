@@ -636,6 +636,7 @@ if ($config_send_invoice_reminders == 1) {
                 continue;
             }
 
+            $subject_log = "Overdue Invoice $invoice_prefix$invoice_number";
             $subject = t_mail('Overdue Invoice {number}', ['{number}' => "$invoice_prefix$invoice_number"]);
 
             // Only show the paid line if a payment has actually been applied
@@ -676,7 +677,7 @@ if ($config_send_invoice_reminders == 1) {
                 appNotify("Mail", "Failed to send email to $contact_email");
 
                 // Logging
-                logApp("Mail", "error", "Failed to send email to $contact_email regarding $subject. $mail");
+                logApp("Mail", "error", "Failed to send email to $contact_email regarding $subject_log. $mail");
             }
 
         }
@@ -803,6 +804,7 @@ while ($row = mysqli_fetch_assoc($sql_recurring_invoices)) {
     // Send invoice email if: (1) Global recurring auto-send is on, (2) the recurring invoice is set to auto-send (than just be a draft), and (3) the recurring invoice is opted in for the client to be notified
     if ($config_recurring_auto_send_invoice == 1 && $recurring_invoice_auto_send == 1 && $recurring_invoice_email_notify == 1) {
 
+        $subject_log = "Invoice $invoice_prefix$invoice_number";
         $subject = t_mail('Invoice {number}', ['{number}' => "$invoice_prefix$invoice_number"]);
         $body = t_mail('Hello {name},', ['{name}' => $contact_name]) . "<br><br>"
             . t_mail('An invoice regarding "{scope}" has been generated. Please view the details below.', ['{scope}' => $invoice_scope]) . "<br><br>"
@@ -834,7 +836,7 @@ while ($row = mysqli_fetch_assoc($sql_recurring_invoices)) {
             appNotify("Mail", "Failed to send email to $contact_email");
 
             // Logging
-            logApp("Mail", "error", "Failed to send email to $contact_email regarding $subject. $mail");
+            logApp("Mail", "error", "Failed to send email to $contact_email regarding $subject_log. $mail");
 
         }
 
