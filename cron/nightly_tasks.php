@@ -636,14 +636,26 @@ if ($config_send_invoice_reminders == 1) {
                 continue;
             }
 
-            $subject = "Overdue Invoice $invoice_prefix$invoice_number";
+            $subject = t_mail('Overdue Invoice {number}', ['{number}' => "$invoice_prefix$invoice_number"]);
 
             // Only show the paid line if a payment has actually been applied
-            $paid_line = $amount_paid > 0 ? "Amount Paid: " . numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) . "<br>" : "";
+            $paid_line = $amount_paid > 0 ? t_mail('Amount Paid:') . " " . numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) . "<br>" : "";
 
-            $body = "Hello $contact_name,<br><br>Our records indicate that we have not yet received payment in full for the invoice $invoice_prefix$invoice_number. We kindly request that you submit your payment as soon as possible. If you have any questions or concerns, please do not hesitate to contact us at $company_email or $company_phone.
-                <br>
-                Kindly review the invoice details mentioned below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Invoice Total: " . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . "<br>$paid_line" . "Balance Due: " . numfmt_format_currency($currency_format, $invoice_balance, $invoice_currency_code) . "<br>Due Date: $invoice_due<br>Over Due By: $day Days<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+            $body = t_mail('Hello {name},', ['{name}' => $contact_name]) . "<br><br>"
+                . t_mail('Our records indicate that we have not yet received payment in full for the invoice {number}.', ['{number}' => "$invoice_prefix$invoice_number"]) . " "
+                . t_mail('We kindly request that you submit your payment as soon as possible.') . " "
+                . t_mail('If you have any questions or concerns, please do not hesitate to contact us at {email} or {phone}.', ['{email}' => $company_email, '{phone}' => $company_phone])
+                . "\n                <br>\n                "
+                . t_mail('Kindly review the invoice details mentioned below.') . "<br><br>"
+                . t_mail('Invoice:') . " $invoice_prefix$invoice_number<br>"
+                . t_mail('Issue Date:') . " $invoice_date<br>"
+                . t_mail('Invoice Total:') . " " . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . "<br>"
+                . "$paid_line"
+                . t_mail('Balance Due:') . " " . numfmt_format_currency($currency_format, $invoice_balance, $invoice_currency_code) . "<br>"
+                . t_mail('Due Date:') . " $invoice_due<br>"
+                . t_mail('Over Due By: {days} Days', ['{days}' => $day]) . "<br><br><br>"
+                . t_mail('To view your invoice, please click {link}.', ['{link}' => "<a href=\'https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>" . t_mail('here') . "</a>"]) . "<br><br><br>--<br>"
+                . "$company_name - " . t_mail('Billing') . "<br>$config_invoice_from_email<br>$company_phone";
 
             $mail = addToMailQueue([
                 [
@@ -791,8 +803,15 @@ while ($row = mysqli_fetch_assoc($sql_recurring_invoices)) {
     // Send invoice email if: (1) Global recurring auto-send is on, (2) the recurring invoice is set to auto-send (than just be a draft), and (3) the recurring invoice is opted in for the client to be notified
     if ($config_recurring_auto_send_invoice == 1 && $recurring_invoice_auto_send == 1 && $recurring_invoice_email_notify == 1) {
 
-        $subject = "Invoice $invoice_prefix$invoice_number";
-        $body = "Hello $contact_name,<br><br>An invoice regarding \"$invoice_scope\" has been generated. Please view the details below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Total: " . numfmt_format_currency($currency_format, $invoice_amount, $recurring_invoice_currency_code) . "<br>Due Date: $invoice_due<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$new_invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+        $subject = t_mail('Invoice {number}', ['{number}' => "$invoice_prefix$invoice_number"]);
+        $body = t_mail('Hello {name},', ['{name}' => $contact_name]) . "<br><br>"
+            . t_mail('An invoice regarding "{scope}" has been generated. Please view the details below.', ['{scope}' => $invoice_scope]) . "<br><br>"
+            . t_mail('Invoice:') . " $invoice_prefix$invoice_number<br>"
+            . t_mail('Issue Date:') . " $invoice_date<br>"
+            . t_mail('Total:') . " " . numfmt_format_currency($currency_format, $invoice_amount, $recurring_invoice_currency_code) . "<br>"
+            . t_mail('Due Date:') . " $invoice_due<br><br><br>"
+            . t_mail('To view your invoice, please click {link}.', ['{link}' => "<a href=\'https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$new_invoice_id&url_key=$invoice_url_key\'>" . t_mail('here') . "</a>"]) . "<br><br><br>--<br>"
+            . "$company_name - " . t_mail('Billing') . "<br>$config_invoice_from_email<br>$company_phone";
 
         $mail = addToMailQueue([
             [

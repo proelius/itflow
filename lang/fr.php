@@ -134,4 +134,13 @@ return [
     'Payment Applied:' => 'Paiement appliqué :',
     'New Balance:' => 'Nouveau solde :',
     'Thank you for your payment of {amount} We\'ve applied your payment to the following invoices, updating their balances accordingly:' => 'Merci pour votre paiement de {amount}. Nous l’avons appliqué aux factures suivantes et leurs soldes ont été mis à jour :',
+    
+    // Email - Cron Nightly Tasks (2 client emails)
+    'Overdue Invoice {number}' => 'Facture {number} en retard de paiement',
+    'Our records indicate that we have not yet received payment in full for the invoice {number}.' => 'Nos registres indiquent que nous n’avons pas encore reçu le paiement intégral de la facture {number}.',
+    'We kindly request that you submit your payment as soon as possible.' => 'Nous vous prions de bien vouloir effectuer votre paiement dans les meilleurs délais.',
+    'If you have any questions or concerns, please do not hesitate to contact us at {email} or {phone}.' => 'Pour toute question, n’hésitez pas à nous contacter à {email} ou au {phone}.',
+    'Kindly review the invoice details mentioned below.' => 'Veuillez consulter les détails de la facture ci-dessous.',
+    'Invoice Total:' => 'Total de la facture :',
+    'Over Due By: {days} Days' => 'Retard : {days} jours',
 ];
