@@ -19,7 +19,7 @@ if (empty($config_smtp_host)) {
 
 // Check to see if client portal is enabled
 if($config_client_portal_enable == 0) {
-    echo "Client Portal is Disabled";
+    echo t('Client Portal is Disabled');
     exit();
 }
 
@@ -45,7 +45,7 @@ $config_mail_from_name = escapeSql($config_mail_from_name);
 $config_mail_from_email = escapeSql($config_mail_from_email);
 $config_base_url = escapeSql($config_base_url);
 
-DEFINE("WORDING_ERROR", "Something went wrong! Your link may have expired. Please request a new password reset e-mail.");
+DEFINE("WORDING_ERROR", t('Something went wrong! Your link may have expired. Please request a new password reset e-mail.'));
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             //End Mail IF
         }
 
-        $_SESSION['login_message'] = "If your account exists, a reset link is on it's way! Please allow a few minutes for it to reach you.";
+        $_SESSION['login_message'] = t("If your account exists, a reset link is on it's way! Please allow a few minutes for it to reach you.");
 
     /*
      * Link is being used - Perform password reset
@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             }
 
             // Redirect to login page
-            $_SESSION['login_message'] = "Password reset successfully!";
+            $_SESSION['login_message'] = t('Password reset successfully!');
             header("Location: /login.php");
             exit();
 
@@ -168,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title><?= escapeHtml($company_name_display) ?> | Password Reset</title>
+    <title><?= escapeHtml($company_name_display) ?> | <?= t('Password Reset') ?></title>
 
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
 <body class="hold-transition login-page">
 <div class="login-box">
-    <div class="login-logo"><b><?= escapeHtml($company_name_display) ?></b> <br>Password Reset</h2></div>
+    <div class="login-logo"><b><?= escapeHtml($company_name_display) ?></b> <br><?= t('Password Reset') ?></h2></div>
     <div class="card">
         <div class="card-body login-card-body">
 
@@ -216,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                     if (sha1($user_row['user_password_reset_token']) == sha1($token)) { ?>
 
                         <div class="input-group mb-3">
-                            <input type="password" class="form-control" placeholder="New Password" name="new_password" required minlength="8">
+                            <input type="password" class="form-control" placeholder="<?= t('New Password') ?>" name="new_password" required minlength="8">
                                 <div class="input-group-text">
                                     <span class="fas fa-lock"></span>
                                 </div>
@@ -226,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                         <input type="hidden" name="email" value="<?= $email ?>">
                         <input type="hidden" name="client" value="<?= $client ?>">
 
-                        <button type="submit" class="btn btn-success w-100 mb-3" name="password_reset_set_password">Reset password</button>
+                        <button type="submit" class="btn btn-success w-100 mb-3" name="password_reset_set_password"><?= t('Reset password') ?></button>
 
 
                     <?php } else {
@@ -242,13 +242,13 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 } else { ?>
 
                     <div class="input-group mb-3">
-                        <input type="email" class="form-control" placeholder="Registered Client Email" name="email" required autofocus>
+                        <input type="email" class="form-control" placeholder="<?= t('Registered Client Email') ?>" name="email" required autofocus>
                             <div class="input-group-text">
                                 <span class="fas fa-envelope"></span>
                             </div>
                     </div>
 
-                    <button type="submit" class="btn btn-success w-100 mb-3" name="password_reset_email_request">Reset my password</button>
+                    <button type="submit" class="btn btn-success w-100 mb-3" name="password_reset_email_request"><?= t('Reset my password') ?></button>
 
                 <?php }
                 ?>
@@ -265,7 +265,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 ?>
             </p>
 
-            <a href="/login.php">Back to login</a>
+            <a href="/login.php"><?= t('Back to login') ?></a>
 
 
         </div>

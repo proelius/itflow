@@ -6,6 +6,7 @@
 
 require_once '../config.php';
 require_once '../functions.php';
+i18n_set_language(client_language());
 
 require_once __DIR__ . "/../includes/session_init.php";
 
@@ -69,13 +70,13 @@ if (isset($_GET['code']) || isset($_GET['error'])) {
     unset($_SESSION['azure_oauth_state'], $_SESSION['azure_oauth_state_expires_at']);
 
     if (!empty($_GET['error'])) {
-        $_SESSION['login_message'] = 'Something went wrong with logging you in: Microsoft returned an error. Please try again.';
+        $_SESSION['login_message'] = t('Something went wrong with logging you in: Microsoft returned an error. Please try again.');
         header("Location: ../login.php");
         exit();
     }
 
     if (empty($state) || empty($session_state) || !hash_equals($session_state, $state) || time() > $session_state_expires) {
-        $_SESSION['login_message'] = 'Something went wrong with logging you in: the sign-in request could not be verified. Please try again.';
+        $_SESSION['login_message'] = t('Something went wrong with logging you in: the sign-in request could not be verified. Please try again.');
         header("Location: ../login.php");
         exit();
     }
@@ -118,7 +119,7 @@ if (isset($_GET['code']) || isset($_GET['error'])) {
         if (isset($msgraph_response['error'])) {
             // Something went wrong verifying the token/using the Graph API - quit
             error_log("ITFlow: MS Graph API error during client portal Entra login: " . json_encode($msgraph_response['error']));
-            $_SESSION['login_message'] = 'Something went wrong with logging you in: could not read your profile from Microsoft. Please try again.';
+            $_SESSION['login_message'] = t('Something went wrong with logging you in: could not read your profile from Microsoft. Please try again.');
             header("Location: ../login.php");
             exit();
 
@@ -164,7 +165,7 @@ if (isset($_GET['code']) || isset($_GET['error'])) {
 
             } else {
 
-                $_SESSION['login_message'] = 'Something went wrong with logging you in: Your account is not configured for Entra SSO. Please ensure you are setup in ITFlow as a contact and have Entra SSO configured.';
+                $_SESSION['login_message'] = t('Something went wrong with logging you in: Your account is not configured for Entra SSO. Please ensure you are setup in ITFlow as a contact and have Entra SSO configured.');
 
                 header("Location: ../login.php");
             }
@@ -179,7 +180,7 @@ if (isset($_GET['code']) || isset($_GET['error'])) {
     } else {
 
         error_log("ITFlow: no access_token returned during client portal Entra login");
-        $_SESSION['login_message'] = 'Something went wrong with logging you in: Microsoft did not return an access token. Please try again.';
+        $_SESSION['login_message'] = t('Something went wrong with logging you in: Microsoft did not return an access token. Please try again.');
         header("Location: ../login.php");
         exit();
 
