@@ -33,8 +33,9 @@
   de fichiers, les données saisies par les utilisateurs, les dates et les montants.
 - Jamais de morceaux de phrase concaténés : une phrase entière avec des paramètres
   nommés, t('Hello {name},', ['{name}' => $name]).
-- lang/fr.php : uniquement l'apostrophe typographique ' ; jamais ' ni \' (certains textes
-  sont insérés dans des requêtes SQL, notamment les e-mails).
+  - lang/fr.php : uniquement l'apostrophe typographique courbe ’ (U+2019) ; jamais
+       l'apostrophe droite ' (U+0027) ni \' (certains textes sont insérés dans des
+       requêtes SQL, notamment les e-mails).
 - lang/en.php et lang/fr.php ont exactement les mêmes clés ; chaque clé est utilisée, aucune
   clé inutile.
 - Contenu destiné aux clients (PDF, e-mails, pages vues par le client) : appliquer la langue
