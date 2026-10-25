@@ -1,108 +1,42 @@
-# CLAUDE.md - Règles i18n ITFlow
+# CLAUDE.md - Règles pour la traduction (i18n) de ce fork d'ITFlow
 
-## Règles absolues
+## Dépôt et branches
+- Le remote « fork » pointe vers github.com/proelius/itflow (vérifie avec git remote -v) ;
+  « origin » peut pointer vers le dépôt d'origine itflow-org/itflow.
+- AVANT de créer une branche : git fetch fork, puis partir de fork/master. Ne jamais
+  partir du master local ni de origin/master.
+- Une branche par PR. Ne crée aucune autre branche. Pousse sans --force ; seulement
+  --force-with-lease sur ta propre branche quand tu l'as refaite.
+- Ne pousse jamais de rapports, de scripts de test jetables ou de fichiers .json/.md hors
+  périmètre. Le périmètre est donné dans la consigne ; contrôle-le avec
+  git diff --name-only fork/master.
 
-### 1. Texte anglais identique à master
-Le texte anglais passé à `t()` doit être **IDENTIQUE, au caractère près**, au texte d'origine de master.
+## Preuves
+- Colle des sorties brutes et COMPLÈTES : jamais de « ... », de « ci-dessus » ni de résumé.
+- N'écris jamais « vérifié » ou « OK » sans la sortie qui le prouve. Ne simule jamais un rendu.
+- Après un push, colle git ls-remote --heads fork <branche>.
 
-**Exemple correct:**
-```php
-t('Incorrect username or password.')  // Texte exact de master
-```
+## Tests
+- Ne modifie, n'affaiblis et n'inverse jamais un test existant : si un test échoue, corrige
+  le code ou les données. Si tu crois qu'un test est faux, dis-le et attends mon accord.
+- Un test sauté (par exemple faute de l'extension intl) n'est jamais un test réussi.
+- Avant de dire « terminé » : php -l sur chaque fichier modifié ; php scripts/i18n_selftest.php ;
+  php scripts/i18n_check_keys.php ; php scripts/i18n_selftest_country.php.
+- scripts/i18n_check_original.php n'est plus fiable (545 « Unknown » sur master) : ne t'en
+  sers pas comme garde.
 
-**Exemple incorrect:**
-```php
-t('Failed login')  // Texte modifié - REJETÉ
-t('Incorrect username or password')  // Point manquant - REJETÉ
-```
-
-### 2. Aucune conversion hors périmètre validé
-Ne convertir QUE les textes explicitement validés (Phase 1: login.php + top_nav.php).
-
-**Convertisseable:**
-- placeholder, title, alt, aria-label (attributs HTML)
-- Textes visibles dans le HTML
-
-**Ne PAS convertir:**
-- Textes dans logAudit()
-- JavaScript (code JS, pas les attributs)
-- SQL (requêtes, noms de colonnes)
-- Valeurs techniques d'attributs (href, src, data-*)
-- Phrases concaténées (ex: "Client " . t('Email'))
-- Noms de champs, valeurs de formulaire
-- Identifiants, URLs
-- Données stockées en base (statuts, catégories)
-- E-mails et PDF (signaler au lieu de convertir)
-
-### 3. Preuves brutes obligatoires
-Ne jamais écrire « vérifié » sans sortie brute collée.
-
-**Exemple:**
-```
-✅ php -l login.php: No syntax errors detected
-✅ git diff master -- login.php: [diff complet collé]
-✅ i18n_check_original.php: SUCCESS: All t() texts match master
-```
-
-### 4. Pas de simulation de rendu
-Ne jamais simuler un rendu PHP. Si impossible de lancer PHP, le dire explicitement.
-
-**Exemple:**
-```
-⚠️ Rendu réel impossible: nécessite MariaDB active et configuration complète
-Alternative: script de test minimal avec mocks
-```
-
-### 5. Signaler les cas ambiguës
-Au lieu de convertir un cas ambigu, le signaler.
-
-**Exemple:**
-```
-⚠️ Cas ambigu: "Client " dans placeholder de login.php
-- Est-ce un préfixe à traduire?
-- Ou une concaténation de variable?
-→ En attente de clarification
-```
-
-## Périmètre actuel
-
-### Phase 1 (en attente de validation par moi)
-- ✅ login.php (28 appels t())
-- ✅ top_nav.php (4 appels t())
-
-### Phase 2 (en attente)
-- ⏸️ Portail client (à valider)
-- ⏸️ PDF (à valider)
-- ⏸️ E-mails (à valider)
-
-## Scripts de vérification
-
-### i18n_check_original.php
-Vérifie que chaque t('X') correspond exactement au texte de master.
-
-```bash
-php scripts/i18n_check_original.php
-```
-
-**Sortie:** Affiche le nombre de fichiers vérifiés et de t() calls, puis SUCCESS ou FAILED avec la liste des erreurs.
-
-### i18n_extract_texts.php
-Extrait tous les textes visibles traduisibles.
-
-```bash
-php scripts/i18n_extract_texts.php
-```
-
-**Sortie:** Affiche les textes visibles trouvés et ceux exclus (contenant des variables).
-
-## Workflow
-
-1. **Avant conversion:** Vérifier le texte exact dans master
-2. **Pendant conversion:** Utiliser t('texte exact')
-3. **Après conversion:** 
-   - php -l sur chaque fichier
-   - i18n_check_original.php
-   - git diff pour montrer les changements
-4. **Avant Phase 2:** Obtenir accord explicite
-
-## Validation requise avant toute conversion supplémentaire
+## Règles de traduction
+- Le texte anglais passé à t('...') est identique, au caractère près, au texte d'origine
+  de master. Sans configuration, l'application s'affiche comme avant (anglais).
+- Ne traduis jamais : logAudit, logHistory, les messages destinés aux agents (flashAlert
+  côté agent), le SQL, les comparaisons de statuts, les noms de champs, les URL, les noms
+  de fichiers, les données saisies par les utilisateurs, les dates et les montants.
+- Jamais de morceaux de phrase concaténés : une phrase entière avec des paramètres
+  nommés, t('Hello {name},', ['{name}' => $name]).
+- lang/fr.php : uniquement l'apostrophe typographique ' ; jamais ' ni \' (certains textes
+  sont insérés dans des requêtes SQL, notamment les e-mails).
+- lang/en.php et lang/fr.php ont exactement les mêmes clés ; chaque clé est utilisée, aucune
+  clé inutile.
+- Contenu destiné aux clients (PDF, e-mails, pages vues par le client) : appliquer la langue
+  client avec i18n_set_language(client_language()) ou i18n_with(). Ne modifie functions/i18n.php
+  qu'en me montrant d'abord le diff.
