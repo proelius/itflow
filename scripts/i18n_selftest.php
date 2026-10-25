@@ -59,50 +59,78 @@ if ($result !== 'fr') {
 }
 echo "\n";
 
-// Test 3: t() with $config_language='en'
-echo "Test 3: t() with \$config_language='en'\n";
-$config_language = 'en';
-$GLOBALS['_i18n_loaded'] = false;
-$GLOBALS['_i18n_lang'] = 'en';
+// Test 3: $config_language='fr' context
+echo "Test 3: \$config_language='fr' context\n";
+$config_language = 'fr';
+$GLOBALS['_i18n_lang'] = null;
 $GLOBALS['_i18n_translations'] = [];
+$GLOBALS['_i18n_loaded'] = false;
+
 $result = t('Sign In');
-if ($result !== 'Sign In') {
-    $errors[] = "t('Sign In') with \$config_language='en' = '{$result}' (expected 'Sign In')";
-    echo "  ✗ t('Sign In') with \$config_language='en' = '{$result}' (expected 'Sign In')\n";
+if ($result !== 'Se connecter') {
+    $errors[] = "t('Sign In') with \$config_language='fr' = '{$result}' (expected 'Se connecter')";
+    echo "  ✗ t('Sign In') with \$config_language='fr' = '{$result}' (expected 'Se connecter')\n";
 } else {
-    echo "  ✓ t('Sign In') with \$config_language='en' = '{$result}'\n";
+    echo "  ✓ t('Sign In') with \$config_language='fr' = '{$result}'\n";
+}
+
+// i18n_with('en', ...) should return English
+$result = i18n_with('en', function() {
+    return t('Sign In');
+});
+
+if ($result !== 'Sign In') {
+    $errors[] = "i18n_with('en', fn() => t('Sign In')) with \$config_language='fr' = '{$result}' (expected 'Sign In')";
+    echo "  ✗ i18n_with('en', fn() => t('Sign In')) with \$config_language='fr' = '{$result}' (expected 'Sign In')\n";
+} else {
+    echo "  ✓ i18n_with('en', fn() => t('Sign In')) with \$config_language='fr' = '{$result}'\n";
+}
+
+// After i18n_with, should return to French
+$result = t('Sign In');
+if ($result !== 'Se connecter') {
+    $errors[] = "After i18n_with('en', ...), t('Sign In') = '{$result}' (expected 'Se connecter')";
+    echo "  ✗ After i18n_with('en', ...), t('Sign In') = '{$result}' (expected 'Se connecter')\n";
+} else {
+    echo "  ✓ After i18n_with('en', ...), t('Sign In') = '{$result}'\n";
 }
 echo "\n";
 
-// Test 4: i18n_with('fr', ...)
-echo "Test 4: i18n_with('fr', fn() => t('Sign In'))\n";
+// Test 4: $config_language='en' with i18n_with('fr', ...)
+echo "Test 4: \$config_language='en' with i18n_with('fr', ...)\n";
 $config_language = 'en';
-$GLOBALS['_i18n_loaded'] = false;
-$GLOBALS['_i18n_lang'] = 'en';
+$GLOBALS['_i18n_lang'] = null;
 $GLOBALS['_i18n_translations'] = [];
+$GLOBALS['_i18n_loaded'] = false;
 
 $result = i18n_with('fr', function() {
     return t('Sign In');
 });
 
 if ($result !== 'Se connecter') {
-    $errors[] = "i18n_with('fr', fn() => t('Sign In')) = '{$result}' (expected 'Se connecter')";
-    echo "  ✗ i18n_with('fr', fn() => t('Sign In')) = '{$result}' (expected 'Se connecter')\n";
+    $errors[] = "i18n_with('fr', fn() => t('Sign In')) with \$config_language='en' = '{$result}' (expected 'Se connecter')";
+    echo "  ✗ i18n_with('fr', fn() => t('Sign In')) with \$config_language='en' = '{$result}' (expected 'Se connecter')\n";
 } else {
-    echo "  ✓ i18n_with('fr', fn() => t('Sign In')) = '{$result}'\n";
+    echo "  ✓ i18n_with('fr', fn() => t('Sign In')) with \$config_language='en' = '{$result}'\n";
 }
 
-// Check that language was restored
+// Check that language was restored to English
 $after_lang = _i18n_get_lang();
-if ($after_lang !== 'en') {
-    $errors[] = "After i18n_with('fr', ...), t('Sign In') = '{$result}' (expected 'Sign In' after restoration)";
-    echo "  ✗ After i18n_with('fr', ...), language = '{$after_lang}' (expected 'en')\n";
+$result = t('Sign In');
+if ($after_lang !== 'en' || $result !== 'Sign In') {
+    $errors[] = "After i18n_with('fr', ...) with \$config_language='en', language = '{$after_lang}' and t('Sign In') = '{$result}' (expected 'en' and 'Sign In')";
+    echo "  ✗ After i18n_with('fr', ...) with \$config_language='en', language = '{$after_lang}' and t('Sign In') = '{$result}' (expected 'en' and 'Sign In')\n";
 } else {
-    echo "  ✓ After i18n_with('fr', ...), language restored to 'en'\n";
+    echo "  ✓ After i18n_with('fr', ...) with \$config_language='en', language restored to 'en' and t('Sign In') = '{$result}'\n";
 }
 
 // Test exception handling
 echo "  Testing exception handling...\n";
+$config_language = 'en';
+$GLOBALS['_i18n_lang'] = null;
+$GLOBALS['_i18n_translations'] = [];
+$GLOBALS['_i18n_loaded'] = false;
+
 try {
     i18n_with('fr', function() {
         throw new Exception("Test exception");
@@ -112,16 +140,35 @@ try {
 }
 
 $after_exception_lang = _i18n_get_lang();
-if ($after_exception_lang !== 'en') {
-    $errors[] = "After exception in i18n_with('fr', ...), language = '{$after_exception_lang}' (expected 'en')";
-    echo "  ✗ After exception in i18n_with('fr', ...), language = '{$after_exception_lang}' (expected 'en')\n";
+$result = t('Sign In');
+if ($after_exception_lang !== 'en' || $result !== 'Sign In') {
+    $errors[] = "After exception in i18n_with('fr', ...), language = '{$after_exception_lang}' and t('Sign In') = '{$result}' (expected 'en' and 'Sign In')";
+    echo "  ✗ After exception in i18n_with('fr', ...), language = '{$after_exception_lang}' and t('Sign In') = '{$result}' (expected 'en' and 'Sign In')\n";
 } else {
-    echo "  ✓ After exception in i18n_with('fr', ...), language restored to 'en'\n";
+    echo "  ✓ After exception in i18n_with('fr', ...), language restored to 'en' and t('Sign In') = '{$result}'\n";
 }
 echo "\n";
 
-// Test 5: lang/fr.php apostrophe check
-echo "Test 5: lang/fr.php apostrophe check (no right apostrophe ') in values)\n";
+// Test 5: i18n_set_language('fr')
+echo "Test 5: i18n_set_language('fr')\n";
+$config_language = 'en';
+$GLOBALS['_i18n_lang'] = null;
+$GLOBALS['_i18n_translations'] = [];
+$GLOBALS['_i18n_loaded'] = false;
+
+i18n_set_language('fr');
+$result = t('Sign In');
+
+if ($result !== 'Se connecter') {
+    $errors[] = "After i18n_set_language('fr'), t('Sign In') = '{$result}' (expected 'Se connecter')";
+    echo "  ✗ After i18n_set_language('fr'), t('Sign In') = '{$result}' (expected 'Se connecter')\n";
+} else {
+    echo "  ✓ After i18n_set_language('fr'), t('Sign In') = '{$result}'\n";
+}
+echo "\n";
+
+// Test 6: lang/fr.php apostrophe check
+echo "Test 6: lang/fr.php apostrophe check (no right apostrophe ' in values)\n";
 $fr_file = $itflow_dir . '/lang/fr.php';
 if (file_exists($fr_file)) {
     $fr_translations = require $fr_file;
@@ -147,8 +194,8 @@ if (file_exists($fr_file)) {
 }
 echo "\n";
 
-// Test 6: lang/en.php and lang/fr.php have same keys
-echo "Test 6: lang/en.php and lang/fr.php have exactly the same keys\n";
+// Test 7: lang/en.php and lang/fr.php have same keys
+echo "Test 7: lang/en.php and lang/fr.php have exactly the same keys\n";
 $en_file = $itflow_dir . '/lang/en.php';
 $fr_file = $itflow_dir . '/lang/fr.php';
 
@@ -180,6 +227,30 @@ if (file_exists($en_file) && file_exists($fr_file)) {
 } else {
     $errors[] = "lang/en.php or lang/fr.php not found";
     echo "  ✗ lang/en.php or lang/fr.php not found\n";
+}
+echo "\n";
+
+// Test 8: No hardcoded 'fr' in functions/i18n.php (outside comments)
+echo "Test 8: No hardcoded 'fr' in functions/i18n.php (outside comments)\n";
+$i18n_file = $itflow_dir . '/functions/i18n.php';
+if (file_exists($i18n_file)) {
+    $content = file_get_contents($i18n_file);
+    
+    // Remove comments (single-line // and multi-line /* */)
+    $content_no_comments = preg_replace('/\/\/.*$/m', '', $content);
+    $content_no_comments = preg_replace('/\/\*.*?\*\//s', '', $content_no_comments);
+    
+    // Check for 'fr' in single quotes (not in strings like 'fr_CH' which is OK as input)
+    // We're looking for hardcoded language values like: 'fr' => or = 'fr'
+    if (preg_match("/['\"]fr['\"]/", $content_no_comments)) {
+        $errors[] = "functions/i18n.php contains hardcoded 'fr' outside comments";
+        echo "  ✗ functions/i18n.php contains hardcoded 'fr' outside comments\n";
+    } else {
+        echo "  ✓ No hardcoded 'fr' in functions/i18n.php (outside comments)\n";
+    }
+} else {
+    $errors[] = "functions/i18n.php not found";
+    echo "  ✗ functions/i18n.php not found\n";
 }
 echo "\n";
 
