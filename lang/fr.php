@@ -18,11 +18,7 @@ return [
     'Log in as Agent' => 'Se connecter comme Agent',
     'Log in as Client' => 'Se connecter comme Client',
     'Login with Microsoft Entra' => 'Se connecter avec Microsoft Entra',
-    'Your session has expired. Please log in again.' => 'Votre session a expiré. Veuillez vous reconnecter.',
-    'Your IP address has been blocked due to multiple failed login attempts. Please try again later.' => 'Votre adresse IP a été bloquée en raison de multiples échecs de connexion. Veuillez réessayer plus tard.',
-    'Too many incorrect 2FA codes. Please log in again.' => 'Trop de codes 2FA incorrects. Veuillez vous reconnecter.',
     'Please enter a valid 2FA code.' => 'Veuillez entrer un code 2FA valide.',
-    '2FA session expired. Please log in again.' => 'Session 2FA expirée. Veuillez vous reconnecter.',
     'Incorrect username or password.' => 'Nom d’utilisateur ou mot de passe incorrect.',
     
     // top_nav.php

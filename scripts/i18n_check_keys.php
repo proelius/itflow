@@ -184,11 +184,11 @@ foreach ($en_keys as $key) {
 }
 
 if (!empty($unused_keys)) {
-    echo "WARNING: Keys defined but not used in t() calls:\n";
+    echo "ERROR: Keys defined but not used in t() calls:\n";
     foreach ($unused_keys as $key) {
         echo "  • '{$key}'\n";
     }
-    echo "\n";
+    exit(1);
 } else {
     echo "✓ All keys are used\n\n";
 }
