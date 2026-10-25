@@ -178,6 +178,23 @@ function t($english_text, $params = []) {
 }
 
 /**
+ * Translate email body/subject text with SQL escaping for apostrophes
+ * Always uses client_language() regardless of current global language
+ * Escapes \ and ' in the TRANSLATED template (order: backslash first, then apostrophe)
+ * Parameters are NEVER escaped (they are pre-escaped by the caller)
+ * 
+ * @param string $english_text Translation key (English text)
+ * @param array $params Named parameters ['{name}' => $value, ...]
+ * @return string Translated and escaped text ready for addToMailQueue()
+ */
+function t_mail($english_text, $params = []) {
+    $dictionary = _i18n_dictionary(client_language());
+    $template = $dictionary[$english_text] ?? $english_text;
+    $template = str_replace(['\\', "'"], ['\\\\', "\\'"], $template);   // antislash PUIS apostrophe
+    return empty($params) ? $template : strtr($template, $params);
+}
+
+/**
  * Get current language
  * @return string Current language code (en, fr, etc.)
  */

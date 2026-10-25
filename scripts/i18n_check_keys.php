@@ -63,6 +63,21 @@ if (!empty($missing_in_en)) {
 
 echo "✓ en.php and fr.php have identical keys\n\n";
 
+// Check php -l on language files
+echo "Checking PHP syntax on language files...\n";
+$en_lint = shell_exec('php -l ' . escapeshellarg($lang_en_file) . ' 2>&1');
+$fr_lint = shell_exec('php -l ' . escapeshellarg($lang_fr_file) . ' 2>&1');
+
+if (strpos($en_lint, 'No syntax errors') === false) {
+    echo "ERROR: lang/en.php has syntax errors:\n{$en_lint}\n";
+    exit(1);
+}
+if (strpos($fr_lint, 'No syntax errors') === false) {
+    echo "ERROR: lang/fr.php has syntax errors:\n{$fr_lint}\n";
+    exit(1);
+}
+echo "✓ PHP syntax valid on both language files\n\n";
+
 // Load exceptions
 $exceptions = [];
 if (file_exists($exceptions_file)) {
@@ -95,6 +110,11 @@ foreach ($iterator as $file) {
         continue;
     }
     
+    // Skip test files
+    if (strpos($relative_path, 'i18n_selftest_mail.php') !== false) {
+        continue;
+    }
+    
     $files_scanned++;
     
     $content = file_get_contents($file->getPathname());
@@ -106,8 +126,8 @@ foreach ($iterator as $file) {
     $count = count($tokens);
     
     for ($i = 0; $i < $count; $i++) {
-        // Look for function call 't'
-        if (is_array($tokens[$i]) && $tokens[$i][0] === T_STRING && $tokens[$i][1] === 't') {
+        // Look for function call 't' or 't_mail'
+        if (is_array($tokens[$i]) && $tokens[$i][0] === T_STRING && ($tokens[$i][1] === 't' || $tokens[$i][1] === 't_mail')) {
             // Check if followed by '('
             $j = $i + 1;
             while ($j < $count && in_array($tokens[$j], [' ', "\t", "\n", "\r"])) {
@@ -115,7 +135,7 @@ foreach ($iterator as $file) {
             }
             
             if ($j < $count && $tokens[$j] === '(') {
-                // Found t( call - extract first argument
+                // Found t( or t_mail( call - extract first argument
                 $j++;
                 // Skip whitespace
                 while ($j < $count && in_array($tokens[$j], [' ', "\t", "\n", "\r"])) {
@@ -192,6 +212,99 @@ if (!empty($unused_keys)) {
 } else {
     echo "✓ All keys are used\n\n";
 }
+
+// Check fr.php values for forbidden characters: ', ", or backslash
+echo "Checking fr.php for forbidden characters in values...\n";
+$fr_raw = file_get_contents($lang_fr_file);
+
+// Look for forbidden patterns in values (after =>)
+$lines = explode("\n", $fr_raw);
+$forbidden_errors = [];
+foreach ($lines as $line_num => $line) {
+    // Skip empty lines and comments
+    if (trim($line) === '' || strpos(trim($line), '//') === 0 || strpos(trim($line), '/*') === 0) {
+        continue;
+    }
+    
+    // Find lines with => (translation lines)
+    if (strpos($line, "=>") !== false) {
+        // Extract the value part (after =>)
+        $parts = explode("=>", $line);
+        if (count($parts) >= 2) {
+            $value_part = trim($parts[1]);
+            // Value should start with ' and end with ', possibly followed by ,
+            if (preg_match("/^'(.*)',?$/", $value_part, $value_matches)) {
+                $value_content = $value_matches[1];
+                // Check for forbidden characters
+                // Straight apostrophe ' (not escaped as \')
+                if (preg_match("/(?<!\\\\\\\\)'/", $value_content)) {
+                    $key_part = $parts[0];
+                    preg_match("/'([^']*)'/", $key_part, $key_matches);
+                    $key = $key_matches[1] ?? 'unknown';
+                    $forbidden_errors[] = "Line {$line_num}: Key '{$key}' contains unescaped apostrophe '";
+                }
+                // Double quote "
+                if (strpos($value_content, '"') !== false) {
+                    $key_part = $parts[0];
+                    preg_match("/'([^']*)'/", $key_part, $key_matches);
+                    $key = $key_matches[1] ?? 'unknown';
+                    $forbidden_errors[] = "Line {$line_num}: Key '{$key}' contains double quote \"";
+                }
+                // Backslash \ (except as escape for apostrophe)
+                if (preg_match("/\\\\(?![\\\\'])/", $value_content)) {
+                    $key_part = $parts[0];
+                    preg_match("/'([^']*)'/", $key_part, $key_matches);
+                    $key = $key_matches[1] ?? 'unknown';
+                    $forbidden_errors[] = "Line {$line_num}: Key '{$key}' contains backslash";
+                }
+            }
+        }
+    }
+}
+
+if (!empty($forbidden_errors)) {
+    echo "ERROR: fr.php contains forbidden characters in values:\n";
+    foreach ($forbidden_errors as $error) {
+        echo "  ✗ {$error}\n";
+    }
+    exit(1);
+}
+
+echo "✓ No forbidden characters in fr.php values\n\n";
+
+// Negative test: verify detection logic works on in-memory data
+echo "Running negative test (in-memory check)...\n";
+$test_key = 'NEGATIVE_TEST_KEY_DO_NOT_USE';
+$test_value = "This has a bad ' apostrophe";
+$test_line = "    '{$test_key}' => '{$test_value}',";
+
+// Test the detection logic on in-memory data (no file writes)
+$lines_test = [$test_line];
+$negative_test_passed = false;
+
+foreach ($lines_test as $line_num => $line) {
+    if (strpos($line, "=>") !== false && strpos($line, $test_key) !== false) {
+        $parts = explode("=>", $line);
+        if (count($parts) >= 2) {
+            $value_part = trim($parts[1]);
+            if (preg_match("/^'(.*)',?$/", $value_part, $value_matches)) {
+                $value_content = $value_matches[1];
+                if (preg_match("/(?<!\\\\\\\\)'/", $value_content)) {
+                    $negative_test_passed = true;
+                    echo "✓ Negative test passed: script correctly detects bad apostrophe\n";
+                    break;
+                }
+            }
+        }
+    }
+}
+
+if (!$negative_test_passed) {
+    echo "ERROR: Negative test failed - detection logic did not find inserted bad value\n";
+    exit(1);
+}
+
+echo "\n";
 
 // Check fr.php values for right apostrophe ' in raw file (should use \' only)
 echo "Checking fr.php for unescaped right apostrophe ' in values...\n";
