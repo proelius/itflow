@@ -167,19 +167,26 @@ if ($result !== 'Se connecter') {
 }
 echo "\n";
 
-// Test 6: lang/fr.php apostrophe check (check for typographic apostrophe ' in source)
-echo "Test 6: lang/fr.php apostrophe check (no typographic apostrophe ' in values)\n";
+// Test 6: lang/fr.php apostrophe check
+echo "Test 6: lang/fr.php apostrophe check (no right apostrophe ' in values)\n";
 $fr_file = $itflow_dir . '/lang/fr.php';
 if (file_exists($fr_file)) {
-    // Check raw file content for typographic apostrophe
-    $raw_content = file_get_contents($fr_file);
-    $typographic_apostrophe = "\u{2019}";  // '
+    $fr_translations = require $fr_file;
+    $apostrophe_errors = [];
+    foreach ($fr_translations as $key => $value) {
+        // Check for right apostrophe ' in values (should use ' only)
+        if (strpos($value, "'") !== false) {
+            $apostrophe_errors[] = "Key '{$key}': value contains right apostrophe '";
+        }
+    }
     
-    if (strpos($raw_content, $typographic_apostrophe) === false) {
-        echo "  ✓ No typographic apostrophe ' in lang/fr.php source\n";
+    if (empty($apostrophe_errors)) {
+        echo "  ✓ No right apostrophe ' in lang/fr.php values\n";
     } else {
-        $errors[] = "lang/fr.php contains typographic apostrophe ' in source";
-        echo "  ✗ lang/fr.php contains typographic apostrophe ' in source\n";
+        foreach ($apostrophe_errors as $error) {
+            $errors[] = "lang/fr.php: {$error}";
+            echo "  ✗ {$error}\n";
+        }
     }
 } else {
     $errors[] = "lang/fr.php not found";
