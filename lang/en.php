@@ -45,6 +45,7 @@ return [
     'Qty' => 'Qty',
     'Price' => 'Price',
     'Tax' => 'Tax',
+    'Tax:' => 'TVA :',
     'Amount' => 'Amount',
     'Subtotal:' => 'Subtotal:',
     'Discount:' => 'Discount:',
@@ -66,5 +67,9 @@ return [
     'Account Statement' => 'Account Statement',
     'As of {date}' => 'As of {date}',
     'Scope' => 'Scope',
+    'Date' => 'Date',
+    'Due' => 'Due',
+    'Paid' => 'Paid',
+    'Balance' => 'Balance',
     'Total Balance Due' => 'Total Balance Due',
 ];

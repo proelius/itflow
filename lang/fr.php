@@ -23,7 +23,7 @@ return [
     'Too many incorrect 2FA codes. Please log in again.' => 'Trop de codes 2FA incorrects. Veuillez vous reconnecter.',
     'Please enter a valid 2FA code.' => 'Veuillez entrer un code 2FA valide.',
     '2FA session expired. Please log in again.' => 'Session 2FA expirée. Veuillez vous reconnecter.',
-    'Incorrect username or password.' => 'Nom d\'utilisateur ou mot de passe incorrect.',
+    'Incorrect username or password.' => 'Nom d’utilisateur ou mot de passe incorrect.',
     
     // top_nav.php
     'Search everywhere' => 'Rechercher partout',
@@ -45,6 +45,7 @@ return [
     'Qty' => 'Qté',
     'Price' => 'Prix',
     'Tax' => 'TVA',
+    'Tax:' => 'TVA :',
     'Amount' => 'Montant',
     'Subtotal:' => 'Sous-total :',
     'Discount:' => 'Remise :',
@@ -60,11 +61,15 @@ return [
     'QUOTE' => 'DEVIS',
     'ACCEPTED' => 'ACCEPTÉ',
     'DECLINED' => 'REFUSÉ',
-    'Expires:' => 'Valable jusqu\'au :',
+    'Expires:' => 'Valable jusqu’au :',
     
     // PDF - Account Statement
     'Account Statement' => 'Relevé de compte',
     'As of {date}' => 'Au {date}',
     'Scope' => 'Objet',
+    'Date' => 'Date',
+    'Due' => 'Échéance',
+    'Paid' => 'Payé',
+    'Balance' => 'Solde',
     'Total Balance Due' => 'Solde total dû',
 ];

@@ -107,7 +107,7 @@ foreach ($iterator as $file) {
     
     for ($i = 0; $i < $count; $i++) {
         // Look for function call 't'
-        if ($tokens[$i] === T_STRING && $tokens[$i][1] === 't') {
+        if (is_array($tokens[$i]) && $tokens[$i][0] === T_STRING && $tokens[$i][1] === 't') {
             // Check if followed by '('
             $j = $i + 1;
             while ($j < $count && in_array($tokens[$j], [' ', "\t", "\n", "\r"])) {
@@ -145,6 +145,14 @@ foreach ($iterator as $file) {
 
 echo "Files scanned: {$files_scanned}\n";
 echo "Keys used in t() calls: " . count($used_keys) . "\n\n";
+
+// Guard: must find at least 40 t() calls
+if (count($used_keys) < 40) {
+    echo "ERROR: Found only " . count($used_keys) . " t() calls (minimum 40 required)\n";
+    exit(1);
+}
+
+echo "✓ Found " . count($used_keys) . " t() calls (minimum 40 required)\n\n";
 
 // Check for unknown keys (used but not in language files)
 $unknown_keys = [];
