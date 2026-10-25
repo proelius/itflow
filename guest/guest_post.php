@@ -364,6 +364,9 @@ if (isset($_GET['export_quote_pdf'])) {
         $currency_format = numfmt_create($company_locale, NumberFormatter::CURRENCY);
 
         require_once("../libs/TCPDF/tcpdf.php");
+        
+        // Set language for PDF
+        i18n_set_language(client_language());
 
         // Start TCPDF
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
@@ -382,13 +385,13 @@ if (isset($_GET['export_quote_pdf'])) {
         }
         $html .= '</td>
             <td width="60%" align="right">
-                <span style="font-size:18pt; font-weight:bold;">QUOTE</span><br>
+                <span style="font-size:18pt; font-weight:bold;">' . t('QUOTE') . '</span><br>
                 <span style="font-size:14pt;">' . $quote_prefix . $quote_number . '</span><br>';
         if (strtolower($quote_status) === 'accepted') {
-            $html .= '<span style="color:green; font-weight:bold;">ACCEPTED</span><br>';
+            $html .= '<span style="color:green; font-weight:bold;">' . t('ACCEPTED') . '</span><br>';
         }
         if (strtolower($quote_status) === 'declined') {
-            $html .= '<span style="color:red; font-weight:bold;">DECLINED</span><br>';
+            $html .= '<span style="color:red; font-weight:bold;">' . t('DECLINED') . '</span><br>';
         }
         $html .= '</td>
         </tr>
@@ -410,12 +413,12 @@ if (isset($_GET['export_quote_pdf'])) {
         $html .= '<table border="0" cellpadding="2" cellspacing="0" width="100%">
         <tr>
             <td width="60%"></td>
-            <td width="20%" style="font-size:10pt;"><strong>Date:</strong></td>
+            <td width="20%" style="font-size:10pt;"><strong>' . t('Date:') . '</strong></td>
             <td width="20%" style="font-size:10pt;" align="right">' . $quote_date . '</td>
         </tr>
         <tr>
             <td></td>
-            <td style="font-size:10pt;"><strong>Expires:</strong></td>
+            <td style="font-size:10pt;"><strong>' . t('Expires:') . '</strong></td>
             <td style="font-size:10pt;" align="right">' . $quote_expire . '</td>
         </tr>
         </table><br><br>';
@@ -424,11 +427,11 @@ if (isset($_GET['export_quote_pdf'])) {
         $html .= '
         <table border="0" cellpadding="5" cellspacing="0" width="100%">
         <tr style="background-color:#f0f0f0;">
-            <th align="left" width="40%"><strong>Item</strong></th>
-            <th align="center" width="10%"><strong>Qty</strong></th>
-            <th align="right" width="15%"><strong>Price</strong></th>
-            <th align="right" width="15%"><strong>Tax</strong></th>
-            <th align="right" width="20%"><strong>Amount</strong></th>
+            <th align="left" width="40%"><strong>' . t('Item') . '</strong></th>
+            <th align="center" width="10%"><strong>' . t('Qty') . '</strong></th>
+            <th align="right" width="15%"><strong>' . t('Price') . '</strong></th>
+            <th align="right" width="15%"><strong>' . t('Tax') . '</strong></th>
+            <th align="right" width="20%"><strong>' . t('Amount') . '</strong></th>
         </tr>';
 
         // Load items
@@ -467,15 +470,15 @@ if (isset($_GET['export_quote_pdf'])) {
             <td width="60%"><i style="font-size:9pt;">' . nl2br($quote_note) . '</i></td>
             <td width="40%">
                 <table width="100%" cellpadding="3" cellspacing="0">
-                    <tr><td>Subtotal:</td><td align="right">' . numfmt_format_currency($currency_format, $sub_total, $quote_currency_code) . '</td></tr>';
+                    <tr><td>' . t('Subtotal:') . '</td><td align="right">' . numfmt_format_currency($currency_format, $sub_total, $quote_currency_code) . '</td></tr>';
         if ($quote_discount > 0) {
-            $html .= '<tr><td>Discount:</td><td align="right">-' . numfmt_format_currency($currency_format, $quote_discount, $quote_currency_code) . '</td></tr>';
+            $html .= '<tr><td>' . t('Discount:') . '</td><td align="right">-' . numfmt_format_currency($currency_format, $quote_discount, $quote_currency_code) . '</td></tr>';
         }
         if ($total_tax > 0) {
-            $html .= '<tr><td>Tax:</td><td align="right">' . numfmt_format_currency($currency_format, $total_tax, $quote_currency_code) . '</td></tr>';
+            $html .= '<tr><td>' . t('Tax:') . '</td><td align="right">' . numfmt_format_currency($currency_format, $total_tax, $quote_currency_code) . '</td></tr>';
         }
         $html .= '
-        <tr><td><h3><strong>Total:</strong></h3></td><td align="right"><h3><strong>' . numfmt_format_currency($currency_format, $quote_amount, $quote_currency_code) . '</strong></h3></td></tr>
+        <tr><td><h3><strong>' . t('Total:') . '</strong></h3></td><td align="right"><h3><strong>' . numfmt_format_currency($currency_format, $quote_amount, $quote_currency_code) . '</strong></h3></td></tr>
         </table>
             </td>
         </tr>
@@ -598,6 +601,9 @@ if (isset($_GET['export_invoice_pdf'])) {
         $invoice_badge_color = getInvoiceBadgeColor($invoice_status);
 
         require_once("../libs/TCPDF/tcpdf.php");
+        
+        // Set language for PDF
+        i18n_set_language(client_language());
 
         // Start TCPDF
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
@@ -616,10 +622,10 @@ if (isset($_GET['export_invoice_pdf'])) {
         }
         $html .= '</td>
             <td width="60%" align="right">
-                <span style="font-size:18pt; font-weight:bold;">Invoice</span><br>
+                <span style="font-size:18pt; font-weight:bold;">' . t('Invoice') . '</span><br>
                 <span style="font-size:14pt;">' . $invoice_prefix . $invoice_number . '</span><br>';
         if (strtolower($invoice_status) === 'paid') {
-            $html .= '<span style="color:green; font-weight:bold;">PAID</span><br>';
+            $html .= '<span style="color:green; font-weight:bold;">' . t('PAID') . '</span><br>';
         }
         $html .= '</td>
         </tr>
@@ -641,12 +647,12 @@ if (isset($_GET['export_invoice_pdf'])) {
         $html .= '<table border="0" cellpadding="2" cellspacing="0" width="100%">
         <tr>
             <td width="60%"></td>
-            <td width="20%" style="font-size:10pt;"><strong>Date:</strong></td>
+            <td width="20%" style="font-size:10pt;"><strong>' . t('Date:') . '</strong></td>
             <td width="20%" style="font-size:10pt;" align="right">' . $invoice_date . '</td>
         </tr>
         <tr>
             <td></td>
-            <td style="font-size:10pt;"><strong>Due:</strong></td>
+            <td style="font-size:10pt;"><strong>' . t('Due:') . '</strong></td>
             <td style="font-size:10pt;" align="right">' . $invoice_due . '</td>
         </tr>
         </table><br><br>';
@@ -655,11 +661,11 @@ if (isset($_GET['export_invoice_pdf'])) {
         $html .= '
         <table border="0" cellpadding="5" cellspacing="0" width="100%">
         <tr style="background-color:#f0f0f0;">
-            <th align="left" width="40%"><strong>Item</strong></th>
-            <th align="center" width="10%"><strong>Qty</strong></th>
-            <th align="right" width="15%"><strong>Price</strong></th>
-            <th align="right" width="15%"><strong>Tax</strong></th>
-            <th align="right" width="20%"><strong>Amount</strong></th>
+            <th align="left" width="40%"><strong>' . t('Item') . '</strong></th>
+            <th align="center" width="10%"><strong>' . t('Qty') . '</strong></th>
+            <th align="right" width="15%"><strong>' . t('Price') . '</strong></th>
+            <th align="right" width="15%"><strong>' . t('Tax') . '</strong></th>
+            <th align="right" width="20%"><strong>' . t('Amount') . '</strong></th>
         </tr>';
 
         // Load items
@@ -698,20 +704,20 @@ if (isset($_GET['export_invoice_pdf'])) {
             <td width="60%"><i style="font-size:9pt;">' . nl2br($invoice_note) . '</i></td>
             <td width="40%">
                 <table width="100%" cellpadding="3" cellspacing="0">
-                    <tr><td>Subtotal:</td><td align="right">' . numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code) . '</td></tr>';
+                    <tr><td>' . t('Subtotal:') . '</td><td align="right">' . numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code) . '</td></tr>';
         if ($invoice_discount > 0) {
-            $html .= '<tr><td>Discount:</td><td align="right">-' . numfmt_format_currency($currency_format, $invoice_discount, $invoice_currency_code) . '</td></tr>';
+            $html .= '<tr><td>' . t('Discount:') . '</td><td align="right">-' . numfmt_format_currency($currency_format, $invoice_discount, $invoice_currency_code) . '</td></tr>';
         }
         if ($total_tax > 0) {
-            $html .= '<tr><td>Tax:</td><td align="right">' . numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code) . '</td></tr>';
+            $html .= '<tr><td>' . t('Tax:') . '</td><td align="right">' . numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code) . '</td></tr>';
         }
         $html .= '
-        <tr><td>Total:</td><td align="right">' . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . '</td></tr>';
+        <tr><td>' . t('Total:') . '</td><td align="right">' . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . '</td></tr>';
         if ($amount_paid > 0) {
-            $html .= '<tr><td>Paid:</td><td align="right">' . numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) . '</td></tr>';
+            $html .= '<tr><td>' . t('Paid:') . '</td><td align="right">' . numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) . '</td></tr>';
         }
         $html .= '
-        <tr><td><h3><strong>Balance:</strong></h3></td><td align="right"><h3><strong>' . numfmt_format_currency($currency_format, $balance, $invoice_currency_code) . '</strong></h3></td></tr>
+        <tr><td><h3><strong>' . t('Balance:') . '</strong></h3></td><td align="right"><h3><strong>' . numfmt_format_currency($currency_format, $balance, $invoice_currency_code) . '</strong></h3></td></tr>
         </table>
             </td>
         </tr>

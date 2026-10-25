@@ -18,11 +18,7 @@ return [
     'Log in as Agent' => 'Se connecter comme Agent',
     'Log in as Client' => 'Se connecter comme Client',
     'Login with Microsoft Entra' => 'Se connecter avec Microsoft Entra',
-    'Your session has expired. Please log in again.' => 'Votre session a expiré. Veuillez vous reconnecter.',
-    'Your IP address has been blocked due to multiple failed login attempts. Please try again later.' => 'Votre adresse IP a été bloquée en raison de multiples échecs de connexion. Veuillez réessayer plus tard.',
-    'Too many incorrect 2FA codes. Please log in again.' => 'Trop de codes 2FA incorrects. Veuillez vous reconnecter.',
     'Please enter a valid 2FA code.' => 'Veuillez entrer un code 2FA valide.',
-    '2FA session expired. Please log in again.' => 'Session 2FA expirée. Veuillez vous reconnecter.',
     'Incorrect username or password.' => 'Nom d’utilisateur ou mot de passe incorrect.',
     
     // top_nav.php
@@ -35,4 +31,41 @@ return [
     'Your login session expired. Please sign in again.' => 'Votre session de connexion a expiré. Veuillez vous reconnecter.',
     'Your MFA session expired. Please sign in again.' => 'Votre session MFA a expiré. Veuillez vous reconnecter.',
     'Too many incorrect 2FA codes. Please wait 10 minutes and sign in again.' => 'Trop de codes 2FA incorrects. Veuillez attendre 10 minutes et vous reconnecter.',
+    
+    // PDF - Invoice
+    'Invoice' => 'Facture',
+    'PAID' => 'PAYÉE',
+    'Date:' => 'Date :',
+    'Due:' => 'Échéance :',
+    'Item' => 'Article',
+    'Qty' => 'Qté',
+    'Price' => 'Prix',
+    'Tax' => 'TVA',
+    'Tax:' => 'TVA :',
+    'Amount' => 'Montant',
+    'Subtotal:' => 'Sous-total :',
+    'Discount:' => 'Remise :',
+    'Total:' => 'Total :',
+    'Paid:' => 'Payé :',
+    'Balance:' => 'Solde :',
+    'Packing Slip' => 'Bon de livraison',
+    'Picked?' => 'Préparé ?',
+    'Picked By:' => 'Préparé par :',
+    'Checked By:' => 'Contrôlé par :',
+    
+    // PDF - Quote
+    'QUOTE' => 'DEVIS',
+    'ACCEPTED' => 'ACCEPTÉ',
+    'DECLINED' => 'REFUSÉ',
+    'Expires:' => 'Valable jusqu’au :',
+    
+    // PDF - Account Statement
+    'Account Statement' => 'Relevé de compte',
+    'As of {date}' => 'Au {date}',
+    'Scope' => 'Objet',
+    'Date' => 'Date',
+    'Due' => 'Échéance',
+    'Paid' => 'Payé',
+    'Balance' => 'Solde',
+    'Total Balance Due' => 'Solde total dû',
 ];
