@@ -9,9 +9,9 @@
  * Usage: php scripts/i18n_extract_texts.php
  */
 
-// Security: Only run from CLI, not via web
+// Stop if accessed via web (scripts/ is web-accessible)
 if (PHP_SAPI !== 'cli') {
-    exit('This script can only be run from command line.');
+    exit;
 }
 
 $itflow_dir = __DIR__ . '/..';
