@@ -517,6 +517,9 @@ if (isset($_GET['export_statement_pdf'])) {
     }
 
     require_once("../libs/TCPDF/tcpdf.php");
+    
+    // Set language for PDF
+    i18n_set_language(client_language());
 
     // Start TCPDF
     $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
@@ -535,8 +538,8 @@ if (isset($_GET['export_statement_pdf'])) {
     }
     $html .= '</td>
         <td width="60%" align="right">
-            <span style="font-size:18pt; font-weight:bold;">Account Statement</span><br>
-            <span style="font-size:11pt;">As of ' . date("Y-m-d") . '</span>
+            <span style="font-size:18pt; font-weight:bold;">' . t('Account Statement') . '</span><br>
+            <span style="font-size:11pt;">' . t('As of {date}', ['{date}' => date("Y-m-d")]) . '</span>
         </td>
     </tr>
     </table><br>';
@@ -555,13 +558,13 @@ if (isset($_GET['export_statement_pdf'])) {
     // Statement lines
     $html .= '<table border="0" cellpadding="4" cellspacing="0" width="100%">
     <tr style="background-color:#343a40; color:#ffffff; font-weight:bold;">
-        <td width="14%">Invoice</td>
-        <td width="30%">Scope</td>
-        <td width="13%">Date</td>
-        <td width="13%">Due</td>
-        <td width="10%" align="right">Amount</td>
-        <td width="10%" align="right">Paid</td>
-        <td width="10%" align="right">Balance</td>
+        <td width="14%">' . t('Invoice') . '</td>
+        <td width="30%">' . t('Scope') . '</td>
+        <td width="13%">' . t('Date') . '</td>
+        <td width="13%">' . t('Due') . '</td>
+        <td width="10%" align="right">' . t('Amount') . '</td>
+        <td width="10%" align="right">' . t('Paid') . '</td>
+        <td width="10%" align="right">' . t('Balance') . '</td>
     </tr>';
 
     $statement_total = 0;
@@ -601,7 +604,7 @@ if (isset($_GET['export_statement_pdf'])) {
     }
 
     $html .= '<tr>
-        <td colspan="6" align="right" style="font-weight:bold;">Total Balance Due</td>
+        <td colspan="6" align="right" style="font-weight:bold;">' . t('Total Balance Due') . '</td>
         <td align="right" style="font-weight:bold;">' . numfmt_format_currency($currency_format, $statement_total, $statement_currency_code) . '</td>
     </tr>
     </table>';
