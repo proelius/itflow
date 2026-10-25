@@ -617,9 +617,9 @@ if (isset($_POST['email_invoice'])) {
     $balance = $invoice_amount - $amount_paid;
 
     if ($invoice_status == 'Paid') {
-        $subject = "Invoice $invoice_prefix$invoice_number Receipt";
+        $subject = t_mail('Invoice {number} Receipt', ['{number}' => "$invoice_prefix$invoice_number"]);
     } else {
-        $subject = "Invoice $invoice_prefix$invoice_number";
+        $subject = t_mail('Invoice {number}', ['{number}' => "$invoice_prefix$invoice_number"]);
     }
 
     // One queue row per selected contact, each greeting its own recipient.
@@ -634,10 +634,23 @@ if (isset($_POST['email_invoice'])) {
         $contact_name = escapeSql($recipient['contact_name']);
         $contact_email = escapeSql($recipient['contact_email']);
 
+        $invoice_link = "https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key";
+
         if ($invoice_status == 'Paid') {
-            $body = "Hello $contact_name,<br><br>Please click on the link below to see your invoice regarding \"$invoice_scope\" marked <b>paid</b>.<br><br><a href=\'https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>Invoice Link</a><br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+            $body = t_mail('Hello {name},', ['{name}' => $contact_name]) . "<br><br>"
+                . t_mail('Please click on the link below to see your invoice regarding "{scope}" marked <b>paid</b>.', ['{scope}' => $invoice_scope]) . "<br><br>"
+                . "<a href=\'$invoice_link\'>" . t_mail('Invoice Link') . "</a><br><br><br>--<br>"
+                . "$company_name - " . t_mail('Billing') . "<br>$config_invoice_from_email<br>$company_phone";
         } else {
-            $body = "Hello $contact_name,<br><br>Please view the details of your invoice regarding \"$invoice_scope\" below.<br><br>Invoice: $invoice_prefix$invoice_number<br>Issue Date: $invoice_date<br>Total: " . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . "<br>Balance Due: " . numfmt_format_currency($currency_format, $balance, $invoice_currency_code) . "<br>Due Date: $invoice_due<br><br><br>To view your invoice, please click <a href=\'https://$config_base_url/guest/guest_view_invoice.php?invoice_id=$invoice_id&url_key=$invoice_url_key\'>here</a>.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+            $body = t_mail('Hello {name},', ['{name}' => $contact_name]) . "<br><br>"
+                . t_mail('Please view the details of your invoice regarding "{scope}" below.', ['{scope}' => $invoice_scope]) . "<br><br>"
+                . t_mail('Invoice:') . " $invoice_prefix$invoice_number<br>"
+                . t_mail('Issue Date:') . " $invoice_date<br>"
+                . t_mail('Total:') . " " . numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) . "<br>"
+                . t_mail('Balance Due:') . " " . numfmt_format_currency($currency_format, $balance, $invoice_currency_code) . "<br>"
+                . t_mail('Due Date:') . " $invoice_due<br><br><br>"
+                . t_mail('To view your invoice, please click {link}.', ['{link}' => "<a href=\'$invoice_link\'>" . t_mail('here') . "</a>"]) . "<br><br><br>--<br>"
+                . "$company_name - " . t_mail('Billing') . "<br>$config_invoice_from_email<br>$company_phone";
         }
 
         $data[] = [
@@ -708,10 +721,12 @@ if (isset($_POST['send_statement'])) {
         // Blank means the whole history, so there is no lower bound to apply
         $statement_date_query = '';
         $statement_period = "up to $statement_date_to";
+        $statement_period_email = t_mail('up to {date}', ['{date}' => $statement_date_to]);
     } else {
         $statement_date_from = escapeSql(validateDate($statement_date_from));
         $statement_date_query = "AND invoice_date >= '$statement_date_from'";
         $statement_period = "$statement_date_from to $statement_date_to";
+        $statement_period_email = t_mail('{from} to {to}', ['{from}' => $statement_date_from, '{to}' => $statement_date_to]);
     }
 
     $include_paid = !empty($_POST['include_paid']);
@@ -821,7 +836,7 @@ if (isset($_POST['send_statement'])) {
 
         $overdue_flag = '';
         if ($invoice_balance > 0 && !empty($invoice_due) && $invoice_due < date("Y-m-d")) {
-            $overdue_flag = ' <span style="color:#dc3545;">(overdue)</span>';
+            $overdue_flag = ' <span style="color:#dc3545;">' . t_mail('(overdue)') . '</span>';
         }
 
         $statement_rows .= '<tr>'
@@ -837,20 +852,20 @@ if (isset($_POST['send_statement'])) {
 
     $statement_table = '<table cellpadding="0" cellspacing="0" style="border-collapse:collapse; font-size:13px;">'
         . '<tr style="background:#343a40; color:#ffffff;">'
-        . '<th style="padding:6px 10px; text-align:left;">Invoice</th>'
-        . '<th style="padding:6px 10px; text-align:left;">Scope</th>'
-        . '<th style="padding:6px 10px; text-align:left;">Date</th>'
-        . '<th style="padding:6px 10px; text-align:left;">Due</th>'
-        . '<th style="padding:6px 10px; text-align:right;">Amount</th>'
-        . '<th style="padding:6px 10px; text-align:right;">Paid</th>'
-        . '<th style="padding:6px 10px; text-align:right;">Balance</th>'
+        . '<th style="padding:6px 10px; text-align:left;">' . t_mail('Invoice') . '</th>'
+        . '<th style="padding:6px 10px; text-align:left;">' . t_mail('Scope') . '</th>'
+        . '<th style="padding:6px 10px; text-align:left;">' . t_mail('Date') . '</th>'
+        . '<th style="padding:6px 10px; text-align:left;">' . t_mail('Due') . '</th>'
+        . '<th style="padding:6px 10px; text-align:right;">' . t_mail('Amount') . '</th>'
+        . '<th style="padding:6px 10px; text-align:right;">' . t_mail('Paid') . '</th>'
+        . '<th style="padding:6px 10px; text-align:right;">' . t_mail('Balance') . '</th>'
         . '</tr>'
         . $statement_rows
-        . '<tr><td colspan="6" style="padding:8px 10px; text-align:right;"><b>Total Balance Due</b></td>'
+        . '<tr><td colspan="6" style="padding:8px 10px; text-align:right;"><b>' . t_mail('Total Balance Due') . '</b></td>'
         . '<td style="padding:8px 10px; text-align:right;"><b>' . numfmt_format_currency($currency_format, $statement_total, $client_currency_code) . '</b></td></tr>'
         . '</table>';
 
-    $subject = "Account Statement - $client_name";
+    $subject = t_mail('Account Statement - {client}', ['{client}' => $client_name]);
 
     $data = [];
     $recipient_labels = [];
@@ -859,9 +874,11 @@ if (isset($_POST['send_statement'])) {
         $contact_name = escapeSql($recipient['contact_name']);
         $contact_email = escapeSql($recipient['contact_email']);
 
-        $body = "Hello $contact_name,<br><br>Please find your account statement for $statement_period below.<br><br>"
+        $body = t_mail('Hello {name},', ['{name}' => $contact_name]) . "<br><br>"
+            . t_mail('Please find your account statement for {period} below.', ['{period}' => $statement_period_email]) . "<br><br>"
             . $statement_table
-            . "<br><br>Click any invoice number above to view or pay it online.<br><br><br>--<br>$company_name - Billing<br>$config_invoice_from_email<br>$company_phone";
+            . "<br><br>" . t_mail('Click any invoice number above to view or pay it online.') . "<br><br><br>--<br>"
+            . "$company_name - " . t_mail('Billing') . "<br>$config_invoice_from_email<br>$company_phone";
 
         $data[] = [
             'from' => $config_invoice_from_email,
