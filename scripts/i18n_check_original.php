@@ -105,6 +105,78 @@ echo "Files checked: " . count($files) . "\n";
 echo "t() calls verified: $checked\n";
 echo "\n";
 
+// Check for non-t() modifications in git diff
+echo "=== Checking for non-text modifications ===\n";
+$diff_cmd = 'cd ' . escapeshellarg($itflow_dir) . ' && git diff master -- "*.php" 2>/dev/null';
+$diff_output = shell_exec($diff_cmd);
+
+$non_text_modifications = [];
+$lines = explode("\n", $diff_output);
+$current_file = null;
+$file_exists_in_master = false;
+
+foreach ($lines as $line) {
+    // Track current file
+    if (preg_match('/^diff --git a\/(.+) b\/(.+)$/', $line, $matches)) {
+        $current_file = $matches[1];
+        
+        // Check if file exists in master
+        $check_cmd = 'cd ' . escapeshellarg($itflow_dir) . ' && git cat-file -e ' . escapeshellarg($master_branch) . ':' . escapeshellarg($current_file) . ' 2>/dev/null; echo $?';
+        $result = trim(shell_exec($check_cmd));
+        // git cat-file -e returns 0 if object exists, 1 if not
+        $file_exists_in_master = (substr($result, -1) === '0');
+        continue;
+    }
+    
+    // Skip if file doesn't exist in master (new file)
+    if (!$file_exists_in_master) {
+        continue;
+    }
+    
+    // Skip if not an added/removed line
+    if (!preg_match('/^[\+\-]/', $line) || preg_match('/^[\+\-]{3}/', $line)) {
+        continue;
+    }
+    
+    // Skip if line contains t(
+    if (strpos($line, 't(') !== false) {
+        continue;
+    }
+    
+    // Skip require_once lines (needed for i18n system)
+    if (preg_match('/^\+require_once.*i18n\.php/', $line)) {
+        continue;
+    }
+    
+    // Skip context lines (start with single + or - followed by space)
+    if (preg_match('/^[\+\-] /', $line)) {
+        continue;
+    }
+    
+    // Check if this is a real modification (not just whitespace)
+    $trimmed = trim(substr($line, 1));
+    if (empty($trimmed)) {
+        continue;
+    }
+    
+    // This is a non-t() modification
+    $non_text_modifications[] = [
+        'file' => $current_file,
+        'line' => $line
+    ];
+}
+
+if (!empty($non_text_modifications)) {
+    echo "FAILED: " . count($non_text_modifications) . " non-text modification(s) detected:\n\n";
+    foreach ($non_text_modifications as $i => $mod) {
+        echo ($i + 1) . ". File: " . $mod['file'] . "\n";
+        echo "   Line: " . $mod['line'] . "\n\n";
+    }
+    exit(1);
+} else {
+    echo "SUCCESS: All non-t() modifications match master exactly.\n";
+}
+
 if (empty($errors)) {
     echo "SUCCESS: All t() texts match master branch exactly.\n";
     exit(0);

@@ -31,4 +31,8 @@ return [
     'Account' => 'Account',
     'Logout' => 'Logout',
     'Submit search' => 'Submit search',
+    'Your IP address has been blocked due to repeated failed login attempts. Please try again later. <br><br>This action has been logged.' => 'Your IP address has been blocked due to repeated failed login attempts. Please try again later. <br><br>This action has been logged.',
+    'Your login session expired. Please sign in again.' => 'Your login session expired. Please sign in again.',
+    'Your MFA session expired. Please sign in again.' => 'Your MFA session expired. Please sign in again.',
+    'Too many incorrect 2FA codes. Please wait 10 minutes and sign in again.' => 'Too many incorrect 2FA codes. Please wait 10 minutes and sign in again.',
 ];
