@@ -180,52 +180,18 @@ function t($english_text, $params = []) {
 /**
  * Translate email body/subject text with SQL escaping for apostrophes
  * Always uses client_language() regardless of current global language
- * Escapes ' in the TRANSLATED template to \' BEFORE substituting parameters
+ * Escapes \ and ' in the TRANSLATED template (order: backslash first, then apostrophe)
  * Parameters are NEVER escaped (they are pre-escaped by the caller)
  * 
- * @param string $key Translation key (English text)
+ * @param string $english_text Translation key (English text)
  * @param array $params Named parameters ['{name}' => $value, ...]
  * @return string Translated and escaped text ready for addToMailQueue()
  */
-function t_mail($key, $params = []) {
-    // Save current language state
-    $saved_lang = $GLOBALS['_i18n_lang'] ?? null;
-    $saved_translations = $GLOBALS['_i18n_translations'] ?? null;
-    $saved_loaded = $GLOBALS['_i18n_loaded'] ?? false;
-    
-    // Always use client_language() for emails
-    $email_lang = client_language();
-    
-    // Load translations for email language (bypass _i18n_load which uses config_language)
-    if ($saved_loaded === false || $GLOBALS['_i18n_lang'] !== $email_lang) {
-        $GLOBALS['_i18n_lang'] = $email_lang;
-        $GLOBALS['_i18n_translations'] = _i18n_dictionary($email_lang);
-        $GLOBALS['_i18n_loaded'] = true;
-    }
-    
-    // Get translation
-    $translated = $key;
-    if (isset($GLOBALS['_i18n_translations'][$key])) {
-        $translated = $GLOBALS['_i18n_translations'][$key];
-    }
-    
-    // ESCAPE apostrophes in the translated template BEFORE substituting parameters
-    // This ensures params (already pre-escaped) are not double-escaped
-    $translated = str_replace("'", "\\'", $translated);
-    
-    // Substitute parameters (they are already pre-escaped by caller)
-    if (!empty($params) && is_array($params)) {
-        $translated = strtr($translated, $params);
-    }
-    
-    // Restore original language state
-    if ($saved_lang !== null) {
-        $GLOBALS['_i18n_lang'] = $saved_lang;
-        $GLOBALS['_i18n_translations'] = $saved_translations;
-        $GLOBALS['_i18n_loaded'] = $saved_loaded;
-    }
-    
-    return $translated;
+function t_mail($english_text, $params = []) {
+    $dictionary = _i18n_dictionary(client_language());
+    $template = $dictionary[$english_text] ?? $english_text;
+    $template = str_replace(['\\', "'"], ['\\\\', "\\'"], $template);   // antislash PUIS apostrophe
+    return empty($params) ? $template : strtr($template, $params);
 }
 
 /**

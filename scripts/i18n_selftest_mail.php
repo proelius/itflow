@@ -40,19 +40,18 @@ if ($result === 'Se connecter') {
     $tests_failed++;
 }
 
-// Test (b): client_language='en', t_mail('Sign In') = 'Sign In'
-echo "\nTest (b): client_language='en', t_mail('Sign In') should return 'Sign In'\n";
+// Test (b): client_language='en', config_language='fr', t_mail('Sign In') = 'Sign In'
+echo "\nTest (b): client_language='en', config_language='fr', t_mail('Sign In') should return 'Sign In'\n";
 $GLOBALS['_i18n_lang'] = 'fr';
 $GLOBALS['_i18n_translations'] = [];
 $GLOBALS['_i18n_loaded'] = false;
 $config_language_client = 'en';
 $result = t_mail('Sign In');
-// Check that the global state was restored to 'fr'
-if ($GLOBALS['_i18n_lang'] === 'fr') {
-    echo "  ✓ PASS: Language restored to 'fr' after t_mail()\n";
+if ($result === 'Sign In') {
+    echo "  ✓ PASS: t_mail('Sign In') = '{$result}' (uses client_language='en', not config_language='fr')\n";
     $tests_passed++;
 } else {
-    echo "  ✗ FAIL: Language not restored, got '" . $GLOBALS['_i18n_lang'] . "'\n";
+    echo "  ✗ FAIL: Expected 'Sign In', got '{$result}'\n";
     $tests_failed++;
 }
 
@@ -112,19 +111,16 @@ if ($result === $expected) {
 
 // Test (f): A value containing another marker is not substituted a 2nd time
 echo "\nTest (f): Value containing marker should not be substituted twice\n";
-// Pre-load English dictionary first
+// Use a key that exists in the dictionary with a placeholder
 $GLOBALS['_i18n_lang'] = 'en';
 $GLOBALS['_i18n_translations'] = [];
 $GLOBALS['_i18n_loaded'] = false;
 $config_language_client = 'en';
-// Force load to get the dictionary
-$t_mail_test_key = 'Test t_mail substitution';
-$GLOBALS['_i18n_translations'][$t_mail_test_key] = 'Hello {name}, {name}';
-$GLOBALS['_i18n_loaded'] = true;  // Prevent reload
-$params = ['{name}' => 'Jean'];
-$result = t_mail($t_mail_test_key, $params);
-// strtr substitutes ALL occurrences of {name} in the template
-if ($result === 'Hello Jean, Jean') {
+// The key 'As of {date}' exists in the dictionary
+$params = ['{date}' => '2024-01-15'];
+$result = t_mail('As of {date}', $params);
+// strtr substitutes ALL occurrences of {date} in the template
+if ($result === 'As of 2024-01-15') {
     echo "  ✓ PASS: All markers substituted correctly: '{$result}'\n";
     $tests_passed++;
 } else {
@@ -163,6 +159,66 @@ if ($all_clean) {
     $tests_passed++;
 } else {
     echo "  ✗ FAIL: Some keys have unescaped apostrophes\n";
+}
+
+// Test (h): t_mail('a\b') (key absent from dictionary, with backslash) returns 'a\\b'
+echo "\nTest (h): t_mail with backslash in key (absent from dict) should escape to a\\b\n";
+$GLOBALS['_i18n_lang'] = 'en';
+$GLOBALS['_i18n_translations'] = [];
+$GLOBALS['_i18n_loaded'] = false;
+$config_language_client = 'en';
+// Key not in dictionary - should return the key itself with escaping
+// Input: a\b (one backslash in PHP string)
+// After escaping: \ -> \\ (one backslash becomes two)
+// Result: a\\b (two backslashes)
+$result = t_mail('a\\b');
+// Expected: a\\b (one backslash escaped to two)
+$expected = 'a\\\\b';
+if ($result === $expected) {
+    echo "  ✓ PASS: Backslash escaped correctly: '{$result}'\n";
+    $tests_passed++;
+} else {
+    echo "  ✗ FAIL: Expected '{$expected}', got '{$result}'\n";
+    $tests_failed++;
+}
+
+// Test (i): A parameter containing a backslash is not doubled
+echo "\nTest (i): Parameter containing backslash should not be doubled\n";
+$GLOBALS['_i18n_lang'] = 'en';
+$GLOBALS['_i18n_translations'] = [];
+$GLOBALS['_i18n_loaded'] = false;
+$config_language_client = 'en';
+$GLOBALS['_i18n_translations']['Path: {path}'] = 'Path: {path}';
+// Input: C:\Users (one backslash in each position)
+$params = ['{path}' => "C:\\Users"];
+$result = t_mail('Path: {path}', $params);
+// Expected: Path: C:\Users (backslashes in param not doubled - param is pre-escaped)
+$expected = "Path: C:\\Users";
+if ($result === $expected) {
+    echo "  ✓ PASS: Parameter backslash not doubled: '{$result}'\n";
+    $tests_passed++;
+} else {
+    echo "  ✗ FAIL: Expected '{$expected}', got '{$result}'\n";
+    $tests_failed++;
+}
+
+// Test (j): Global language state identical before/after with config_language='fr' AND client='en'
+echo "\nTest (j): Global state preserved with config_language='fr' AND client='en'\n";
+$GLOBALS['_i18n_lang'] = 'fr';
+$GLOBALS['_i18n_translations'] = [];
+$GLOBALS['_i18n_loaded'] = false;
+$config_language_client = 'en';
+$before_lang = $GLOBALS['_i18n_lang'];
+$t_mail_before = $GLOBALS['_i18n_translations'] ?? null;
+t_mail('Sign In');
+$after_lang = $GLOBALS['_i18n_lang'];
+$t_mail_after = $GLOBALS['_i18n_translations'] ?? null;
+if ($before_lang === $after_lang && $t_mail_before === $t_mail_after) {
+    echo "  ✓ PASS: Global state preserved (lang: {$before_lang} -> {$after_lang})\n";
+    $tests_passed++;
+} else {
+    echo "  ✗ FAIL: Global state changed (lang: {$before_lang} -> {$after_lang})\n";
+    $tests_failed++;
 }
 
 // Summary

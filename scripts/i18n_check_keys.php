@@ -272,23 +272,14 @@ if (!empty($forbidden_errors)) {
 
 echo "✓ No forbidden characters in fr.php values\n\n";
 
-// Negative test: temporarily insert a bad value and verify script fails
-echo "Running negative test (inserting bad value temporarily)...\n";
+// Negative test: verify detection logic works on in-memory data
+echo "Running negative test (in-memory check)...\n";
 $test_key = 'NEGATIVE_TEST_KEY_DO_NOT_USE';
 $test_value = "This has a bad ' apostrophe";
-$test_line = "    '{$test_key}' => '{$test_value}',\n";
+$test_line = "    '{$test_key}' => '{$test_value}',";
 
-// Read current fr.php
-$fr_content = file_get_contents($lang_fr_file);
-$fr_lines = explode("\n", $fr_content);
-
-// Insert test line before the closing bracket
-array_splice($fr_lines, -1, 0, $test_line);
-file_put_contents($lang_fr_file, implode("\n", $fr_lines));
-
-// Re-run checks (inline, not recursive call)
-$fr_raw_test = file_get_contents($lang_fr_file);
-$lines_test = explode("\n", $fr_raw_test);
+// Test the detection logic on in-memory data (no file writes)
+$lines_test = [$test_line];
 $negative_test_passed = false;
 
 foreach ($lines_test as $line_num => $line) {
@@ -308,11 +299,8 @@ foreach ($lines_test as $line_num => $line) {
     }
 }
 
-// Restore original fr.php
-file_put_contents($lang_fr_file, $fr_content);
-
 if (!$negative_test_passed) {
-    echo "ERROR: Negative test failed - script did not detect inserted bad value\n";
+    echo "ERROR: Negative test failed - detection logic did not find inserted bad value\n";
     exit(1);
 }
 
