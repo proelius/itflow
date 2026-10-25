@@ -213,7 +213,7 @@ function formatAddress($address, $city, $state, $zip, $country = '', $separator 
     $country = trim((string)$country);
 
     // Translate country name if i18n is available
-    if (!empty($country)) {
+    if ($country !== '' && function_exists('i18n_country_name')) {
         $country = i18n_country_name($country);
     }
 
