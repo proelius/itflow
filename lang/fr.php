@@ -106,4 +106,12 @@ return [
     'up to {date}' => 'jusqu’au {date}',
     '{from} to {to}' => 'du {from} au {to}',
     '(overdue)' => '(en retard)',
+    
+    // Email - Quote & Recurring Invoice
+    'Quote [{scope}]' => 'Devis [{scope}]',
+    'Thank you for your inquiry, we are pleased to provide you with the following estimate.' => 'Nous vous remercions de votre demande et avons le plaisir de vous transmettre le devis suivant.',
+    'Total Cost:' => 'Coût total :',
+    'View and accept your estimate online {link}' => 'Consultez et acceptez votre devis en ligne {link}',
+    'Sales' => 'Service commercial',
+    'An invoice regarding "{scope}" has been generated. Please view the details below.' => 'Une facture concernant « {scope} » a été générée. Veuillez en consulter les détails ci-dessous.',
 ];
