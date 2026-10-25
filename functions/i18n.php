@@ -8,17 +8,47 @@
  * 
  * Usage:
  *   t('Sign In')                    // Returns 'Se connecter' (FR) or 'Sign In' (EN)
- *   t('Failed login', $username)    // Parameters replaced via strtr()
+ *   t('Failed login for %username%', ['%username%' => $username])  // Parameters via strtr()
+ *   i18n_with('fr', fn() => t('Sign In'))  // Temporary French context
+ *   i18n_set_language('fr')          // Permanent switch (for PDFs)
  * 
  * Files:
  *   lang/en.php - English texts (keys)
  *   lang/fr.php - French translations
  */
 
-// Global translation cache
-$GLOBALS['_i18n_loaded'] = false;
+// Global translation state
 $GLOBALS['_i18n_lang'] = 'en';
 $GLOBALS['_i18n_translations'] = [];
+
+/**
+ * Normalize language code to lowercase 2-letter code
+ * @param string|null $lang Language code (e.g. 'fr_CH', 'FR', 'fr-FR', null)
+ * @return string Normalized code ('fr', 'en', etc.)
+ */
+function _i18n_normalize_lang($lang) {
+    // If not a string, return default
+    if (!is_string($lang)) {
+        return 'en';
+    }
+    
+    // Extract first 2 letters, lowercase
+    $normalized = strtolower(substr($lang, 0, 2));
+    
+    // Validate: must be 2 characters
+    if (strlen($normalized) !== 2) {
+        return 'en';
+    }
+    
+    // Check against available languages (no hardcoded values)
+    $available_langs = _i18n_get_available_langs();
+    if (in_array($normalized, $available_langs)) {
+        return $normalized;
+    }
+    
+    // Fallback to default
+    return 'en';
+}
 
 /**
  * Get list of available languages from lang/ directory
@@ -43,65 +73,36 @@ function _i18n_get_available_langs() {
         }
     }
     
-    // Always include 'en' as fallback
+    // Always include default
     if (!in_array('en', $langs)) {
         $langs[] = 'en';
     }
     
     $cache = $langs;
-    return $cache;
+    return $langs;
 }
 
 /**
- * Get client language from config (no DB column)
- * @param int|null $client_id Client ID (optional, for future use)
- * @return string Language code (e.g. 'en', 'fr', 'fr_FR')
+ * Load translations for a specific language with static cache
+ * @param string $lang Language code
+ * @return array Translations array
  */
-function client_language($client_id = null) {
-    global $config_language_client;
+function _i18n_dictionary($lang) {
+    static $cache = [];
     
-    // Return from config (e.g. 'fr_FR', 'en_US', etc.)
-    if (isset($config_language_client) && is_string($config_language_client)) {
-        return $config_language_client;
+    // Return cached if available
+    if (isset($cache[$lang])) {
+        return $cache[$lang];
     }
     
-    // Default to English
-    return 'en';
-}
-
-/**
- * Load translations for current language
- */
-function _i18n_load() {
-    global $config_language;
-    
-    if ($GLOBALS['_i18n_loaded']) {
-        return;
-    }
-    
-    // Determine language (default: en)
-    $lang = 'en';
-    if (isset($config_language) && is_string($config_language)) {
-        $lang = strtolower(trim($config_language));
-    }
-    
-    // Get available languages from lang/ directory (not hardcoded)
-    $available_langs = _i18n_get_available_langs();
-    
-    // Validate against available languages
-    if (!in_array($lang, $available_langs)) {
-        $lang = 'en';
-    }
-    
-    $GLOBALS['_i18n_lang'] = $lang;
-    $GLOBALS['_i18n_translations'] = [];
+    $translations = [];
     
     // Load English (base)
     $en_file = __DIR__ . '/../lang/en.php';
     if (file_exists($en_file)) {
-        $translations = require $en_file;
-        if (is_array($translations)) {
-            $GLOBALS['_i18n_translations'] = $translations;
+        $en_translations = require $en_file;
+        if (is_array($en_translations)) {
+            $translations = $en_translations;
         }
     }
     
@@ -112,14 +113,41 @@ function _i18n_load() {
             $lang_translations = require $lang_file;
             if (is_array($lang_translations)) {
                 // Merge: target language overrides English keys
-                $GLOBALS['_i18n_translations'] = array_merge(
-                    $GLOBALS['_i18n_translations'],
-                    $lang_translations
-                );
+                $translations = array_merge($translations, $lang_translations);
             }
         }
     }
     
+    $cache[$lang] = $translations;
+    return $translations;
+}
+
+/**
+ * Apply language settings (set global state)
+ * @param string $lang Normalized language code
+ */
+function _i18n_apply($lang) {
+    $GLOBALS['_i18n_lang'] = $lang;
+    $GLOBALS['_i18n_translations'] = _i18n_dictionary($lang);
+}
+
+/**
+ * Load translations for current language from config (only once)
+ */
+function _i18n_load() {
+    global $config_language;
+    
+    // If already loaded, return current state
+    if (!empty($GLOBALS['_i18n_loaded'])) {
+        return;
+    }
+    
+    // Determine language from config
+    $lang = isset($config_language) && is_string($config_language)
+        ? _i18n_normalize_lang($config_language)
+        : 'en';
+    
+    _i18n_apply($lang);
     $GLOBALS['_i18n_loaded'] = true;
 }
 
@@ -127,7 +155,7 @@ function _i18n_load() {
  * Translate text
  * 
  * @param string $english_text English text (serves as translation key)
- * @param array $params Named parameters for replacement (e.g. ['username' => 'John'])
+ * @param array $params Named parameters for replacement (e.g. ['%username%' => 'John'])
  * @return string Translated text or original English if not found
  */
 function t($english_text, $params = []) {
@@ -154,36 +182,51 @@ function t($english_text, $params = []) {
  * @return string Current language code (en, fr, etc.)
  */
 function _i18n_get_lang() {
-    _i18n_load();
     return $GLOBALS['_i18n_lang'];
 }
 
 /**
+ * Set language permanently (for PDFs that end with exit)
+ * @param string $lang Language code (e.g. 'fr', 'en')
+ */
+function i18n_set_language($lang) {
+    _i18n_load();
+    _i18n_apply(_i18n_normalize_lang($lang));
+}
+
+/**
  * Execute code with temporary language context
- * @param string $lang Language code
+ * @param string $lang Language code (e.g. 'fr', 'en')
  * @param callable $callback Function to execute
  * @return mixed Result of callback
  */
 function i18n_with($lang, callable $callback) {
+    // Load current state
     _i18n_load();
     
+    // Save current language
     $old_lang = $GLOBALS['_i18n_lang'];
-    $available_langs = _i18n_get_available_langs();
-    
-    // Validate language
-    $effective_lang = in_array($lang, $available_langs) ? $lang : $old_lang;
     
     // Set new language
-    $GLOBALS['_i18n_lang'] = $effective_lang;
-    $GLOBALS['_i18n_loaded'] = false;
-    _i18n_load();
+    i18n_set_language($lang);
     
-    // try/finally for guaranteed restoration
+    // Guaranteed restoration even if callback throws exception
     try {
         return $callback();
     } finally {
-        $GLOBALS['_i18n_lang'] = $old_lang;
-        $GLOBALS['_i18n_loaded'] = false;
-        _i18n_load();
+        // Restore previous language
+        _i18n_apply($old_lang);
     }
+}
+
+/**
+ * Get client language from config (no DB column)
+ * Normalizes 'fr_CH' -> 'fr', 'FR' -> 'fr', etc.
+ * @param int|null $client_id Client ID (optional, for future use)
+ * @return string Normalized language code ('en', 'fr', etc.)
+ */
+function client_language($client_id = null) {
+    global $config_language_client;
+    
+    return _i18n_normalize_lang(isset($config_language_client) ? $config_language_client : 'en');
 }

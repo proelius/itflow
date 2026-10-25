@@ -1,12 +1,19 @@
 <?php
 /**
- * i18n Check Exceptions
+ * i18n_exceptions.php
  * 
- * Textes qui n'existent pas dans master mais sont valides:
- * - Assemblés à l'affichage (concaténation conditionnelle)
- * - Textes techniques spécifiques à l'implémentation
+ * Liste des exceptions pour l'i18n.
+ * Ces textes sont assemblés dynamiquement et ne doivent pas être traduits.
+ * 
+ * Usage: Inclus par i18n_extract_texts.php pour exclure ces textes.
  */
+
+// Stop if accessed via web (scripts/ is web-accessible)
+if (PHP_SAPI !== 'cli') {
+    exit;
+}
+
 return [
-    // Placeholder login: "Client Email" assemblé conditionnellement (pas de concaténation de morceaux)
-    'Client Email',
+    // Textes assemblés dynamiquement (ne pas traduire)
+    'Client Email' => 'Text assembled at display time (login.php line 736)',
 ];

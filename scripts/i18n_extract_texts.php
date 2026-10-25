@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php
 /**
  * i18n_extract_texts.php
@@ -52,7 +51,7 @@ foreach ($files as $file) {
     $content = file_get_contents($file);
     
     // Extract all t('...') calls
-    preg_match_all("/t\([\x27\x22]([^\x27\x22]+)[\x27\x22]\)/", $content, $matches);
+    preg_match_all("/t\(['\"]([^'\"]+)['\"]\)/", $content, $matches);
     
     foreach ($matches[1] as $text) {
         // Skip if text contains variables (like agent/$config_start_page)
