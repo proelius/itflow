@@ -145,8 +145,9 @@ if (!empty($ticket_id) && !empty($reply)) {
                 $company_name = escapeSql($company_row['company_name']);
                 $company_phone = escapeSql(formatPhoneNumber($company_row['company_phone'], $company_row['company_phone_country_code']));
 
-                $subject = "Ticket update - [$ticket_prefix$ticket_number] - $ticket_subject";
-                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>Your ticket regarding $ticket_subject has been updated.<br><br>--------------------------------<br>$reply<br>--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status_name<br>Portal: <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$ticket_url_key\'>View ticket</a><br><br>--<br>$company_name - Support<br>$from_email<br>$company_phone";
+                $subject_log = "Ticket update - [$ticket_prefix$ticket_number] - $ticket_subject";
+                $subject = t_mail('Ticket update') . " - [$ticket_prefix$ticket_number] - $ticket_subject";
+                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("Your ticket regarding {subject} has been updated.", ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$reply<br>--------------------------------<br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status_name<br>" . t_mail("Portal:") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$ticket_url_key\'>" . t_mail("View ticket") . "</a><br><br>--<br>$company_name - " . t_mail("Support") . "<br>$from_email<br>$company_phone";
 
                 $data = [];
 
@@ -163,7 +164,7 @@ if (!empty($ticket_id) && !empty($reply)) {
                 }
 
                 // Also email all the watchers
-                $watcher_body = $body . "<br><br>----------------------------------------<br>YOU ARE A COLLABORATOR ON THIS TICKET";
+                $watcher_body = $body . "<br><br>----------------------------------------<br>" . t_mail("YOU ARE A COLLABORATOR ON THIS TICKET");
                 $sql_watchers = mysqli_query($mysqli, "SELECT watcher_name, watcher_email FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id");
                 while ($watcher_row = mysqli_fetch_assoc($sql_watchers)) {
                     $watcher_name = escapeSql($watcher_row['watcher_name']);

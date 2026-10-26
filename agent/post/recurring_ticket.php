@@ -189,11 +189,12 @@ if (isset($_POST['bulk_force_recurring_tickets'])) {
                 // Notify client by email their ticket has been raised, if general notifications are turned on & there is a valid contact email
                 if (!empty($config_smtp_provider) && $config_ticket_client_general_notifications == 1 && filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
 
-                    $email_subject = "Ticket Created - [$ticket_prefix$ticket_number] - $ticket_subject (scheduled)";
+                    $email_subject_log = "Ticket Created - [$ticket_prefix$ticket_number] - $ticket_subject (scheduled)";
+                    $email_subject = t_mail('Ticket Created') . " - [$ticket_prefix$ticket_number] - $ticket_subject " . t_mail('(scheduled)');
                     // SLA response commitment for this client + priority, empty when no SLA applies
                     $sla_notice = escapeSql(getTicketSlaEmailNotice($id, $company_phone));
                     $ticket_status_name = escapeSql(getTicketStatusName($ticket_status));
-                    $email_body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>A ticket regarding \"$ticket_subject\" has been automatically created for you.<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status_name<br>Portal: https://$config_base_url/client/ticket.php?id=$id$sla_notice<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+                    $email_body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail('A ticket regarding "{subject}" has been automatically created for you.', ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status_name<br>" . t_mail("Portal:") . " https://$config_base_url/client/ticket.php?id=$id$sla_notice<br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
 
                     $email = [
                         'from' => $config_ticket_from_email,
@@ -339,11 +340,12 @@ if (isset($_GET['force_recurring_ticket'])) {
         // Notify client by email their ticket has been raised, if general notifications are turned on & there is a valid contact email
         if (!empty($config_smtp_provider) && $config_ticket_client_general_notifications == 1 && filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
 
-            $email_subject = "Ticket created - [$ticket_prefix$ticket_number] - $ticket_subject (scheduled)";
+            $email_subject_log = "Ticket created - [$ticket_prefix$ticket_number] - $ticket_subject (scheduled)";
+            $email_subject = t_mail('Ticket created') . " - [$ticket_prefix$ticket_number] - $ticket_subject " . t_mail('(scheduled)');
             // SLA response commitment for this client + priority, empty when no SLA applies
             $sla_notice = escapeSql(getTicketSlaEmailNotice($id, $company_phone));
             $ticket_status_name = escapeSql(getTicketStatusName($ticket_status));
-            $email_body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>A ticket regarding \"$ticket_subject\" has been automatically created for you.<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status_name<br>Portal: https://$config_base_url/client/ticket.php?id=$id$sla_notice<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+            $email_body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail('A ticket regarding "{subject}" has been automatically created for you.', ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status_name<br>" . t_mail("Portal:") . " https://$config_base_url/client/ticket.php?id=$id$sla_notice<br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
 
             $email = [
                 'from' => $config_ticket_from_email,
