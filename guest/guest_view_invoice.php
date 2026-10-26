@@ -3,7 +3,7 @@
 require_once "includes/inc_all_guest.php";
 
 if (!isset($_GET['invoice_id'], $_GET['url_key'])) {
-    echo "<br><h2>Oops, something went wrong! Please raise a ticket if you believe this is an error.</h2>";
+    echo "<br><h2>" . t('Oops, something went wrong! Please raise a ticket if you believe this is an error.') . "</h2>";
     require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php';
 
     exit();
@@ -29,7 +29,7 @@ $sql = mysqli_query(
 
 if (mysqli_num_rows($sql) !== 1) {
     // Invalid invoice/key
-    echo "<br><h2>Oops, something went wrong! Please raise a ticket if you believe this is an error.</h2>";
+    echo "<br><h2>" . t('Oops, something went wrong! Please raise a ticket if you believe this is an error.') . "</h2>";
     require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php';
 
     exit();
@@ -177,17 +177,31 @@ if ($balance > 0) {
 
 ?>
 
+<?php
+// Mapping d'affichage des statuts (traduction uniquement à l'affichage)
+$invoice_status_labels = [
+    'Draft' => t('Draft'),
+    'Sent' => t('Sent'),
+    'Viewed' => t('Viewed'),
+    'Partial' => t('Partial'),
+    'Paid' => t('Paid'),
+    'Cancelled' => t('Cancelled'),
+    'Non-Billable' => t('Non-Billable')
+];
+$display_status = $invoice_status_labels[$invoice_status] ?? $invoice_status;
+?>
 <div class="card my-3">
     <div class="card-header bg-light d-print-none">
         <div class="row">
             <div class="col-6">
-                <h4 class="mt-1">Account Balance: <b><?= numfmt_format_currency($currency_format, $account_balance, $invoice_currency_code) ?></b></h4>
+                <h4 class="mt-1"><?= t('Account Balance:') ?> <b><?= numfmt_format_currency($currency_format, $account_balance, $invoice_currency_code) ?></b></h4>
             </div>
             <div class="col-6">
                 <div class="float-end">
-                    <a class="btn btn-default" href="#" onclick="window.print();"><i class="fas fa-fw fa-print me-2"></i>Print</a>
+                    <a class="btn btn-default" href="#" onclick="window.print();"><i class="fas fa-fw fa-print me-2"></i><?= t('Print') ?></a>
                     <a class="btn btn-default" href="guest_post.php?export_invoice_pdf=<?= $invoice_id ?>&url_key=<?= $url_key ?>">
-                        <i class="fa fa-fw fa-download me-2"></i>Download
+                        <i class="fa fa-fw fa-download me-2"></i><?= t('Download') ?>
+
                     </a>
                     <?php if (
                         $invoice_status !== "Paid" &&
@@ -203,10 +217,10 @@ if ($balance > 0) {
                         // Stripe - Online payment (either setup a customer record, or pay directly if customer record already exists)
                         // Needs adjusting if we do ever add more payment providers but fine for now.
                         if ($stripe_customer_id) { ?>
-                            <a class="btn btn-success" href="guest_pay_invoice_stripe.php?invoice_id=<?= $invoice_id ?>&url_key=<?= $url_key ?>"><i class="fa fa-fw fa-credit-card me-2"></i>Pay Now </a>
+                            <a class="btn btn-success" href="guest_pay_invoice_stripe.php?invoice_id=<?= $invoice_id ?>&url_key=<?= $url_key ?>"><i class="fa fa-fw fa-credit-card me-2"></i><?= t('Pay Now') ?> </a>
                         <?php }
                         else { ?>
-                            <a class="btn btn-success" href="guest_pay_setup_stripe_customer.php?invoice_id=<?= $invoice_id ?>&url_key=<?= $url_key ?>"><i class="fa fa-fw fa-credit-card me-2"></i>Pay Now </a>
+                            <a class="btn btn-success" href="guest_pay_setup_stripe_customer.php?invoice_id=<?= $invoice_id ?>&url_key=<?= $url_key ?>"><i class="fa fa-fw fa-credit-card me-2"></i><?= t('Pay Now') ?> </a>
                         <?php }
                     } ?>
                 </div>
@@ -218,7 +232,7 @@ if ($balance > 0) {
         <div class="row mb-3">
             <?php if (file_exists("../uploads/settings/$company_logo")) { ?>
             <div class="col-sm-2">
-                <img class="img-fluid" src="<?= "../uploads/settings/$company_logo" ?>" alt="Company logo">
+                <img class="img-fluid" src="<?= "../uploads/settings/$company_logo" ?>" alt="<?= t('Company logo') ?>">
             </div>
             <?php } ?>
             <div class="col-sm-6 <?php if (!file_exists("../uploads/settings/$company_logo")) { echo "col-sm-8"; } ?>">
@@ -234,21 +248,21 @@ if ($balance > 0) {
             </div>
 
             <div class="col-sm-4">
-                <h3 class="text-end"><strong>INVOICE</strong></h3>
+                <h3 class="text-end"><strong><?= t('INVOICE') ?></strong></h3>
                 <h5 class="badge text-bg-<?= $invoice_badge_color ?> p-2 float-end">
-                    <?= "$invoice_status" ?>
+                    <?= $display_status ?>
                 </h5>
                 <table class="table table-sm table-borderless">
                     <tr>
-                        <th>Invoice #:</th>
+                        <th><?= t('Invoice #:') ?></th>
                         <td class="text-end"><?= "$invoice_prefix$invoice_number" ?></td>
                     </tr>
                     <tr>
-                        <th>Date:</th>
+                        <th><?= t('Date:') ?></th>
                         <td class="text-end"><?= $invoice_date ?></td>
                     </tr>
                     <tr>
-                        <th>Due:</th>
+                        <th><?= t('Due:') ?></th>
                         <td class="text-end"><?= $invoice_due ?></td>
                     </tr>
                 </table>
@@ -257,7 +271,7 @@ if ($balance > 0) {
         </div>
         <div class="row mb-3 bg-light p-3">
             <div class="col">
-                <h6><strong>Bill To:</strong></h6>
+                <h6><strong><?= t('Bill To:') ?></strong></h6>
                 <ul class="list-unstyled mb-0">
                     <li><?= $client_name ?></li>
                     <li><?= formatAddress($location_address, $location_city, $location_state, $location_zip, $location_country, '<br>') ?></li>
@@ -273,12 +287,12 @@ if ($balance > 0) {
                         <table class="table table-hover mb-0">
                             <thead class="bg-light">
                             <tr>
-                                <th>Item</th>
-                                <th>Description</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Unit Price</th>
-                                <th class="text-end">Tax</th>
-                                <th class="text-end">Amount</th>
+                                <th><?= t('Item') ?></th>
+                                <th><?= t('Description') ?></th>
+                                <th class="text-center"><?= t('Qty') ?></th>
+                                <th class="text-end"><?= t('Unit Price') ?></th>
+                                <th class="text-end"><?= t('Tax') ?></th>
+                                <th class="text-end"><?= t('Amount') ?></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -332,14 +346,14 @@ if ($balance > 0) {
                 <table class="table table-hover mb-0">
                     <tbody>
                     <tr>
-                        <td>Subtotal:</td>
+                        <td><?= t('Subtotal:') ?></td>
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code) ?></td>
                     </tr>
                     <?php
                     if ($invoice_discount > 0) {
                         ?>
                         <tr>
-                            <td>Discount:</td>
+                            <td><?= t('Discount:') ?></td>
                             <td class="text-end">-<?= numfmt_format_currency($currency_format, $invoice_discount, $invoice_currency_code) ?></td>
                         </tr>
                     <?php
@@ -347,24 +361,24 @@ if ($balance > 0) {
                     ?>
                     <?php if ($total_tax > 0) { ?>
                         <tr>
-                            <td>Tax:</td>
+                            <td><?= t('Tax:') ?></td>
                             <td class="text-end"><?= numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code) ?></td>
                         </tr>
                     <?php } ?>
                     <tr>
-                        <td>Total:</td>
+                        <td><?= t('Total:') ?></td>
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) ?></td>
                     </tr>
                     <?php if ($amount_paid > 0) { ?>
                         <tr>
-                            <td><div class="text-success">Paid:</div></td>
+                            <td><div class="text-success"><?= t('Paid:') ?></div></td>
                             <td class="text-end text-success"><?= numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) ?></td>
                         </tr>
                     <?php
                     }
                     ?>
                     <tr class="h5 text-bold">
-                        <td>Balance:</td>
+                        <td><?= t('Balance:') ?></td>
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $balance, $invoice_currency_code) ?></td>
                     </tr>
 
@@ -421,7 +435,8 @@ if ($statement_count > 0) { ?>
 <div class="card d-print-none">
     <div class="card-header bg-dark">
         <strong class="text-white">
-            <i class="fa fa-fw fa-file-alt me-2"></i>Account Statement
+            <i class="fa fa-fw fa-file-alt me-2"></i><?= t('Account Statement') ?>
+
         </strong>
     </div>
     <div class="card-body">
@@ -429,13 +444,13 @@ if ($statement_count > 0) { ?>
             <table class="table table-sm mb-0">
                 <thead>
                 <tr>
-                    <th class="text-center">Invoice</th>
-                    <th class="d-none d-md-table-cell">Scope</th>
-                    <th>Date</th>
-                    <th>Due</th>
-                    <th class="text-end">Amount</th>
-                    <th class="text-end">Paid</th>
-                    <th class="text-end">Balance</th>
+                    <th class="text-center"><?= t('Invoice') ?></th>
+                    <th class="d-none d-md-table-cell"><?= t('Scope') ?></th>
+                    <th><?= t('Date') ?></th>
+                    <th><?= t('Due') ?></th>
+                    <th class="text-end"><?= t('Amount') ?></th>
+                    <th class="text-end"><?= t('Paid') ?></th>
+                    <th class="text-end"><?= t('Balance') ?></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -467,10 +482,10 @@ if ($statement_count > 0) { ?>
 
                     if ($statement_days > 0) {
                         $statement_due_class = 'text-danger';
-                        $statement_due_note = "(overdue by $statement_days days)";
+                        $statement_due_note = t('(overdue by {days} days)', ['{days}' => $statement_days]);
                     } else {
                         $statement_due_class = '';
-                        $statement_due_note = '(due in ' . abs($statement_days) . ' days)';
+                        $statement_due_note = t('(due in {days} days)', ['{days}' => abs($statement_days)]);
                     }
 
                     ?>
@@ -498,7 +513,7 @@ if ($statement_count > 0) { ?>
                 </tbody>
                 <tfoot>
                 <tr>
-                    <th colspan="6" class="text-end">Total Balance Due</th>
+                    <th colspan="6" class="text-end"><?= t('Total Balance Due') ?></th>
                     <th class="text-end font-monospace"><?= numfmt_format_currency($currency_format, $invoice_tally_total, $client_currency_code) ?></th>
                 </tr>
                 </tfoot>
