@@ -202,4 +202,7 @@ return [
     'Quote Declined' => 'Devis refusé',
     'File uploaded!' => 'Fichier téléversé !',
     'Something went wrong uploading the file - please let the support team know.' => 'Une erreur est survenue lors du téléversement du fichier. Veuillez en informer l’équipe de support.',
+    // Confirm dialog - MESSAGES CLIENT lot 3e
+    'Are you sure?' => 'Êtes-vous sûr(e) ?',
+    'Yes' => 'Oui',
 ];

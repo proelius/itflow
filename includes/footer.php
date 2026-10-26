@@ -80,6 +80,7 @@
 <script src="/js/autocomplete.js"></script>
 <script src="/js/app.js"></script>
 <script src="/js/ajax_modal.js"></script>
+<?php if (i18n_current_language() !== 'en') { ?><script>window.itflowConfirmI18n = <?= json_encode(['title' => t('Are you sure?'), 'yes' => t('Yes'), 'cancel' => t('Cancel')], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;</script><?php } ?>
 <script src="/js/confirm_modal.js"></script>
 <script src="/js/date_filter.js"></script>
 

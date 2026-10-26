@@ -20,6 +20,7 @@
  * without touching any of them.
  */
 document.addEventListener('click', function (e) {
+    const i18n = window.itflowConfirmI18n || {};
     const link = e.target.closest('a.confirm-link, button.confirm-link');
     if (!link || typeof Swal === 'undefined') {
         return;
@@ -39,12 +40,12 @@ document.addEventListener('click', function (e) {
         // palette off the `theme` option and defaults to 'light', so the dialog
         // stayed white on a dark page. Read at fire time, not at load.
         theme: document.documentElement.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light',
-        title: link.dataset.confirmTitle || 'Are you sure?',
+        title: link.dataset.confirmTitle || i18n.title || 'Are you sure?',
         text: link.dataset.confirmText || '',
         icon: link.dataset.confirmIcon || (destructive ? 'warning' : 'question'),
         showCancelButton: true,
-        confirmButtonText: link.dataset.confirmButton || 'Yes',
-        cancelButtonText: 'Cancel',
+        confirmButtonText: link.dataset.confirmButton || i18n.yes || 'Yes',
+        cancelButtonText: i18n.cancel || 'Cancel',
         reverseButtons: true,
         focusCancel: destructive,
         buttonsStyling: false,
