@@ -137,7 +137,6 @@ if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Vie
 
         <div class="float-end">
             <a class="btn btn-primary" href="#" onclick="window.print();"><i class="fas fa-fw fa-print me-2"></i><?= t('Print') ?></a>
-
             <a class="btn btn-primary" href="guest_post.php?export_quote_pdf=<?= $quote_id ?>&url_key=<?= $url_key ?>">
                 <i class="fa fa-fw fa-download me-2"></i><?= t('Download') ?>
 
@@ -169,17 +168,14 @@ if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Vie
                 <table class="table table-sm table-borderless">
                     <tr>
                         <th><?= t('Quote #:') ?></th>
-
                         <td class="text-end"><?= "$quote_prefix$quote_number" ?></td>
                     </tr>
                     <tr>
                         <th><?= t('Date:') ?></th>
-
                         <td class="text-end"><?= $quote_date ?></td>
                     </tr>
                     <tr>
                         <th><?= t('Expires:') ?></th>
-
                         <td class="text-end"><?= $quote_expire ?></td>
                     </tr>
                 </table>
@@ -189,7 +185,6 @@ if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Vie
         <div class="row mb-3 bg-light p-3">
             <div class="col">
                 <h6><strong><?= t('To:') ?></strong></h6>
-
                 <ul class="list-unstyled mb-0">
                     <li><?= $client_name ?></li>
                     <li><?= formatAddress($location_address, $location_city, $location_state, $location_zip, $location_country, '<br>') ?></li>
@@ -208,17 +203,11 @@ if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Vie
                             <thead class="bg-light">
                             <tr>
                                 <th><?= t('Item') ?></th>
-
                                 <th><?= t('Description') ?></th>
-
                                 <th class="text-center"><?= t('Qty') ?></th>
-
                                 <th class="text-end"><?= t('Unit Price') ?></th>
-
                                 <th class="text-end"><?= t('Tax') ?></th>
-
                                 <th class="text-end"><?= t('Amount') ?></th>
-
                             </tr>
                             </thead>
                             <tbody>
@@ -277,13 +266,11 @@ if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Vie
                     <tbody>
                     <tr>
                         <td><?= t('Subtotal:') ?></td>
-
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $sub_total, $quote_currency_code) ?></td>
                     </tr>
                     <?php if ($quote_discount > 0) { ?>
                         <tr>
                             <td><?= t('Discount:') ?></td>
-
                             <td class="text-end"><?= numfmt_format_currency($currency_format, -$quote_discount, $quote_currency_code) ?></td>
                         </tr>
                     <?php } ?>
@@ -295,7 +282,6 @@ if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Vie
                     <?php } ?>
                     <tr class="border-top h5 text-bold">
                         <td><strong><?= t('Total:') ?></strong></td>
-
                         <td class="text-end"><strong><?= numfmt_format_currency($currency_format, $quote_amount, $quote_currency_code) ?></strong></td>
                     </tr>
                     </tbody>
@@ -310,7 +296,9 @@ if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Vie
             <?php
                 if ($quote_status == "Sent" || $quote_status == "Viewed" && strtotime($quote_expire) > strtotime("now")) { ?>
                     <a class="btn btn-success confirm-link" href="guest_post.php?accept_quote=<?= $quote_id ?>&url_key=<?= $url_key ?>">
-                        <i class="fas fa-fw fa-thumbs-up me-2"></i><?= t('Accept') ?></a>
+                        <i class="fas fa-fw fa-thumbs-up me-2"></i><?= t('Accept') ?>
+
+                    </a>
                     <a class="btn btn-danger confirm-link" href="guest_post.php?decline_quote=<?= $quote_id ?>&url_key=<?= $url_key ?>">
                         <i class="fas fa-fw fa-thumbs-down me-2"></i><?= t('Decline') ?>
 
@@ -318,7 +306,9 @@ if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Vie
                 <?php } ?>
                 <?php if ($quote_status == "Accepted") { ?>
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadFileModal">
-                        <i class="fas fa-fw fa-cloud-upload-alt me-2"></i><?= t('Upload File') ?></button>
+                        <i class="fas fa-fw fa-cloud-upload-alt me-2"></i><?= t('Upload File') ?>
+
+                </button>
                 <?php } ?>
         </div>
 
