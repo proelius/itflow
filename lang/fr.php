@@ -185,4 +185,15 @@ return [
     'Cancelled' => 'Annulé',
     'Draft' => 'Brouillon',
     'Non-Billable' => 'Non facturable',
+    // Guest Quote Page - PAGES CLIENT lot 2
+    'Quote #:' => 'Devis n° :',
+    'To:' => 'Destinataire :',
+    'Accept' => 'Accepter',
+    'Decline' => 'Refuser',
+    'Upload File' => 'Téléverser un fichier',
+    'Upload' => 'Téléverser',
+    'Cancel' => 'Annuler',
+    'Accepted' => 'Accepté',
+    'Declined' => 'Refusé',
+    'Invoiced' => 'Facturé',
 ];

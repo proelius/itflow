@@ -186,4 +186,15 @@ return [
 'Cancelled' => 'Cancelled',
 'Draft' => 'Draft',
 'Non-Billable' => 'Non-Billable',
+    // Guest Quote Page - PAGES CLIENT lot 2
+    'Quote #:' => 'Quote #:',
+    'To:' => 'To:',
+    'Accept' => 'Accept',
+    'Decline' => 'Decline',
+    'Upload File' => 'Upload File',
+    'Upload' => 'Upload',
+    'Cancel' => 'Cancel',
+    'Accepted' => 'Accepted',
+    'Declined' => 'Declined',
+    'Invoiced' => 'Invoiced',
 ];
