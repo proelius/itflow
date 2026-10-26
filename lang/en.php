@@ -134,4 +134,13 @@ return [
     'Payment Applied:' => 'Payment Applied:',
     'New Balance:' => 'New Balance:',
     'Thank you for your payment of {amount} We\'ve applied your payment to the following invoices, updating their balances accordingly:' => 'Thank you for your payment of {amount} We\'ve applied your payment to the following invoices, updating their balances accordingly:',
+    
+    // Email - Cron Nightly Tasks (2 client emails)
+    'Overdue Invoice {number}' => 'Overdue Invoice {number}',
+    'Our records indicate that we have not yet received payment in full for the invoice {number}.' => 'Our records indicate that we have not yet received payment in full for the invoice {number}.',
+    'We kindly request that you submit your payment as soon as possible.' => 'We kindly request that you submit your payment as soon as possible.',
+    'If you have any questions or concerns, please do not hesitate to contact us at {email} or {phone}.' => 'If you have any questions or concerns, please do not hesitate to contact us at {email} or {phone}.',
+    'Kindly review the invoice details mentioned below.' => 'Kindly review the invoice details mentioned below.',
+    'Invoice Total:' => 'Invoice Total:',
+    'Over Due By: {days} Days' => 'Over Due By: {days} Days',
 ];
