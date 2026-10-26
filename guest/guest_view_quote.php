@@ -308,7 +308,7 @@ if ($quote_status == "Draft" || $quote_status == "Sent" || $quote_status == "Vie
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadFileModal">
                         <i class="fas fa-fw fa-cloud-upload-alt me-2"></i><?= t('Upload File') ?>
 
-                </button>
+                    </button>
                 <?php } ?>
         </div>
 
