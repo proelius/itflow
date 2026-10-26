@@ -33,7 +33,7 @@ if (isset($_GET['accept_quote'], $_GET['url_key'])) {
         mysqli_query($mysqli, "UPDATE quotes SET quote_status = 'Accepted' WHERE quote_id = $quote_id AND quote_status IN ('Sent', 'Viewed')");
 
         if (mysqli_affected_rows($mysqli) !== 1) {
-            flashAlert("This quote is no longer awaiting a response", 'error');
+            flashAlert(t("This quote is no longer awaiting a response"), 'error');
             redirect();
         }
 
@@ -78,7 +78,7 @@ if (isset($_GET['accept_quote'], $_GET['url_key'])) {
             $mail = addToMailQueue($data);
         }
 
-        flashAlert("Quote Accepted");
+        flashAlert(t("Quote Accepted"));
 
         redirect();
 
@@ -108,7 +108,7 @@ if (isset($_GET['decline_quote'], $_GET['url_key'])) {
         mysqli_query($mysqli, "UPDATE quotes SET quote_status = 'Declined' WHERE quote_id = $quote_id AND quote_status IN ('Sent', 'Viewed')");
 
         if (mysqli_affected_rows($mysqli) !== 1) {
-            flashAlert("This quote is no longer awaiting a response", 'error');
+            flashAlert(t("This quote is no longer awaiting a response"), 'error');
             redirect();
         }
 
@@ -152,7 +152,7 @@ if (isset($_GET['decline_quote'], $_GET['url_key'])) {
 
             $mail = addToMailQueue($data);
         }
-        flashAlert("Quote Declined", 'danger');
+        flashAlert(t("Quote Declined"), 'danger');
 
         redirect();
 
@@ -807,7 +807,7 @@ if (isset($_POST['guest_quote_upload_file'])) {
                     mysqli_query($mysqli, "INSERT INTO quote_files SET quote_id = $quote_id, file_id = $file_id");
 
                     // Logging & feedback
-                    flashAlert('File uploaded!');
+                    flashAlert(t('File uploaded!'));
 
                     appNotify("Quote File", "$file_name was uploaded to quote $quote_prefix$quote_number", "/agent/quote.php?quote_id=$quote_id", $client_id);
 
@@ -816,7 +816,7 @@ if (isset($_POST['guest_quote_upload_file'])) {
                     logAudit("File", "Upload", "Guest uploaded file $file_name to quote $quote_prefix$quote_number", $client_id);
 
                 } else {
-                    flashAlert('Something went wrong uploading the file - please let the support team know.', 'error');
+                    flashAlert(t('Something went wrong uploading the file - please let the support team know.'), 'error');
 
                     logApp("Guest", "error", "Error uploading file to invoice");
                 }

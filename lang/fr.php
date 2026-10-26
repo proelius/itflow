@@ -196,4 +196,10 @@ return [
     'Accepted' => 'Accepté',
     'Declined' => 'Refusé',
     'Invoiced' => 'Facturé',
+    // Guest Post Page - MESSAGES CLIENT lot 3a
+    'This quote is no longer awaiting a response' => 'Ce devis n’attend plus de réponse',
+    'Quote Accepted' => 'Devis accepté',
+    'Quote Declined' => 'Devis refusé',
+    'File uploaded!' => 'Fichier téléversé !',
+    'Something went wrong uploading the file - please let the support team know.' => 'Une erreur est survenue lors du téléversement du fichier. Veuillez en informer l’équipe de support.',
 ];
