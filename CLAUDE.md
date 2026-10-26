@@ -41,3 +41,26 @@
 - Contenu destiné aux clients (PDF, e-mails, pages vues par le client) : appliquer la langue
   client avec i18n_set_language(client_language()) ou i18n_with(). Ne modifie functions/i18n.php
   qu'en me montrant d'abord le diff.
+
+## Pages web : retours à la ligne et ?>
+- PHP avale UN retour à la ligne placé IMMÉDIATEMENT après ?> .
+- Une ligne vide de compensation n'est nécessaire QUE si ?> est le DERNIER caractère de la
+  ligne (rien après) ET si l'original avait un retour à la ligne à cet endroit.
+- Si la ligne continue après ?> (ex. `<th><?= t('X') ?></th>`, `<td>…?></td>`, `…?></a>`),
+  AUCUNE ligne vide n'est ajoutée.
+- Exemple Download (compensation requise) :
+  ```
+  <i class="fa fa-fw fa-download me-2"></i><?= t('Download') ?>
+
+  </a>
+  ```
+- Exemple Print (aucune compensation) :
+  ```
+  <i class="fas fa-fw fa-print me-2"></i><?= t('Print') ?></a>
+  ```
+- Exemple Accept (compensation requise, closing tag sur sa ligne) :
+  ```
+  <i class="fas fa-fw fa-thumbs-up me-2"></i><?= t('Accept') ?>
+
+  </a>
+  ```
