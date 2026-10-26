@@ -197,4 +197,10 @@ return [
     'Accepted' => 'Accepted',
     'Declined' => 'Declined',
     'Invoiced' => 'Invoiced',
+    // Guest Post Page - MESSAGES CLIENT lot 3a
+    'This quote is no longer awaiting a response' => 'This quote is no longer awaiting a response',
+    'Quote Accepted' => 'Quote Accepted',
+    'Quote Declined' => 'Quote Declined',
+    'File uploaded!' => 'File uploaded!',
+    'Something went wrong uploading the file - please let the support team know.' => 'Something went wrong uploading the file - please let the support team know.',
 ];
