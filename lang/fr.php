@@ -143,4 +143,17 @@ return [
     'Kindly review the invoice details mentioned below.' => 'Veuillez consulter les détails de la facture ci-dessous.',
     'Invoice Total:' => 'Total de la facture :',
     'Over Due By: {days} Days' => 'Retard : {days} jour(s)',
+
+    
+    // Email - Password Reset (client/login_reset.php)
+    'Password reset for {company} Client Portal' => 'Réinitialisation du mot de passe pour le portail client de {company}',
+    'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.' => 'Quelqu’un (probablement vous) a demandé un nouveau mot de passe pour votre compte sur le portail client de {company}.',
+    'Please {link} to reset your password.' => 'Veuillez {link} pour réinitialiser votre mot de passe.',
+    'click here' => 'cliquer ici',
+    'Alternatively, copy and paste this URL into your browser:' => 'Vous pouvez aussi copier et coller cette adresse dans votre navigateur :',
+    'If you didn\'t request this change, you can safely ignore this email.' => 'Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.',
+    'Password reset confirmation for {company} Client Portal' => 'Confirmation de la réinitialisation du mot de passe pour le portail client de {company}',
+    'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!' => 'Le mot de passe de votre compte sur le portail client de {company} a bien été réinitialisé. Tout est en ordre !',
+    'If you didn\'t reset your password, please get in touch ASAP.' => 'Si vous n’avez pas réinitialisé votre mot de passe, veuillez nous contacter sans délai.',
+    'Support' => 'Support technique',
 ];

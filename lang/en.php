@@ -143,4 +143,17 @@ return [
     'Kindly review the invoice details mentioned below.' => 'Kindly review the invoice details mentioned below.',
     'Invoice Total:' => 'Invoice Total:',
     'Over Due By: {days} Days' => 'Over Due By: {days} Days',
+
+    
+    // Email - Password Reset (client/login_reset.php)
+    'Password reset for {company} Client Portal' => 'Password reset for {company} Client Portal',
+    'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.' => 'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.',
+    'Please {link} to reset your password.' => 'Please {link} to reset your password.',
+    'click here' => 'click here',
+    'Alternatively, copy and paste this URL into your browser:' => 'Alternatively, copy and paste this URL into your browser:',
+    'If you didn\'t request this change, you can safely ignore this email.' => 'If you didn\'t request this change, you can safely ignore this email.',
+    'Password reset confirmation for {company} Client Portal' => 'Password reset confirmation for {company} Client Portal',
+    'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!' => 'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!',
+    'If you didn\'t reset your password, please get in touch ASAP.' => 'If you didn\'t reset your password, please get in touch ASAP.',
+    'Support' => 'Support',
 ];
