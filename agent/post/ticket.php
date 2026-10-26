@@ -143,10 +143,11 @@ if (isset($_POST['add_ticket'])) {
 
         // EMAILING
 
-        $subject = "Ticket Created [$ticket_prefix$ticket_number] - $ticket_subject";
+        $subject_log = "Ticket Created [$ticket_prefix$ticket_number] - $ticket_subject";
+        $subject = t_mail($subject_log);
         // SLA response commitment for this client + priority, empty when no SLA applies
         $sla_notice = escapeSql(getTicketSlaEmailNotice($ticket_id, $company_phone));
-        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>A ticket regarding \"$ticket_subject\" has been created for you.<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status_name<br>Portal: <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>View ticket</a>$sla_notice<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("A ticket regarding \"{subject}\" has been created for you.", ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status_name<br>" . t_mail("Portal:") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("View ticket") . "</a>$sla_notice<br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
 
         // Verify contact email is valid
         if (filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
@@ -169,7 +170,7 @@ if (isset($_POST['add_ticket'])) {
 
         // Also Email all the watchers
         $sql_watchers = mysqli_query($mysqli, "SELECT watcher_email FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id");
-        $body .= "<br><br>----------------------------------------<br>YOU HAVE BEEN ADDED AS A COLLABORATOR FOR THIS TICKET";
+        $body .= "<br><br>----------------------------------------<br>" . t_mail("YOU HAVE BEEN ADDED AS A COLLABORATOR FOR THIS TICKET");
         while ($row = mysqli_fetch_assoc($sql_watchers)) {
             $watcher_email = escapeSql($row['watcher_email']);
 
@@ -320,10 +321,11 @@ if (isset($_POST['edit_ticket'])) {
         // Email content
         $data = []; // Queue array
 
-        $subject = "Ticket Created - [$ticket_prefix$ticket_number] - $ticket_subject";
+        $subject_log = "Ticket Created - [$ticket_prefix$ticket_number] - $ticket_subject";
+        $subject = t_mail($subject_log);
         // SLA response commitment for this client + priority, empty when no SLA applies
         $sla_notice = escapeSql(getTicketSlaEmailNotice($ticket_id, $company_phone));
-        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>A ticket regarding \"$ticket_subject\" has been created for you.<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status<br>Portal: <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>View ticket</a>$sla_notice<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("A ticket regarding \"{subject}\" has been created for you.", ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status<br>" . t_mail("Portal:") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("View ticket") . "</a>$sla_notice<br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
 
 
         // Only add contact to email queue if email is valid
@@ -518,10 +520,11 @@ if (isset($_POST['edit_ticket_contact'])) {
         // Email content
         $data = []; // Queue array
 
-        $subject = "Ticket Created - [$ticket_prefix$ticket_number] - $ticket_subject";
+        $subject_log = "Ticket Created - [$ticket_prefix$ticket_number] - $ticket_subject";
+        $subject = t_mail($subject_log);
         // SLA response commitment for this client + priority, empty when no SLA applies
         $sla_notice = escapeSql(getTicketSlaEmailNotice($ticket_id, $company_phone));
-        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>A ticket regarding \"$ticket_subject\" has been created for you.<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status<br>Portal: <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>View ticket</a>$sla_notice<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("A ticket regarding \"{subject}\" has been created for you.", ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status<br>" . t_mail("Portal:") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("View ticket") . "</a>$sla_notice<br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
 
         $data[] = [
             'from' => $config_ticket_from_email,
@@ -636,8 +639,9 @@ if (isset($_POST['add_ticket_watcher'])) {
                 // Email content
                 $data = []; // Queue array
 
-                $subject = "Ticket Notification - [$ticket_prefix$ticket_number] - $ticket_subject";
-                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello,<br><br>You have been added as a collaborator on this ticket regarding \"$ticket_subject\".<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status<br>Guest link: https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+                $subject_log = "Ticket Notification - [$ticket_prefix$ticket_number] - $ticket_subject";
+                $subject = t_mail($subject_log);
+                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello,") . "<br><br>" . t_mail("You have been added as a collaborator on this ticket regarding \"{subject}\".", ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$ticket_details--------------------------------<br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status<br>" . t_mail("Guest link:") . " https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key<br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
 
                 $data[] = [
                     'from' => $config_ticket_from_email,
@@ -1439,8 +1443,9 @@ if (isset($_POST['bulk_resolve_tickets'])) {
                     $company_phone = escapeSql(formatPhoneNumber($row['company_phone'], $row['company_phone_country_code']));
 
                     // EMAIL
-                    $subject = "Ticket resolved - [$ticket_prefix$ticket_number] - $ticket_subject | (pending closure)";
-                    $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>Your ticket regarding \"$ticket_subject\" has been marked as solved and is pending closure.<br><br>$details<br><br> If your request/issue is resolved, you can simply ignore this email. If you need further assistance, please reply or <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>re-open</a> to let us know! <br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Portal: https://$base_url/client/ticket.php?id=$ticket_id<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+                    $subject_log = "Ticket resolved - [$ticket_prefix$ticket_number] - $ticket_subject | (pending closure)";
+                    $subject = t_mail($subject_log);
+                    $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("Your ticket regarding \"{subject}\" has been marked as solved and is pending closure.", ['{subject}' => $ticket_subject]) . "<br><br>$details<br><br> " . t_mail("If your request/issue is resolved, you can simply ignore this email. If you need further assistance, please reply or") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("re-open") . " " . t_mail("to let us know!") . " <br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Portal:") . " https://$base_url/client/ticket.php?id=$ticket_id<br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
 
                     // Check email valid
                     if (filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
@@ -1462,7 +1467,7 @@ if (isset($_POST['bulk_resolve_tickets'])) {
 
                     // Also Email all the watchers
                     $sql_watchers = mysqli_query($mysqli, "SELECT watcher_email FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id");
-                    $body .= "<br><br>----------------------------------------<br>YOU ARE A COLLABORATOR ON THIS TICKET";
+                    $body .= "<br><br>----------------------------------------<br>" . t_mail("YOU ARE A COLLABORATOR ON THIS TICKET");
                     while ($row = mysqli_fetch_assoc($sql_watchers)) {
                         $watcher_email = escapeSql($row['watcher_email']);
 
@@ -1617,8 +1622,9 @@ if (isset($_POST['bulk_ticket_reply'])) {
             // Send e-mail to client if public update & email is set up
             if ($private_note == 0 && (!empty($config_smtp_provider))) {
 
-                $subject = "Ticket update - [$ticket_prefix$ticket_number] - $ticket_subject";
-                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>Your ticket regarding $ticket_subject has been updated.<br><br>--------------------------------<br>$ticket_reply<br>--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status_name<br>Portal: <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>View ticket</a><br><br>--<br>$company_name - Support<br>$from_email<br>$company_phone";
+                $subject_log = "Ticket update - [$ticket_prefix$ticket_number] - $ticket_subject";
+                $subject = t_mail($subject_log);
+                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("Your ticket regarding {subject} has been updated.", ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$ticket_reply<br>--------------------------------<br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status_name<br>" . t_mail("Portal:") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("View ticket") . "</a><br><br>--<br>$company_name - " . t_mail("Support") . "<br>$from_email<br>$company_phone";
 
                 if (filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
 
@@ -1639,7 +1645,7 @@ if (isset($_POST['bulk_ticket_reply'])) {
 
                 // Also Email all the watchers
                 $sql_watchers = mysqli_query($mysqli, "SELECT watcher_email FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id");
-                $body .= "<br><br>----------------------------------------<br>YOU ARE A COLLABORATOR ON THIS TICKET";
+                $body .= "<br><br>----------------------------------------<br>" . t_mail("YOU ARE A COLLABORATOR ON THIS TICKET");
                 while ($row = mysqli_fetch_assoc($sql_watchers)) {
                     $watcher_email = escapeSql($row['watcher_email']);
 
@@ -1959,12 +1965,14 @@ if (isset($_POST['add_ticket_reply'])) {
 
             if ($ticket_status == 4) {
                 // Resolved
-                $subject = "Ticket resolved - [$ticket_prefix$ticket_number] - $ticket_subject | (pending closure)";
-                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>Your ticket regarding $ticket_subject has been marked as solved and is pending closure.<br><br>--------------------------------<br>$ticket_reply<br>--------------------------------<br><br>If your request/issue is resolved, you can simply ignore this email. If you need further assistance, please reply or <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>re-open</a> to let us know! <br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status_name<br>Portal: <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>View ticket</a><br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+                $subject_log = "Ticket resolved - [$ticket_prefix$ticket_number] - $ticket_subject | (pending closure)";
+                $subject = t_mail($subject_log);
+                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("Your ticket regarding {subject} has been marked as solved and is pending closure.", ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$ticket_reply<br>--------------------------------<br><br>" . t_mail("If your request/issue is resolved, you can simply ignore this email. If you need further assistance, please reply or") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("re-open") . " " . t_mail("to let us know!") . " <br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status_name<br>" . t_mail("Portal:") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("View ticket") . "</a><br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
             } else {
                 // Anything else
-                $subject = "Ticket update - [$ticket_prefix$ticket_number] - $ticket_subject";
-                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>Your ticket regarding $ticket_subject has been updated.<br><br>--------------------------------<br>$ticket_reply<br>--------------------------------<br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status_name<br>Portal: <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>View ticket</a><br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+                $subject_log = "Ticket update - [$ticket_prefix$ticket_number] - $ticket_subject";
+                $subject = t_mail($subject_log);
+                $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("Your ticket regarding {subject} has been updated.", ['{subject}' => $ticket_subject]) . "<br><br>--------------------------------<br>$ticket_reply<br>--------------------------------<br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status_name<br>" . t_mail("Portal:") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("View ticket") . "</a><br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
             }
 
             if (filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
@@ -1986,7 +1994,7 @@ if (isset($_POST['add_ticket_reply'])) {
 
             // Also Email all the watchers
             $sql_watchers = mysqli_query($mysqli, "SELECT watcher_email FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id");
-            $body .= "<br><br>----------------------------------------<br>YOU ARE A COLLABORATOR ON THIS TICKET";
+            $body .= "<br><br>----------------------------------------<br>" . t_mail("YOU ARE A COLLABORATOR ON THIS TICKET");
             while ($row = mysqli_fetch_assoc($sql_watchers)) {
                 $watcher_email = escapeSql($row['watcher_email']);
 
@@ -2391,8 +2399,9 @@ if (isset($_GET['resolve_ticket'])) {
         $company_phone = escapeSql(formatPhoneNumber($row['company_phone'], $row['company_phone_country_code']));
 
         // EMAIL
-        $subject = "Ticket resolved - [$ticket_prefix$ticket_number] - $ticket_subject | (pending closure)";
-        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>Your ticket regarding $ticket_subject has been marked as solved and is pending closure.<br><br>If your request/issue is resolved, you can simply ignore this email. If you need further assistance, please reply or <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>re-open</a> to let us know! <br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Status: $ticket_status<br>Portal: <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>View ticket</a><br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+        $subject_log = "Ticket resolved - [$ticket_prefix$ticket_number] - $ticket_subject | (pending closure)";
+        $subject = t_mail($subject_log);
+        $body = "<i style=\'color: #808080\'>##- Please type your reply above this line -##</i><br><br>" . t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("Your ticket regarding {subject} has been marked as solved and is pending closure.", ['{subject}' => $ticket_subject]) . "<br><br>" . t_mail("If your request/issue is resolved, you can simply ignore this email. If you need further assistance, please reply or") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("re-open") . " " . t_mail("to let us know!") . " <br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Status:") . " $ticket_status<br>" . t_mail("Portal:") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("View ticket") . "</a><br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
 
         // Check email valid
         if (filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
@@ -2414,7 +2423,7 @@ if (isset($_GET['resolve_ticket'])) {
 
         // Also Email all the watchers
         $sql_watchers = mysqli_query($mysqli, "SELECT watcher_email FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id");
-        $body .= "<br><br>----------------------------------------<br>YOU ARE A COLLABORATOR ON THIS TICKET";
+        $body .= "<br><br>----------------------------------------<br>" . t_mail("YOU ARE A COLLABORATOR ON THIS TICKET");
         while ($row = mysqli_fetch_assoc($sql_watchers)) {
             $watcher_email = escapeSql($row['watcher_email']);
 
@@ -2493,8 +2502,9 @@ if (isset($_GET['close_ticket'])) {
         $company_phone = escapeSql(formatPhoneNumber($row['company_phone'], $row['company_phone_country_code']));
 
         // EMAIL
-        $subject = "Ticket closed - [$ticket_prefix$ticket_number] - $ticket_subject | (do not reply)";
-        $body = "Hello $contact_name,<br><br>Your ticket regarding \"$ticket_subject\" has been closed. <br><br> We hope the request/issue was resolved to your satisfaction, please provide your feedback <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>here</a>. <br>If you need further assistance, please raise a new ticket using the below details. Please do not reply to this email. <br><br>Ticket: $ticket_prefix$ticket_number<br>Subject: $ticket_subject<br>Portal: https://$config_base_url/client/ticket.php?id=$ticket_id<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+        $subject_log = "Ticket closed - [$ticket_prefix$ticket_number] - $ticket_subject | (do not reply)";
+        $subject = t_mail($subject_log);
+        $body = t_mail("Hello {name},", ['{name}' => $contact_name]) . "<br><br>" . t_mail("Your ticket regarding \"{subject}\" has been closed.", ['{subject}' => $ticket_subject]) . " <br><br> " . t_mail("We hope the request/issue was resolved to your satisfaction, please provide your feedback") . " <a href=\'https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$ticket_id&url_key=$url_key\'>" . t_mail("here") . "</a>. <br>" . t_mail("If you need further assistance, please raise a new ticket using the below details.") . " " . t_mail("Please do not reply to this email.") . " <br><br>" . t_mail("Ticket:") . " $ticket_prefix$ticket_number<br>" . t_mail("Subject:") . " $ticket_subject<br>" . t_mail("Portal:") . " https://$config_base_url/client/ticket.php?id=$ticket_id<br><br>--<br>$company_name - " . t_mail("Support") . "<br>$config_ticket_from_email<br>$company_phone";
 
         // Check email valid
         if (filter_var($contact_email, FILTER_VALIDATE_EMAIL)) {
@@ -2516,7 +2526,7 @@ if (isset($_GET['close_ticket'])) {
 
         // Also Email all the watchers
         $sql_watchers = mysqli_query($mysqli, "SELECT watcher_email FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id");
-        $body .= "<br><br>----------------------------------------<br>YOU ARE A COLLABORATOR ON THIS TICKET";
+        $body .= "<br><br>----------------------------------------<br>" . t_mail("YOU ARE A COLLABORATOR ON THIS TICKET");
         while ($row = mysqli_fetch_assoc($sql_watchers)) {
             $watcher_email = escapeSql($row['watcher_email']);
 
