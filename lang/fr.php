@@ -156,4 +156,14 @@ return [
     'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!' => 'Le mot de passe de votre compte sur le portail client de {company} a bien été réinitialisé. Tout est en ordre !',
     'If you didn\'t reset your password, please get in touch ASAP.' => 'Si vous n’avez pas réinitialisé votre mot de passe, veuillez nous contacter sans délai.',
     'Support' => 'Support technique',
+
+    // Email - Contact Portal Invitation (agent/post/contact.php)
+    'Your new {company} portal account' => 'Votre nouveau compte sur le portail client de {company}',
+    '{company} has created a support portal account for you.' => '{company} a créé pour vous un compte sur son portail de support.',
+    'Username:' => 'Identifiant :',
+    'Password:' => 'Mot de passe :',
+    'Login URL:' => 'Adresse de connexion :',
+    'Login with your Microsoft (Azure AD) account.' => 'Connectez-vous avec votre compte Microsoft (Azure AD).',
+    'Request a password reset at {url}' => 'Demandez la réinitialisation de votre mot de passe à l’adresse {url}',
+    '-- Please change on first login' => '-- Veuillez le modifier lors de votre première connexion',
 ];
