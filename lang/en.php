@@ -235,4 +235,13 @@ return [
     'Subject:' => 'Subject:',
     'Status:' => 'Status:',
     'Portal:' => 'Portal:',
+    'Ticket created' => 'Ticket created',
+    '(scheduled)' => '(scheduled)',
+    'A ticket regarding "{subject}" has been automatically created for you.' => 'A ticket regarding "{subject}" has been automatically created for you.',
+    'Ticket task approval required' => 'Ticket task approval required',
+    'A ticket regarding {subject} has a task requiring your approval:-' => 'A ticket regarding {subject} has a task requiring your approval:-',
+    'Task name:' => 'Task name:',
+    'Scope/Type:' => 'Scope/Type:',
+    'To approve this task, please click' => 'To approve this task, please click',
+    'If you require further information, please reply to this e-mail.' => 'If you require further information, please reply to this e-mail.',
 ];

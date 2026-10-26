@@ -234,4 +234,13 @@ return [
     'Subject:' => 'Sujet :',
     'Status:' => 'Statut :',
     'Portal:' => 'Portail :',
+    'Ticket created' => 'Ticket créé',
+    '(scheduled)' => '(planifié)',
+    'A ticket regarding "{subject}" has been automatically created for you.' => 'Un ticket concernant « {subject} » a été créé automatiquement pour vous.',
+    'Ticket task approval required' => 'Approbation requise pour une tâche du ticket',
+    'A ticket regarding {subject} has a task requiring your approval:-' => 'Le ticket concernant {subject} comporte une tâche qui nécessite votre approbation :',
+    'Task name:' => 'Nom de la tâche :',
+    'Scope/Type:' => 'Portée / type :',
+    'To approve this task, please click' => 'Pour approuver cette tâche, veuillez cliquer',
+    'If you require further information, please reply to this e-mail.' => 'Si vous avez besoin d’informations supplémentaires, répondez à cet e-mail.',
 ];
