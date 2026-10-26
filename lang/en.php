@@ -156,4 +156,14 @@ return [
     'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!' => 'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!',
     'If you didn\'t reset your password, please get in touch ASAP.' => 'If you didn\'t reset your password, please get in touch ASAP.',
     'Support' => 'Support',
+
+    // Email - Contact Portal Invitation (agent/post/contact.php)
+    'Your new {company} portal account' => 'Your new {company} portal account',
+    '{company} has created a support portal account for you.' => '{company} has created a support portal account for you.',
+    'Username:' => 'Username:',
+    'Password:' => 'Password:',
+    'Login URL:' => 'Login URL:',
+    'Login with your Microsoft (Azure AD) account.' => 'Login with your Microsoft (Azure AD) account.',
+    'Request a password reset at {url}' => 'Request a password reset at {url}',
+    '-- Please change on first login' => '-- Please change on first login',
 ];

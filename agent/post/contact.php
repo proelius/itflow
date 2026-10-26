@@ -190,15 +190,20 @@ if (isset($_POST['edit_contact'])) {
         // Authentication info (azure, reset password, or tech-provided temporary password)
 
         if ($auth_method == 'azure') {
-            $password_info = "Login with your Microsoft (Azure AD) account.";
+            $password_info = t_mail('Login with your Microsoft (Azure AD) account.');
         } elseif (empty($_POST['contact_password'])) {
-            $password_info = "Request a password reset at https://$config_base_url/client/login_reset.php";
+            $password_info = t_mail('Request a password reset at {url}', ['{url}' => "https://$config_base_url/client/login_reset.php"]);
         } else {
-            $password_info = mysqli_real_escape_string($mysqli, $_POST['contact_password'] . " -- Please change on first login");
+            $password_info = mysqli_real_escape_string($mysqli, $_POST['contact_password']) . " " . t_mail('-- Please change on first login');
         }
 
-        $subject = "Your new $company_name portal account";
-        $body = "Hello $name,<br><br>$company_name has created a support portal account for you. <br><br>Username: $email<br>Password: $password_info<br><br>Login URL: https://$config_base_url/client/<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+        $subject = t_mail('Your new {company} portal account', ['{company}' => $company_name]);
+        $body = t_mail('Hello {name},', ['{name}' => $name]) . "<br><br>"
+          . t_mail('{company} has created a support portal account for you.', ['{company}' => $company_name]) . " <br><br>"
+          . t_mail('Username:') . " $email<br>"
+          . t_mail('Password:') . " $password_info<br><br>"
+          . t_mail('Login URL:') . " https://$config_base_url/client/<br><br>--<br>"
+          . "$company_name - " . t_mail('Support') . "<br>$config_ticket_from_email<br>$company_phone";
 
         // Queue Mail
         $data = [
