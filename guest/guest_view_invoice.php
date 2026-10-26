@@ -258,11 +258,11 @@ $display_status = $invoice_status_labels[$invoice_status] ?? $invoice_status;
                         <td class="text-end"><?= "$invoice_prefix$invoice_number" ?></td>
                     </tr>
                     <tr>
-                        <th>Date:</th>
+                        <th><?= t('Date:') ?></th>
                         <td class="text-end"><?= $invoice_date ?></td>
                     </tr>
                     <tr>
-                        <th>Due:</th>
+                        <th><?= t('Due:') ?></th>
                         <td class="text-end"><?= $invoice_due ?></td>
                     </tr>
                 </table>
@@ -287,12 +287,12 @@ $display_status = $invoice_status_labels[$invoice_status] ?? $invoice_status;
                         <table class="table table-hover mb-0">
                             <thead class="bg-light">
                             <tr>
-                                <th>Item</th>
+                                <th><?= t('Item') ?></th>
                                 <th><?= t('Description') ?></th>
-                                <th class="text-center">Qty</th>
+                                <th class="text-center"><?= t('Qty') ?></th>
                                 <th class="text-end"><?= t('Unit Price') ?></th>
-                                <th class="text-end">Tax</th>
-                                <th class="text-end">Amount</th>
+                                <th class="text-end"><?= t('Tax') ?></th>
+                                <th class="text-end"><?= t('Amount') ?></th>
                             </tr>
                             </thead>
                             <tbody>
@@ -346,14 +346,14 @@ $display_status = $invoice_status_labels[$invoice_status] ?? $invoice_status;
                 <table class="table table-hover mb-0">
                     <tbody>
                     <tr>
-                        <td>Subtotal:</td>
+                        <td><?= t('Subtotal:') ?></td>
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $sub_total, $invoice_currency_code) ?></td>
                     </tr>
                     <?php
                     if ($invoice_discount > 0) {
                         ?>
                         <tr>
-                            <td>Discount:</td>
+                            <td><?= t('Discount:') ?></td>
                             <td class="text-end">-<?= numfmt_format_currency($currency_format, $invoice_discount, $invoice_currency_code) ?></td>
                         </tr>
                     <?php
@@ -361,24 +361,24 @@ $display_status = $invoice_status_labels[$invoice_status] ?? $invoice_status;
                     ?>
                     <?php if ($total_tax > 0) { ?>
                         <tr>
-                            <td>Tax:</td>
+                            <td><?= t('Tax:') ?></td>
                             <td class="text-end"><?= numfmt_format_currency($currency_format, $total_tax, $invoice_currency_code) ?></td>
                         </tr>
                     <?php } ?>
                     <tr>
-                        <td>Total:</td>
+                        <td><?= t('Total:') ?></td>
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $invoice_amount, $invoice_currency_code) ?></td>
                     </tr>
                     <?php if ($amount_paid > 0) { ?>
                         <tr>
-                            <td><div class="text-success">Paid:</div></td>
+                            <td><div class="text-success"><?= t('Paid:') ?></div></td>
                             <td class="text-end text-success"><?= numfmt_format_currency($currency_format, $amount_paid, $invoice_currency_code) ?></td>
                         </tr>
                     <?php
                     }
                     ?>
                     <tr class="h5 text-bold">
-                        <td>Balance:</td>
+                        <td><?= t('Balance:') ?></td>
                         <td class="text-end"><?= numfmt_format_currency($currency_format, $balance, $invoice_currency_code) ?></td>
                     </tr>
 
@@ -435,7 +435,7 @@ if ($statement_count > 0) { ?>
 <div class="card d-print-none">
     <div class="card-header bg-dark">
         <strong class="text-white">
-            <i class="fa fa-fw fa-file-alt me-2"></i>Account Statement
+            <i class="fa fa-fw fa-file-alt me-2"></i><?= t('Account Statement') ?>
         </strong>
     </div>
     <div class="card-body">
@@ -443,13 +443,13 @@ if ($statement_count > 0) { ?>
             <table class="table table-sm mb-0">
                 <thead>
                 <tr>
-                    <th class="text-center">Invoice</th>
-                    <th class="d-none d-md-table-cell">Scope</th>
-                    <th>Date</th>
-                    <th>Due</th>
-                    <th class="text-end">Amount</th>
-                    <th class="text-end">Paid</th>
-                    <th class="text-end">Balance</th>
+                    <th class="text-center"><?= t('Invoice') ?></th>
+                    <th class="d-none d-md-table-cell"><?= t('Scope') ?></th>
+                    <th><?= t('Date') ?></th>
+                    <th><?= t('Due') ?></th>
+                    <th class="text-end"><?= t('Amount') ?></th>
+                    <th class="text-end"><?= t('Paid') ?></th>
+                    <th class="text-end"><?= t('Balance') ?></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -512,7 +512,7 @@ if ($statement_count > 0) { ?>
                 </tbody>
                 <tfoot>
                 <tr>
-                    <th colspan="6" class="text-end">Total Balance Due</th>
+                    <th colspan="6" class="text-end"><?= t('Total Balance Due') ?></th>
                     <th class="text-end font-monospace"><?= numfmt_format_currency($currency_format, $invoice_tally_total, $client_currency_code) ?></th>
                 </tr>
                 </tfoot>
