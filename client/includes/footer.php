@@ -79,6 +79,7 @@
 <script src="/js/pretty_content.js"></script>
 
 <script src="/libs/sweetalert2/js/sweetalert2.min.js"></script>
+<?php if (i18n_current_language() !== 'en') { ?><script>window.itflowConfirmI18n = <?= json_encode(['title' => t('Are you sure?'), 'yes' => t('Yes'), 'cancel' => t('Cancel')], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;</script><?php } ?>
 <script src="/js/confirm_modal.js"></script>
 
 <?php if (!empty($portal_load_phone_inputs)) { ?>

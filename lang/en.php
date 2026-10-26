@@ -203,4 +203,7 @@ return [
     'Quote Declined' => 'Quote Declined',
     'File uploaded!' => 'File uploaded!',
     'Something went wrong uploading the file - please let the support team know.' => 'Something went wrong uploading the file - please let the support team know.',
+    // Confirm dialog - MESSAGES CLIENT lot 3e
+    'Are you sure?' => 'Are you sure?',
+    'Yes' => 'Yes',
 ];
