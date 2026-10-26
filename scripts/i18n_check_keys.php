@@ -153,10 +153,8 @@ foreach ($iterator as $file) {
                     // Remove quotes from the string
                     $key = substr($first_arg, 1, -1);
                     
-                    // Handle escaped quotes (both single and double)
+                    // Handle escaped quotes
                     $key = str_replace("\\'", "'", $key);
-                    $key = str_replace('\\"', '"', $key);
-                    $key = str_replace("\\\\'", "'", $key);
                     
                     $used_keys[$key] = $relative_path;
                 }

@@ -234,9 +234,4 @@ return [
     'Subject:' => 'Sujet :',
     'Status:' => 'Statut :',
     'Portal:' => 'Portail :',
-    'Guest link:' => 'Lien d’accès :',
-    'View ticket' => 'Voir le ticket',
-    're-open' => 'rouvrir le ticket',
-    'to let us know!' => 'pour nous le faire savoir !',
-    'here' => 'ici',
 ];

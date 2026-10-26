@@ -235,9 +235,4 @@ return [
     'Subject:' => 'Subject:',
     'Status:' => 'Status:',
     'Portal:' => 'Portal:',
-    'Guest link:' => 'Guest link:',
-    'View ticket' => 'View ticket',
-    're-open' => 're-open',
-    'to let us know!' => 'to let us know!',
-    'here' => 'here',
 ];
