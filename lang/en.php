@@ -58,7 +58,7 @@ return [
     'Qty' => 'Qty',
     'Price' => 'Price',
     'Tax' => 'Tax',
-    'Tax:' => 'TVA :',
+    'Tax:' => 'Tax:',
     'Amount' => 'Amount',
     'Subtotal:' => 'Subtotal:',
     'Discount:' => 'Discount:',

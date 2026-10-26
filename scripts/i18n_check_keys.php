@@ -354,5 +354,139 @@ if (!empty($apostrophe_errors)) {
 
 echo "✓ No unescaped right apostrophe ' in fr.php values\n\n";
 
+// Test (a): Check that en.php values match keys (English = key)
+echo "Checking en.php values match keys (English text should equal key)...\n";
+$en_raw = file_get_contents($lang_en_file);
+$en_lines = explode("\n", $en_raw);
+$en_value_errors = [];
+
+foreach ($en_lines as $line_num => $line) {
+    // Skip empty lines and comments
+    if (trim($line) === '' || strpos(trim($line), '//') === 0 || strpos(trim($line), '/*') === 0) {
+        continue;
+    }
+    
+    // Find lines with => (translation lines)
+    if (strpos($line, "=>") !== false) {
+        // Extract key and value
+        if (preg_match("/'([^']*)'\s*=>\s*'([^']*)',?$/", $line, $matches)) {
+            $key = $matches[1];
+            $value = $matches[2];
+            // For English, value should equal key
+            if ($key !== $value) {
+                $en_value_errors[] = "Line {$line_num}: Key '{$key}' has value '{$value}' (should be '{$key}')";
+            }
+        }
+    }
+}
+
+if (!empty($en_value_errors)) {
+    echo "ERROR: en.php values must match keys (English text = key):\n";
+    foreach ($en_value_errors as $error) {
+        echo "  ✗ {$error}\n";
+    }
+    exit(1);
+}
+
+echo "✓ All en.php values match keys\n\n";
+
+// Test (b): Check for duplicate keys in en.php and fr.php
+echo "Checking for duplicate keys in lang files...\n";
+$en_key_counts = [];
+$fr_key_counts = [];
+
+// Count keys in en.php
+foreach ($en_lines as $line) {
+    if (preg_match("/'([^']*)'\s*=>/", $line, $matches)) {
+        $key = $matches[1];
+        $en_key_counts[$key] = ($en_key_counts[$key] ?? 0) + 1;
+    }
+}
+
+// Count keys in fr.php
+$fr_lines = explode("\n", $fr_raw);
+foreach ($fr_lines as $line) {
+    if (preg_match("/'([^']*)'\s*=>/", $line, $matches)) {
+        $key = $matches[1];
+        $fr_key_counts[$key] = ($fr_key_counts[$key] ?? 0) + 1;
+    }
+}
+
+$duplicate_errors = [];
+foreach ($en_key_counts as $key => $count) {
+    if ($count > 1) {
+        $duplicate_errors[] = "en.php: Key '{$key}' defined {$count} times";
+    }
+}
+foreach ($fr_key_counts as $key => $count) {
+    if ($count > 1) {
+        $duplicate_errors[] = "fr.php: Key '{$key}' defined {$count} times";
+    }
+}
+
+if (!empty($duplicate_errors)) {
+    echo "ERROR: Duplicate keys found:\n";
+    foreach ($duplicate_errors as $error) {
+        echo "  ✗ {$error}\n";
+    }
+    exit(1);
+}
+
+echo "✓ No duplicate keys in lang files\n\n";
+
+// Negative test (a): verify en.php value check detection
+echo "Running negative test (a) - en.php value mismatch detection...\n";
+$test_line_a = "    'TEST_KEY_MISMATCH' => 'Wrong Value',";
+$test_lines_a = [$test_line_a];
+$negative_test_a_passed = false;
+
+foreach ($test_lines_a as $line) {
+    if (preg_match("/'([^']*)'\s*=>\s*'([^']*)',?$/", $line, $matches)) {
+        $key = $matches[1];
+        $value = $matches[2];
+        if ($key !== $value) {
+            $negative_test_a_passed = true;
+            echo "✓ Negative test (a) passed: script correctly detects value mismatch\n";
+            break;
+        }
+    }
+}
+
+if (!$negative_test_a_passed) {
+    echo "ERROR: Negative test (a) failed - did not detect value mismatch\n";
+    exit(1);
+}
+
+// Negative test (b): verify duplicate key detection
+echo "Running negative test (b) - duplicate key detection...\n";
+$test_lines_b = [
+    "    'DUPLICATE_KEY' => 'DUPLICATE_KEY',",
+    "    'DUPLICATE_KEY' => 'DUPLICATE_KEY',",
+];
+$test_counts = [];
+$negative_test_b_passed = false;
+
+foreach ($test_lines_b as $line) {
+    if (preg_match("/'([^']*)'\s*=>/", $line, $matches)) {
+        $key = $matches[1];
+        $test_counts[$key] = ($test_counts[$key] ?? 0) + 1;
+    }
+}
+
+foreach ($test_counts as $key => $count) {
+    if ($count > 1) {
+        $negative_test_b_passed = true;
+        echo "✓ Negative test (b) passed: script correctly detects duplicate keys\n";
+        break;
+    }
+}
+
+if (!$negative_test_b_passed) {
+    echo "ERROR: Negative test (b) failed - did not detect duplicate keys\n";
+    exit(1);
+}
+
+echo "\n";
+
 echo "=== All checks passed ===\n";
 exit(0);

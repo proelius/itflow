@@ -436,6 +436,7 @@ if ($statement_count > 0) { ?>
     <div class="card-header bg-dark">
         <strong class="text-white">
             <i class="fa fa-fw fa-file-alt me-2"></i><?= t('Account Statement') ?>
+
         </strong>
     </div>
     <div class="card-body">
