@@ -180,7 +180,7 @@ if (isset($_GET['reopen_ticket'], $_GET['url_key'])) {
 
         triggerCustomAction('ticket_update', $ticket_id);
 
-        flashAlert("Ticket reopened");
+        flashAlert(t('Ticket reopened'));
 
         redirect();
 
@@ -209,7 +209,7 @@ if (isset($_GET['close_ticket'], $_GET['url_key'])) {
 
         triggerCustomAction('ticket_close', $ticket_id);
 
-        flashAlert("Ticket closed");
+        flashAlert(t('Ticket closed'));
 
         redirect();
 
@@ -240,7 +240,7 @@ if (isset($_GET['add_ticket_feedback'], $_GET['url_key'])) {
             appNotify("Feedback", "Guest rated ticket number $ticket_prefix$ticket_number (ID: $ticket_id) as bad", "/agent/ticket.php?ticket_id=$ticket_id");
         }
 
-        flashAlert("Feedback recorded - thank you");
+        flashAlert(t('Feedback recorded - thank you'));
 
         redirect();
 
@@ -269,7 +269,7 @@ if (isset($_GET['approve_ticket_task'])) {
     $ticket_id = intval($approval_row['task_ticket_id']);
 
     if (!$approval_row) {
-        exit("Cannot find/approve that task");
+        exit(t('Cannot find/approve that task'));
     }
 
     // Approve
@@ -281,7 +281,7 @@ if (isset($_GET['approve_ticket_task'])) {
     // Logging
     logAudit("Task", "Edit", "Guest user approved task $task_name via link (approval $approval_id)", 0, $task_id);
 
-    flashAlert("Task Approved");
+    flashAlert(t('Task Approved'));
     redirect();
 
 }

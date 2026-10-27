@@ -303,3 +303,50 @@ function i18n_country_name($country) {
     
     return $translated;
 }
+
+/**
+ * Get ticket status label in current language
+ * @param string $name English status name (New, Open, On Hold, Resolved, Closed)
+ * @return string Translated status label or original if not found/custom
+ */
+function i18n_ticket_status_label(string $name): string {
+    // Map English status names to t() keys
+    $status_map = [
+        'New' => 'New',
+        'Open' => 'Open',
+        'On Hold' => 'On Hold',
+        'Resolved' => 'Resolved',
+        'Closed' => 'Closed',
+    ];
+    
+    // Return unchanged if not in map (custom status)
+    if (!isset($status_map[$name])) {
+        return $name;
+    }
+    
+    // Return translated label
+    return t($status_map[$name]);
+}
+
+/**
+ * Get ticket priority label in current language
+ * @param string $name English priority name (Low, Medium, High, Critical)
+ * @return string Translated priority label or original if not found/custom
+ */
+function i18n_ticket_priority_label(string $name): string {
+    // Map English priority names to t() keys
+    $priority_map = [
+        'Low' => 'Low',
+        'Medium' => 'Medium',
+        'High' => 'High',
+        'Critical' => 'Critical',
+    ];
+    
+    // Return unchanged if not in map (custom priority)
+    if (!isset($priority_map[$name])) {
+        return $name;
+    }
+    
+    // Return translated label
+    return t($priority_map[$name]);
+}

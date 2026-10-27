@@ -72,20 +72,20 @@ if ($ticket_row) {
     <div class="card mt-3">
         <div class="card-header bg-dark text-center">
             <h4 class="mt-1">
-                Ticket <?= $ticket_prefix, $ticket_number ?>
+                Ticket <?= t('Ticket') ?> <?= $ticket_prefix, $ticket_number ?>
             </h4>
         </div>
 
         <div class="card-body prettyContent">
-            <h5><strong>Subject:</strong> <?= $ticket_subject ?></h5>
+            <h5><strong><?= t('Subject:') ?></strong> <?= $ticket_subject ?></h5>
             <hr>
             <p>
-                <strong>State:</strong> <?= $ticket_status ?>
+                <strong><?= t('State:') ?></strong> <?= i18n_ticket_status_label($ticket_status) ?>
                 <br>
-                <strong>Priority:</strong> <?= $ticket_priority ?>
+                <strong><?= t('Priority:') ?></strong> <?= i18n_ticket_priority_label($ticket_priority) ?>
                 <br>
                 <?php if (!empty($ticket_assigned_to) && empty($ticket_closed_at)) { ?>
-                    <strong>Assigned to: </strong> <?= $ticket_assigned_to ?>
+                    <strong><?= t('Assigned to:') ?> </strong> <?= $ticket_assigned_to ?>
                 <?php } ?>
             </p>
             <?= $ticket_details ?>
@@ -98,21 +98,21 @@ if ($ticket_row) {
 
     <?php if (empty($ticket_resolved_at)) { ?>
         <!-- Reply - guest users should email or login so we know exactly who replied -->
-        <h6><i>Please <a href="../client">log in</a> or reply to the ticket via email to respond</i></h6>
+        <h6><i><?= t('Please {link} or reply to the ticket via email to respond', ['{link}' => '<a href="../client">' . t('log in') . '</a>']) ?></i></h6>
 
     <?php } elseif (empty($ticket_closed_at)) { ?>
         <!-- Re-open -->
 
-        <h4>Your ticket has been resolved</h4>
+        <h4><?= t('Your ticket has been resolved') ?></h4>
 
         <div class="col-4">
             <div class="row">
                 <div class="col">
-                    <a href="guest_post.php?reopen_ticket&ticket_id=<?= $ticket_id ?>&url_key=<?= $url_key ?>" class="btn btn-secondary btn-lg"><i class="fas fa-fw fa-redo text-white"></i> Reopen ticket</a>
+                    <a href="guest_post.php?reopen_ticket&ticket_id=<?= $ticket_id ?>&url_key=<?= $url_key ?>" class="btn btn-secondary btn-lg"><i class="fas fa-fw fa-redo text-white"></i> <?= t('Reopen ticket') ?></a>
                 </div>
 
                 <div class="col">
-                    <a href="guest_post.php?close_ticket=&ticket_id=<?= $ticket_id ?>&url_key=<?= $url_key ?>" class="btn btn-success btn-lg"><i class="fas fa-fw fa-gavel text-white"></i> Close ticket</a>
+                    <a href="guest_post.php?close_ticket=&ticket_id=<?= $ticket_id ?>&url_key=<?= $url_key ?>" class="btn btn-success btn-lg"><i class="fas fa-fw fa-gavel text-white"></i> <?= t('Close ticket') ?></a>
                 </div>
             </div>
         </div>
@@ -120,16 +120,16 @@ if ($ticket_row) {
 
     <?php } elseif (empty($ticket_feedback)) { ?>
 
-        <h4>Ticket closed. Please rate your ticket</h4>
+        <h4><?= t('Ticket closed. Please rate your ticket') ?></h4>
 
         <div class="col-4">
             <div class="row">
                 <div class="col">
-                    <a href="guest_post.php?add_ticket_feedback&ticket_id=<?= $ticket_id ?>&url_key=<?= $url_key ?>&feedback=Good" class="btn btn-success btn-lg"><i class="fas fa-fw fa-smile text-white"></i> Good</a>
+                    <a href="guest_post.php?add_ticket_feedback&ticket_id=<?= $ticket_id ?>&url_key=<?= $url_key ?>&feedback=Good" class="btn btn-success btn-lg"><i class="fas fa-fw fa-smile text-white"></i> <?= t('Good') ?></a>
                 </div>
 
                 <div class="col">
-                    <a href="guest_post.php?add_ticket_feedback&ticket_id=<?= $ticket_id ?>&url_key=<?= $url_key ?>&feedback=Bad" class="btn btn-danger btn-lg"><i class="fas fa-fw fa-frown text-white"></i> Bad</a>
+                    <a href="guest_post.php?add_ticket_feedback&ticket_id=<?= $ticket_id ?>&url_key=<?= $url_key ?>&feedback=Bad" class="btn btn-danger btn-lg"><i class="fas fa-fw fa-frown text-white"></i> <?= t('Bad') ?></a>
                 </div>
             </div>
         </div>
@@ -137,7 +137,7 @@ if ($ticket_row) {
 
     <?php } else { ?>
 
-        <h4>Rated <?= $ticket_feedback ?> -- Thanks for your feedback!</h4>
+        <h4><?= t('Rated {feedback} -- Thanks for your feedback!', ['{feedback}' => $ticket_feedback === 'Good' ? t('Good') : ($ticket_feedback === 'Bad' ? t('Bad') : $ticket_feedback)]) ?></h4>
 
     <?php } ?>
 
