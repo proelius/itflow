@@ -88,13 +88,13 @@ $approve_link = "guest_post.php?approve_ticket_task=$task_id&approval_id=$approv
              supporting detail and follows underneath. */ ?>
     <div class="card mt-3 mb-3">
         <div class="card-header bg-dark text-center py-3">
-            <h4 class="mb-0"><i class="fas fa-fw fa-clipboard-check me-2"></i>Task Approval</h4>
+            <h4 class="mb-0"><i class="fas fa-fw fa-clipboard-check me-2"></i><?= t('Task Approval') ?></h4>
         </div>
 
         <div class="card-body text-center py-4">
 
             <?php if ($approval_status == 'pending') { ?>
-                <p class="text-muted mb-2">You have been asked to approve the following task</p>
+                <p class="text-muted mb-2"><?= t('You have been asked to approve the following task') ?></p>
             <?php } ?>
 
             <h4 class="mb-3"><?= ucfirst($task_name) ?></h4>
@@ -109,14 +109,15 @@ $approve_link = "guest_post.php?approve_ticket_task=$task_id&approval_id=$approv
                          which is where a mailed approval link is usually opened */ ?>
                 <div class="d-grid gap-2 d-sm-block">
                     <a href="<?= $approve_link ?>" class="btn btn-success btn-lg confirm-link"
-                       data-confirm-title="Approve this task?"
+                       data-confirm-title="<?= t('Approve this task?') ?>"
                        data-confirm-text="<?= ucfirst($task_name) ?>"
-                       data-confirm-button="Yes, approve">
-                        <i class="fas fa-fw fa-check me-2"></i>Approve task
+                       data-confirm-button="<?= t('Yes, approve') ?>">
+                        <i class="fas fa-fw fa-check me-2"></i><?= t('Approve task') ?>
+
                     </a>
                 </div>
 
-                <small class="text-muted d-block mt-3">Not expecting this? Get in touch using the details below.</small>
+                <small class="text-muted d-block mt-3"><?= t('Not expecting this? Get in touch using the details below.') ?></small>
 
             <?php } elseif ($approval_status == 'approved') { ?>
 
@@ -124,13 +125,15 @@ $approve_link = "guest_post.php?approve_ticket_task=$task_id&approval_id=$approv
                          is the confirmation screen for every successful approval -
                          not just an already-done state */ ?>
                 <div class="alert alert-success d-inline-block mb-0">
-                    <i class="fas fa-fw fa-check-circle me-2"></i><span class="text-bold">Approved</span> &mdash; nothing further is needed.
+                    <i class="fas fa-fw fa-check-circle me-2"></i><span class="text-bold"><?= t('Approved') ?></span> &mdash; <?= t('nothing further is needed.') ?>
+
                 </div>
 
             <?php } else { ?>
 
                 <div class="alert alert-danger d-inline-block mb-0">
-                    <i class="fas fa-fw fa-times-circle me-2"></i><span class="text-bold">Declined</span> &mdash; this task was not approved.
+                    <i class="fas fa-fw fa-times-circle me-2"></i><span class="text-bold"><?= t('Declined') ?></span> &mdash; <?= t('this task was not approved.') ?>
+
                 </div>
 
             <?php } ?>
@@ -140,10 +143,10 @@ $approve_link = "guest_post.php?approve_ticket_task=$task_id&approval_id=$approv
 
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title mt-2">Ticket details</h5>
+            <h5 class="card-title mt-2"><?= t('Ticket details') ?></h5>
             <div class="card-tools">
-                <span class="p-2 badge rounded-pill text-bg-secondary"><?= $ticket_status ?></span>
-                <span class="p-2 badge rounded-pill text-bg-<?= $ticket_priority_color ?>"><?= $ticket_priority ?></span>
+                <span class="p-2 badge rounded-pill text-bg-secondary"><?= i18n_ticket_status_label($ticket_status) ?></span>
+                <span class="p-2 badge rounded-pill text-bg-<?= $ticket_priority_color ?>"><?= i18n_ticket_priority_label($ticket_priority) ?></span>
             </div>
         </div>
 
