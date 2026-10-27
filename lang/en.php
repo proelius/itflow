@@ -300,4 +300,10 @@ return [
     'Sign out' => 'Sign out',
     'Welcome, {name}!' => 'Welcome, {name}!',
     'Close' => 'Close',
+
+    'New ticket' => 'New ticket',
+    'Account Balance' => 'Account Balance',
+    'Recurring Monthly' => 'Recurring Monthly',
+    'Domains Expiring' => 'Domains Expiring',
+    'Your Assigned Assets' => 'Your Assigned Assets',
 ];

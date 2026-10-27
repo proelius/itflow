@@ -299,4 +299,10 @@ return [
     'Sign out' => 'Se déconnecter',
     'Welcome, {name}!' => 'Bienvenue, {name} !',
     'Close' => 'Fermer',
+
+    'New ticket' => 'Nouveau ticket',
+    'Account Balance' => 'Solde du compte',
+    'Recurring Monthly' => 'Récurrent mensuel',
+    'Domains Expiring' => 'Domaines expirant',
+    'Your Assigned Assets' => 'Vos équipements assignés',
 ];

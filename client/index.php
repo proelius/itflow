@@ -170,7 +170,7 @@ $sql_assigned_assets = mysqli_query(
 ?>
 <div class="row">
     <div class="col-md-2">
-        <a href="ticket_add.php" class="btn btn-primary w-100 mb-3">New ticket</a>
+        <a href="ticket_add.php" class="btn btn-primary w-100 mb-3"><?= t('New ticket') ?></a>
     </div>
 </div>
 <?php
@@ -183,7 +183,7 @@ if (contactCan('accounting')) { ?>
     <div class="col-sm-3">
         <a href="unpaid_invoices.php" class="card">
             <div class="card-header">
-                <h3 class="card-title text-bold text-dark">Account Balance</h3>
+                <h3 class="card-title text-bold text-dark"><?= t('Account Balance') ?></h3>
             </div>
             <div class="card-body">
                 <div class="h4 text-danger"><b><?= numfmt_format_currency($currency_format, $balance, $session_company_currency) ?></b></div>
@@ -196,7 +196,7 @@ if (contactCan('accounting')) { ?>
     <div class="col-sm-3">
         <a href="recurring_invoices.php" class="card text-dark">
             <div class="card-header">
-                <h3 class="card-title">Recurring Monthly</h3>
+                <h3 class="card-title"><?= t('Recurring Monthly') ?></h3>
             </div>
             <div class="card-body">
                 <div class="h4"><b><?= numfmt_format_currency($currency_format, $recurring_monthly_total, $session_company_currency) ?></b></div>
@@ -221,7 +221,7 @@ if (contactCan('itdoc')) {
         <a href="domains.php">
             <div  class="card text-dark">
                 <div class="card-header">
-                    <h3 class="card-title text-bold"><i class="fas fa-fw fa-globe me-2"></i>Domains Expiring</h3>
+                    <h3 class="card-title text-bold"><i class="fas fa-fw fa-globe me-2"></i><?= t('Domains Expiring') ?></h3>
                 </div>
                 <div class="card-body">
                     <?php
@@ -259,7 +259,7 @@ if (contactCan('itdoc')) {
     <div class="col-sm-3">
         <a href="assets.php" class="card text-dark">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-fw fa-desktop me-2"></i>Your Assigned Assets</h3>
+                <h3 class="card-title"><i class="fas fa-fw fa-desktop me-2"></i><?= t('Your Assigned Assets') ?></h3>
             </div>
             <div class="card-body">
                 <table>
