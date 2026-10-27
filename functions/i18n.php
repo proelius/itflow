@@ -310,22 +310,14 @@ function i18n_country_name($country) {
  * @return string Translated status label or original if not found/custom
  */
 function i18n_ticket_status_label(string $name): string {
-    // Map English status names to t() keys
-    $status_map = [
-        'New' => 'New',
-        'Open' => 'Open',
-        'On Hold' => 'On Hold',
-        'Resolved' => 'Resolved',
-        'Closed' => 'Closed',
-    ];
-    
-    // Return unchanged if not in map (custom status)
-    if (!isset($status_map[$name])) {
-        return $name;
-    }
-    
-    // Return translated label
-    return t($status_map[$name]);
+    return match ($name) {
+        'New' => t('New'),
+        'Open' => t('Open'),
+        'On Hold' => t('On Hold'),
+        'Resolved' => t('Resolved'),
+        'Closed' => t('Closed'),
+        default => $name,
+    };
 }
 
 /**
@@ -334,19 +326,11 @@ function i18n_ticket_status_label(string $name): string {
  * @return string Translated priority label or original if not found/custom
  */
 function i18n_ticket_priority_label(string $name): string {
-    // Map English priority names to t() keys
-    $priority_map = [
-        'Low' => 'Low',
-        'Medium' => 'Medium',
-        'High' => 'High',
-        'Critical' => 'Critical',
-    ];
-    
-    // Return unchanged if not in map (custom priority)
-    if (!isset($priority_map[$name])) {
-        return $name;
-    }
-    
-    // Return translated label
-    return t($priority_map[$name]);
+    return match ($name) {
+        'Low' => t('Low'),
+        'Medium' => t('Medium'),
+        'High' => t('High'),
+        'Critical' => t('Critical'),
+        default => $name,
+    };
 }
