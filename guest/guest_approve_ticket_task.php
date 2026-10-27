@@ -113,6 +113,7 @@ $approve_link = "guest_post.php?approve_ticket_task=$task_id&approval_id=$approv
                        data-confirm-text="<?= ucfirst($task_name) ?>"
                        data-confirm-button="<?= t('Yes, approve') ?>">
                         <i class="fas fa-fw fa-check me-2"></i><?= t('Approve task') ?>
+
                     </a>
                 </div>
 
@@ -125,12 +126,14 @@ $approve_link = "guest_post.php?approve_ticket_task=$task_id&approval_id=$approv
                          not just an already-done state */ ?>
                 <div class="alert alert-success d-inline-block mb-0">
                     <i class="fas fa-fw fa-check-circle me-2"></i><span class="text-bold"><?= t('Approved') ?></span> &mdash; <?= t('nothing further is needed.') ?>
+
                 </div>
 
             <?php } else { ?>
 
                 <div class="alert alert-danger d-inline-block mb-0">
                     <i class="fas fa-fw fa-times-circle me-2"></i><span class="text-bold"><?= t('Declined') ?></span> &mdash; <?= t('this task was not approved.') ?>
+
                 </div>
 
             <?php } ?>
@@ -142,8 +145,8 @@ $approve_link = "guest_post.php?approve_ticket_task=$task_id&approval_id=$approv
         <div class="card-header">
             <h5 class="card-title mt-2"><?= t('Ticket details') ?></h5>
             <div class="card-tools">
-                <span class="p-2 badge rounded-pill text-bg-secondary"><?= $ticket_status ?></span>
-                <span class="p-2 badge rounded-pill text-bg-<?= $ticket_priority_color ?>"><?= $ticket_priority ?></span>
+                <span class="p-2 badge rounded-pill text-bg-secondary"><?= i18n_ticket_status_label($ticket_status) ?></span>
+                <span class="p-2 badge rounded-pill text-bg-<?= $ticket_priority_color ?>"><?= i18n_ticket_priority_label($ticket_priority) ?></span>
             </div>
         </div>
 

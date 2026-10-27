@@ -72,7 +72,7 @@ if ($ticket_row) {
     <div class="card mt-3">
         <div class="card-header bg-dark text-center">
             <h4 class="mt-1">
-                Ticket <?= t('Ticket') ?> <?= $ticket_prefix, $ticket_number ?>
+                <?= t('Ticket') ?> <?= $ticket_prefix, $ticket_number ?>
             </h4>
         </div>
 
