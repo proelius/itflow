@@ -321,6 +321,15 @@ function i18n_ticket_status_label(string $name): string {
 }
 
 /**
+ * Get ticket status label in client's language (for emails)
+ * @param string $name English status name (New, Open, On Hold, Resolved, Closed)
+ * @return string Translated status label in client's language or original if not found/custom
+ */
+function i18n_ticket_status_label_client(string $name): string {
+    return i18n_with(client_language(), fn() => i18n_ticket_status_label($name));
+}
+
+/**
  * Get ticket priority label in current language
  * @param string $name English priority name (Low, Medium, High, Critical)
  * @return string Translated priority label or original if not found/custom
