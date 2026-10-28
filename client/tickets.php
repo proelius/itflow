@@ -76,7 +76,7 @@ $total_tickets = intval($row['total_tickets']);
                     <td>
                         <a href="ticket.php?id=<?= $ticket_id ?>"><?= $ticket_subject ?></a>
                     </td>
-                    <td><?= $ticket_status ?></td>
+                    <td><?= i18n_ticket_status_label($ticket_status) ?></td>
                 </tr>
             <?php
             }

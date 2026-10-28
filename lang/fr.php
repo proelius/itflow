@@ -264,6 +264,8 @@ return [
     'Ticket closed. Please rate your ticket' => 'Ticket fermé. Merci d’évaluer votre ticket',
     'Good' => 'Bien',
     'Bad' => 'Mauvais',
+    'Rated' => 'Noté',
+    'Thanks for your feedback!' => 'Merci pour votre avis !',
     'Rated {feedback} -- Thanks for your feedback!' => 'Évaluation : {feedback} -- Merci pour votre avis !',
     'Task Approval' => 'Approbation de tâche',
     'You have been asked to approve the following task' => 'Votre approbation est demandée pour la tâche suivante',
