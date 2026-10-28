@@ -340,8 +340,43 @@ function i18n_ticket_priority_label(string $name): string {
         'Medium' => t('Medium'),
         'High' => t('High'),
         'Critical' => t('Critical'),
+        'Urgent' => t('Urgent'),
         default => $name,
     };
+}
+
+/**
+ * Format SLA due timestamp in current language
+ * @param int $timestamp Unix timestamp
+ * @return string Formatted date/time in current language
+ */
+function i18n_format_sla_due(int $timestamp): string {
+    $current_lang = i18n_get_current_language();
+    
+    if ($current_lang === 'en') {
+        // English: exact format 'D j M, g:i A'
+        return date('D j M, g:i A', $timestamp);
+    }
+    
+    // Try IntlDateFormatter if available
+    if (class_exists('IntlDateFormatter')) {
+        $locale = $current_lang === 'fr' ? 'fr_CH' : $current_lang;
+        $formatter = new IntlDateFormatter(
+            $locale,
+            IntlDateFormatter::NONE,
+            IntlDateFormatter::NONE,
+            date_default_timezone_get(),
+            IntlDateFormatter::GREGORIAN,
+            'EEE d MMM, HH:mm'
+        );
+        $formatted = $formatter->format($timestamp);
+        if ($formatted !== false) {
+            return $formatted;
+        }
+    }
+    
+    // Fallback to English format
+    return date('D j M, g:i A', $timestamp);
 }
 
 /**
