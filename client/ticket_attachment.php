@@ -11,11 +11,12 @@ require_once '../includes/load_global_settings.php';
 require_once '../functions.php';
 require_once 'includes/check_login.php';
 require_once 'functions.php';
+i18n_set_language(client_language());
 
 // Require an attachment ID
 if (!isset($_GET['attachment_id'])) {
     http_response_code(400);
-    exit("Attachment ID required");
+    exit(t('Attachment ID required'));
 }
 
 $attachment_id = intval($_GET['attachment_id']);
@@ -31,7 +32,7 @@ $sql = mysqli_query($mysqli, "SELECT * FROM ticket_attachments WHERE ticket_atta
 
 if (mysqli_num_rows($sql) !== 1) {
     http_response_code(404);
-    exit("Attachment not found");
+    exit(t('Attachment not found'));
 }
 
 $row = mysqli_fetch_array($sql);
@@ -46,7 +47,7 @@ $attachment_reference_name = $row['ticket_attachment_reference_name'];
 // nonexistent ones
 if (!verifyContactTicketAccess($ticket_id, "Any")) {
     http_response_code(404);
-    exit("Attachment not found");
+    exit(t('Attachment not found'));
 }
 
 // Build the on-disk path
@@ -56,7 +57,7 @@ $file_path = realpath(__DIR__ . "/../uploads/tickets/$ticket_id/$attachment_refe
 // Path traversal guard - resolved path must stay inside uploads
 if ($file_path === false || $uploads_base === false || strpos($file_path, $uploads_base) !== 0) {
     http_response_code(404);
-    exit("Attachment not found");
+    exit(t('Attachment not found'));
 }
 
 // No MIME column on ticket_attachments - detect from file content.
