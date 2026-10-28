@@ -42,8 +42,8 @@ $sql_activity = mysqli_query(
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Your activity</h3>
-    <a class="btn btn-secondary" href="profile.php"><i class="fa fa-fw fa-user me-2"></i>Back to profile</a>
+    <h3 class="mb-0"><?= t('Your activity') ?></h3>
+    <a class="btn btn-secondary" href="profile.php"><i class="fa fa-fw fa-user me-2"></i><?= t('Back to profile') ?></a>
 </div>
 <hr>
 
@@ -52,7 +52,7 @@ $sql_activity = mysqli_query(
 
         <?php if ($total_records == 0) { ?>
 
-            <?= portalEmptyState('Nothing has been recorded on your account yet.') ?>
+            <?= portalEmptyState(t('Nothing has been recorded on your account yet.')) ?>
 
         <?php } else { ?>
 
@@ -64,10 +64,10 @@ $sql_activity = mysqli_query(
                              before September and Today next to Tomorrow. The rows
                              arrive newest-first from SQL and the initialiser keeps
                              that order, so the useful sort is the one already applied. */ ?>
-                    <th data-dt-order="disable">When</th>
-                    <th>Type</th>
-                    <th>What happened</th>
-                    <th>From</th>
+                    <th data-dt-order="disable"><?= t('When') ?></th>
+                    <th><?= t('Type') ?></th>
+                    <th><?= t('What happened') ?></th>
+                    <th><?= t('From') ?></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -85,7 +85,7 @@ $sql_activity = mysqli_query(
                     // every password change
                     if ($row['log_type'] === 'Client Login') {
                         $log_badge_color = 'primary';
-                        $log_label = 'Sign-in';
+                        $log_label = t('Sign-in');
                     } else {
                         $log_badge_color = 'secondary';
                         $log_label = "$log_type $log_action";
@@ -111,8 +111,9 @@ $sql_activity = mysqli_query(
 
             <?php if ($total_records > $activity_limit) { ?>
                 <small class="text-muted">
-                    Showing your most recent <?= $activity_limit ?> records of <?= $total_records ?>.
-                    Raise a ticket if you need to go back further.
+                    <?= t('Showing your most recent {limit} records of {total}.', ['{limit}' => $activity_limit, '{total}' => $total_records]) ?>
+
+                    <?= t('Raise a ticket if you need to go back further.') ?>
                 </small>
             <?php } ?>
 
