@@ -14,22 +14,22 @@ $quotes_sql = mysqli_query($mysqli, "SELECT quote_amount, quote_date, quote_id, 
     quote_url_key FROM quotes WHERE quote_client_id = $session_client_id AND quote_status != 'Draft' ORDER BY quote_date DESC");
 ?>
 
-<h3>Quotes</h3>
+<h3><?= t('Quotes') ?></h3>
 <div class="row">
 
     <div class="col-md-10">
 
         <?php if (mysqli_num_rows($quotes_sql) == 0) { ?>
-            <?= portalEmptyState('There are no quotes on this account yet.') ?>
+            <?= portalEmptyState(t('There are no quotes on this account yet.')) ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
                 <th>#</th>
-                <th>Scope</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Status</th>
+                <th><?= t('Scope') ?></th>
+                <th><?= t('Amount') ?></th>
+                <th><?= t('Date') ?></th>
+                <th><?= t('Status') ?></th>
             </tr>
             </thead>
             <tbody>
@@ -74,7 +74,7 @@ $quotes_sql = mysqli_query($mysqli, "SELECT quote_amount, quote_date, quote_id, 
                     <td><?= $quote_date ?></td>
                     <td>
                         <span class="p-2 badge text-bg-<?= $quote_badge_color ?>">
-                            <?= $quote_status ?>
+                            <?= i18n_quote_status_label($quote_status) ?>
                         </span>
                     </td>
 

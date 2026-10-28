@@ -30,23 +30,23 @@ $payment_provider_threshold = floatval($row['payment_provider_threshold']);
 
 ?>
 
-<h3>Recurring Invoices</h3>
+<h3><?= t('Recurring Invoices') ?></h3>
 <div class="row">
 
     <div class="col-md-10">
 
         <?php if (mysqli_num_rows($recurring_invoices_sql) == 0) { ?>
-            <?= portalEmptyState('There are no recurring invoices set up on this account.') ?>
+            <?= portalEmptyState(t('There are no recurring invoices set up on this account.')) ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
-                <th>Scope</th>
-                <th>Amount</th>
-                <th>Next Bill Date</th>
-                <th>Frequency</th>
+                <th><?= t('Scope') ?></th>
+                <th><?= t('Amount') ?></th>
+                <th><?= t('Next Bill Date') ?></th>
+                <th><?= t('Frequency') ?></th>
                 <?php if ($payment_provider_id) { ?>
-                <th>Auto Pay</th>
+                <th><?= t('Auto Pay') ?></th>
                 <?php } ?>
             </tr>
             </thead>
@@ -77,7 +77,7 @@ $payment_provider_threshold = floatval($row['payment_provider_threshold']);
                     <td><?= $recurring_invoice_scope_display ?></td>
                     <td><?= numfmt_format_currency($currency_format, $recurring_invoice_amount, $session_company_currency) ?></td>
                     <td><?= $recurring_invoice_next_date ?></td>
-                    <td><?= ucwords($recurring_invoice_frequency) ?>ly</td>
+                    <td><?= i18n_recurring_frequency_label($recurring_invoice_frequency) ?></td>
                     <?php if ($payment_provider_id) { ?>
                     <td>
                         <?php $sql = mysqli_query($mysqli, "SELECT saved_payment_description, saved_payment_id FROM client_saved_payment_methods WHERE saved_payment_client_id = $session_client_id");
@@ -87,7 +87,7 @@ $payment_provider_threshold = floatval($row['payment_provider_threshold']);
                                 <input type="hidden" name="set_recurring_payment" value="1">
                                 <input type="hidden" name="recurring_invoice_id" value="<?= $recurring_invoice_id ?>">
                                 <select class="form-select select2" name="saved_payment_id" onchange="this.form.submit()">
-                                    <option value="0">Disabled</option>
+                                    <option value="0"><?= t('Disabled') ?></option>
                                     <?php
                                         while ($row = mysqli_fetch_assoc($sql)) {
                                             $saved_payment_id = intval($row['saved_payment_id']);
@@ -99,7 +99,7 @@ $payment_provider_threshold = floatval($row['payment_provider_threshold']);
                                 </select>
                             </form>
                         <?php } else { ?>
-                            <a href="saved_payment_methods.php">Add a Payment Method</a>
+                            <a href="saved_payment_methods.php"><?= t('Add a Payment Method') ?></a>
                         <?php } ?>
                     </td>
                     <?php } ?>

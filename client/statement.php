@@ -58,10 +58,10 @@ $statement_total = 0;
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Account Statement</h3>
+    <h3 class="mb-0"><?= t('Account Statement') ?></h3>
     <?php if ($statement_count > 0) { ?>
         <a class="btn btn-primary" href="post.php?export_statement_pdf=1&csrf_token=<?= $_SESSION['csrf_token'] ?>">
-            <i class="fa fa-fw fa-download me-2"></i>Download PDF
+            <i class="fa fa-fw fa-download me-2"></i><?= t('Download PDF') ?>
         </a>
     <?php } ?>
 </div>
@@ -72,7 +72,7 @@ $statement_total = 0;
 
         <?php if ($statement_count == 0) { ?>
 
-            <?= portalEmptyState('There is nothing outstanding on this account.', 'fa-check', 'success') ?>
+            <?= portalEmptyState(t('There is nothing outstanding on this account.'), 'fa-check', 'success') ?>
 
         <?php } else { ?>
 
@@ -80,12 +80,12 @@ $statement_total = 0;
                 <thead class="table-dark">
                 <tr>
                     <th>#</th>
-                    <th>Scope</th>
-                    <th>Date</th>
-                    <th>Due</th>
-                    <th class="text-end">Amount</th>
-                    <th class="text-end">Paid</th>
-                    <th class="text-end">Balance</th>
+                    <th><?= t('Scope') ?></th>
+                    <th><?= t('Date') ?></th>
+                    <th><?= t('Due') ?></th>
+                    <th class="text-end"><?= t('Amount') ?></th>
+                    <th class="text-end"><?= t('Paid') ?></th>
+                    <th class="text-end"><?= t('Balance') ?></th>
                 </tr>
                 </thead>
                 <tbody>
