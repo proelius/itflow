@@ -6,7 +6,7 @@ require_once "../config.php";
 require_once "../includes/inc_set_timezone.php";
 
 require_once "../functions.php";
-
+i18n_set_language(client_language());
 
 $session_ip = escapeSql(getIP());
 $session_user_agent = escapeSql($_SERVER['HTTP_USER_AGENT']);
@@ -27,17 +27,17 @@ if (isset($_GET['id']) && isset($_GET['key'])) {
 
     // Check result
     if (mysqli_num_rows($sql) !== 1 || !$row) {
-        exit("Item cannot be viewed at this time (disabled or invalid).");
+        exit(t('Item cannot be viewed at this time (disabled or invalid).'));
     }
 
     // Check it is a file
     if ($item_type !== "File") {
-        exit("Item cannot be viewed at this time (Bad item type: expected File but got $item_type).");
+        exit(t('Item cannot be viewed at this time (Bad item type: expected File but got {type}).', ['{type}' => $item_type]));
     }
 
     // Check item sharing link is active
     if ($item_active != "1") {
-        exit("Item cannot be viewed at this time (disabled).");
+        exit(t('Item cannot be viewed at this time (disabled).'));
     }
 
     // Check view limit (if not unlimited)
@@ -45,7 +45,7 @@ if (isset($_GET['id']) && isset($_GET['key'])) {
         // Not unlimited
         if ($item_views >= $item_view_limit) {
             // Views exceed
-            exit("Item cannot be viewed at this time (view limit exceeded).");
+            exit(t('Item cannot be viewed at this time (view limit exceeded).'));
         }
     }
 
@@ -53,7 +53,7 @@ if (isset($_GET['id']) && isset($_GET['key'])) {
     $file_row = mysqli_fetch_assoc($file_sql);
 
     if (mysqli_num_rows($file_sql) !== 1 || !$file_row) {
-        exit("Item cannot be viewed at this time (No file, may have been deleted).");
+        exit(t('Item cannot be viewed at this time (No file, may have been deleted).'));
     }
 
     $file_name = escapeSql($file_row['file_name']);
@@ -63,13 +63,13 @@ if (isset($_GET['id']) && isset($_GET['key'])) {
 
     // Don't burn a view on a file that is missing from disk
     if (!is_readable($file_path)) {
-        exit("Item cannot be viewed at this time (No file, may have been deleted).");
+        exit(t('Item cannot be viewed at this time (No file, may have been deleted).'));
     }
 
     // Claim the view before the file is served. The checks above stay as a
     // fast path for messaging - this UPDATE is what enforces the limit.
     if (!claimSharedItemView($item_id)) {
-        exit("Item cannot be viewed at this time (view limit exceeded).");
+        exit(t('Item cannot be viewed at this time (view limit exceeded).'));
     }
 
     // Display file as download

@@ -163,7 +163,7 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
         $subject_email = "Ticket created - [$config_ticket_prefix$ticket_number] - $subject";
         // SLA response commitment for this client + priority, empty when no SLA applies
         $sla_notice = getTicketSlaEmailNotice($id, $company_phone);
-        $body = "<i style='color: #808080'>##- Please type your reply above this line -##</i><br><br>Hello $contact_name,<br><br>Thank you for your email. A ticket regarding \"$subject\" has been automatically created for you.<br><br>Ticket: $config_ticket_prefix$ticket_number<br>Subject: $subject<br>Status: New<br>Portal: <a href='https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$id&url_key=$url_key'>View ticket</a>$sla_notice<br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+        $body = "<i style='color: #808080'>##- Please type your reply above this line -##</i><br><br>" . i18n_with(client_language(), fn() => t('Hello {name},', ['{name}' => $contact_name])) . "<br><br>" . i18n_with(client_language(), fn() => t('Thank you for your email. A ticket regarding "{subject}" has been automatically created for you.', ['{subject}' => $subject])) . "<br><br>" . i18n_with(client_language(), fn() => t('Ticket:')) . " $config_ticket_prefix$ticket_number<br>" . i18n_with(client_language(), fn() => t('Subject:')) . " $subject<br>" . i18n_with(client_language(), fn() => t('Status:')) . " " . i18n_ticket_status_label_client('New') . "<br>" . i18n_with(client_language(), fn() => t('Portal:')) . " <a href='https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$id&url_key=$url_key'>" . i18n_with(client_language(), fn() => t('View ticket')) . "</a>$sla_notice<br><br>--<br>$company_name - " . i18n_with(client_language(), fn() => t('Support')) . "<br>$config_ticket_from_email<br>$company_phone";
         $data[] = [
             'from' => $config_ticket_from_email,
             'from_name' => $config_ticket_from_name,
@@ -269,8 +269,8 @@ function addReply($from_email, $date, $subject, $ticket_number, $message, $attac
 
             appNotify("Ticket", "Email parser: $from_email attempted to re-open ticket $config_ticket_prefix_esc$ticket_number_esc2 (ID $ticket_id) - check inbox manually to see email", "/agent/ticket.php?ticket_id=$ticket_id$client_uri", $client_id);
 
-            $email_subject = "Action required: This ticket is already closed";
-            $email_body = "Hi there, <br><br>You've tried to reply to a ticket that is closed - we won't see your response. <br><br>Please raise a new ticket by sending a new e-mail to our support address below. <br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
+            $email_subject = i18n_with(client_language(), fn() => t('Action required: This ticket is already closed'));
+            $email_body = i18n_with(client_language(), fn() => t('Hi there,')) . " <br><br>" . i18n_with(client_language(), fn() => t('You\'ve tried to reply to a ticket that is closed - we won\'t see your response.')) . " <br><br>" . i18n_with(client_language(), fn() => t('Please raise a new ticket by sending a new e-mail to our support address below.')) . " <br><br>--<br>$company_name - " . i18n_with(client_language(), fn() => t('Support')) . "<br>$config_ticket_from_email<br>$company_phone";
 
             $data = [
                 [
