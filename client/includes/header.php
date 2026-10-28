@@ -84,6 +84,7 @@ header("X-Frame-Options: DENY"); // Legacy
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?= in_array(basename($_SERVER['PHP_SELF']), ['invoices.php', 'quotes.php', 'autopay.php', 'statement.php']) ? 'active' : '' ?>" href="#" id="navbarDropdown1" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <?= t('Finance') ?>
+
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown1">
                             <a class="dropdown-item" href="/client/invoices.php"><?= t('Invoices') ?></a>
@@ -99,6 +100,7 @@ header("X-Frame-Options: DENY"); // Legacy
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?= in_array(basename($_SERVER['PHP_SELF']), ['documents.php', 'contacts.php', 'domains.php', 'certificates.php']) ? 'active' : '' ?>" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <?= t('Technical') ?>
+
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown2">
                             <a class="dropdown-item" href="/client/contacts.php"><?= t('Contacts') ?></a>
