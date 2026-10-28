@@ -19,7 +19,7 @@ enforceContactCan('contacts');
         <li class="breadcrumb-item">
             <a href="contacts.php">Contacts</a>
         </li>
-        <li class="breadcrumb-item active">Add Contact</li>
+        <li class="breadcrumb-item active"><?= t('Add Contact') ?></li>
     </ol>
 
     <div class="col-md-6">
@@ -27,28 +27,28 @@ enforceContactCan('contacts');
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
             <div class="mb-3">
-                <label>Name <strong class="text-danger">*</strong></label>
+                <label><?= t('Name') ?> <strong class="text-danger">*</strong></label>
                 <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
-                    <input type="text" class="form-control" name="contact_name" placeholder="Name" required maxlength="200">
+                    <input type="text" class="form-control" name="contact_name" placeholder="<?= t('Name') ?>" required maxlength="200">
                 </div>
             </div>
 
             <div class="mb-3">
-                <label>Email <strong class="text-danger">*</strong></label>
+                <label><?= t('Email') ?> <strong class="text-danger">*</strong></label>
                 <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-fw fa-envelope"></i></span>
-                    <input type="email" class="form-control" name="contact_email" placeholder="Email" required maxlength="200">
+                    <input type="email" class="form-control" name="contact_email" placeholder="<?= t('Email') ?>" required maxlength="200">
                 </div>
             </div>
 
-            <label>Roles:</label>
+            <label><?= t('Roles:') ?></label>
             <div class="row g-2">
                 <div class="col-md-4">
                     <div class="mb-3">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="contactBillingCheckbox" name="contact_billing" value="1">
-                            <label class="form-check-label" for="contactBillingCheckbox">Billing</label>
+                            <label class="form-check-label" for="contactBillingCheckbox"><?= t('Billing') ?></label>
                         </div>
                     </div>
                 </div>
@@ -56,27 +56,27 @@ enforceContactCan('contacts');
                     <div class="mb-3">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="contactTechnicalCheckbox" name="contact_technical" value="1">
-                            <label class="form-check-label" for="contactTechnicalCheckbox">Technical</label>
+                            <label class="form-check-label" for="contactTechnicalCheckbox"><?= t('Technical') ?></label>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="mb-3">
-                <label>Portal authentication</label>
+                <label><?= t('Portal authentication') ?></label>
                 <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-fw fa-user-circle"></i></span>
                     <select class="form-select select2 authMethod" name="contact_auth_method">
-                        <option value="">- No portal access -</option>
-                        <option value="local">Local (Email and password)</option>
+                        <option value=""><?= t('- No portal access -') ?></option>
+                        <option value="local"><?= t('Local (Email and password)') ?></option>
                         <?php if (!empty($config_azure_client_id)) { ?>
-                            <option value="azure">Azure (Microsoft 365)</option>
+                            <option value="azure"><?= t('Azure (Microsoft 365)') ?></option>
                         <?php } ?>
                     </select>
                 </div>
             </div>
 
-            <button class="btn btn-primary" name="add_contact">Add</button>
+            <button class="btn btn-primary" name="add_contact"><?= t('Add') ?></button>
         </form>
     </div>
 
