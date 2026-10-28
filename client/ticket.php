@@ -81,18 +81,18 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
 
         <ol class="breadcrumb d-print-none">
             <li class="breadcrumb-item">
-                <a href="index.php">Home</a>
+                <a href="index.php"><?= t('Home') ?></a>
             </li>
             <li class="breadcrumb-item">
-                <a href="tickets.php">Tickets</a>
+                <a href="tickets.php"><?= t('Tickets') ?></a>
             </li>
-            <li class="breadcrumb-item active">Ticket <?= $ticket_prefix . $ticket_number ?></li>
+            <li class="breadcrumb-item active"><?= t('Ticket') ?> <?= $ticket_prefix . $ticket_number ?></li>
         </ol>
 
         <div class="card">
             <div class="card-header bg-dark my-2">
                 <h4 class="card-title mt-1">
-                    Ticket <?= $ticket_prefix, $ticket_number ?>
+                    <?= t('Ticket') ?> <?= $ticket_prefix, $ticket_number ?>
                 </h4>
                 <div class="card-tools">
                     <?php
@@ -103,10 +103,10 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
             </div>
 
             <div class="card-body prettyContent">
-                <h5><strong>Subject:</strong> <?= $ticket_subject ?></h5>
+                <h5><strong><?= t('Subject:') ?></strong> <?= $ticket_subject ?></h5>
                 <p>
-                    <strong>State:</strong> <?= $ticket_status ?><br>
-                    <strong>Priority:</strong> <?= $ticket_priority ?><br>
+                    <strong><?= t('State:') ?></strong> <?= i18n_ticket_status_label($ticket_status) ?><br>
+                    <strong><?= t('Priority:') ?></strong> <?= i18n_ticket_priority_label($ticket_priority) ?><br>
                     <?php if (!empty($ticket_category)) { ?>
                         <strong>Category:</strong> <?= $ticket_category ?><br>
                     <?php } ?>
@@ -114,12 +114,12 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                     <?php if (empty($ticket_closed_at)) { ?>
 
                         <?php if ($task_count) { ?>
-                            <strong>Tasks: </strong> <?= $completed_task_count . " / " .$task_count ?>
+                            <strong><?= t('Tasks:') ?> </strong> <?= $completed_task_count . " / " .$task_count ?>
                             <br>
                         <?php } ?>
 
                         <?php if (!empty($ticket_assigned_to)) { ?>
-                            <strong>Assigned to: </strong> <?= $ticket_assigned_to ?>
+                            <strong><?= t('Assigned to:') ?> </strong> <?= $ticket_assigned_to ?>
                         <?php } ?>
 
                     <?php } ?>
@@ -154,8 +154,9 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
         <?php if (mysqli_num_rows($sql_task_approvals) > 0) { ?>
             <div class="card">
                 <div class="card-body">
-                    <h5>Approvals</h5>
-                    This ticket has tasks requiring approval:
+                    <h5><?= t('Approvals') ?></h5>
+                    <?= t('This ticket has tasks requiring approval:') ?>
+
 
                     <ul>
                         <?php
@@ -189,7 +190,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
 
                             <li>
                                 <?php echo $task_name;
-                                if ($contact_can_approve) { ?> - <a href="post.php?approve_ticket_task=<?= $task_id ?>&approval_id=<?= $approval_id ?>&approval_url_key=<?= $approval_url_key ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="confirm-link">Approve task</a> <?php }
+                                if ($contact_can_approve) { ?> - <a href="post.php?approve_ticket_task=<?= $task_id ?>&approval_id=<?= $approval_id ?>&approval_url_key=<?= $approval_url_key ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="confirm-link"><?= t('Approve task') ?></a> <?php }
                                 else {?> - Please ask your <?= $approval_type ?> contact to approve this task <?php } ?>
                             </li>
 
@@ -214,27 +215,27 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <input type="hidden" name="ticket_id" value="<?= $ticket_id ?>">
                 <div class="mb-3">
-                    <textarea class="form-control tinymce" name="comment" placeholder="Add comments.."></textarea>
+                    <textarea class="form-control tinymce" name="comment" placeholder="<?= t('Add comments..') ?>"></textarea>
                 </div>
                 <div class="mb-3">
                     <input type="file" class="form-control" name="file[]" multiple id="fileInput" accept=".jpg, .jpeg, .gif, .png, .webp, .pdf, .txt, .md, .doc, .docx, .odt, .csv, .xls, .xlsx, .ods, .pptx, .odp, .zip, .tar, .gz, .xml, .msg, .json, .wav, .mp3, .ogg, .mov, .mp4, .av1, .ovpn">
                 </div>
-                <button type="submit" class="btn btn-primary" name="add_ticket_comment">Reply</button>
+                <button type="submit" class="btn btn-primary" name="add_ticket_comment"><?= t('Reply') ?></button>
             </form>
 
         <?php } elseif (empty($ticket_closed_at)) { ?>
             <!-- Re-open -->
 
-            <h4>Your ticket has been resolved</h4>
+            <h4><?= t('Your ticket has been resolved') ?></h4>
 
             <div class="col-6">
                 <div class="row">
                     <div class="col">
-                        <a href="post.php?reopen_ticket=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-secondary btn-lg"><i class="fas fa-fw fa-redo text-white"></i> Reopen ticket</a>
+                        <a href="post.php?reopen_ticket=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-secondary btn-lg"><i class="fas fa-fw fa-redo text-white"></i> <?= t('Reopen ticket') ?></a>
                     </div>
 
                     <div class="col">
-                        <a href="post.php?close_ticket=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-success btn-lg confirm-link"><i class="fas fa-fw fa-gavel text-white"></i> Close ticket</a>
+                        <a href="post.php?close_ticket=<?= $ticket_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-success btn-lg confirm-link"><i class="fas fa-fw fa-gavel text-white"></i> <?= t('Close ticket') ?></a>
                     </div>
                 </div>
             </div>
@@ -242,24 +243,26 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
 
         <?php } elseif (empty($ticket_feedback)) { ?>
 
-            <h4>Ticket closed. Please rate your ticket</h4>
+            <h4><?= t('Ticket closed. Please rate your ticket') ?></h4>
 
             <form action="post.php" method="post">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <input type="hidden" name="ticket_id" value="<?= $ticket_id ?>">
 
                 <button type="submit" class="btn btn-primary btn-lg" name="add_ticket_feedback" value="Good" onclick="this.form.submit()">
-                    <span class="fa fa-smile" aria-hidden="true"></span> Good
+                    <span class="fa fa-smile" aria-hidden="true"></span> <?= t('Good') ?>
+
                 </button>
 
                 <button type="submit" class="btn btn-danger btn-lg" name="add_ticket_feedback" value="Bad" onclick="this.form.submit()">
-                    <span class="fa fa-frown" aria-hidden="true"></span> Bad
+                    <span class="fa fa-frown" aria-hidden="true"></span> <?= t('Bad') ?>
+
                 </button>
             </form>
 
         <?php } else { ?>
 
-            <h4>Rated <?= $ticket_feedback ?> -- Thanks for your feedback!</h4>
+            <h4><?= t('Rated {feedback} -- Thanks for your feedback!', ['{feedback}' => $ticket_feedback === 'Good' ? t('Good') : ($ticket_feedback === 'Bad' ? t('Bad') : $ticket_feedback)]) ?></h4>
 
         <?php } ?>
 

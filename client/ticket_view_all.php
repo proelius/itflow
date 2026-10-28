@@ -28,15 +28,15 @@ if (!isset($_GET['status']) || ($_GET['status']) == 'Open') {
 $all_tickets = mysqli_query($mysqli, "SELECT ticket_id, ticket_prefix, ticket_number, ticket_subject, ticket_status_name, contact_name FROM tickets LEFT JOIN contacts ON ticket_contact_id = contact_id LEFT JOIN ticket_statuses ON ticket_status = ticket_status_id WHERE $ticket_status_snippet AND ticket_client_id = $session_client_id ORDER BY ticket_id DESC");
 ?>
 
-    <h2>All tickets</h2>
+    <h2><?= t('All tickets') ?></h2>
     <div class="col-md-2">
         <div class="mb-3">
             <form method="get">
-                <label>Ticket Status</label>
+                <label><?= t('Ticket Status') ?></label>
                 <select class="form-select" name="status" onchange="this.form.submit()">
-                    <option value="%" <?php if ($status == "%") {echo "selected";}?> >Any</option>
-                    <option value="Open" <?php if ($status == "Open") {echo "selected";}?> >Open</option>
-                    <option value="Closed" <?php if ($status == "Closed") {echo "selected";}?> >Closed</option>
+                    <option value="%" <?php if ($status == "%") {echo "selected";}?> ><?= t('Any') ?></option>
+                    <option value="Open" <?php if ($status == "Open") {echo "selected";}?> ><?= t('Open') ?></option>
+                    <option value="Closed" <?php if ($status == "Closed") {echo "selected";}?> ><?= t('Closed') ?></option>
                 </select>
             </form>
         </div>
@@ -48,9 +48,9 @@ $all_tickets = mysqli_query($mysqli, "SELECT ticket_id, ticket_prefix, ticket_nu
         <thead>
         <tr>
             <th scope="col">#</th>
-            <th scope="col">Subject</th>
-            <th scope="col">Contact</th>
-            <th scope="col">Status</th>
+            <th scope="col"><?= t('Subject') ?></th>
+            <th scope="col"><?= t('Contact') ?></th>
+            <th scope="col"><?= t('Status') ?></th>
         </tr>
         </thead>
         <tbody>
@@ -68,7 +68,7 @@ $all_tickets = mysqli_query($mysqli, "SELECT ticket_id, ticket_prefix, ticket_nu
             echo "<td> <a href='ticket.php?id=$ticket_id'> $ticket_prefix$ticket_number</a></td>";
             echo "<td> <a href='ticket.php?id=$ticket_id'> $ticket_subject</a></td>";
             echo "<td>$ticket_contact_name</td>";
-            echo "<td>$ticket_status</td>";
+            echo "<td>".i18n_ticket_status_label($ticket_status)."</td>";
             echo "</tr>";
         }
         ?>
