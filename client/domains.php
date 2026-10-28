@@ -13,19 +13,19 @@ enforceContactCan('itdoc');
 $domains_sql = mysqli_query($mysqli, "SELECT domain_id, domain_name, domain_expire FROM domains WHERE domain_client_id = $session_client_id AND domain_archived_at IS NULL ORDER BY domain_expire ASC");
 ?>
 
-    <h3>Domains</h3>
+    <h3><?= t('Domains') ?></h3>
     <div class="row">
 
         <div class="col-md-10">
 
             <?php if (mysqli_num_rows($domains_sql) == 0) { ?>
-                <?= portalEmptyState('There are no domains on this account yet.') ?>
+                <?= portalEmptyState(t('There are no domains on this account yet.')) ?>
             <?php } else { ?>
             <table class="table table-bordered border border-dark">
                 <thead class="table-dark">
                 <tr>
-                    <th>Domain Name</th>
-                    <th>Expiry</th>
+                    <th><?= t('Domain Name') ?></th>
+                    <th><?= t('Expiry') ?></th>
                 </tr>
                 </thead>
                 <tbody>

@@ -15,15 +15,17 @@ $documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, docum
 
 <div class="row">
     <div class="col">
-        <h3><i class="fas fa-file-alt me-2"></i>Documents</h3>
+        <h3><i class="fas fa-file-alt me-2"></i><?= t('Documents') ?></h3>
     </div>
     <div class="col-auto">
         <div class="btn-group">
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
-                <i class="fas fa-plus me-2"></i>New Document
+                <i class="fas fa-plus me-2"></i><?= t('New Document') ?>
+
             </button>
             <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#uploadFileDocumentModal">
-                <i class="fas fa-upload me-2"></i>Upload File
+                <i class="fas fa-upload me-2"></i><?= t('Upload File') ?>
+
             </button>
         </div>
     </div>
@@ -32,14 +34,14 @@ $documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, docum
 <div class="row mt-3">
     <div class="col-md-12">
         <?php if (mysqli_num_rows($documents_sql) == 0) { ?>
-            <?= portalEmptyState('There are no documents shared with you yet.') ?>
+            <?= portalEmptyState(t('There are no documents shared with you yet.')) ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
-                <th>Name</th>
-                <th>Created</th>
-                <th class="text-center">Actions</th>
+                <th><?= t('Name') ?></th>
+                <th><?= t('Created') ?></th>
+                <th class="text-center"><?= t('Actions') ?></th>
             </tr>
             </thead>
             <tbody>
@@ -85,36 +87,36 @@ $documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, docum
     <div class="modal-dialog modal-lg">
         <div class="modal-content bg-dark">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fa fa-fw fa-file-alt me-2"></i>Create New Document</h5>
+                <h5 class="modal-title"><i class="fa fa-fw fa-file-alt me-2"></i><?= t('Create New Document') ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="post.php" method="post" autocomplete="off">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <div class="modal-body bg-white">
                     <div class="mb-3">
-                        <label>Document Name <strong class="text-danger">*</strong></label>
+                        <label><?= t('Document Name') ?> <strong class="text-danger">*</strong></label>
                         <div class="input-group">
                                 <span class="input-group-text"><i class="fa fa-fw fa-file-alt"></i></span>
-                            <input type="text" class="form-control" name="document_name" placeholder="Enter document name" required maxlength="200">
+                            <input type="text" class="form-control" name="document_name" placeholder="<?= t('Enter document name') ?>" required maxlength="200">
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label>Description</label>
+                        <label><?= t('Description') ?></label>
                         <div class="input-group">
                                 <span class="input-group-text"><i class="fa fa-fw fa-align-left"></i></span>
-                            <input type="text" class="form-control" name="document_description" placeholder="Brief description (optional)" maxlength="255">
+                            <input type="text" class="form-control" name="document_description" placeholder="<?= t('Brief description (optional)') ?>" maxlength="255">
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label>Content <strong class="text-danger">*</strong></label>
-                        <textarea class="form-control" name="document_content" rows="8" placeholder="Enter document content..." required></textarea>
+                        <label><?= t('Content') ?> <strong class="text-danger">*</strong></label>
+                        <textarea class="form-control" name="document_content" rows="8" placeholder="<?= t('Enter document content...') ?>" required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer bg-white">
-                    <button type="submit" name="client_add_document" class="btn btn-primary"><i class="fa fa-check me-2"></i>Create Document</button>
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Cancel</button>
+                    <button type="submit" name="client_add_document" class="btn btn-primary"><i class="fa fa-check me-2"></i><?= t('Create Document') ?></button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i><?= t('Cancel') ?></button>
                 </div>
             </form>
         </div>
@@ -126,38 +128,38 @@ $documents_sql = mysqli_query($mysqli, "SELECT document_id, document_name, docum
     <div class="modal-dialog">
         <div class="modal-content bg-dark">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fa fa-fw fa-upload me-2"></i>Upload Document File</h5>
+                <h5 class="modal-title"><i class="fa fa-fw fa-upload me-2"></i><?= t('Upload Document File') ?></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="post.php" method="post" enctype="multipart/form-data" autocomplete="off">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <div class="modal-body bg-white">
                     <div class="mb-3">
-                        <label>Document Name <strong class="text-danger">*</strong></label>
+                        <label><?= t('Document Name') ?> <strong class="text-danger">*</strong></label>
                         <div class="input-group">
                                 <span class="input-group-text"><i class="fa fa-fw fa-file-alt"></i></span>
-                            <input type="text" class="form-control" name="document_name" placeholder="Enter document name" required maxlength="200">
+                            <input type="text" class="form-control" name="document_name" placeholder="<?= t('Enter document name') ?>" required maxlength="200">
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label>Description</label>
+                        <label><?= t('Description') ?></label>
                         <div class="input-group">
                                 <span class="input-group-text"><i class="fa fa-fw fa-align-left"></i></span>
-                            <input type="text" class="form-control" name="document_description" placeholder="Brief description (optional)" maxlength="255">
+                            <input type="text" class="form-control" name="document_description" placeholder="<?= t('Brief description (optional)') ?>" maxlength="255">
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label>Upload File <strong class="text-danger">*</strong></label>
+                        <label><?= t('Upload File') ?> <strong class="text-danger">*</strong></label>
                         <input type="file" class="form-control" name="document_file" id="documentFileInput"
                                accept=".pdf,.doc,.docx,.txt,.md,.odt,.rtf" required>
-                        <small class="text-secondary">Supported formats: PDF, Word documents, text files</small>
+                        <small class="text-secondary"><?= t('Supported formats: PDF, Word documents, text files') ?></small>
                     </div>
                 </div>
                 <div class="modal-footer bg-white">
-                    <button type="submit" name="client_upload_document" class="btn btn-primary"><i class="fa fa-upload me-2"></i>Upload Document</button>
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Cancel</button>
+                    <button type="submit" name="client_upload_document" class="btn btn-primary"><i class="fa fa-upload me-2"></i><?= t('Upload Document') ?></button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i><?= t('Cancel') ?></button>
                 </div>
             </form>
         </div>

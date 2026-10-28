@@ -129,14 +129,14 @@ function portalDateTime($datetime) {
     $day = date('Y-m-d', $timestamp);
 
     if ($day === date('Y-m-d')) {
-        return escapeHtml("Today at $time");
+        return escapeHtml(t('Today at {time}', ['{time}' => $time]));
     }
 
     if ($day === date('Y-m-d', strtotime('-1 day'))) {
-        return escapeHtml("Yesterday at $time");
+        return escapeHtml(t('Yesterday at {time}', ['{time}' => $time]));
     }
 
-    return escapeHtml(date($config_date_format, $timestamp) . " at $time");
+    return escapeHtml(t('{date} at {time}', ['{date}' => date($config_date_format, $timestamp), '{time}' => $time]));
 }
 
 /*
