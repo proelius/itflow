@@ -649,10 +649,8 @@ function getTicketSlaEmailNotice($ticket_id, $company_phone = '')
     // The only value in this notice that comes from the database rather than a
     // literal - escaped so the quote-free guarantee above holds for it too
     $priority = escapeHtml($row['ticket_priority']);
-    $target = formatSlaMinutes($response_minutes);
-    $due = i18n_format_sla_due(strtotime($row['ticket_response_due_at']));
 
-    $notice = "<br><br>" . i18n_with(client_language(), fn() => t('Priority:')) . " " . i18n_with(client_language(), fn() => i18n_ticket_priority_label($priority)) . "<br>" . i18n_with(client_language(), fn() => t('Target response: within {target} (by {due})', ['{target}' => $target, '{due}' => $due]));
+    $notice = "<br><br>" . i18n_with(client_language(), fn() => t('Priority:')) . " " . i18n_with(client_language(), fn() => i18n_ticket_priority_label($priority)) . "<br>" . i18n_with(client_language(), fn() => t('Target response: within {target} (by {due})', ['{target}' => formatSlaMinutes($response_minutes), '{due}' => i18n_format_sla_due(strtotime($row['ticket_response_due_at']))]));
 
     // Higher priorities get told to phone rather than sit on an email thread
     if (!empty($company_phone) && ($priority == 'Urgent' || $priority == 'High')) {
