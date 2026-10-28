@@ -265,8 +265,6 @@ return [
     'Ticket closed. Please rate your ticket' => 'Ticket closed. Please rate your ticket',
     'Good' => 'Good',
     'Bad' => 'Bad',
-    'Rated' => 'Rated',
-    'Thanks for your feedback!' => 'Thanks for your feedback!',
 
     'Rated {feedback} -- Thanks for your feedback!' => 'Rated {feedback} -- Thanks for your feedback!',
     'Task Approval' => 'Task Approval',

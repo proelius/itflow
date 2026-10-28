@@ -250,16 +250,18 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
 
                 <button type="submit" class="btn btn-primary btn-lg" name="add_ticket_feedback" value="Good" onclick="this.form.submit()">
                     <span class="fa fa-smile" aria-hidden="true"></span> <?= t('Good') ?>
+
                 </button>
 
                 <button type="submit" class="btn btn-danger btn-lg" name="add_ticket_feedback" value="Bad" onclick="this.form.submit()">
                     <span class="fa fa-frown" aria-hidden="true"></span> <?= t('Bad') ?>
+
                 </button>
             </form>
 
         <?php } else { ?>
 
-            <h4><?= t('Rated') ?> <?= $ticket_feedback ?> -- <?= t('Thanks for your feedback!') ?></h4>
+            <h4><?= t('Rated {feedback} -- Thanks for your feedback!', ['{feedback}' => $ticket_feedback === 'Good' ? t('Good') : ($ticket_feedback === 'Bad' ? t('Bad') : $ticket_feedback)]) ?></h4>
 
         <?php } ?>
 

@@ -35,8 +35,8 @@ $all_tickets = mysqli_query($mysqli, "SELECT ticket_id, ticket_prefix, ticket_nu
                 <label><?= t('Ticket Status') ?></label>
                 <select class="form-select" name="status" onchange="this.form.submit()">
                     <option value="%" <?php if ($status == "%") {echo "selected";}?> ><?= t('Any') ?></option>
-                    <option value="Open" <?php if ($status == "Open") {echo "selected";}?> >Open</option>
-                    <option value="Closed" <?php if ($status == "Closed") {echo "selected";}?> >Closed</option>
+                    <option value="Open" <?php if ($status == "Open") {echo "selected";}?> ><?= t('Open') ?></option>
+                    <option value="Closed" <?php if ($status == "Closed") {echo "selected";}?> ><?= t('Closed') ?></option>
                 </select>
             </form>
         </div>

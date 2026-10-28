@@ -13,10 +13,10 @@ $sql_assets = mysqli_query($mysqli, "SELECT asset_id, asset_name, asset_type FRO
 
     <ol class="breadcrumb d-print-none">
         <li class="breadcrumb-item">
-            <a href="index.php">Home</a>
+            <a href="index.php"><?= t('Home') ?></a>
         </li>
         <li class="breadcrumb-item">
-            <a href="tickets.php">Tickets</a>
+            <a href="tickets.php"><?= t('Tickets') ?></a>
         </li>
         <li class="breadcrumb-item active"><?= t('New Ticket') ?></li>
     </ol>
@@ -42,10 +42,10 @@ $sql_assets = mysqli_query($mysqli, "SELECT asset_id, asset_name, asset_type FRO
                         <div class="input-group">
                                 <span class="input-group-text"><i class="fa fa-fw fa-thermometer-half"></i></span>
                             <select class="form-select select2" name="priority" required>
-                                <option>Low</option>
-                                <option selected>Medium</option>
-                                <option>High</option>
-                                <option><?= t('Urgent') ?></option>
+                                <option<?= t('Low') === 'Low' ? '' : ' value="Low"' ?>><?= t('Low') ?></option>
+                                <option<?= t('Medium') === 'Medium' ? '' : ' value="Medium"' ?> selected><?= t('Medium') ?></option>
+                                <option<?= t('High') === 'High' ? '' : ' value="High"' ?>><?= t('High') ?></option>
+                                <option<?= t('Urgent') === 'Urgent' ? '' : ' value="Urgent"' ?>><?= t('Urgent') ?></option>
                             </select>
                         </div>
                     </div>
