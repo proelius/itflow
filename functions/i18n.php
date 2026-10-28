@@ -351,7 +351,8 @@ function i18n_ticket_priority_label(string $name): string {
  * @return string Formatted date/time in current language
  */
 function i18n_format_sla_due(int $timestamp): string {
-    $current_lang = i18n_get_current_language();
+    _i18n_load();
+    $current_lang = $GLOBALS['_i18n_lang'];
     
     if ($current_lang === 'en') {
         // English: exact format 'D j M, g:i A'
