@@ -14,7 +14,7 @@ enforceContactCan('contacts');
 
     <ol class="breadcrumb d-print-none">
         <li class="breadcrumb-item">
-            <a href="index.php">Home</a>
+            <a href="index.php"><?= t('Home') ?></a>
         </li>
         <li class="breadcrumb-item">
             <a href="contacts.php">Contacts</a>

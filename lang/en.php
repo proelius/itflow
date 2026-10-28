@@ -406,7 +406,7 @@ return [
     'Department' => 'Department',
     'Location' => 'Location',
     'No' => 'No',
-    'Primary' => 'Primary',
+
     'Mobile' => 'Mobile',
     'Keeping these current means we can reach you about a ticket without hunting
                         for a number. Clear a field to remove it.' => 'Keeping these current means we can reach you about a ticket without hunting

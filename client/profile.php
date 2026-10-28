@@ -110,9 +110,9 @@ if ($login_method === 'local') {
  * at id 0 - working by luck rather than by meaning.
  */
 $contact_roles = [
-    ['Primary', (bool) $session_contact_primary, 'Everything in the portal'],
-    ['Billing', (bool) $session_contact_is_billing_contact, 'Invoices, quotes and payments'],
-    ['Technical', (bool) $session_contact_is_technical_contact, 'Assets, documents, domains and contacts'],
+    ['Primary', (bool) $session_contact_primary, t('Everything in the portal')],
+    ['Billing', (bool) $session_contact_is_billing_contact, t('Invoices, quotes and payments')],
+    ['Technical', (bool) $session_contact_is_technical_contact, t('Assets, documents, domains and contacts')],
 ];
 
 /*
@@ -231,6 +231,7 @@ $sql_actions = mysqli_query(
         <small class="text-muted">
             <?= t('To change your name, email, title, department or location, raise a ticket and we will
             update them for you.') ?>
+
         </small>
 
     </div>
@@ -248,6 +249,7 @@ $sql_actions = mysqli_query(
                 <tr>
                     <th class="w-50">
                         <?= match ($contact_role[0]) { 'Primary' => t('Primary contact'), 'Billing' => t('Billing contact'), 'Technical' => t('Technical contact'), default => $contact_role[0] . ' contact' } ?>
+
                         <br><small class="text-muted fw-normal"><?= $contact_role[2] ?></small>
                     </th>
                     <td class="align-middle">
@@ -272,6 +274,7 @@ $sql_actions = mysqli_query(
             <tr>
                 <th>
                     <?= t('Phone PIN') ?>
+
                     <br><small class="text-muted fw-normal"><?= t('Confirms it is you when you call') ?></small>
                 </th>
                 <td class="align-middle">
@@ -321,6 +324,7 @@ $sql_actions = mysqli_query(
 
         <small class="text-muted">
             <?= t('Somewhere here you do not recognise? Raise a ticket and change your password.') ?>
+
         </small>
 
     </div>
@@ -375,6 +379,7 @@ $sql_actions = mysqli_query(
                     <p class="text-muted">
                         <?= t('Keeping these current means we can reach you about a ticket without hunting
                         for a number. Clear a field to remove it.') ?>
+
                     </p>
 
                     <label for="contactPhone"><?= t('Phone /') ?> <span class="text-secondary"><?= t('Extension') ?></span></label>
@@ -410,9 +415,11 @@ $sql_actions = mysqli_query(
                 <div class="modal-footer">
                     <button type="submit" name="set_contact_phone" class="btn btn-primary text-bold">
                         <i class="fas fa-check me-2"></i><?= t('Save') ?>
+
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                         <i class="fas fa-times me-2"></i><?= t('Cancel') ?>
+
                     </button>
                 </div>
             </form>
@@ -429,6 +436,7 @@ $sql_actions = mysqli_query(
                 <div class="modal-header bg-dark">
                     <h5 class="modal-title text-white">
                         <i class="fa fa-fw fa-key me-2"></i><?= empty($contact_pin) ? t('Set a phone PIN') : t('Change your phone PIN') ?>
+
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= t('Close') ?>"></button>
                 </div>
@@ -437,6 +445,7 @@ $sql_actions = mysqli_query(
                     <p class="text-muted">
                         <?= t('We ask for this to confirm it is really you when you call. Pick something you
                         will remember but that is not easy to guess.') ?>
+
                     </p>
 
                     <?php if ($login_method === 'local') { ?>
@@ -464,9 +473,11 @@ $sql_actions = mysqli_query(
                 <div class="modal-footer">
                     <button type="submit" name="set_contact_pin" class="btn btn-primary text-bold">
                         <i class="fas fa-check me-2"></i><?= empty($contact_pin) ? t('Save PIN') : t('Update PIN') ?>
+
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                         <i class="fas fa-times me-2"></i><?= t('Cancel') ?>
+
                     </button>
                 </div>
             </form>
@@ -509,9 +520,11 @@ $sql_actions = mysqli_query(
                 <div class="modal-footer">
                     <button type="submit" name="edit_profile" class="btn btn-primary text-bold">
                         <i class="fas fa-check me-2"></i><?= t('Save password') ?>
+
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                         <i class="fas fa-times me-2"></i><?= t('Cancel') ?>
+
                     </button>
                 </div>
             </form>

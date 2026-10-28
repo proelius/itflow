@@ -404,7 +404,7 @@ return [
     'Department' => 'Service',
     'Location' => 'Lieu',
     'No' => 'Non',
-    'Primary' => 'Principal',
+
     'Mobile' => 'Mobile',
     'Keeping these current means we can reach you about a ticket without hunting
                         for a number. Clear a field to remove it.' => 'Avec des numéros à jour, nous pouvons vous joindre au sujet d’un ticket sans chercher votre numéro. Videz un champ pour le supprimer.',
