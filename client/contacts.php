@@ -15,10 +15,10 @@ $contacts_sql = mysqli_query($mysqli, "SELECT contact_id, contact_name, contact_
 
     <div class="row">
         <div class="col">
-            <h3>Contacts</h3>
+            <h3><?= t('Contacts') ?></h3>
         </div>
         <div class="col offset-6">
-            <a href="contact_add.php" class="btn btn-primary" role="button"><i class="fas fa-plus me-2"></i>New Contact</a>
+            <a href="contact_add.php" class="btn btn-primary" role="button"><i class="fas fa-plus me-2"></i><?= t('New Contact') ?></a>
         </div>
     </div>
 
@@ -27,14 +27,14 @@ $contacts_sql = mysqli_query($mysqli, "SELECT contact_id, contact_name, contact_
         <div class="col-md-10">
 
             <?php if (mysqli_num_rows($contacts_sql) == 0) { ?>
-                <?= portalEmptyState('There are no contacts on this account yet.') ?>
+                <?= portalEmptyState(t('There are no contacts on this account yet.')) ?>
             <?php } else { ?>
             <table class="table table-bordered border border-dark">
                 <thead class="table-dark">
                 <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Roles</th>
+                    <th><?= t('Name') ?></th>
+                    <th><?= t('Email') ?></th>
+                    <th><?= t('Roles') ?></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -50,13 +50,13 @@ $contacts_sql = mysqli_query($mysqli, "SELECT contact_id, contact_name, contact_
 
                     $contact_roles_display = '-';
                     if ($contact_primary) {
-                        $contact_roles_display = 'Primary contact';
+                        $contact_roles_display = t('Primary contact');
                     } else if ($contact_technical && $contact_billing) {
-                        $contact_roles_display = 'Technical & Billing';
+                        $contact_roles_display = t('Technical & Billing');
                     } else if ($contact_technical) {
-                        $contact_roles_display = 'Technical';
+                        $contact_roles_display = t('Technical');
                     } else if ($contact_billing) {
-                        $contact_roles_display = 'Billing';
+                        $contact_roles_display = t('Billing');
                     }
 
                     ?>

@@ -110,9 +110,9 @@ if ($login_method === 'local') {
  * at id 0 - working by luck rather than by meaning.
  */
 $contact_roles = [
-    ['Primary', (bool) $session_contact_primary, 'Everything in the portal'],
-    ['Billing', (bool) $session_contact_is_billing_contact, 'Invoices, quotes and payments'],
-    ['Technical', (bool) $session_contact_is_technical_contact, 'Assets, documents, domains and contacts'],
+    ['Primary', (bool) $session_contact_primary, t('Everything in the portal')],
+    ['Billing', (bool) $session_contact_is_billing_contact, t('Invoices, quotes and payments')],
+    ['Technical', (bool) $session_contact_is_technical_contact, t('Assets, documents, domains and contacts')],
 ];
 
 /*
@@ -149,7 +149,7 @@ $sql_actions = mysqli_query(
 
 ?>
 
-<h3>Profile</h3>
+<h3><?= t('Profile') ?></h3>
 <hr>
 
 <div class="row">
@@ -159,37 +159,37 @@ $sql_actions = mysqli_query(
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
-                <th colspan="2">Your details</th>
+                <th colspan="2"><?= t('Your details') ?></th>
             </tr>
             </thead>
             <tbody>
             <tr>
-                <th class="w-25">Name</th>
+                <th class="w-25"><?= t('Name') ?></th>
                 <td><?= $contact_name ?></td>
             </tr>
             <tr>
-                <th>Email</th>
+                <th><?= t('Email') ?></th>
                 <td><?= $contact_email ?></td>
             </tr>
             <?php if (!empty($contact_title)) { ?>
                 <tr>
-                    <th>Title</th>
+                    <th><?= t('Title') ?></th>
                     <td><?= $contact_title ?></td>
                 </tr>
             <?php } ?>
             <?php if (!empty($contact_department)) { ?>
                 <tr>
-                    <th>Department</th>
+                    <th><?= t('Department') ?></th>
                     <td><?= $contact_department ?></td>
                 </tr>
             <?php } ?>
             <tr>
-                <th>Company</th>
+                <th><?= t('Company') ?></th>
                 <td><?= $client_name ?></td>
             </tr>
             <?php if (!empty($contact_location)) { ?>
                 <tr>
-                    <th>Location</th>
+                    <th><?= t('Location') ?></th>
                     <td>
                         <?= $contact_location ?>
                         <?php if (!empty($contact_location_address)) { ?>
@@ -199,38 +199,39 @@ $sql_actions = mysqli_query(
                 </tr>
             <?php } ?>
             <tr>
-                <th>Phone</th>
+                <th><?= t('Phone') ?></th>
                 <td>
                     <?php if (empty($contact_phone)) { ?>
-                        <span class="text-muted">Not set</span>
+                        <span class="text-muted"><?= t('Not set') ?></span>
                     <?php } else { ?>
                         <?= $contact_phone ?>
                         <?php if (!empty($contact_extension)) { ?>
-                            <span class="text-muted">ext. <?= $contact_extension ?></span>
+                            <span class="text-muted"><?= t('ext.') ?> <?= $contact_extension ?></span>
                         <?php } ?>
                     <?php } ?>
                     <button type="button" class="btn btn-sm btn-outline-secondary float-end"
-                        data-bs-toggle="modal" data-bs-target="#phoneModal">Edit</button>
+                        data-bs-toggle="modal" data-bs-target="#phoneModal"><?= t('Edit') ?></button>
                 </td>
             </tr>
             <tr>
-                <th>Mobile</th>
+                <th><?= t('Mobile') ?></th>
                 <td>
                     <?php if (empty($contact_mobile)) { ?>
-                        <span class="text-muted">Not set</span>
+                        <span class="text-muted"><?= t('Not set') ?></span>
                     <?php } else { ?>
                         <?= $contact_mobile ?>
                     <?php } ?>
                     <button type="button" class="btn btn-sm btn-outline-secondary float-end"
-                        data-bs-toggle="modal" data-bs-target="#phoneModal">Edit</button>
+                        data-bs-toggle="modal" data-bs-target="#phoneModal"><?= t('Edit') ?></button>
                 </td>
             </tr>
             </tbody>
         </table>
 
         <small class="text-muted">
-            To change your name, email, title, department or location, raise a ticket and we will
-            update them for you.
+            <?= t('To change your name, email, title, department or location, raise a ticket and we will
+            update them for you.') ?>
+
         </small>
 
     </div>
@@ -240,49 +241,51 @@ $sql_actions = mysqli_query(
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
-                <th colspan="2">Portal access</th>
+                <th colspan="2"><?= t('Portal access') ?></th>
             </tr>
             </thead>
             <tbody>
             <?php foreach ($contact_roles as $contact_role) { ?>
                 <tr>
                     <th class="w-50">
-                        <?= $contact_role[0] ?> contact
+                        <?= match ($contact_role[0]) { 'Primary' => t('Primary contact'), 'Billing' => t('Billing contact'), 'Technical' => t('Technical contact'), default => $contact_role[0] . ' contact' } ?>
+
                         <br><small class="text-muted fw-normal"><?= $contact_role[2] ?></small>
                     </th>
                     <td class="align-middle">
                         <?php if ($contact_role[1]) { ?>
-                            <span class="p-2 badge text-bg-success">Yes</span>
+                            <span class="p-2 badge text-bg-success"><?= t('Yes') ?></span>
                         <?php } else { ?>
-                            <span class="p-2 badge text-bg-secondary">No</span>
+                            <span class="p-2 badge text-bg-secondary"><?= t('No') ?></span>
                         <?php } ?>
                     </td>
                 </tr>
             <?php } ?>
             <tr>
-                <th>Sign in with</th>
+                <th><?= t('Sign in with') ?></th>
                 <td class="align-middle">
-                    <?= $login_method_display ?>
+                    <?= match ($login_method) { 'azure' => t('Microsoft account'), 'local' => t('Password'), default => $login_method_display } ?>
                     <?php if ($login_method === 'local') { ?>
                         <button type="button" class="btn btn-sm btn-outline-secondary float-end"
-                            data-bs-toggle="modal" data-bs-target="#passwordModal">Change</button>
+                            data-bs-toggle="modal" data-bs-target="#passwordModal"><?= t('Change') ?></button>
                     <?php } ?>
                 </td>
             </tr>
             <tr>
                 <th>
-                    Phone PIN
-                    <br><small class="text-muted fw-normal">Confirms it is you when you call</small>
+                    <?= t('Phone PIN') ?>
+
+                    <br><small class="text-muted fw-normal"><?= t('Confirms it is you when you call') ?></small>
                 </th>
                 <td class="align-middle">
                     <?php if (empty($contact_pin)) { ?>
-                        <span class="text-muted">Not set</span>
+                        <span class="text-muted"><?= t('Not set') ?></span>
                     <?php } else { ?>
                         <span class="font-monospace"><?= $contact_pin ?></span>
                     <?php } ?>
                     <button type="button" class="btn btn-sm btn-outline-secondary float-end"
                         data-bs-toggle="modal" data-bs-target="#pinModal">
-                        <?= empty($contact_pin) ? 'Set' : 'Change' ?>
+                        <?= empty($contact_pin) ? t('Set') : t('Change') ?>
                     </button>
                 </td>
             </tr>
@@ -300,13 +303,13 @@ $sql_actions = mysqli_query(
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
-                <th colspan="2">Recent sign-ins</th>
+                <th colspan="2"><?= t('Recent sign-ins') ?></th>
             </tr>
             </thead>
             <tbody>
             <?php if (mysqli_num_rows($sql_logins) == 0) { ?>
                 <tr>
-                    <td colspan="2" class="text-muted">No sign-ins recorded yet.</td>
+                    <td colspan="2" class="text-muted"><?= t('No sign-ins recorded yet.') ?></td>
                 </tr>
             <?php } else { ?>
                 <?php while ($row = mysqli_fetch_assoc($sql_logins)) { ?>
@@ -320,7 +323,8 @@ $sql_actions = mysqli_query(
         </table>
 
         <small class="text-muted">
-            Somewhere here you do not recognise? Raise a ticket and change your password.
+            <?= t('Somewhere here you do not recognise? Raise a ticket and change your password.') ?>
+
         </small>
 
     </div>
@@ -330,13 +334,13 @@ $sql_actions = mysqli_query(
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
-                <th colspan="2">Recent activity</th>
+                <th colspan="2"><?= t('Recent activity') ?></th>
             </tr>
             </thead>
             <tbody>
             <?php if (mysqli_num_rows($sql_actions) == 0) { ?>
                 <tr>
-                    <td colspan="2" class="text-muted">Nothing recorded yet.</td>
+                    <td colspan="2" class="text-muted"><?= t('Nothing recorded yet.') ?></td>
                 </tr>
             <?php } else { ?>
                 <?php while ($row = mysqli_fetch_assoc($sql_actions)) { ?>
@@ -349,14 +353,14 @@ $sql_actions = mysqli_query(
             </tbody>
         </table>
 
-        <a href="activity.php"><i class="fa fa-fw fa-list me-2"></i>View all your activity</a>
+        <a href="activity.php"><i class="fa fa-fw fa-list me-2"></i><?= t('View all your activity') ?></a>
 
     </div>
 
 </div>
 
 <p class="text-muted">
-    <small>Portal user ID <?= intval($_SESSION['user_id']) ?> &mdash; quote this if we ask for it.</small>
+    <small><?= t('Portal user ID {id} &mdash; quote this if we ask for it.', ['{id}' => intval($_SESSION['user_id'])]) ?></small>
 </p>
 
 
@@ -367,41 +371,42 @@ $sql_actions = mysqli_query(
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
                 <div class="modal-header bg-dark">
-                    <h5 class="modal-title text-white"><i class="fa fa-fw fa-phone me-2"></i>Your phone numbers</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title text-white"><i class="fa fa-fw fa-phone me-2"></i><?= t('Your phone numbers') ?></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= t('Close') ?>"></button>
                 </div>
                 <div class="modal-body">
 
                     <p class="text-muted">
-                        Keeping these current means we can reach you about a ticket without hunting
-                        for a number. Clear a field to remove it.
+                        <?= t('Keeping these current means we can reach you about a ticket without hunting
+                        for a number. Clear a field to remove it.') ?>
+
                     </p>
 
-                    <label for="contactPhone">Phone / <span class="text-secondary">Extension</span></label>
+                    <label for="contactPhone"><?= t('Phone /') ?> <span class="text-secondary"><?= t('Extension') ?></span></label>
                     <div class="row g-2">
                         <div class="col-8 mb-3">
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fa fa-fw fa-phone"></i></span>
                                 <input type="hidden" name="phone_country_code" value="<?= $contact_phone_country_code ?>">
                                 <input type="tel" class="form-control" id="contactPhone" name="phone"
-                                    placeholder="Phone Number" maxlength="200" value="<?= $contact_phone_input ?>"
+                                    placeholder="<?= t('Phone Number') ?>" maxlength="200" value="<?= $contact_phone_input ?>"
                                     data-itflow-phone="phone_country_code">
                             </div>
                         </div>
                         <div class="col-4 mb-3">
                             <input type="text" class="form-control" id="contactExtension" name="extension"
-                                inputmode="numeric" maxlength="200" placeholder="ext."
+                                inputmode="numeric" maxlength="200" placeholder="<?= t('ext.') ?>"
                                 value="<?= $contact_extension ?>">
                         </div>
                     </div>
 
-                    <label for="contactMobile">Mobile</label>
+                    <label for="contactMobile"><?= t('Mobile') ?></label>
                     <div class="mb-3">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-mobile-alt"></i></span>
                             <input type="hidden" name="mobile_country_code" value="<?= $contact_mobile_country_code ?>">
                             <input type="tel" class="form-control" id="contactMobile" name="mobile"
-                                placeholder="Mobile Number" maxlength="200" value="<?= $contact_mobile_input ?>"
+                                placeholder="<?= t('Mobile Number') ?>" maxlength="200" value="<?= $contact_mobile_input ?>"
                                 data-itflow-phone="mobile_country_code">
                         </div>
                     </div>
@@ -409,10 +414,12 @@ $sql_actions = mysqli_query(
                 </div>
                 <div class="modal-footer">
                     <button type="submit" name="set_contact_phone" class="btn btn-primary text-bold">
-                        <i class="fas fa-check me-2"></i>Save
+                        <i class="fas fa-check me-2"></i><?= t('Save') ?>
+
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancel
+                        <i class="fas fa-times me-2"></i><?= t('Cancel') ?>
+
                     </button>
                 </div>
             </form>
@@ -428,20 +435,21 @@ $sql_actions = mysqli_query(
 
                 <div class="modal-header bg-dark">
                     <h5 class="modal-title text-white">
-                        <i class="fa fa-fw fa-key me-2"></i><?= empty($contact_pin) ? 'Set a phone PIN' : 'Change your phone PIN' ?>
+                        <i class="fa fa-fw fa-key me-2"></i><?= empty($contact_pin) ? t('Set a phone PIN') : t('Change your phone PIN') ?>
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= t('Close') ?>"></button>
                 </div>
                 <div class="modal-body">
 
                     <p class="text-muted">
-                        We ask for this to confirm it is really you when you call. Pick something you
-                        will remember but that is not easy to guess.
+                        <?= t('We ask for this to confirm it is really you when you call. Pick something you
+                        will remember but that is not easy to guess.') ?>
+
                     </p>
 
                     <?php if ($login_method === 'local') { ?>
                         <div class="mb-3">
-                            <label for="pinCurrentPassword">Your current password</label>
+                            <label for="pinCurrentPassword"><?= t('Your current password') ?></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
                                 <input type="password" class="form-control" id="pinCurrentPassword" name="current_password"
@@ -451,11 +459,11 @@ $sql_actions = mysqli_query(
                     <?php } ?>
 
                     <div class="mb-3">
-                        <label for="contactPin"><?= empty($contact_pin) ? 'New PIN' : 'Replace with' ?></label>
+                        <label for="contactPin"><?= empty($contact_pin) ? t('New PIN') : t('Replace with') ?></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-key"></i></span>
                             <input type="text" class="form-control" id="contactPin" name="pin"
-                                minlength="4" maxlength="255" placeholder="At least 4 characters"
+                                minlength="4" maxlength="255" placeholder="<?= t('At least 4 characters') ?>"
                                 autocomplete="off" required>
                         </div>
                     </div>
@@ -463,10 +471,11 @@ $sql_actions = mysqli_query(
                 </div>
                 <div class="modal-footer">
                     <button type="submit" name="set_contact_pin" class="btn btn-primary text-bold">
-                        <i class="fas fa-check me-2"></i><?= empty($contact_pin) ? 'Save PIN' : 'Update PIN' ?>
+                        <i class="fas fa-check me-2"></i><?= empty($contact_pin) ? t('Save PIN') : t('Update PIN') ?>
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancel
+                        <i class="fas fa-times me-2"></i><?= t('Cancel') ?>
+
                     </button>
                 </div>
             </form>
@@ -482,13 +491,13 @@ $sql_actions = mysqli_query(
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
                 <div class="modal-header bg-dark">
-                    <h5 class="modal-title text-white"><i class="fa fa-fw fa-lock me-2"></i>Change your password</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title text-white"><i class="fa fa-fw fa-lock me-2"></i><?= t('Change your password') ?></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= t('Close') ?>"></button>
                 </div>
                 <div class="modal-body">
 
                     <div class="mb-3">
-                        <label for="currentPassword">Your current password</label>
+                        <label for="currentPassword"><?= t('Your current password') ?></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
                             <input type="password" class="form-control" id="currentPassword" name="current_password"
@@ -497,21 +506,23 @@ $sql_actions = mysqli_query(
                     </div>
 
                     <div class="mb-3">
-                        <label for="newPassword">New password</label>
+                        <label for="newPassword"><?= t('New password') ?></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
                             <input type="password" class="form-control" id="newPassword" name="new_password"
-                                minlength="8" placeholder="At least 8 characters" autocomplete="new-password">
+                                minlength="8" placeholder="<?= t('At least 8 characters') ?>" autocomplete="new-password">
                         </div>
                     </div>
 
                 </div>
                 <div class="modal-footer">
                     <button type="submit" name="edit_profile" class="btn btn-primary text-bold">
-                        <i class="fas fa-check me-2"></i>Save password
+                        <i class="fas fa-check me-2"></i><?= t('Save password') ?>
+
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancel
+                        <i class="fas fa-times me-2"></i><?= t('Cancel') ?>
+
                     </button>
                 </div>
             </form>
