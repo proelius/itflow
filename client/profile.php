@@ -436,7 +436,6 @@ $sql_actions = mysqli_query(
                 <div class="modal-header bg-dark">
                     <h5 class="modal-title text-white">
                         <i class="fa fa-fw fa-key me-2"></i><?= empty($contact_pin) ? t('Set a phone PIN') : t('Change your phone PIN') ?>
-
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= t('Close') ?>"></button>
                 </div>
@@ -473,7 +472,6 @@ $sql_actions = mysqli_query(
                 <div class="modal-footer">
                     <button type="submit" name="set_contact_pin" class="btn btn-primary text-bold">
                         <i class="fas fa-check me-2"></i><?= empty($contact_pin) ? t('Save PIN') : t('Update PIN') ?>
-
                     </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                         <i class="fas fa-times me-2"></i><?= t('Cancel') ?>
