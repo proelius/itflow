@@ -114,6 +114,7 @@ $sql_activity = mysqli_query(
                     <?= t('Showing your most recent {limit} records of {total}.', ['{limit}' => $activity_limit, '{total}' => $total_records]) ?>
 
                     <?= t('Raise a ticket if you need to go back further.') ?>
+
                 </small>
             <?php } ?>
 
