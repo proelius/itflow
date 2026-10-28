@@ -12,7 +12,7 @@ header("X-Frame-Options: DENY"); // Legacy
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title><?= escapeHtml($session_company_name) ?> | Client Portal</title>
+    <title><?= escapeHtml($session_company_name) ?> | <?= t('Client Portal') ?></title>
 
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -74,23 +74,24 @@ header("X-Frame-Options: DENY"); // Legacy
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item <?php if (basename($_SERVER['PHP_SELF']) == "index.php") {echo "active";} ?>">
-                    <a class="nav-link" href="/client/index.php">Home</a>
+                    <a class="nav-link" href="/client/index.php"><?= t('Home') ?></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == "tickets.php" || basename($_SERVER['PHP_SELF']) == "ticket_add.php" || basename($_SERVER['PHP_SELF']) == "ticket.php") {echo "active";} ?>" href="/client/tickets.php">Tickets</a>
+                    <a class="nav-link <?php if (basename($_SERVER['PHP_SELF']) == "tickets.php" || basename($_SERVER['PHP_SELF']) == "ticket_add.php" || basename($_SERVER['PHP_SELF']) == "ticket.php") {echo "active";} ?>" href="/client/tickets.php"><?= t('Tickets') ?></a>
                 </li>
 
                 <?php if (contactCan('accounting') && $config_module_enable_accounting == 1) { ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?= in_array(basename($_SERVER['PHP_SELF']), ['invoices.php', 'quotes.php', 'autopay.php', 'statement.php']) ? 'active' : '' ?>" href="#" id="navbarDropdown1" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Finance
+                            <?= t('Finance') ?>
+
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown1">
-                            <a class="dropdown-item" href="/client/invoices.php">Invoices</a>
-                            <a class="dropdown-item" href="/client/recurring_invoices.php">Recurring Invoices</a>
-                            <a class="dropdown-item" href="/client/quotes.php">Quotes</a>
-                            <a class="dropdown-item" href="/client/statement.php">Account Statement</a>
-                            <a class="dropdown-item" href="/client/saved_payment_methods.php">Saved Payments</a>
+                            <a class="dropdown-item" href="/client/invoices.php"><?= t('Invoices') ?></a>
+                            <a class="dropdown-item" href="/client/recurring_invoices.php"><?= t('Recurring Invoices') ?></a>
+                            <a class="dropdown-item" href="/client/quotes.php"><?= t('Quotes') ?></a>
+                            <a class="dropdown-item" href="/client/statement.php"><?= t('Account Statement') ?></a>
+                            <a class="dropdown-item" href="/client/saved_payment_methods.php"><?= t('Saved Payments') ?></a>
                         </div>
                     </li>
                 <?php } ?>
@@ -98,15 +99,16 @@ header("X-Frame-Options: DENY"); // Legacy
                 <?php if ($config_module_enable_itdoc && contactCan('itdoc')) { ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?= in_array(basename($_SERVER['PHP_SELF']), ['documents.php', 'contacts.php', 'domains.php', 'certificates.php']) ? 'active' : '' ?>" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Technical
+                            <?= t('Technical') ?>
+
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown2">
-                            <a class="dropdown-item" href="/client/contacts.php">Contacts</a>
-                            <a class="dropdown-item" href="/client/assets.php">Assets</a>
-                            <a class="dropdown-item" href="/client/documents.php">Documents</a>
-                            <a class="dropdown-item" href="/client/domains.php">Domains</a>
-                            <a class="dropdown-item" href="/client/certificates.php">Certificates</a>
-                            <a class="dropdown-item" href="/client/ticket_view_all.php">All tickets</a>
+                            <a class="dropdown-item" href="/client/contacts.php"><?= t('Contacts') ?></a>
+                            <a class="dropdown-item" href="/client/assets.php"><?= t('Assets') ?></a>
+                            <a class="dropdown-item" href="/client/documents.php"><?= t('Documents') ?></a>
+                            <a class="dropdown-item" href="/client/domains.php"><?= t('Domains') ?></a>
+                            <a class="dropdown-item" href="/client/certificates.php"><?= t('Certificates') ?></a>
+                            <a class="dropdown-item" href="/client/ticket_view_all.php"><?= t('All tickets') ?></a>
                         </div>
                     </li>
                 <?php } ?>
@@ -142,10 +144,10 @@ header("X-Frame-Options: DENY"); // Legacy
                         <?= stripslashes(escapeHtml($session_contact_name)) ?>
                     </a>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="/client/profile.php"><i class="fas fa-fw fa-user me-2"></i>Account</a>
-                        <a class="dropdown-item" href="/client/activity.php"><i class="fas fa-fw fa-list me-2"></i>Activity</a>
+                        <a class="dropdown-item" href="/client/profile.php"><i class="fas fa-fw fa-user me-2"></i><?= t('Account') ?></a>
+                        <a class="dropdown-item" href="/client/activity.php"><i class="fas fa-fw fa-list me-2"></i><?= t('Activity') ?></a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="/client/post.php?logout"><i class="fas fa-fw fa-sign-out-alt me-2"></i>Sign out</a>
+                        <a class="dropdown-item" href="/client/post.php?logout"><i class="fas fa-fw fa-sign-out-alt me-2"></i><?= t('Sign out') ?></a>
                     </div>
                 </li>
             </ul>
@@ -180,7 +182,7 @@ header("X-Frame-Options: DENY"); // Legacy
             <?php } ?>
         </div>
 
-        <h4 class="mb-0 flex-grow-1">Welcome, <strong><?= stripslashes(escapeHtml($session_contact_name)) ?></strong>!</h4>
+        <h4 class="mb-0 flex-grow-1"><?= t('Welcome, {name}!', ['{name}' => '<strong>' . stripslashes(escapeHtml($session_contact_name)) . '</strong>']) ?></h4>
 
         <?php if ($session_company_logo) { ?>
             <img height="48" width="142" class="img-fluid flex-shrink-0" src="<?= "/uploads/settings/$session_company_logo" ?>">
@@ -197,7 +199,7 @@ header("X-Frame-Options: DENY"); // Legacy
         ?>
         <div class="alert alert-<?= alertStyleClass($_SESSION['alert_type'] ?? 'success') ?> alert-dismissible" id="alert">
             <?= alertMessageHtml($_SESSION['alert_message']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="<?= t('Close') ?>"></button>
         </div>
         <?php
 
