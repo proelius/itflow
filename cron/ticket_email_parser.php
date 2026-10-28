@@ -160,7 +160,7 @@ function addTicket($contact_id, $contact_name, $contact_email, $client_id, $date
     // External email
     $data = [];
     if ($config_ticket_client_general_notifications == 1 && !preg_match($bad_pattern, $contact_email)) {
-        $subject_email = "Ticket created - [$config_ticket_prefix$ticket_number] - $subject";
+        $subject_email = i18n_with(client_language(), fn() => t('Ticket created')) . " - [$config_ticket_prefix$ticket_number] - $subject";
         // SLA response commitment for this client + priority, empty when no SLA applies
         $sla_notice = getTicketSlaEmailNotice($id, $company_phone);
         $body = "<i style='color: #808080'>##- Please type your reply above this line -##</i><br><br>" . i18n_with(client_language(), fn() => t('Hello {name},', ['{name}' => $contact_name])) . "<br><br>" . i18n_with(client_language(), fn() => t('Thank you for your email. A ticket regarding "{subject}" has been automatically created for you.', ['{subject}' => $subject])) . "<br><br>" . i18n_with(client_language(), fn() => t('Ticket:')) . " $config_ticket_prefix$ticket_number<br>" . i18n_with(client_language(), fn() => t('Subject:')) . " $subject<br>" . i18n_with(client_language(), fn() => t('Status:')) . " " . i18n_ticket_status_label_client('New') . "<br>" . i18n_with(client_language(), fn() => t('Portal:')) . " <a href='https://$config_base_url/guest/guest_view_ticket.php?ticket_id=$id&url_key=$url_key'>" . i18n_with(client_language(), fn() => t('View ticket')) . "</a>$sla_notice<br><br>--<br>$company_name - " . i18n_with(client_language(), fn() => t('Support')) . "<br>$config_ticket_from_email<br>$company_phone";
