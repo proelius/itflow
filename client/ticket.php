@@ -157,6 +157,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                     <h5><?= t('Approvals') ?></h5>
                     <?= t('This ticket has tasks requiring approval:') ?>
 
+
                     <ul>
                         <?php
 
