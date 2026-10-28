@@ -103,10 +103,10 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
             </div>
 
             <div class="card-body prettyContent">
-                <h5><strong>Subject:</strong> <?= $ticket_subject ?></h5>
+                <h5><strong><?= t('Subject:') ?></strong> <?= $ticket_subject ?></h5>
                 <p>
-                    <strong>State:</strong> <?= $ticket_status ?><br>
-                    <strong>Priority:</strong> <?= $ticket_priority ?><br>
+                    <strong><?= t('State:') ?></strong> <?= $ticket_status ?><br>
+                    <strong><?= t('Priority:') ?></strong> <?= $ticket_priority ?><br>
                     <?php if (!empty($ticket_category)) { ?>
                         <strong>Category:</strong> <?= $ticket_category ?><br>
                     <?php } ?>
@@ -114,12 +114,12 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                     <?php if (empty($ticket_closed_at)) { ?>
 
                         <?php if ($task_count) { ?>
-                            <strong>Tasks: </strong> <?= $completed_task_count . " / " .$task_count ?>
+                            <strong><?= t('Tasks:') ?></strong>  <?= $completed_task_count . " / " .$task_count ?>
                             <br>
                         <?php } ?>
 
                         <?php if (!empty($ticket_assigned_to)) { ?>
-                            <strong>Assigned to: </strong> <?= $ticket_assigned_to ?>
+                            <strong><?= t('Assigned to:') ?></strong>  <?= $ticket_assigned_to ?>
                         <?php } ?>
 
                     <?php } ?>
@@ -154,8 +154,8 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
         <?php if (mysqli_num_rows($sql_task_approvals) > 0) { ?>
             <div class="card">
                 <div class="card-body">
-                    <h5>Approvals</h5>
-                    This ticket has tasks requiring approval:
+                    <h5><?= t('Approvals') ?></h5>
+                    <?= t('This ticket has tasks requiring approval:') ?>
 
                     <ul>
                         <?php
@@ -189,7 +189,7 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
 
                             <li>
                                 <?php echo $task_name;
-                                if ($contact_can_approve) { ?> - <a href="post.php?approve_ticket_task=<?= $task_id ?>&approval_id=<?= $approval_id ?>&approval_url_key=<?= $approval_url_key ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="confirm-link">Approve task</a> <?php }
+                                if ($contact_can_approve) { ?> - <a href="post.php?approve_ticket_task=<?= $task_id ?>&approval_id=<?= $approval_id ?>&approval_url_key=<?= $approval_url_key ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="confirm-link"><?= t('Approve task') ?></a> <?php }
                                 else {?> - Please ask your <?= $approval_type ?> contact to approve this task <?php } ?>
                             </li>
 
@@ -214,12 +214,12 @@ if (isset($_GET['id']) && intval($_GET['id'])) {
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <input type="hidden" name="ticket_id" value="<?= $ticket_id ?>">
                 <div class="mb-3">
-                    <textarea class="form-control tinymce" name="comment" placeholder="Add comments.."></textarea>
+                    <textarea class="form-control tinymce" name="comment" placeholder="<?= t('Add comments..') ?>"></textarea>
                 </div>
                 <div class="mb-3">
                     <input type="file" class="form-control" name="file[]" multiple id="fileInput" accept=".jpg, .jpeg, .gif, .png, .webp, .pdf, .txt, .md, .doc, .docx, .odt, .csv, .xls, .xlsx, .ods, .pptx, .odp, .zip, .tar, .gz, .xml, .msg, .json, .wav, .mp3, .ogg, .mov, .mp4, .av1, .ovpn">
                 </div>
-                <button type="submit" class="btn btn-primary" name="add_ticket_comment">Reply</button>
+                <button type="submit" class="btn btn-primary" name="add_ticket_comment"><?= t('Reply') ?></button>
             </form>
 
         <?php } elseif (empty($ticket_closed_at)) { ?>
