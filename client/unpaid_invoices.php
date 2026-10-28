@@ -56,12 +56,12 @@ $balance = $invoice_amounts - $amount_paid;
     </div>
     <div class="col-5">
         <?php if ($payment_provider_active && $bulk_payment_enabled) { // Currently not implmented fully ?>
-        <button type="button" class="btn btn-outline-success dropdown-toggle float-end" data-bs-toggle="dropdown"><i class="fa fa-fw fa-credit-card me-2"></i><?= t('Pay Balance') ?> <strong>(<?= numfmt_format_currency($currency_format, $balance, $session_company_currency) ?>)</strong></button>
+        <button type="button" class="btn btn-outline-success dropdown-toggle float-end" data-bs-toggle="dropdown"><i class="fa fa-fw fa-credit-card me-2"></i>Pay Balance <strong>(<?= numfmt_format_currency($currency_format, $balance, $session_company_currency) ?>)</strong></button>
         <div class="dropdown-menu">
-            <a class="dropdown-item" href="//<?= $config_base_url ?>/guest/guest_pay_invoice_stripe.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>"><?= t('Enter Card Manually') ?></a>
+            <a class="dropdown-item" href="//<?= $config_base_url ?>/guest/guest_pay_invoice_stripe.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>">Enter Card Manually</a>
             <?php
             if (mysqli_num_rows($sql_saved_payment_methods) > 0) { ?>
-                <h6 class="dropdown-header text-start"><?= t('Pay with a Saved Card') ?></h6></h6>
+                <h6 class="dropdown-header text-start">Pay with a Saved Card</h6>
             <?php
             while ($row = mysqli_fetch_assoc($sql_saved_payment_methods)) {
                 $saved_payment_id = intval($row['saved_payment_id']);
@@ -155,7 +155,7 @@ $balance = $invoice_amounts - $amount_paid;
                         ){ ?>
                         <button type="button" class="btn btn-sm btn-outline-success dropdown-toggle" data-bs-toggle="dropdown"><i class="fa fa-fw fa-credit-card me-2"></i>Pay</button>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="//<?= $config_base_url ?>/guest/guest_pay_invoice_stripe.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>"><?= t('Enter Card Manually') ?></a>
+                            <a class="dropdown-item" href="//<?= $config_base_url ?>/guest/guest_pay_invoice_stripe.php?invoice_id=<?= "$invoice_id&url_key=$invoice_url_key" ?>">Enter Card Manually</a>
 
                             <?php
                             // Saved Payment Methods
@@ -167,7 +167,7 @@ $balance = $invoice_amounts - $amount_paid;
                                 AND payment_provider_active = 1;
                             ");
                             if (mysqli_num_rows($sql_saved_payment_methods) > 0) { ?>
-                                <h6 class="dropdown-header text-start"><?= t('Pay with a Saved Card') ?></h6></h6>
+                                <h6 class="dropdown-header text-start">Pay with a Saved Card</h6>
                             <?php
                             while ($row = mysqli_fetch_assoc($sql_saved_payment_methods)) {
                                 $saved_payment_id = intval($row['saved_payment_id']);

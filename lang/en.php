@@ -332,14 +332,14 @@ return [
     'There are no invoices on this account yet.' => 'There are no invoices on this account yet.',
     'Unpaid Invoices' => 'Unpaid Invoices',
     'There is nothing unpaid on this account.' => 'There is nothing unpaid on this account.',
-    'Pay Balance' => 'Pay Balance',
-    'Enter Card Manually' => 'Enter Card Manually',
-    'Pay with a Saved Card' => 'Pay with a Saved Card',
+
+
+
     'Next Bill Date' => 'Next Bill Date',
     'Frequency' => 'Frequency',
-    'Auto Pay' => 'Auto Pay',
-    'Disabled' => 'Disabled',
-    'Add a Payment Method' => 'Add a Payment Method',
+
+
+
     'There are no quotes on this account yet.' => 'There are no quotes on this account yet.',
     'There are no recurring invoices set up on this account.' => 'There are no recurring invoices set up on this account.',
     'Download PDF' => 'Download PDF',

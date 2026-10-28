@@ -62,6 +62,7 @@ $statement_total = 0;
     <?php if ($statement_count > 0) { ?>
         <a class="btn btn-primary" href="post.php?export_statement_pdf=1&csrf_token=<?= $_SESSION['csrf_token'] ?>">
             <i class="fa fa-fw fa-download me-2"></i><?= t('Download PDF') ?>
+
         </a>
     <?php } ?>
 </div>
@@ -145,7 +146,7 @@ $statement_total = 0;
                 </tbody>
                 <tfoot>
                 <tr>
-                    <th colspan="6" class="text-end">Total Balance Due</th>
+                    <th colspan="6" class="text-end"><?= t('Total Balance Due') ?></th>
                     <th class="text-end"><?= numfmt_format_currency($currency_format, $statement_total, $statement_currency_code) ?></th>
                 </tr>
                 </tfoot>
