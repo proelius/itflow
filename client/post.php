@@ -92,7 +92,7 @@ if (isset($_POST['add_ticket_comment'])) {
 
     // After stripping bad HTML, check the comment isn't just empty
     if (empty($comment)) {
-        flashAlert("You must enter a comment", 'danger');
+        flashAlert(t('You must enter a comment'), 'danger');
         redirect();
     }
 
@@ -214,7 +214,7 @@ if (isset($_POST['set_contact_phone'])) {
 
     logAudit("Contact", "Edit", "Client contact $session_contact_name updated their phone numbers in the client portal", $session_client_id, $session_contact_id);
 
-    flashAlert("Phone numbers updated");
+    flashAlert(t('Phone numbers updated'));
 
     redirect('profile.php');
 
@@ -237,7 +237,7 @@ if (isset($_POST['set_contact_pin'])) {
     // re-authenticated for password logins. SSO contacts are exempt: they have
     // no local password to check, and the identity provider already did this.
     if (!portalReauthenticate($_POST['current_password'] ?? '')) {
-        flashAlert("That password was not right - your PIN has not been changed", 'error');
+        flashAlert(t('That password was not right - your PIN has not been changed'), 'error');
         redirect('profile.php');
     }
 
@@ -251,7 +251,7 @@ if (isset($_POST['set_contact_pin'])) {
     $pin = escapeSql(substr(trim($_POST['pin'] ?? ''), 0, 255));
 
     if (strlen($pin) < 4) {
-        flashAlert("Your PIN needs to be at least 4 characters, and cannot contain < or >", 'error');
+        flashAlert(t('Your PIN needs to be at least 4 characters, and cannot contain < or >'), 'error');
         redirect('profile.php');
     }
 
@@ -261,7 +261,7 @@ if (isset($_POST['set_contact_pin'])) {
     // an audit trail an agent can read would defeat the point of having one
     logAudit("Contact", "Edit", "Client contact $session_contact_name set their phone PIN in the client portal", $session_client_id, $session_contact_id);
 
-    flashAlert("Phone PIN updated");
+    flashAlert(t('Phone PIN updated'));
 
     redirect('profile.php');
 
@@ -286,7 +286,7 @@ if (isset($_GET['approve_ticket_task'])) {
     $ticket_id = intval($approval_row['task_ticket_id']);
 
     if (!$approval_row) {
-        flashAlert("Cannot find/approve that task", 'warning');
+        flashAlert(t('Cannot find/approve that task'), 'warning');
         redirect();
         exit;
     }
@@ -302,7 +302,7 @@ if (isset($_GET['approve_ticket_task'])) {
     // Logging
     logAudit("Task", "Edit", "Contact $session_contact_email approved task $task_name (approval $approval_id)", $session_client_id, $task_id);
 
-    flashAlert("Task Approved");
+    flashAlert(t('Task Approved'));
     redirect();
 
 }
@@ -513,7 +513,7 @@ if (isset($_GET['export_statement_pdf'])) {
     );
 
     if (mysqli_num_rows($statement_sql) == 0) {
-        flashAlert("There is nothing outstanding to put on a statement", 'error');
+        flashAlert(t('There is nothing outstanding to put on a statement'), 'error');
         redirect("statement.php");
     }
 
@@ -641,7 +641,7 @@ if (isset($_POST['edit_profile'])) {
     // Without this a hijacked session could set a new password without knowing
     // the old one, locking the real contact out of their own portal.
     if (!empty($new_password) && !portalReauthenticate($_POST['current_password'] ?? '')) {
-        flashAlert("That password was not right - your password has not been changed", 'error');
+        flashAlert(t('That password was not right - your password has not been changed'), 'error');
         redirect('profile.php');
     }
 
@@ -672,7 +672,7 @@ if (isset($_POST['add_contact'])) {
     // Check the email isn't already in use
     $sql = mysqli_query($mysqli, "SELECT user_id FROM users WHERE user_email = '$contact_email'");
     if ($sql && mysqli_num_rows($sql) > 0) {
-        flashAlert("Cannot add contact as that email address is already in use", 'danger');
+        flashAlert(t('Cannot add contact as that email address is already in use'), 'danger');
         redirect('contact_add.php');
     }
 
@@ -698,7 +698,7 @@ if (isset($_POST['add_contact'])) {
 
     triggerCustomAction('contact_create', $contact_id);
 
-    flashAlert("Contact $contact_name created");
+    flashAlert(t('Contact {name} created', ['{name}' => $contact_name]));
 
     redirect('contacts.php');
 
@@ -713,7 +713,7 @@ if (isset($_POST['edit_contact'])) {
     $contact_id = intval($_POST['contact_id']);
     // A contact cannot edit their own record - that would let them change their own roles
     if ($contact_id === $session_contact_id) {
-        flashAlert("You cannot edit your own contact record", 'danger');
+        flashAlert(t('You cannot edit your own contact record'), 'danger');
         redirect('contacts.php');
     }
     $contact_name = escapeSql($_POST['contact_name']);
@@ -730,7 +730,7 @@ if (isset($_POST['edit_contact'])) {
     // Check the email isn't already in use
     $sql = mysqli_query($mysqli, "SELECT user_id FROM users WHERE user_email = '$contact_email' AND user_id != $contact_user_id");
     if ($sql && mysqli_num_rows($sql) > 0) {
-        flashAlert("Cannot update contact as that email address is already in use", 'danger');
+        flashAlert(t('Cannot update contact as that email address is already in use'), 'danger');
         redirect('contact_edit.php?id=' . $contact_id);
     }
 
@@ -751,7 +751,7 @@ if (isset($_POST['edit_contact'])) {
 
     logAudit("Contact", "Edit", "Client contact $session_contact_name edited contact $contact_name in the client portal", $session_client_id, $contact_id);
 
-    flashAlert("Contact $contact_name updated");
+    flashAlert(t('Contact {name} updated', ['{name}' => $contact_name]));
 
     triggerCustomAction('contact_update', $contact_id);
 
@@ -1452,7 +1452,7 @@ if (isset($_POST['client_add_document'])) {
 
     logAudit("Document", "Create", "Client contact $session_contact_name created document $document_name", $session_client_id, $document_id);
 
-    flashAlert("Document <strong>$document_name</strong> created successfully");
+    flashAlert(t('Document {name} created successfully', ['{name}' => "<strong>".$document_name."</strong>"]));
 
     redirect('documents.php');
 
@@ -1528,18 +1528,18 @@ if (isset($_POST['client_upload_document'])) {
 
                 logAudit("Document", "Upload", "Client contact $session_contact_name uploaded document $document_name with file $file_name", $session_client_id, $document_id);
 
-                flashAlert("Document <strong>$document_name</strong> uploaded successfully");
+                flashAlert(t('Document {name} uploaded successfully', ['{name}' => "<strong>".$document_name."</strong>"]));
 
             } else {
-                flashAlert('Error uploading file. Please try again.', 'error');
+                flashAlert(t('Error uploading file. Please try again.'), 'error');
             }
 
         } else {
-            flashAlert('Invalid file type. Please upload PDF, Word documents, or text files only.', 'error');
+            flashAlert(t('Invalid file type. Please upload PDF, Word documents, or text files only.'), 'error');
         }
 
     } else {
-        flashAlert('Please select a file to upload.', 'error');
+        flashAlert(t('Please select a file to upload.'), 'error');
     }
 
     redirect('documents.php');
