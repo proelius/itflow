@@ -327,4 +327,21 @@ return [
     'Category' => 'Catégorie',
     '- No Category -' => '- Aucune catégorie -',
     'Details' => 'Détails',
+    'There are no invoices on this account yet.' => 'Vous n’avez pas encore de facture sur ce compte.',
+    'Unpaid Invoices' => 'Factures impayées',
+    'There is nothing unpaid on this account.' => 'Rien d’impayé sur ce compte.',
+
+
+
+    'Next Bill Date' => 'Prochaine facturation',
+    'Frequency' => 'Fréquence',
+
+
+
+    'There are no quotes on this account yet.' => 'Vous n’avez pas encore de devis sur ce compte.',
+    'There are no recurring invoices set up on this account.' => 'Aucune facture récurrente configurée sur ce compte.',
+    'Download PDF' => 'Télécharger le PDF',
+    'There is nothing outstanding on this account.' => 'Rien d’impayé sur ce compte.',
+    'Monthly' => 'Mensuelle',
+    'Yearly' => 'Annuelle',
 ];

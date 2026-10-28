@@ -343,3 +343,53 @@ function i18n_ticket_priority_label(string $name): string {
         default => $name,
     };
 }
+
+/**
+ * Get invoice status label in current language
+ * @param string $name English status name (Draft, Sent, Viewed, Partial, Paid, Cancelled, Non-Billable)
+ * @return string Translated status label or original if not found/custom
+ */
+function i18n_invoice_status_label(string $name): string {
+    return match ($name) {
+        'Draft' => t('Draft'),
+        'Sent' => t('Sent'),
+        'Viewed' => t('Viewed'),
+        'Partial' => t('Partial'),
+        'Paid' => t('Paid'),
+        'Cancelled' => t('Cancelled'),
+        'Non-Billable' => t('Non-Billable'),
+        default => $name,
+    };
+}
+
+/**
+ * Get quote status label in current language
+ * @param string $name English status name (Draft, Sent, Viewed, Accepted, Declined, Invoiced)
+ * @return string Translated status label or original if not found/custom
+ */
+function i18n_quote_status_label(string $name): string {
+    return match ($name) {
+        'Draft' => t('Draft'),
+        'Sent' => t('Sent'),
+        'Viewed' => t('Viewed'),
+        'Accepted' => t('Accepted'),
+        'Declined' => t('Declined'),
+        'Invoiced' => t('Invoiced'),
+        default => $name,
+    };
+}
+
+/**
+ * Get recurring invoice frequency label in current language
+ * @param string $name English frequency name (monthly, yearly)
+ * @return string Translated frequency label or original if not found/custom
+ */
+function i18n_recurring_frequency_label(string $name): string {
+    $lower = strtolower($name);
+    return match ($lower) {
+        'monthly' => t('Monthly'),
+        'yearly' => t('Yearly'),
+        default => $name,
+    };
+}
+

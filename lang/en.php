@@ -329,4 +329,21 @@ return [
     'Category' => 'Category',
     '- No Category -' => '- No Category -',
     'Details' => 'Details',
+    'There are no invoices on this account yet.' => 'There are no invoices on this account yet.',
+    'Unpaid Invoices' => 'Unpaid Invoices',
+    'There is nothing unpaid on this account.' => 'There is nothing unpaid on this account.',
+
+
+
+    'Next Bill Date' => 'Next Bill Date',
+    'Frequency' => 'Frequency',
+
+
+
+    'There are no quotes on this account yet.' => 'There are no quotes on this account yet.',
+    'There are no recurring invoices set up on this account.' => 'There are no recurring invoices set up on this account.',
+    'Download PDF' => 'Download PDF',
+    'There is nothing outstanding on this account.' => 'There is nothing outstanding on this account.',
+    'Monthly' => 'Monthly',
+    'Yearly' => 'Yearly',
 ];

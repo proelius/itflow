@@ -15,23 +15,23 @@ $invoices_sql = mysqli_query($mysqli, "SELECT invoice_amount, invoice_date, invo
     invoice_scope, invoice_status, invoice_url_key FROM invoices WHERE invoice_client_id = $session_client_id AND invoice_status != 'Draft' ORDER BY invoice_date DESC");
 ?>
 
-<h3>Invoices</h3>
+<h3><?= t('Invoices') ?></h3>
 <div class="row">
 
     <div class="col-md-10">
 
         <?php if (mysqli_num_rows($invoices_sql) == 0) { ?>
-            <?= portalEmptyState('There are no invoices on this account yet.') ?>
+            <?= portalEmptyState(t('There are no invoices on this account yet.')) ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
                 <th>#</th>
-                <th>Scope</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Due</th>
-                <th>Status</th>
+                <th><?= t('Scope') ?></th>
+                <th><?= t('Amount') ?></th>
+                <th><?= t('Date') ?></th>
+                <th><?= t('Due') ?></th>
+                <th><?= t('Status') ?></th>
             </tr>
             </thead>
             <tbody>
@@ -84,7 +84,7 @@ $invoices_sql = mysqli_query($mysqli, "SELECT invoice_amount, invoice_date, invo
                     <td class="<?= $overdue_color ?>"><?= $invoice_due ?></td>
                     <td>
                         <span class="p-2 badge text-bg-<?= $invoice_badge_color ?>">
-                            <?= $invoice_status ?>
+                            <?= i18n_invoice_status_label($invoice_status) ?>
                         </span>
                     </td>
                 </tr>

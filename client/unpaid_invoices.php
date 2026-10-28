@@ -52,7 +52,7 @@ $balance = $invoice_amounts - $amount_paid;
 
 <div class="row">
     <div class="col-5">
-        <h3>Unpaid Invoices</h3>
+        <h3><?= t('Unpaid Invoices') ?></h3>
     </div>
     <div class="col-5">
         <?php if ($payment_provider_active && $bulk_payment_enabled) { // Currently not implmented fully ?>
@@ -81,16 +81,16 @@ $balance = $invoice_amounts - $amount_paid;
     <div class="col-md-10">
 
         <?php if (mysqli_num_rows($invoices_sql) == 0) { ?>
-            <?= portalEmptyState('There is nothing unpaid on this account.', 'fa-check', 'success') ?>
+            <?= portalEmptyState(t('There is nothing unpaid on this account.'), 'fa-check', 'success') ?>
         <?php } else { ?>
         <table class="table table-bordered border border-dark">
             <thead class="table-dark">
             <tr>
                 <th>#</th>
-                <th>Scope</th>
-                <th>Amount</th>
-                <th>Date</th>
-                <th>Due</th>
+                <th><?= t('Scope') ?></th>
+                <th><?= t('Amount') ?></th>
+                <th><?= t('Date') ?></th>
+                <th><?= t('Due') ?></th>
                 <th></th>
             </tr>
             </thead>
