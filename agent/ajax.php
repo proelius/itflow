@@ -334,7 +334,6 @@ if (isset($_GET['share_generate_link'])) {
         if ($item_expires_friendly == "never") {
             $subject = "$company_name secure link enclosed";
         }
-        $body = "Hello,<br><br>$session_name from $company_name sent you a time sensitive secure link regarding \"$item_name\".<br><br>The link will expire in <strong>$item_expires_friendly</strong>$item_view_limit_wording.<br><br><strong><a href=\'$url\'>Click here to access your secure content</a></strong><br><br>--<br>$company_name - Support<br>$config_ticket_from_email<br>$company_phone";
         $body = t_mail('Hello,') . "<br><br>" . t_mail('{agent} from {company} sent you a time sensitive secure link regarding \"{item}\".', ['{agent}' => $session_name, '{company}' => $company_name, '{item}' => $item_name]) . "<br><br>" . t_mail('The link will expire in {delay}', ['{delay}' => "<strong>" . $item_expires_friendly . "</strong>"]) . $item_view_limit_wording . "<br><br><strong><a href=\'" . $url . "\'>" . t_mail('Click here to access your secure content') . "</a></strong><br><br>--<br>" . $company_name . " - " . t_mail("Support") . "<br>" . $config_ticket_from_email . "<br>" . $company_phone;
         // Add the intended recipient disclosure
         $body .= "<br><br><em>This email and any attachments are confidential and intended for the specified recipient(s) only. If you are not the intended recipient, please notify the sender and delete this email. Unauthorized use, disclosure, or distribution is prohibited.</em>";
