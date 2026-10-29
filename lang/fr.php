@@ -502,7 +502,7 @@ return [
     '{n} business days' => '{n} jours ouvrés',
     'Time sensitive - {company} secure link enclosed' => 'Lien sécurisé de {company} à durée limitée',
     '{company} secure link enclosed' => 'Lien sécurisé de {company}',
-    '{agent} from {company} sent you a time sensitive secure link regarding "{item}".' => '{agent} de {company} vous a envoyé un lien sécurisé à durée limitée concernant « {item} ».',
+    '{agent} from {company} sent you a time sensitive secure link regarding \\"{item}\\."' => '{agent} de {company} vous a envoyé un lien sécurisé à durée limitée concernant « {item} ».',
     'The link will expire in {delay}' => 'Ce lien expire : {delay}',
     '1 hour' => 'dans 1 heure',
     '1 day' => 'dans 1 jour',

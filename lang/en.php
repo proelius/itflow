@@ -507,7 +507,7 @@ return [
     '{n} business days' => '{n} business days',
     'Time sensitive - {company} secure link enclosed' => 'Time sensitive - {company} secure link enclosed',
     '{company} secure link enclosed' => '{company} secure link enclosed',
-    '{agent} from {company} sent you a time sensitive secure link regarding "{item}".' => '{agent} from {company} sent you a time sensitive secure link regarding "{item}".',
+    '{agent} from {company} sent you a time sensitive secure link regarding \\"{item}\\."' => '{agent} from {company} sent you a time sensitive secure link regarding \\"{item}\\."',
     'The link will expire in {delay}' => 'The link will expire in {delay}',
     '1 hour' => '1 hour',
     '1 day' => '1 day',
