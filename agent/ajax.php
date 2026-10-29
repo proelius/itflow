@@ -251,7 +251,7 @@ if (isset($_GET['share_generate_link'])) {
     $item_view_limit = intval($_GET['views']);
     $item_view_limit_wording = "";
     if ($item_view_limit == 1) {
-        $item_view_limit_wording = " and may only be viewed <strong>once</strong>, before the link is destroyed.";
+        $item_view_limit_wording = t_mail(' and may only be viewed {once}, before the link is destroyed.', ['{once}' => '<strong>' . t_mail('once') . '</strong>']);
     }
     $item_expires = intval($_GET['expires']);
     $item_expires_friendly = "never"; // default never
@@ -330,13 +330,26 @@ if (isset($_GET['share_generate_link'])) {
     // Send user e-mail, if specified
     if(!empty($config_smtp_host) && filter_var($item_email, FILTER_VALIDATE_EMAIL)){
 
-        $subject = "Time sensitive - $company_name secure link enclosed";
+        $item_expires_label = match ($item_expires_friendly) {
+            '1 hour' => t_mail('1 hour'),
+            '1 day' => t_mail('1 day'),
+            '1 week' => t_mail('1 week'),
+            '1 month' => t_mail('1 month'),
+            default => t_mail('never'),
+        };
+
+        $subject = t_mail('Time sensitive - {company} secure link enclosed', ['{company}' => $company_name]);
         if ($item_expires_friendly == "never") {
-            $subject = "$company_name secure link enclosed";
+            $subject = t_mail('{company} secure link enclosed', ['{company}' => $company_name]);
         }
-        $body = t_mail('Hello,') . "<br><br>" . t_mail('{agent} from {company} sent you a time sensitive secure link regarding \"{item}\".', ['{agent}' => $session_name, '{company}' => $company_name, '{item}' => $item_name]) . "<br><br>" . t_mail('The link will expire in {delay}', ['{delay}' => "<strong>" . $item_expires_friendly . "</strong>"]) . $item_view_limit_wording . "<br><br><strong><a href=\'" . $url . "\'>" . t_mail('Click here to access your secure content') . "</a></strong><br><br>--<br>" . $company_name . " - " . t_mail("Support") . "<br>" . $config_ticket_from_email . "<br>" . $company_phone;
+        $body = t_mail('Hello,') . "<br><br>"
+            . t_mail('{agent} from {company} sent you a time sensitive secure link regarding "{item}".', ['{agent}' => $session_name, '{company}' => $company_name, '{item}' => $item_name])
+            . "<br><br>" . t_mail('The link will expire in {delay}', ['{delay}' => "<strong>$item_expires_label</strong>"])
+            . $item_view_limit_wording . ".<br><br><strong><a href=\'$url\'>" . t_mail('Click here to access your secure content') . "</a></strong><br><br>--<br>"
+            . $company_name . " - " . t_mail('Support') . "<br>$config_ticket_from_email<br>$company_phone";
+
         // Add the intended recipient disclosure
-        $body .= "<br><br><em>This email and any attachments are confidential and intended for the specified recipient(s) only. If you are not the intended recipient, please notify the sender and delete this email. Unauthorized use, disclosure, or distribution is prohibited.</em>";
+        $body .= "<br><br><em>" . t_mail('This email and any attachments are confidential and intended for the specified recipient(s) only. If you are not the intended recipient, please notify the sender and delete this email. Unauthorized use, disclosure, or distribution is prohibited.') . "</em>";
 
         $data = [
             [
