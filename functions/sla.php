@@ -577,16 +577,24 @@ function formatSlaMinutes($minutes)
     }
 
     if ($minutes < 60) {
-        return $minutes . ' minute' . ($minutes == 1 ? '' : 's');
+        if ($minutes == 1) {
+            return t('{n} minute', ['{n}' => $minutes]);
+        } else {
+            return t('{n} minutes', ['{n}' => $minutes]);
+        }
     }
 
     if ($minutes < $day_minutes) {
         $hours = intdiv($minutes, 60);
         $remainder = $minutes % 60;
 
-        $text = $hours . ' ' . $qualifier . 'hour' . ($hours == 1 ? '' : 's');
+        if ($qualifier) {
+            $text = $hours == 1 ? t('{n} business hour', ['{n}' => $hours]) : t('{n} business hours', ['{n}' => $hours]);
+        } else {
+            $text = $hours == 1 ? t('{n} hour', ['{n}' => $hours]) : t('{n} hours', ['{n}' => $hours]);
+        }
         if ($remainder >= 5) {
-            $text .= ' ' . $remainder . ' minutes';
+            $text .= ' ' . ($remainder == 1 ? t('{n} minute', ['{n}' => $remainder]) : t('{n} minutes', ['{n}' => $remainder]));
         }
 
         return $text;
@@ -595,9 +603,13 @@ function formatSlaMinutes($minutes)
     $days = intdiv($minutes, $day_minutes);
     $hours = intdiv($minutes % $day_minutes, 60);
 
-    $text = $days . ' ' . $qualifier . 'day' . ($days == 1 ? '' : 's');
+    if ($qualifier) {
+        $text = $days == 1 ? t('{n} business day', ['{n}' => $days]) : t('{n} business days', ['{n}' => $days]);
+    } else {
+        $text = $days == 1 ? t('{n} day', ['{n}' => $days]) : t('{n} days', ['{n}' => $days]);
+    }
     if ($hours > 0) {
-        $text .= ' ' . $hours . ' hour' . ($hours == 1 ? '' : 's');
+        $text .= ' ' . ($hours == 1 ? t('{n} hour', ['{n}' => $hours]) : t('{n} hours', ['{n}' => $hours]));
     }
 
     return $text;
@@ -637,17 +649,15 @@ function getTicketSlaEmailNotice($ticket_id, $company_phone = '')
     // The only value in this notice that comes from the database rather than a
     // literal - escaped so the quote-free guarantee above holds for it too
     $priority = escapeHtml($row['ticket_priority']);
-    $target = formatSlaMinutes($response_minutes);
-    $due = date('D j M, g:i A', strtotime($row['ticket_response_due_at']));
 
-    $notice = "<br><br>Priority: $priority<br>Target response: within $target (by $due)";
+    $notice = "<br><br>" . i18n_with(client_language(), fn() => t('Priority:')) . " " . i18n_with(client_language(), fn() => i18n_ticket_priority_label($priority)) . "<br>" . i18n_with(client_language(), fn() => t('Target response: within {target} (by {due})', ['{target}' => formatSlaMinutes($response_minutes), '{due}' => i18n_format_sla_due(strtotime($row['ticket_response_due_at']))]));
 
     // Higher priorities get told to phone rather than sit on an email thread
     if (!empty($company_phone) && ($priority == 'Urgent' || $priority == 'High')) {
         if ($priority == 'Urgent') {
-            $notice .= "<br><br><strong>This ticket is marked Urgent.</strong> If the issue is stopping work right now, please call us on $company_phone rather than waiting for a reply to this email.";
+            $notice .= "<br><br><strong>" . i18n_with(client_language(), fn() => t('This ticket is marked Urgent.')) . "</strong> " . i18n_with(client_language(), fn() => t('If the issue is stopping work right now, please call us on {phone} rather than waiting for a reply to this email.', ['{phone}' => $company_phone]));
         } else {
-            $notice .= "<br><br><strong>This ticket is marked High priority.</strong> If it is business-impacting, calling us on $company_phone will get you the fastest response.";
+            $notice .= "<br><br><strong>" . i18n_with(client_language(), fn() => t('This ticket is marked High priority.')) . "</strong> " . i18n_with(client_language(), fn() => t('If it is business-impacting, calling us on {phone} will get you the fastest response.', ['{phone}' => $company_phone]));
         }
     }
 
