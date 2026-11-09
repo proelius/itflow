@@ -15,9 +15,9 @@
  *   data-confirm-button  confirm label      (default: "Yes")
  *   data-confirm-icon    warning|error|question|info|success
  *
- * A link whose classes mark it destructive (text-danger) defaults to a red
- * confirm button and a warning icon, so the 92 delete links read as dangerous
- * without touching any of them.
+ * A link whose classes mark it destructive (text-danger, btn-danger or
+ * btn-outline-danger) defaults to a red confirm button and a warning icon, so
+ * the delete links read as dangerous without touching any of them.
  */
 document.addEventListener('click', function (e) {
     const i18n = window.itflowConfirmI18n || {};
@@ -33,7 +33,8 @@ document.addEventListener('click', function (e) {
     const submitter = link.tagName === 'BUTTON' ? link : null;
     const form = submitter ? (submitter.form || submitter.closest('form')) : null;
 
-    const destructive = link.classList.contains('text-danger');
+    const destructive = ['text-danger', 'btn-danger', 'btn-outline-danger']
+        .some(function (cls) { return link.classList.contains(cls); });
 
     Swal.fire({
         // SweetAlert2 has no idea about Bootstrap's mode - it keys its own dark
