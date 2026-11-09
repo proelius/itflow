@@ -1,11 +1,12 @@
 <?php
 /*
  * Client Portal
- * Web certificates - the SSL/TLS certificates for domains owned by this client.
+ * Certificates are on Domains & certificates now - old links land there.
  */
 
-header("Content-Security-Policy: default-src 'self'");
-
-require_once "includes/inc_all.php";
+require_once '../config.php';
+require_once '../includes/load_global_settings.php';
+require_once '../functions.php';
+require_once 'includes/check_login.php';
 
 redirect('domains.php?tab=certificates');
