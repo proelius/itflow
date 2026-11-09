@@ -355,7 +355,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
             </div>
             <div class="itflow-portal-panel-body">
                 <p class="small text-body-secondary mb-0"><?= t('We ask for it to make sure it is really you when you call.') ?>
-                    <?= empty($me['contact_pin']) ? 'You have not set one.' : 'Yours is <span class="font-monospace fw-semibold">' . escapeHtml($me['contact_pin']) . '</span>.' ?></p>
+                    <?= empty($me['contact_pin']) ? t('You have not set one.') : 'Yours is <span class="font-monospace fw-semibold">' . escapeHtml($me['contact_pin']) . '</span>.' ?></p>
             </div>
             <form class="collapse itflow-portal-panel-body border-top" id="pinForm" action="post.php" method="post" autocomplete="off" data-portal-once>
                 <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
@@ -369,7 +369,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     </div>
                 <?php } ?>
                 <div class="mb-3">
-                    <label class="form-label" for="contactPin"><?= empty($me['contact_pin']) ? 'New PIN' : 'Replace it with' ?></label>
+                    <label class="form-label" for="contactPin"><?= empty($me['contact_pin']) ? t('New PIN') : t('Replace it with') ?></label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fa fa-fw fa-hashtag"></i></span>
                         <input type="text" class="form-control" id="contactPin" name="pin" minlength="4" maxlength="255" placeholder="<?= t('At least 4 characters') ?>" autocomplete="off" required>
