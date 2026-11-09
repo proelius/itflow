@@ -278,6 +278,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                         <?= portalTile('fa-mobile-alt') ?>
                         <span class="itflow-portal-ticket-main">
                             <span class="itflow-portal-ticket-subject d-block"><?= t('Two-step sign-in') ?>
+
                                 <span class="itflow-portal-state <?= $session_mfa_on ? 'itflow-portal-state-resolved' : 'itflow-portal-state-hold' ?> ms-1"><i class="fas fa-fw fa-<?= $session_mfa_on ? 'check' : 'minus' ?>"></i><?= $session_mfa_on ? t('On') : t('Off') ?></span>
                             </span>
                             <span class="itflow-portal-ticket-meta"><span><?= $session_mfa_on ? t('Signing in asks for a code from your authenticator app') : t('A code from an app on your phone, as well as your password') ?></span></span>
@@ -355,6 +356,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
             </div>
             <div class="itflow-portal-panel-body">
                 <p class="small text-body-secondary mb-0"><?= t('We ask for it to make sure it is really you when you call.') ?>
+
                     <?= empty($me['contact_pin']) ? t('You have not set one.') : 'Yours is <span class="font-monospace fw-semibold">' . escapeHtml($me['contact_pin']) . '</span>.' ?></p>
             </div>
             <form class="collapse itflow-portal-panel-body border-top" id="pinForm" action="post.php" method="post" autocomplete="off" data-portal-once>
