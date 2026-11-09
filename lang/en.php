@@ -644,7 +644,6 @@ return [
     'Reply to a text about a ticket to add to it.' => 'Reply to a text about a ticket to add to it.',
     'Reply STOP to any text and they stop.' => 'Reply STOP to any text and they stop.',
     'Message and data rates may apply.' => 'Message and data rates may apply.',
-    'Invoices, quotes, receipts and statements go to' => 'Invoices, quotes, receipts and statements go to',
     'Forget them' => 'Forget them',
     'after signing in' => 'after signing in',
     'day' => 'day',
@@ -739,5 +738,5 @@ return [
     'New document' => 'New document',
     'or, as it can\'t be shown here, type the key in' => 'or, as it can\'t be shown here, type the key in',
     'None - you see your own tickets' => 'None - you see your own tickets',
-    '{company}\'s billing contacts - ask us if they should go somewhere else.' => '{company}\'s billing contacts - ask us if they should go somewhere else.',
+    'Invoices, quotes, receipts and statements go to {company}\'s billing contacts - ask us if they should go somewhere else.' => 'Invoices, quotes, receipts and statements go to {company}\'s billing contacts - ask us if they should go somewhere else.',
 ];

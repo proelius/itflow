@@ -595,7 +595,6 @@ return [
     'Reply to a text about a ticket to add to it.' => 'Répondez à un message concernant un ticket pour y ajouter une réponse.',
     'Reply STOP to any text and they stop.' => "Répondez STOP à n’importe quel message et ils s’arrêtents.",
     'Message and data rates may apply.' => "Des frais de message et de données peuvent s’appliquer.",
-    'Invoices, quotes, receipts and statements go to' => 'Les factures, devis, reçus et relevés sont envoyés à',
     'Forget them' => "Les oublier",
     'after signing in' => "après la connexion",
     'day' => "jour",
@@ -692,6 +691,7 @@ return [
     'Upload a file' => 'Téléverser un fichier',
     'New document' => 'Nouveau document',
     'or, as it can\'t be shown here, type the key in' => 'ou, comme il ne peut pas être affiché ici, saisissez cette clé :',
-    '{company}\'s billing contacts - ask us if they should go somewhere else.' => '{company} : contacts de facturation - demandez-nous s’ils doivent aller ailleurs.',
     'None - you see your own tickets' => 'Aucun - vous voyez vos propres tickets',
+
+    'Invoices, quotes, receipts and statements go to {company}\'s billing contacts - ask us if they should go somewhere else.' => 'Les factures, devis, reçus et relevés sont envoyés aux contacts de facturation de {company} - demandez-nous s’ils doivent aller ailleurs.',
 ];
