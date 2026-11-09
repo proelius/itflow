@@ -43,7 +43,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
         'icon' => $resolved ? 'fa-check' : 'fa-reply',
         'tone' => $resolved ? 'is-info' : '',
         'title' => $row['ticket_subject'],
-        'line' => ($resolved ? 'Resolved - is it fixed? Close it, or reopen it' : 'We replied - waiting on you') . ' · ' . $row['ticket_prefix'] . $row['ticket_number'],
+        'line' => ($resolved ? t('Resolved - is it fixed? Close it, or reopen it') : t('We replied - waiting on you')) . ' · ' . $row['ticket_prefix'] . $row['ticket_number'],
     ];
 }
 
@@ -59,7 +59,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
         'href' => 'ticket.php?id=' . intval($row['ticket_id']),
         'icon' => 'fa-clipboard-check',
         'tone' => '',
-        'title' => 'Approve: ' . $row['task_name'],
+        'title' => t('Approve: ') . $row['task_name'],
         'line' => 'Waiting for your approval · ' . $row['ticket_prefix'] . $row['ticket_number'],
     ];
 }
@@ -235,7 +235,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
                 <span class="itflow-portal-stat-icon"><i class="fas fa-calendar-alt"></i></span>
                 <span>
                     <span class="itflow-portal-stat-value d-block"><?= count($renewals) ?></span>
-                    <span class="itflow-portal-stat-label"><?= count($renewals) === 1 ? 'Renewal' : 'Renewals' ?> coming up</span>
+                    <span class="itflow-portal-stat-label"><?= count($renewals) === 1 ? 'Renewal' : t('Renewals') ?> coming up</span>
                 </span>
             </a>
         </div>
@@ -271,7 +271,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
 
         <section class="itflow-portal-panel">
             <div class="itflow-portal-panel-head">
-                <h2><i class="fas fa-life-ring"></i><?= $sees_all ? 'Open tickets' : 'Your open tickets' ?></h2>
+                <h2><i class="fas fa-life-ring"></i><?= $sees_all ? 'Open tickets' : t('Your open tickets') ?></h2>
                 <a href="tickets.php">All tickets</a>
             </div>
             <?php if (!mysqli_num_rows($recent)) { ?>
