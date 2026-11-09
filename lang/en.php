@@ -639,4 +639,10 @@ return [
     'Your account' => 'Your account',
     'Your details, the emails you get from us and how you sign in' => 'Your details, the emails you get from us and how you sign in',
     'Your phone numbers' => 'Your phone numbers',
+    'from' => 'from',
+    'Texts go to' => 'Texts go to',
+    'Reply to a text about a ticket to add to it.' => 'Reply to a text about a ticket to add to it.',
+    'Reply STOP to any text and they stop.' => 'Reply STOP to any text and they stop.',
+    'Message and data rates may apply.' => 'Message and data rates may apply.',
+    'Invoices, quotes, receipts and statements go to' => 'Invoices, quotes, receipts and statements go to',
 ];
