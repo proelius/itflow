@@ -168,7 +168,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     <?php foreach (PORTAL_TICKET_EMAILS as $key => $option) { ?>
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="radio" name="ticket_emails" id="ticketEmails-<?= $key ?>" value="<?= $key ?>"<?= $ticket_pref === $key ? ' checked' : '' ?>>
-                            <label class="form-check-label" for="ticketEmails-<?= $key ?>"><?= escapeHtml($option['label']) ?> <span class="d-block small text-body-secondary"><?= escapeHtml($option['text']) ?></span></label>
+                            <label class="form-check-label" for="ticketEmails-<?= $key ?>"><?= escapeHtml(i18n_portal_label($option['label'])) ?> <span class="d-block small text-body-secondary"><?= escapeHtml(i18n_portal_label($option['text'])) ?></span></label>
                         </div>
                     <?php } ?>
                 </fieldset>
@@ -178,7 +178,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                         <?php foreach (PORTAL_COMPANY_TICKET_EMAILS as $key => $option) { ?>
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="radio" name="company_ticket_emails" id="companyEmails-<?= $key ?>" value="<?= $key ?>"<?= $company_pref === $key ? ' checked' : '' ?>>
-                                <label class="form-check-label" for="companyEmails-<?= $key ?>"><?= escapeHtml($option['label']) ?> <span class="d-block small text-body-secondary"><?= escapeHtml($option['text']) ?></span></label>
+                                <label class="form-check-label" for="companyEmails-<?= $key ?>"><?= escapeHtml(i18n_portal_label($option['label'])) ?> <span class="d-block small text-body-secondary"><?= escapeHtml(i18n_portal_label($option['text'])) ?></span></label>
                             </div>
                         <?php } ?>
                     </fieldset>

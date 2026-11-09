@@ -429,3 +429,25 @@ function i18n_recurring_frequency_label(string $name): string {
     };
 }
 
+/**
+ * Get portal label text in current language (for PORTAL_TICKET_EMAILS, PORTAL_COMPANY_TICKET_EMAILS, and device labels)
+ * @param string $text English label text
+ * @return string Translated label or original if not found
+ */
+function i18n_portal_label(string $text): string {
+    return match ($text) {
+        'Every email' => t('Every email'),
+        'When a ticket is raised for you, every reply and update, when it is fixed and when it is closed' => t('When a ticket is raised for you, every reply and update, when it is fixed and when it is closed'),
+        'Replies and fixes only' => t('Replies and fixes only'),
+        'Our replies and when it is fixed - not the emails saying a ticket was raised or closed' => t('Our replies and when it is fixed - not the emails saying a ticket was raised or closed'),
+        'Only the tickets I am on' => t('Only the tickets I am on'),
+        'Nothing about tickets other people raise' => t('Nothing about tickets other people raise'),
+        'New tickets' => t('New tickets'),
+        'An email when anyone raises one - in the portal, by email or by calling us' => t('An email when anyone raises one - in the portal, by email or by calling us'),
+        'New tickets and every update' => t('New tickets and every update'),
+        'As if you were copied in on all of them' => t('As if you were copied in on all of them'),
+        'Unknown device' => t('Unknown device'),
+        default => $text,
+    };
+}
+
