@@ -109,7 +109,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
 
         <section class="itflow-portal-panel mb-4">
             <div class="itflow-portal-panel-head">
-                <h2><i class="fas fa-id-card"></i>Your details</h2>
+                <h2><i class="fas fa-id-card"></i><?= t('Your details') ?></h2>
                 <a href="<?= escapeHtml(portalAskUrl('Please update my details')) ?>">Ask us to change them</a>
             </div>
             <div class="itflow-portal-panel-body">
@@ -184,9 +184,9 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     </fieldset>
                 <?php } ?>
                 <?php if ($session_contact_is_billing_contact || $session_contact_primary) { ?>
-                    <p class="small text-body-secondary">Invoices, quotes, receipts and statements go to <?= escapeHtml($session_client_name) ?>'s billing contacts - ask us if they should go somewhere else.</p>
+                    <p class="small text-body-secondary"><?= t('Invoices, quotes, receipts and statements go to') ?> <?= escapeHtml($session_client_name) ?><?= t("'s billing contacts - ask us if they should go somewhere else.") ?></p>
                 <?php } ?>
-                <button type="submit" class="btn btn-primary" name="portal_email_prefs"><i class="fas fa-check me-2"></i>Save</button>
+                <button type="submit" class="btn btn-primary" name="portal_email_prefs"><i class="fas fa-check me-2"></i><?= t('Save') ?></button>
             </div>
         </form>
 
@@ -208,11 +208,11 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                             <input class="form-check-input" type="checkbox" role="switch" name="sms_opt_in" value="1" id="portalSmsOptIn" <?= $my_texts['on'] && !$my_texts['stopped'] ? 'checked' : '' ?>>
                             <label class="form-check-label" for="portalSmsOptIn"><?= t('Text me about my tickets, visits and invoices') ?></label>
                         </div>
-                        <p class="small text-body-secondary">To <?= escapeHtml(smsNumberText($my_texts['number'])) ?>, from <?= escapeHtml($texting_number) ?>. Reply to a text about a ticket to add to it. Reply STOP to any text and they stop. Message and data rates may apply.</p>
+                        <p class="small text-body-secondary"><?= t('Texts go to') ?> <?= escapeHtml(smsNumberText($my_texts['number'])) ?>, <?= t('from') ?> <?= escapeHtml($texting_number) ?>. <?= t('Reply to a text about a ticket to add to it.') ?> <?= t('Reply STOP to any text and they stop.') ?> <?= t('Message and data rates may apply.') ?></p>
                         <?php if ($my_texts['stopped']) { ?>
                             <p class="small text-warning-emphasis">You replied STOP to our texts, so we send none. Turn this on to get them again.</p>
                         <?php } ?>
-                        <button type="submit" class="btn btn-primary" name="portal_sms_prefs"><i class="fas fa-check me-2"></i>Save</button>
+                        <button type="submit" class="btn btn-primary" name="portal_sms_prefs"><i class="fas fa-check me-2"></i><?= t('Save') ?></button>
                     <?php } ?>
                 </div>
             </form>
@@ -243,7 +243,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                             <span class="itflow-portal-ticket-subject d-block">Password</span>
                             <span class="itflow-portal-ticket-meta"><span>At least <?= USER_PASSWORD_MIN ?> characters</span></span>
                         </span>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#passwordForm" aria-expanded="false" aria-controls="passwordForm">Change</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#passwordForm" aria-expanded="false" aria-controls="passwordForm"><?= t('Change') ?></button>
                     </li>
                 </ul>
                 <form class="collapse itflow-portal-panel-body border-top" id="passwordForm" action="post.php" method="post" autocomplete="off" data-portal-once>
@@ -351,7 +351,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
         <section class="itflow-portal-panel mb-4">
             <div class="itflow-portal-panel-head">
                 <h2><i class="fas fa-hashtag"></i><?= t('Phone PIN') ?></h2>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#pinForm" aria-expanded="false" aria-controls="pinForm"><?= empty($me['contact_pin']) ? 'Set' : 'Change' ?></button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#pinForm" aria-expanded="false" aria-controls="pinForm"><?= empty($me['contact_pin']) ? t('Set') : t('Change') ?></button>
             </div>
             <div class="itflow-portal-panel-body">
                 <p class="small text-body-secondary mb-0"><?= t('We ask for it to make sure it is really you when you call.') ?>

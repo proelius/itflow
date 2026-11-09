@@ -133,7 +133,7 @@ return [
     'Outstanding Amount:' => 'Outstanding Amount:',
     'Payment Applied:' => 'Payment Applied:',
     'New Balance:' => 'New Balance:',
-    'Thank you for your payment of {amount} We've applied your payment to the following invoices, updating their balances accordingly:' => 'Thank you for your payment of {amount} We've applied your payment to the following invoices, updating their balances accordingly:',
+    'Thank you for your payment of {amount} We\'ve applied your payment to the following invoices, updating their balances accordingly:' => 'Thank you for your payment of {amount} We\'ve applied your payment to the following invoices, updating their balances accordingly:',
     
     // Email - Cron Nightly Tasks (2 client emails)
     'Overdue Invoice {number}' => 'Overdue Invoice {number}',
@@ -147,14 +147,14 @@ return [
     
     // Email - Password Reset (client/login_reset.php)
     'Password reset for {company} Client Portal' => 'Password reset for {company} Client Portal',
-    'Someone (probably you) has requested a new password for your account on {company}'s Client Portal.' => 'Someone (probably you) has requested a new password for your account on {company}'s Client Portal.',
+    'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.' => 'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.',
     'Please {link} to reset your password.' => 'Please {link} to reset your password.',
     'click here' => 'click here',
     'Alternatively, copy and paste this URL into your browser:' => 'Alternatively, copy and paste this URL into your browser:',
-    'If you didn't request this change, you can safely ignore this email.' => 'If you didn't request this change, you can safely ignore this email.',
+    'If you didn\'t request this change, you can safely ignore this email.' => 'If you didn\'t request this change, you can safely ignore this email.',
     'Password reset confirmation for {company} Client Portal' => 'Password reset confirmation for {company} Client Portal',
-    'Your password for your account on {company}'s Client Portal was successfully reset. You should be all set!' => 'Your password for your account on {company}'s Client Portal was successfully reset. You should be all set!',
-    'If you didn't reset your password, please get in touch ASAP.' => 'If you didn't reset your password, please get in touch ASAP.',
+    'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!' => 'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!',
+    'If you didn\'t reset your password, please get in touch ASAP.' => 'If you didn\'t reset your password, please get in touch ASAP.',
     'Support' => 'Support',
 
     // Email - Contact Portal Invitation (agent/post/contact.php)
@@ -482,7 +482,7 @@ return [
     'Thank you for your email. A ticket regarding "{subject}" has been automatically created for you.' => 'Thank you for your email. A ticket regarding "{subject}" has been automatically created for you.',
     'Action required: This ticket is already closed' => 'Action required: This ticket is already closed',
     'Hi there,' => 'Hi there,',
-    'You've tried to reply to a ticket that is closed - we won't see your response.' => 'You've tried to reply to a ticket that is closed - we won't see your response.',
+    'You\'ve tried to reply to a ticket that is closed - we won\'t see your response.' => 'You\'ve tried to reply to a ticket that is closed - we won\'t see your response.',
     'Please raise a new ticket by sending a new e-mail to our support address below.' => 'Please raise a new ticket by sending a new e-mail to our support address below.',
     'Item cannot be viewed at this time (disabled or invalid).' => 'Item cannot be viewed at this time (disabled or invalid).',
     'Item cannot be viewed at this time (Bad item type: expected File but got {type}).' => 'Item cannot be viewed at this time (Bad item type: expected File but got {type}).',
@@ -596,7 +596,7 @@ return [
     'Save numbers' => 'Save numbers',
     'Signing in' => 'Signing in',
     'So we can reach you about a ticket without hunting for a number. Clear one to remove it.' => 'So we can reach you about a ticket without hunting for a number. Clear one to remove it.',
-    'Somewhere you don't recognise? Change your password and let us know.' => 'Somewhere you don't recognise? Change your password and let us know.',
+    'Somewhere you don\'t recognise? Change your password and let us know.' => 'Somewhere you don\'t recognise? Change your password and let us know.',
     'Text me about my tickets, visits and invoices' => 'Text me about my tickets, visits and invoices',
     'Texts from us' => 'Texts from us',
     'The same again' => 'The same again',
@@ -626,7 +626,7 @@ return [
     'Save numbers' => 'Save numbers',
     'Signing in' => 'Signing in',
     'So we can reach you about a ticket without hunting for a number. Clear one to remove it.' => 'So we can reach you about a ticket without hunting for a number. Clear one to remove it.',
-    'Somewhere you don't recognise? Change your password and let us know.' => 'Somewhere you don't recognise? Change your password and let us know.',
+    'Somewhere you don\'t recognise? Change your password and let us know.' => 'Somewhere you don\'t recognise? Change your password and let us know.',
     'Text me about my tickets, visits and invoices' => 'Text me about my tickets, visits and invoices',
     'Texts from us' => 'Texts from us',
     'The same again' => 'The same again',
