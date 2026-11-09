@@ -693,6 +693,6 @@ return [
     'Upload a file' => 'Téléverser un fichier',
     'New document' => 'Nouveau document',
     'or, as it can\'t be shown here, type the key in' => 'ou, comme il ne peut pas être affiché ici, saisissez cette clé :',
-    '\'s billing contacts - ask us if they should go somewhere else.' => 'les contacts de facturation - demandez-nous s\'ils doivent aller ailleurs.',
+    '{company}\'s billing contacts - ask us if they should go somewhere else.' => '{company} : contacts de facturation - demandez-nous s’ils doivent aller ailleurs.',
     'None - you see your own tickets' => 'Aucun - vous voyez vos propres tickets',
 ];

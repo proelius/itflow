@@ -184,7 +184,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     </fieldset>
                 <?php } ?>
                 <?php if ($session_contact_is_billing_contact || $session_contact_primary) { ?>
-                    <p class="small text-body-secondary"><?= t('Invoices, quotes, receipts and statements go to') ?> <?= escapeHtml($session_client_name) ?><?= t("'s billing contacts - ask us if they should go somewhere else.") ?></p>
+                    <p class="small text-body-secondary"><?= t('Invoices, quotes, receipts and statements go to') ?> <?= t('{company}\'s billing contacts - ask us if they should go somewhere else.', ['{company}' => escapeHtml($session_client_name)]) ?></p>
                 <?php } ?>
                 <button type="submit" class="btn btn-primary" name="portal_email_prefs"><i class="fas fa-check me-2"></i><?= t('Save') ?></button>
             </div>
