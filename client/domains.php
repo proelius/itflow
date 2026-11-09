@@ -45,20 +45,20 @@ function domainsState($expiry) {
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1>Domains &amp; certificates</h1>
-        <p>Your domain names and the certificates that keep your sites secure</p>
+        <h1><?= t('Domains & certificates') ?></h1>
+        <p><?= t('Your domain names and the certificates that keep your sites secure') ?></p>
     </div>
 </div>
 
 <nav class="itflow-portal-tabs" aria-label="Domains and certificates">
-    <a class="<?= $tab === 'domains' ? 'active' : '' ?>" href="domains.php"><i class="fas fa-globe"></i>Domains <span class="badge rounded-pill"><?= $counts['domains'] ?></span></a>
-    <a class="<?= $tab === 'certificates' ? 'active' : '' ?>" href="domains.php?tab=certificates"><i class="fas fa-lock"></i>Certificates <span class="badge rounded-pill"><?= $counts['certificates'] ?></span></a>
+    <a class="<?= $tab === 'domains' ? 'active' : '' ?>" href="domains.php"><i class="fas fa-globe"></i><?= t('Domains') ?> <span class="badge rounded-pill"><?= $counts['domains'] ?></span></a>
+    <a class="<?= $tab === 'certificates' ? 'active' : '' ?>" href="domains.php?tab=certificates"><i class="fas fa-lock"></i><?= t('Certificates') ?> <span class="badge rounded-pill"><?= $counts['certificates'] ?></span></a>
 </nav>
 
 <section class="itflow-portal-panel">
     <?php if ($tab === 'domains') { ?>
         <?php if (!$counts['domains']) { ?>
-            <?= emptyStateHtml(['title' => 'No domains yet', 'text' => 'The domain names we look after for you show here.', 'icon' => 'fa-globe', 'filtered' => false]) ?>
+            <?= emptyStateHtml(['title' => t('No domains yet'), 'text' => t('The domain names we look after for you show here.'), 'icon' => 'fa-globe', 'filtered' => false]) ?>
         <?php } else { ?>
             <ul class="itflow-portal-list">
                 <?php while ($row = mysqli_fetch_assoc($domains)) {
@@ -84,7 +84,7 @@ function domainsState($expiry) {
         <?php } ?>
     <?php } else { ?>
         <?php if (!$counts['certificates']) { ?>
-            <?= emptyStateHtml(['title' => 'No certificates yet', 'text' => 'The web certificates we watch for you show here.', 'icon' => 'fa-lock', 'filtered' => false]) ?>
+            <?= emptyStateHtml(['title' => t('No certificates yet'), 'text' => t('The web certificates we watch for you show here.'), 'icon' => 'fa-lock', 'filtered' => false]) ?>
         <?php } else { ?>
             <ul class="itflow-portal-list">
                 <?php while ($row = mysqli_fetch_assoc($certificates)) {

@@ -60,20 +60,20 @@ function documentsUrl(array $changes) {
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1>Documents</h1>
-        <p>Guides and records we share with you</p>
+        <h1><?= t('Documents') ?></h1>
+        <p><?= t('Guides and records we share with you') ?></p>
     </div>
     <div class="d-flex flex-wrap align-items-center gap-2">
         <form method="get" class="d-flex" role="search">
             <?php if ($folder !== null) { ?><input type="hidden" name="folder" value="<?= $folder ?>"><?php } ?>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-fw fa-search"></i></span>
-                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="Search documents" aria-label="Search documents" maxlength="200">
+                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Search documents') ?>" aria-label="Search documents" maxlength="200">
             </div>
         </form>
         <div class="btn-group">
-            <a class="btn btn-primary" href="document_add.php"><i class="fas fa-plus me-2"></i>New document</a>
-            <a class="btn btn-outline-primary" href="document_add.php?upload=1"><i class="fas fa-upload me-2"></i>Upload a file</a>
+            <a class="btn btn-primary" href="document_add.php"><i class="fas fa-plus me-2"></i><?= t('New document') ?></a>
+            <a class="btn btn-outline-primary" href="document_add.php?upload=1"><i class="fas fa-upload me-2"></i><?= t('Upload a file') ?></a>
         </div>
     </div>
 </div>
@@ -92,8 +92,8 @@ function documentsUrl(array $changes) {
         <?php if ($q !== '') { ?>
             <?= emptyStateHtml(['thing' => 'documents', 'filtered' => true, 'match_text' => 'No document mentions &ldquo;' . escapeHtml($q) . '&rdquo;.', 'clear_url' => documentsUrl(['q' => null, 'page' => null])]) ?>
         <?php } else { ?>
-            <?= emptyStateHtml(['title' => 'No documents yet', 'text' => 'Guides and records we share with you show here - and you can add your own.', 'icon' => 'fa-folder-open', 'filtered' => false,
-                'actions' => [['label' => 'New document', 'href' => 'document_add.php'], ['label' => 'Upload a file', 'href' => 'document_add.php?upload=1', 'icon' => 'fa-upload']]]) ?>
+            <?= emptyStateHtml(['title' => t('No documents yet'), 'text' => t('Guides and records we share with you show here - and you can add your own.'), 'icon' => 'fa-folder-open', 'filtered' => false,
+                'actions' => [['label' => t('New document'), 'href' => 'document_add.php'], ['label' => t('Upload a file'), 'href' => 'document_add.php?upload=1', 'icon' => 'fa-upload']]]) ?>
         <?php } ?>
     <?php } else { ?>
         <ul class="itflow-portal-list">
@@ -110,7 +110,7 @@ function documentsUrl(array $changes) {
                             </span>
                         </span>
                         <span class="itflow-portal-ticket-side">
-                            <small title="<?= escapeHtml($updated) ?>">Updated <?= escapeHtml(date('M j, Y', strtotime($updated))) ?></small>
+                            <small title="<?= escapeHtml($updated) ?>"><?= t('Updated') ?> <?= escapeHtml(date('M j, Y', strtotime($updated))) ?></small>
                         </span>
                     </a>
                 </li>
