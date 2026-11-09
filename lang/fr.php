@@ -616,7 +616,6 @@ return [
     'At least' => "Au moins",
     'Turn this on to get them again.' => "Activez ceci pour les recevoir à nouveau.",
     'You replied STOP to our texts, so we send none.' => "Vous avez répondu STOP à nos messages, nous n’en envoyons donc aucun.",
-    's billing contacts - ask us if they should go somewhere else.' => "leleles contacts de facturation - demandez-nous s’ils doivent aller ailleurs.",
     'About other tickets at' => "Concernant les autres tickets chez",
     'About your tickets' => "Concernant vos tickets",
     'Ask us to change them' => "Demandez-nous de les modifier",

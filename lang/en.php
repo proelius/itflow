@@ -666,7 +666,6 @@ return [
     'At least' => 'At least',
     'Turn this on to get them again.' => 'Turn this on to get them again.',
     'You replied STOP to our texts, so we send none.' => 'You replied STOP to our texts, so we send none.',
-    's billing contacts - ask us if they should go somewhere else.' => 's billing contacts - ask us if they should go somewhere else.',
     'About other tickets at' => 'About other tickets at',
     'About your tickets' => 'About your tickets',
     'Ask us to change them' => 'Ask us to change them',
@@ -739,6 +738,6 @@ return [
     'Upload a file' => 'Upload a file',
     'New document' => 'New document',
     'or, as it can\'t be shown here, type the key in' => 'or, as it can\'t be shown here, type the key in',
-    '\'s billing contacts - ask us if they should go somewhere else.' => '\'s billing contacts - ask us if they should go somewhere else.',
     'None - you see your own tickets' => 'None - you see your own tickets',
+    '{company}\'s billing contacts - ask us if they should go somewhere else.' => '{company}\'s billing contacts - ask us if they should go somewhere else.',
 ];
