@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_reset_email_
         }
     }
 
-    $message = "If there is a client portal account for that address, a link to reset its password is on its way. It works for " . PORTAL_RESET_LINK_MINUTES . " minutes.";
+    $message = t("If there is a client portal account for that address, a link to reset its password is on its way. It works for {minutes} minutes.", ["{minutes}" => PORTAL_RESET_LINK_MINUTES]);
     $message_type = 'success';
 
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_reset_set_password'])) {
@@ -86,11 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_reset_email_
     $password = (string) ($_POST['new_password'] ?? '');
 
     if (!$link_user) {
-        $message = 'That link has run out or has been used already. Ask for a new one below.';
+        $message = t("That link has run out or has been used already. Ask for a new one below.");
     } elseif (($problem = userPasswordProblem($password)) !== '') {
         $message = $problem;
     } elseif ($password !== (string) ($_POST['confirm_password'] ?? '')) {
-        $message = 'The two passwords are not the same - type it again in both.';
+        $message = t("The two passwords are not the same - type it again in both.");
     } else {
         $user_id = intval($link_user['user_id']);
         $hash = escapeSql(password_hash($password, PASSWORD_DEFAULT));

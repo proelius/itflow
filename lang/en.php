@@ -560,4 +560,7 @@ return [
     'Wrong two-step code' => 'Wrong two-step code',
     'Your account' => 'Your account',
     'Your domain names and the certificates that keep your sites secure' => 'Your domain names and the certificates that keep your sites secure',
+    'If there is a client portal account for that address, a link to reset its password is on its way. It works for {minutes} minutes.' => 'If there is a client portal account for that address, a link to reset its password is on its way. It works for {minutes} minutes.',
+    'That link has run out or has been used already. Ask for a new one below.' => 'That link has run out or has been used already. Ask for a new one below.',
+    'The two passwords are not the same - type it again in both.' => 'The two passwords are not the same - type it again in both.',
 ];

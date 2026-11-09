@@ -555,4 +555,7 @@ return [
     'Wrong two-step code' => 'Code à deux étapes incorrect',
     'Your account' => 'Votre compte',
     'Your domain names and the certificates that keep your sites secure' => 'Vos noms de domaine et les certificats qui protègent vos sites',
+    'If there is a client portal account for that address, a link to reset its password is on its way. It works for {minutes} minutes.' => 'Si un compte portail client existe pour cette adresse, un lien pour réinitialiser son mot de passe est en route. Il est valide pour {minutes} minutes.',
+    'That link has run out or has been used already. Ask for a new one below.' => 'Ce lien est expiré ou déjà utilisé. Demandez-en un nouveau ci-dessous.',
+    'The two passwords are not the same - type it again in both.' => 'Les deux mots de passe ne sont pas identiques - saisissez-les à nouveau dans les deux champs.',
 ];
