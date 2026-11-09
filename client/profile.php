@@ -100,7 +100,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
 <?php if ($portal_mfa_setup_needed) { ?>
     <div class="alert alert-warning d-flex gap-2 align-items-start">
         <i class="fas fa-shield-alt mt-1"></i>
-        <div><strong><?= escapeHtml($session_company_name) ?> <?= t('asks everyone to use two-step sign-in.') ?></strong> <?= t('Set it up below to carry on - it takes a minute with an authenticator app on your phone.') ?></div>
+        <div><strong><?= t('{company} asks everyone to use two-step sign-in.', ['{company}' => escapeHtml($session_company_name)]) ?></strong> <?= t('Set it up below to carry on - it takes a minute with an authenticator app on your phone.') ?></div>
     </div>
 <?php } ?>
 
@@ -208,7 +208,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                             <input class="form-check-input" type="checkbox" role="switch" name="sms_opt_in" value="1" id="portalSmsOptIn" <?= $my_texts['on'] && !$my_texts['stopped'] ? 'checked' : '' ?>>
                             <label class="form-check-label" for="portalSmsOptIn"><?= t('Text me about my tickets, visits and invoices') ?></label>
                         </div>
-                        <p class="small text-body-secondary"><?= t('Texts go to') ?> <?= escapeHtml(smsNumberText($my_texts['number'])) ?>, <?= t('from') ?> <?= escapeHtml($texting_number) ?>. <?= t('Reply to a text about a ticket to add to it.') ?> <?= t('Reply STOP to any text and they stop.') ?> <?= t('Message and data rates may apply.') ?></p>
+                        <p class="small text-body-secondary"><?= t('To {number}, from {from_number}. Reply to a text about a ticket to add to it. Reply STOP to any text and they stop. Message and data rates may apply.', ['{number}' => escapeHtml(smsNumberText($my_texts['number'])), '{from_number}' => escapeHtml($texting_number)]) ?></p>
                         <?php if ($my_texts['stopped']) { ?>
                             <p class="small text-warning-emphasis"><?= t('You replied STOP to our texts, so we send none.') ?> <?= t('Turn this on to get them again.') ?></p>
                         <?php } ?>
@@ -241,7 +241,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                         <?= portalTile('fa-key') ?>
                         <span class="itflow-portal-ticket-main">
                             <span class="itflow-portal-ticket-subject d-block"><?= t('Password') ?></span>
-                            <span class="itflow-portal-ticket-meta"><span><?= t('At least') ?> <?= USER_PASSWORD_MIN ?> <?= t('characters') ?></span></span>
+                            <span class="itflow-portal-ticket-meta"><span><?= t('At least {min} characters', ['{min}' => USER_PASSWORD_MIN]) ?></span></span>
                         </span>
                         <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#passwordForm" aria-expanded="false" aria-controls="passwordForm"><?= t('Change') ?></button>
                     </li>
@@ -286,7 +286,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                         <?php if (!$session_mfa_on && !$mfa_setup) { ?>
                             <a class="btn btn-sm btn-primary text-nowrap" href="profile.php?mfa=setup#security"><?= t('Turn on') ?></a>
                         <?php } elseif ($session_mfa_on && !$mfa_required) { ?>
-                            <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" data-bs-toggle="collapse" data-bs-target="#mfaOffForm" aria-expanded="false" aria-controls="mfaOffForm"><?= t('Turn off') ?></button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" data-bs-toggle="collapse" data-bs-target="#mfaOffForm" aria-expanded="false" aria-controls="mfaOffForm"><?= t('Turn off two-step sign-in') ?></button>
                         <?php } ?>
                     </li>
                 </ul>
@@ -296,7 +296,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                         <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
                         <ol class="small ps-3 mb-3">
                             <li><?= t('Open an authenticator app on your phone - Microsoft or Google Authenticator, 1Password, Authy, Bitwarden - and add an account.') ?></li>
-                            <li><?= t('Scan this code') ?><?= $mfa_qr ? '' : ' - ' . t('or, as it can\'t be shown here, type the key in') ?></li>
+                            <li><?= $mfa_qr ? t('Scan this code') : t('Scan this code - or, as it can\'t be shown here, type the key in') ?>:</li>
                         </ol>
                         <div class="text-center mb-3">
                             <?php if ($mfa_qr) { ?>
@@ -332,16 +332,16 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                                 <input type="password" class="form-control" id="mfaOffPassword" name="current_password" autocomplete="current-password" required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-outline-danger" name="portal_mfa_disable"><i class="fas fa-times me-2"></i><?= t('Turn off') ?> <?= t('two-step sign-in') ?></button>
+                        <button type="submit" class="btn btn-outline-danger" name="portal_mfa_disable"><i class="fas fa-times me-2"></i><?= t('Turn off two-step sign-in') ?></button>
                     </form>
                 <?php } elseif ($session_mfa_on) { ?>
-                    <div class="itflow-portal-panel-body border-top small text-body-secondary py-2"><?= escapeHtml($session_company_name) ?> <?= t('asks everyone to use it, so it stays on.') ?> <?= t('Lost your phone? Ask us to reset it.') ?></div>
+                    <div class="itflow-portal-panel-body border-top small text-body-secondary py-2"><?= t('{company} asks everyone to use it, so it stays on. Lost your phone? Ask us to reset it.', ['{company}' => escapeHtml($session_company_name)]) ?></div>
                 <?php } ?>
 
                 <?php if ($session_mfa_on && $remembered) { ?>
                     <form class="itflow-portal-panel-body border-top d-flex align-items-center justify-content-between gap-2" action="post.php" method="post" data-portal-once>
                         <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
-                        <span class="small text-body-secondary"><?= $remembered ?> <?= t('browser') ?><?= $remembered === 1 ? ' ' . t('skips') : ' ' . t('s skip') ?> <?= t('the code for') ?> <?= intval($config_login_remember_me_expire) ?> <?= t('day') ?><?= intval($config_login_remember_me_expire) === 1 ? '' : 's' ?> <?= t('after signing in') ?></span>
+                        <span class="small text-body-secondary"><?= $remembered === 1 ? t('{count} browser skips the code for {days} day after signing in', ['{count}' => $remembered, '{days}' => intval($config_login_remember_me_expire)]) : t('{count} browsers skip the code for {days} days after signing in', ['{count}' => $remembered, '{days}' => intval($config_login_remember_me_expire)]) ?></span>
                         <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap" name="portal_forget_browsers"><?= t('Forget them') ?></button>
                     </form>
                 <?php } ?>

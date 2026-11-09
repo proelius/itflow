@@ -45,7 +45,7 @@ if ($can_invite && portalSignupOn() && intval(mysqli_fetch_row(mysqli_query($mys
 <div class="itflow-portal-page-head">
     <div>
         <h1><?= t('Contacts') ?></h1>
-        <p><?= t('The people at') ?> <?= escapeHtml($session_client_name) ?><?= $manage ? ', ' . t('and who can sign in here') : '' ?></p>
+        <p><?= $manage ? t('The people at {company}, and who can sign in here', ['{company}' => escapeHtml($session_client_name)]) : t('The people at {company}', ['{company}' => escapeHtml($session_client_name)]) ?></p>
     </div>
     <div class="d-flex flex-wrap align-items-center gap-2">
         <form method="get" class="d-flex" role="search">
