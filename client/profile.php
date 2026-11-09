@@ -60,7 +60,7 @@ if (!empty($me['location_name'])) {
 
 $facts = [
     'Name' => escapeHtml($me['contact_name'] ?? ''),
-    'Email' => escapeHtml($me['contact_email'] ?? '') . ($password_account || $microsoft_account ? '<div class="small text-body-secondary"><?= t(\'You sign in with it\') ?></div>' : ''),
+    'Email' => escapeHtml($me['contact_email'] ?? '') . ($password_account || $microsoft_account ? '<div class="small text-body-secondary">' . t('You sign in with it') . '</div>' : ''),
 ];
 if (trim((string) ($me['contact_title'] ?? '')) !== '') {
     $facts['Job title'] = escapeHtml($me['contact_title']);
@@ -74,7 +74,7 @@ if ($location !== '') {
 }
 $facts['Roles'] = $roles
     ? '<span class="itflow-portal-roles">' . implode('', array_map(function ($role) { return '<span>' . escapeHtml($role) . '</span>'; }, $roles)) . '</span>'
-    : '<span class="text-body-secondary"><?= t(\'None - you see your own tickets\') ?></span>';
+    : '<span class="text-body-secondary">' . t('None - you see your own tickets') . '</span>';
 
 $sql_logins = mysqli_query($mysqli, "SELECT log_created_at, log_ip, log_user_agent FROM logs
     WHERE log_type = 'Client Login' AND log_action = 'Success' AND log_user_id = $session_user_id AND log_client_id = $session_client_id AND $session_user_id > 0
@@ -277,10 +277,10 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     <li class="itflow-portal-ticket">
                         <?= portalTile('fa-mobile-alt') ?>
                         <span class="itflow-portal-ticket-main">
-                            <span class="itflow-portal-ticket-subject d-block">Two-step sign-in
-                                <span class="itflow-portal-state <?= $session_mfa_on ? 'itflow-portal-state-resolved' : 'itflow-portal-state-hold' ?> ms-1"><i class="fas fa-fw fa-<?= $session_mfa_on ? 'check' : 'minus' ?>"></i><?= $session_mfa_on ? 'On' : 'Off' ?></span>
+                            <span class="itflow-portal-ticket-subject d-block"><?= t('Two-step sign-in') ?>
+                                <span class="itflow-portal-state <?= $session_mfa_on ? 'itflow-portal-state-resolved' : 'itflow-portal-state-hold' ?> ms-1"><i class="fas fa-fw fa-<?= $session_mfa_on ? 'check' : 'minus' ?>"></i><?= $session_mfa_on ? t('On') : t('Off') ?></span>
                             </span>
-                            <span class="itflow-portal-ticket-meta"><span><?= $session_mfa_on ? 'Signing in asks for a code from your authenticator app' : 'A code from an app on your phone, as well as your password' ?></span></span>
+                            <span class="itflow-portal-ticket-meta"><span><?= $session_mfa_on ? t('Signing in asks for a code from your authenticator app') : t('A code from an app on your phone, as well as your password') ?></span></span>
                         </span>
                         <?php if (!$session_mfa_on && !$mfa_setup) { ?>
                             <a class="btn btn-sm btn-primary text-nowrap" href="profile.php?mfa=setup#security"><?= t('Turn on') ?></a>
