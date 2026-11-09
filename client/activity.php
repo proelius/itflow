@@ -17,9 +17,9 @@ require_once "includes/inc_all.php";
 
 $per_page = 25;
 $tabs = [
-    'all' => ['label' => 'All', 'icon' => 'fa-list', 'where' => '1 = 1'],
-    'signins' => ['label' => 'Signing in', 'icon' => 'fa-sign-in-alt', 'where' => "log_type = 'Client Login'"],
-    'changes' => ['label' => 'Changes', 'icon' => 'fa-pen', 'where' => "log_type <> 'Client Login'"],
+    'all' => ['label' => t('All'), 'icon' => 'fa-list', 'where' => '1 = 1'],
+    'signins' => ['label' => t('Signing in'), 'icon' => 'fa-sign-in-alt', 'where' => "log_type = 'Client Login'"],
+    'changes' => ['label' => t('Changes'), 'icon' => 'fa-pen', 'where' => "log_type <> 'Client Login'"],
 ];
 $tab = isset($tabs[$_GET['tab'] ?? '']) ? $_GET['tab'] : 'all';
 $scope = "log_user_id = $session_user_id AND log_client_id = $session_client_id AND $session_user_id > 0";
@@ -40,15 +40,15 @@ $sql = mysqli_query($mysqli, "SELECT log_type, log_action, log_description, log_
 /** What a row was, in words, with its icon. */
 function activityLabel(array $row) {
     $sign_in = [
-        'Success' => ['Signed in', 'fa-sign-in-alt'],
-        'MFA Failed' => ['Wrong two-step code', 'fa-exclamation-triangle'],
-        'Reset Requested' => ['Asked for a password link', 'fa-envelope'],
-        'Reset Sent' => ['Password link emailed', 'fa-envelope'],
-        'Password Reset' => ['Set a password from a link', 'fa-key'],
-        'Failed' => ['Sign-in refused', 'fa-ban'],
+        'Success' => [t('Signed in'), 'fa-sign-in-alt'],
+        'MFA Failed' => [t('Wrong two-step code'), 'fa-exclamation-triangle'],
+        'Reset Requested' => [t('Asked for a password link'), 'fa-envelope'],
+        'Reset Sent' => [t('Password link emailed'), 'fa-envelope'],
+        'Password Reset' => [t('Set a password from a link'), 'fa-key'],
+        'Failed' => [t('Sign-in refused'), 'fa-ban'],
     ];
     if ($row['log_type'] === 'Client Login') {
-        return $sign_in[$row['log_action']] ?? ['Signing in', 'fa-sign-in-alt'];
+        return $sign_in[$row['log_action']] ?? [t('Signing in'), 'fa-sign-in-alt'];
     }
     return [trim($row['log_type'] . ' ' . strtolower((string) $row['log_action'])), 'fa-pen'];
 }
@@ -60,12 +60,12 @@ function activityUrl(array $changes) {
 }
 ?>
 
-<a class="itflow-portal-back" href="profile.php"><i class="fas fa-chevron-left"></i>Your account</a>
+<a class="itflow-portal-back" href="profile.php"><i class="fas fa-chevron-left"></i><?= t('Your account') ?></a>
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1>Your activity</h1>
-        <p>Every time you signed in, and what you did here</p>
+        <h1><?= t('Your activity') ?></h1>
+        <p><?= t('Every time you signed in, and what you did here') ?></p>
     </div>
 </div>
 
@@ -77,7 +77,7 @@ function activityUrl(array $changes) {
 
 <section class="itflow-portal-panel">
     <?php if (!$total) { ?>
-        <?= emptyStateHtml(['title' => $tab === 'all' ? 'Nothing yet' : 'Nothing here yet', 'text' => 'What you do in the portal shows here.', 'icon' => 'fa-history', 'filtered' => false]) ?>
+        <?= emptyStateHtml(['title' => $tab === 'all' ? t('Nothing yet') : t('Nothing here yet'), 'text' => t('What you do in the portal shows here.'), 'icon' => 'fa-history', 'filtered' => false]) ?>
     <?php } else { ?>
         <ul class="itflow-portal-list">
             <?php while ($row = mysqli_fetch_assoc($sql)) {
@@ -96,8 +96,8 @@ function activityUrl(array $changes) {
             <div class="itflow-portal-pager">
                 <span><?= $offset + 1 ?>-<?= min($offset + $per_page, $total) ?> of <?= $total ?></span>
                 <div class="btn-group">
-                    <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(activityUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="Newer"><i class="fas fa-chevron-left"></i></a>
-                    <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(activityUrl(['page' => $page + 1])) ?>" aria-label="Older"><i class="fas fa-chevron-right"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(activityUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="<?= t('Newer') ?>"><i class="fas fa-chevron-left"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(activityUrl(['page' => $page + 1])) ?>" aria-label="<?= t('Older') ?>"><i class="fas fa-chevron-right"></i></a>
                 </div>
             </div>
         <?php } ?>
