@@ -733,4 +733,12 @@ return [
     'Name, email, title or phone' => 'Name, email, title or phone',
     'and who can sign in here' => 'and who can sign in here',
     'The people at' => 'The people at',
+    'New tickets' => 'New tickets',
+    'No certificates yet' => 'No certificates yet',
+    'No domains yet' => 'No domains yet',
+    'Upload a file' => 'Upload a file',
+    'New document' => 'New document',
+    'or, as it can\'t be shown here, type the key in' => 'or, as it can\'t be shown here, type the key in',
+    '\'s billing contacts - ask us if they should go somewhere else.' => '\'s billing contacts - ask us if they should go somewhere else.',
+    'None - you see your own tickets' => 'None - you see your own tickets',
 ];

@@ -687,4 +687,12 @@ return [
     'and who can sign in here' => 'et qui peuvent se connecter ici',
     'The people at' => 'Les personnes chez',
     'Domains &amp; certificates' => 'Domaines &amp; certificats',
+    'New tickets' => 'Nouveaux tickets',
+    'No certificates yet' => 'Aucun certificat pour le moment',
+    'No domains yet' => 'Aucun domaine pour le moment',
+    'Upload a file' => 'Téléverser un fichier',
+    'New document' => 'Nouveau document',
+    'or, as it can\'t be shown here, type the key in' => 'ou, comme il ne peut pas être affiché ici, saisissez cette clé :',
+    '\'s billing contacts - ask us if they should go somewhere else.' => 'les contacts de facturation - demandez-nous s\'ils doivent aller ailleurs.',
+    'None - you see your own tickets' => 'Aucun - vous voyez vos propres tickets',
 ];
