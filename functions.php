@@ -53,6 +53,7 @@ require_once __DIR__ . '/functions/ai_billing.php';
 require_once __DIR__ . '/functions/export.php';
 require_once __DIR__ . '/functions/calendar.php';
 require_once __DIR__ . '/functions/backup.php';
+require_once __DIR__ . '/functions/i18n.php';
 require_once __DIR__ . '/functions/search.php';
 require_once __DIR__ . '/functions/notifications.php';
 require_once __DIR__ . '/functions/dashboard.php';
