@@ -123,7 +123,7 @@ if ($can_invite && portalSignupOn() && intval(mysqli_fetch_row(mysqli_query($mys
                     <a class="itflow-portal-ticket" href="contact.php?id=<?= $id ?>">
                         <?= portalAvatarHtml((string) $row['contact_name'], !empty($row['contact_photo']) ? "/uploads/clients/$session_client_id/" . rawurlencode(basename($row['contact_photo'])) : '') ?>
                         <span class="itflow-portal-ticket-main">
-                            <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml($row['contact_name']) ?><?= $id === $session_contact_id ? '<span class="fw-normal text-body-secondary"><?= t(" (you)") ?></span>' : '' ?></span>
+                            <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml($row['contact_name']) ?><?= $id === $session_contact_id ? '<span class="fw-normal text-body-secondary">' . t(' (you)') . '</span>' : '' ?></span>
                             <span class="itflow-portal-ticket-meta">
                                 <?php foreach (array_filter([$row['contact_title'], $row['contact_department']]) as $part) { ?><span><?= escapeHtml($part) ?></span><?php } ?>
                                 <?php if (!empty($row['contact_email'])) { ?><span><i class="fas fa-envelope me-1"></i><?= escapeHtml($row['contact_email']) ?></span><?php } ?>
