@@ -754,3 +754,34 @@ function portalMessage($text) {
     }
     return $text;
 }
+
+/** A quote's amounts in words - "$100 up front and $50 a month" - quoteAmountText() in the portal's language. */
+function portalQuoteAmountText(array $groups, $currency) {
+    $parts = [];
+    foreach ($groups as $frequency => $group) {
+        $amount = billingMoney($group['total'], $currency);
+        if ($frequency === '') {
+            if ($group['items'] || count($groups) === 1) {
+                $parts[] = count($groups) > 1 ? t('{amount} up front', ['{amount}' => $amount]) : $amount;
+            }
+        } else {
+            $parts[] = match (recurringInvoicePeriodWord($frequency)) {
+                'quarter' => t('{amount} a quarter', ['{amount}' => $amount]),
+                'year' => t('{amount} a year', ['{amount}' => $amount]),
+                default => t('{amount} a month', ['{amount}' => $amount]),
+            };
+        }
+    }
+    return count($parts) > 1 ? t('{list} and {last}', ['{list}' => implode(', ', array_slice($parts, 0, -1)), '{last}' => end($parts)]) : (string) reset($parts);
+}
+
+/** The heading of a group of a quote's lines - One-time, Each month... - in the portal's language. */
+function portalQuoteGroupLabel($label) {
+    return match ((string) $label) {
+        'One-time' => t('One-time'),
+        'Each month' => t('Each month'),
+        'Each quarter' => t('Each quarter'),
+        'Each year' => t('Each year'),
+        default => (string) $label,
+    };
+}

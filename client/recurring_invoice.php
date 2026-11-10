@@ -16,10 +16,10 @@ portalBillingGate();
 
 $recurring = billingRow('recurring', intval($_GET['id'] ?? 0), false);
 if (!$recurring || intval($recurring['client_id']) !== $session_client_id || intval($recurring['recurring_invoice_status']) !== 1) { ?>
-    <a class="itflow-portal-back" href="recurring_invoices.php"><i class="fas fa-chevron-left"></i>Recurring invoices</a>
+    <a class="itflow-portal-back" href="recurring_invoices.php"><i class="fas fa-chevron-left"></i><?= t('Recurring invoices') ?></a>
     <section class="itflow-portal-panel">
-        <?= emptyStateHtml(['title' => "That recurring invoice isn't here", 'text' => 'It may have ended, or the link is not quite right.', 'icon' => 'fa-redo-alt', 'filtered' => false,
-            'actions' => [['label' => 'Recurring invoices', 'href' => 'recurring_invoices.php', 'icon' => 'fa-arrow-left']]]) ?>
+        <?= emptyStateHtml(['title' => t('That recurring invoice isn\'t here'), 'text' => t('It may have ended, or the link is not quite right.'), 'icon' => 'fa-redo-alt', 'filtered' => false,
+            'actions' => [['label' => t('Recurring invoices'), 'href' => 'recurring_invoices.php', 'icon' => 'fa-arrow-left']]]) ?>
     </section>
     <?php
     require_once "includes/footer.php";
@@ -53,12 +53,12 @@ $paper = [
 ];
 ?>
 
-<a class="itflow-portal-back" href="recurring_invoices.php"><i class="fas fa-chevron-left"></i>Recurring invoices</a>
+<a class="itflow-portal-back" href="recurring_invoices.php"><i class="fas fa-chevron-left"></i><?= t('Recurring invoices') ?></a>
 
 <div class="itflow-portal-page-head">
     <div>
         <h1><?= escapeHtml($title) ?></h1>
-        <p><?= escapeHtml(recurringInvoiceFrequencies()[$recurring['recurring_invoice_frequency']] ?? ucfirst((string) $recurring['recurring_invoice_frequency'])) ?> · <?= escapeHtml(billingNumber('recurring', $recurring)) ?></p>
+        <p><?= escapeHtml(i18n_portal_label(recurringInvoiceFrequencies()[$recurring['recurring_invoice_frequency']] ?? ucfirst((string) $recurring['recurring_invoice_frequency']))) ?> · <?= escapeHtml(billingNumber('recurring', $recurring)) ?></p>
     </div>
 </div>
 
@@ -68,9 +68,9 @@ $paper = [
 
         <section class="itflow-portal-panel mb-4">
             <div class="itflow-portal-panel-body">
-                <div class="itflow-billing-stat-label">Each <?= escapeHtml(recurringInvoicePeriodWord($recurring['recurring_invoice_frequency'])) ?></div>
+                <div class="itflow-billing-stat-label"><?= escapeHtml(portalQuoteGroupLabel('Each ' . recurringInvoicePeriodWord($recurring['recurring_invoice_frequency']))) ?></div>
                 <div class="itflow-portal-big-amount itflow-money"><?= escapeHtml(billingMoney($recurring['recurring_invoice_amount'], $currency)) ?></div>
-                <p class="small text-body-secondary mb-0">The next invoice comes <?= escapeHtml(date('M j, Y', strtotime($recurring['recurring_invoice_next_date']))) ?>.</p>
+                <p class="small text-body-secondary mb-0"><?= t('The next invoice comes {date}.', ['{date}' => escapeHtml(date('M j, Y', strtotime($recurring['recurring_invoice_next_date'])))]) ?></p>
             </div>
             <?php if ($cards_on) { ?>
                 <div class="itflow-portal-panel-body border-top">
@@ -105,10 +105,10 @@ $paper = [
 
         <section class="itflow-portal-panel mb-4">
             <div class="itflow-portal-panel-head">
-                <h2><i class="fas fa-file-invoice-dollar"></i>Invoices from it</h2>
+                <h2><i class="fas fa-file-invoice-dollar"></i><?= t('Invoices from it') ?></h2>
             </div>
             <?php if (!$made) { ?>
-                <?= emptyStateHtml(['title' => 'None yet', 'text' => 'The first one comes ' . escapeHtml(date('M j, Y', strtotime($recurring['recurring_invoice_next_date']))) . '.', 'icon' => 'fa-file-invoice-dollar', 'filtered' => false]) ?>
+                <?= emptyStateHtml(['title' => t('None yet'), 'text' => t('The first one comes {date}.', ['{date}' => escapeHtml(date('M j, Y', strtotime($recurring['recurring_invoice_next_date'])))]), 'icon' => 'fa-file-invoice-dollar', 'filtered' => false]) ?>
             <?php } else { ?>
                 <ul class="itflow-portal-list">
                     <?php foreach ($made as $row) {
@@ -128,7 +128,10 @@ $paper = [
         </section>
 
         <p class="small text-body-secondary px-1">
-            Something to change? <a href="<?= escapeHtml(portalAskUrl("Change to $title")) ?>">Ask us</a><?php if (!empty($company['phone_display'])) { ?> or call <?= escapeHtml($company['phone_display']) ?><?php } ?>.
+            <?= !empty($company['phone_display'])
+                ? t('Something to change? <a href="{url}">Ask us</a> or call {phone}.', ['{url}' => escapeHtml(portalAskUrl("Change to $title")), '{phone}' => escapeHtml($company['phone_display'])])
+                : t('Something to change? <a href="{url}">Ask us</a>.', ['{url}' => escapeHtml(portalAskUrl("Change to $title"))]) ?>
+
         </p>
 
     </div>
