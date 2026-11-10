@@ -40,7 +40,7 @@ $signature_pad = [
     'id' => 'sign',
     'name' => (string) $round['contract_signature_sent_to_name'],
     'title' => intval($round['contract_signature_contact_id']) ? (string) (mysqli_fetch_row(mysqli_query($mysqli, "SELECT contact_title FROM contacts WHERE contact_id = " . intval($round['contract_signature_contact_id'])))[0] ?? '') : '',
-    'agree' => 'I have read this contract and agree to it for ' . $round['client_name'] . ', and to signing it electronically',
+    'agree' => t('I have read this contract and agree to it for {client}, and to signing it electronically', ['{client}' => $round['client_name']]),
 ];
 
 ?>
