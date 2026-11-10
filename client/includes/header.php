@@ -112,8 +112,8 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
     <div class="itflow-portal-viewas d-print-none" role="status">
         <div class="container d-flex flex-wrap align-items-center gap-2">
             <i class="fas fa-eye"></i>
-            <span class="me-auto">You're viewing the portal as <strong><?= escapeHtml($portal_view_as['contact_name']) ?></strong> - read only<?= empty($portal_view_as['billing']) ? '. Billing is hidden, as your role doesn\'t see it' : '' ?></span>
-            <a class="btn btn-sm btn-light" href="/client/post.php?exit_view_as"><i class="fas fa-times me-1"></i>Exit</a>
+            <span class="me-auto"><?= empty($portal_view_as['billing']) ? t('You\'re viewing the portal as <strong>{name}</strong> - read only. Billing is hidden, as your role doesn\'t see it', ['{name}' => escapeHtml($portal_view_as['contact_name'])]) : t('You\'re viewing the portal as <strong>{name}</strong> - read only', ['{name}' => escapeHtml($portal_view_as['contact_name'])]) ?></span>
+            <a class="btn btn-sm btn-light" href="/client/post.php?exit_view_as"><i class="fas fa-times me-1"></i><?= t('Exit') ?></a>
         </div>
     </div>
 <?php } ?>
@@ -130,7 +130,7 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
             <?php } ?>
         </a>
 
-        <nav class="itflow-portal-nav d-none d-lg-flex" aria-label="Portal">
+        <nav class="itflow-portal-nav d-none d-lg-flex" aria-label="<?= t('Portal') ?>">
             <?php foreach ($portal_nav as $item) {
                 $active = in_array($portal_page, $item['pages'], true);
                 if (!empty($item['children'])) { ?>
@@ -155,10 +155,10 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
         </nav>
 
         <div class="ms-auto d-flex align-items-center gap-2">
-            <a class="btn btn-primary d-none d-sm-inline-flex align-items-center" href="/client/ticket_add.php"><i class="fas fa-plus me-2"></i>New ticket</a>
+            <a class="btn btn-primary d-none d-sm-inline-flex align-items-center" href="/client/ticket_add.php"><i class="fas fa-plus me-2"></i><?= t('New ticket') ?></a>
 
             <div class="dropdown">
-                <button type="button" class="itflow-portal-account" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Your account">
+                <button type="button" class="itflow-portal-account" data-bs-toggle="dropdown" aria-expanded="false" aria-label="<?= t('Your account') ?>">
                     <?= portalAvatarHtml($portal_contact_name, $session_contact_photo ? "/uploads/clients/$session_client_id/$session_contact_photo" : '') ?>
                     <span class="d-none d-md-inline text-truncate"><?= escapeHtml($portal_contact_name) ?></span>
                     <i class="fas fa-chevron-down small text-body-secondary d-none d-md-inline"></i>
@@ -189,7 +189,7 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
 
 <?php /* Phone: the sections along the bottom of the screen, where a thumb
          reaches them, and everything else in a menu that slides in. */ ?>
-<nav class="itflow-portal-tabbar d-lg-none" aria-label="Portal">
+<nav class="itflow-portal-tabbar d-lg-none" aria-label="<?= t('Portal') ?>">
     <a href="/client/index.php" class="<?= $portal_page === 'index.php' ? 'active' : '' ?>"><i class="fas fa-home"></i><span><?= escapeHtml(i18n_portal_label('Home')) ?></span></a>
     <a href="/client/tickets.php" class="<?= in_array($portal_page, $portal_nav['tickets']['pages'], true) && $portal_page !== 'ticket_add.php' ? 'active' : '' ?>"><i class="fas fa-life-ring"></i><span><?= escapeHtml(i18n_portal_label('Tickets')) ?></span></a>
     <a href="/client/ticket_add.php" class="itflow-portal-tabbar-new<?= $portal_page === 'ticket_add.php' ? ' active' : '' ?>"><i class="fas fa-plus"></i><span><?= escapeHtml(i18n_portal_label('New')) ?></span></a>
@@ -199,13 +199,13 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
     <a href="#portalMenu" data-bs-toggle="offcanvas" role="button" aria-controls="portalMenu"><i class="fas fa-bars"></i><span><?= escapeHtml(i18n_portal_label('Menu')) ?></span></a>
 </nav>
 
-<div class="offcanvas offcanvas-end itflow-portal-menu" tabindex="-1" id="portalMenu" aria-label="Menu">
+<div class="offcanvas offcanvas-end itflow-portal-menu" tabindex="-1" id="portalMenu" aria-label="<?= t('Menu') ?>">
     <div class="offcanvas-header">
         <div class="min-w-0">
             <div class="fw-semibold text-truncate"><?= escapeHtml($portal_contact_name) ?></div>
             <div class="small text-body-secondary text-truncate"><?= escapeHtml($session_client_name) ?></div>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="<?= t('Close') ?>"></button>
     </div>
     <div class="offcanvas-body">
         <?php foreach ($portal_nav as $item) { ?>
@@ -245,7 +245,7 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
         ?>
         <div class="alert alert-<?= alertStyleClass($_SESSION['alert_type'] ?? 'success') ?> alert-dismissible" id="alert">
             <?= alertMessageHtml($_SESSION['alert_message']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="<?= t('Close') ?>"></button>
         </div>
         <?php
 
