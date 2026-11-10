@@ -115,7 +115,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
             <div class="itflow-portal-panel-body">
                 <dl class="itflow-portal-facts mb-0">
                     <?php foreach ($facts as $label => $value) { ?>
-                        <div><dt><?= t($label) ?></dt><dd><?= $value ?></dd></div>
+                        <div><dt><?= i18n_portal_label($label) ?></dt><dd><?= $value ?></dd></div>
                     <?php } ?>
                 </dl>
             </div>
