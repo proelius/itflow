@@ -59,11 +59,11 @@ if (!empty($me['location_name'])) {
 }
 
 $facts = [
-    'Name' => escapeHtml($me['contact_name'] ?? ''),
+    t('Name') => escapeHtml($me['contact_name'] ?? ''),
     'Email' => escapeHtml($me['contact_email'] ?? '') . ($password_account || $microsoft_account ? '<div class="small text-body-secondary">' . t('You sign in with it') . '</div>' : ''),
 ];
 if (trim((string) ($me['contact_title'] ?? '')) !== '') {
-    $facts['Job title'] = escapeHtml($me['contact_title']);
+    $facts[t('Job title')] = escapeHtml($me['contact_title']);
 }
 if (trim((string) ($me['contact_department'] ?? '')) !== '') {
     $facts['Department'] = escapeHtml($me['contact_department']);
@@ -310,7 +310,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                         </ol>
                         <div class="input-group mb-3">
                             <span class="input-group-text"><i class="fas fa-fw fa-mobile-alt"></i></span>
-                            <input type="text" class="form-control form-control-lg font-monospace text-center itflow-mfa-code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" name="verify_code" placeholder="000000" autocomplete="one-time-code" aria-label="6-digit code" required autofocus>
+                            <input type="text" class="form-control form-control-lg font-monospace text-center itflow-mfa-code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" name="verify_code" placeholder="000000" autocomplete="one-time-code" aria-label="<?= t('6-digit code') ?>" required autofocus>
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="submit" class="btn btn-primary" name="portal_mfa_enable"><i class="fas fa-check me-2"></i><?= t('Turn on') ?></button>

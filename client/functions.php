@@ -505,6 +505,33 @@ function portalContractState(array $row, $round = null) {
     return ['key' => 'active', 'label' => t('In force'), 'icon' => 'fa-check-circle', 'class' => 'itflow-portal-state-resolved'];
 }
 
+/**
+ * When a domain or certificate expires, as words in the portal's language - the 'text' of domainExpiry() or
+ * certificateExpiry() ("Expires in 5 days", "Auto-renews tomorrow", "Renews itself, expires in 3 months").
+ */
+function portalExpiryText(array $expiry, $certificate = false) {
+    $days = $expiry['days'];
+    $auto = !empty($expiry['auto']);
+    $short_lived = !empty($expiry['short_lived']);
+    if ($expiry['state'] === 'soon') {
+        if ($certificate) {
+            if ($short_lived) {
+                return $days === 0 ? t('Expires today - it should have renewed by now') : ($days === 1 ? t('Expires tomorrow - it should have renewed by now') : t('Expires in {n} days - it should have renewed by now', ['{n}' => $days]));
+            }
+            return $days === 0 ? t('Expires today') : ($days === 1 ? t('Expires tomorrow') : t('Expires in {n} days', ['{n}' => $days]));
+        }
+        if ($auto) {
+            return $days === 0 ? t('Auto-renews today') : ($days === 1 ? t('Auto-renews tomorrow') : t('Auto-renews in {n} days', ['{n}' => $days]));
+        }
+        return $days === 0 ? t('Expires today') : ($days === 1 ? t('Expires tomorrow') : t('Expires in {n} days', ['{n}' => $days]));
+    }
+    $when = timeAgo($expiry['date']);
+    if ($certificate) {
+        return $short_lived ? t('Renews itself, expires {when}', ['{when}' => $when]) : t('Expires {when}', ['{when}' => $when]);
+    }
+    return $auto ? t('Auto-renews {when}', ['{when}' => $when]) : t('Expires {when}', ['{when}' => $when]);
+}
+
 /** A contract's type in the portal's language - contractTypeLabel(), with the label as a literal t(). */
 function portalContractTypeLabel($type) {
     return match ((string) $type) {
