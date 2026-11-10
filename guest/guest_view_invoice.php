@@ -14,7 +14,7 @@ $invoice = billingRow('invoice', intval($_GET['invoice_id'] ?? 0), false);
 $url_key = (string) ($_GET['url_key'] ?? '');
 
 if (!$invoice || (string) $invoice['invoice_url_key'] === '' || !hash_equals((string) $invoice['invoice_url_key'], $url_key)) {
-    echo '<div class="itflow-asset-empty mt-5"><i class="fas fa-file-invoice-dollar fa-3x mb-3 opacity-50"></i><h1 class="h4">This invoice link isn\'t working</h1><p>It may have been mistyped or replaced. Ask whoever sent it for a new link.</p></div>';
+    echo '<div class="itflow-asset-empty mt-5"><i class="fas fa-file-invoice-dollar fa-3x mb-3 opacity-50"></i><h1 class="h4">' . t('This invoice link isn\'t working') . '</h1><p>' . t('It may have been mistyped or replaced. Ask whoever sent it for a new link.') . '</p></div>';
     require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php';
     exit();
 }
@@ -79,37 +79,37 @@ $paper = [
                     <div class="d-flex align-items-center gap-3">
                         <span class="itflow-asset-icon bg-success-subtle text-success-emphasis" aria-hidden="true"><i class="fas fa-check"></i></span>
                         <div>
-                            <div class="fw-semibold">Paid in full</div>
-                            <div class="small text-body-secondary"><?= $payments ? 'On ' . escapeHtml($payments[0]['payment_date']) . ' - thank you.' : 'Thank you.' ?></div>
+                            <div class="fw-semibold"><?= t('Paid in full') ?></div>
+                            <div class="small text-body-secondary"><?= $payments ? t('On {date} - thank you.', ['{date}' => escapeHtml($payments[0]['payment_date'])]) : t('Thank you.') ?></div>
                         </div>
                     </div>
                 <?php } elseif (in_array($state['state'], ['cancelled', 'nonbillable'], true)) { ?>
                     <div class="d-flex align-items-center gap-3">
                         <span class="itflow-asset-icon bg-secondary-subtle text-secondary-emphasis" aria-hidden="true"><i class="fas fa-ban"></i></span>
                         <div>
-                            <div class="fw-semibold"><?= $state['state'] === 'cancelled' ? 'Cancelled' : 'Nothing to pay' ?></div>
-                            <div class="small text-body-secondary">Nothing is owed on this invoice.</div>
+                            <div class="fw-semibold"><?= $state['state'] === 'cancelled' ? t('Cancelled') : t('Nothing to pay') ?></div>
+                            <div class="small text-body-secondary"><?= t('Nothing is owed on this invoice.') ?></div>
                         </div>
                     </div>
                 <?php } else { ?>
-                    <div class="itflow-billing-stat-label">Amount due</div>
+                    <div class="itflow-billing-stat-label"><?= t('Amount due') ?></div>
                     <div class="itflow-billing-stat-value mb-1 <?= $state['state'] === 'overdue' ? 'text-danger-emphasis' : '' ?>"><?= $money($state['balance']) ?></div>
-                    <div class="mb-3"><?= invoiceDuePill($state) ?: '<span class="small text-body-secondary">Due ' . escapeHtml($invoice['invoice_due']) . '</span>' ?></div>
+                    <div class="mb-3"><?= guestDuePill($state) ?: '<span class="small text-body-secondary">' . t('Due {date}', ['{date}' => escapeHtml($invoice['invoice_due'])]) . '</span>' ?></div>
                     <?php if ($pay_url) { ?>
-                        <a class="btn btn-success btn-lg w-100 mb-2" href="<?= escapeHtml($pay_url) ?>"><i class="fas fa-credit-card me-2"></i>Pay Now</a>
-                        <div class="small text-body-secondary text-center mb-3"><i class="fas fa-lock me-1"></i>Securely, by card<?= $card_fee > 0 ? ' - plus a ' . $money($card_fee) . ' card fee' : '' ?></div>
+                        <a class="btn btn-success btn-lg w-100 mb-2" href="<?= escapeHtml($pay_url) ?>"><i class="fas fa-credit-card me-2"></i><?= t('Pay Now') ?></a>
+                        <div class="small text-body-secondary text-center mb-3"><i class="fas fa-lock me-1"></i><?= $card_fee > 0 ? t('Securely, by card - plus a {fee} card fee', ['{fee}' => $money($card_fee)]) : t('Securely, by card') ?></div>
                     <?php } ?>
                 <?php } ?>
                 <div class="d-flex gap-2 <?= $state['state'] === 'paid' || in_array($state['state'], ['cancelled', 'nonbillable'], true) ? 'mt-3' : '' ?>">
-                    <a class="btn btn-outline-primary flex-fill" href="guest_post.php?export_invoice_pdf=<?= $invoice_id ?>&url_key=<?= $query_key ?>"><i class="fas fa-file-pdf me-2"></i>Download PDF</a>
-                    <button type="button" class="btn btn-outline-secondary" onclick="window.print();" title="Print"><i class="fas fa-print"></i></button>
+                    <a class="btn btn-outline-primary flex-fill" href="guest_post.php?export_invoice_pdf=<?= $invoice_id ?>&url_key=<?= $query_key ?>"><i class="fas fa-file-pdf me-2"></i><?= t('Download PDF') ?></a>
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.print();" title="<?= t('Print') ?>"><i class="fas fa-print"></i></button>
                 </div>
             </div>
         </div>
 
         <?php if ($payments) { ?>
             <div class="card mb-3">
-                <div class="card-header"><h3 class="card-title mb-0"><i class="fas fa-fw fa-receipt text-secondary me-2"></i>Payments</h3></div>
+                <div class="card-header"><h3 class="card-title mb-0"><i class="fas fa-fw fa-receipt text-secondary me-2"></i><?= t('Payments') ?></h3></div>
                 <div class="list-group list-group-flush">
                     <?php foreach ($payments as $payment) { ?>
                         <div class="list-group-item d-flex justify-content-between align-items-center">
@@ -128,7 +128,7 @@ $paper = [
             <!-- Everything else they owe -->
             <div class="card mb-3">
                 <div class="card-header d-flex align-items-center">
-                    <h3 class="card-title mb-0 me-auto"><i class="fas fa-fw fa-file-alt text-secondary me-2"></i>Your account</h3>
+                    <h3 class="card-title mb-0 me-auto"><i class="fas fa-fw fa-file-alt text-secondary me-2"></i><?= t('Your account') ?></h3>
                     <span class="fw-semibold itflow-money"><?= escapeHtml(billingMoney($open_total, $currency)) ?></span>
                 </div>
                 <div class="list-group list-group-flush">
@@ -139,11 +139,11 @@ $paper = [
                             href="guest_view_invoice.php?invoice_id=<?= $open_id ?>&url_key=<?= rawurlencode((string) $open['invoice_url_key']) ?>">
                             <div class="flex-grow-1 min-w-0">
                                 <div class="fw-semibold"><?= escapeHtml($open['invoice_prefix'] . $open['invoice_number']) ?></div>
-                                <div class="small text-truncate <?= $open_id === $invoice_id ? '' : 'text-body-secondary' ?>"><?= escapeHtml($open['invoice_scope']) ?: 'Dated ' . escapeHtml($open['invoice_date']) ?></div>
+                                <div class="small text-truncate <?= $open_id === $invoice_id ? '' : 'text-body-secondary' ?>"><?= escapeHtml($open['invoice_scope']) ?: t('Dated {date}', ['{date}' => escapeHtml($open['invoice_date'])]) ?></div>
                             </div>
                             <div class="text-end">
                                 <div class="itflow-money small fw-semibold"><?= escapeHtml(billingMoney($open_state['balance'], $open['invoice_currency_code'])) ?></div>
-                                <?php if ($open_id !== $invoice_id) { ?><?= invoiceDuePill($open_state) ?><?php } ?>
+                                <?php if ($open_id !== $invoice_id) { ?><?= guestDuePill($open_state) ?><?php } ?>
                             </div>
                         </a>
                     <?php } ?>
@@ -153,9 +153,18 @@ $paper = [
 
         <?php if (!empty($company['company_email']) || !empty($company['phone_display'])) { ?>
             <div class="small text-body-secondary px-1">
-                Questions about this invoice? Contact <?= escapeHtml($company['company_name']) ?>
-                <?php if (!empty($company['company_email'])) { ?> at <a href="mailto:<?= escapeHtml($company['company_email']) ?>?subject=<?= rawurlencode("Invoice $number") ?>"><?= escapeHtml($company['company_email']) ?></a><?php } ?>
-                <?php if (!empty($company['phone_display'])) { ?> or <?= escapeHtml($company['phone_display']) ?><?php } ?>.
+                <?php
+                $contact_company = escapeHtml($company['company_name']);
+                $contact_email = !empty($company['company_email']) ? '<a href="mailto:' . escapeHtml($company['company_email']) . '?subject=' . rawurlencode("Invoice $number") . '">' . escapeHtml($company['company_email']) . '</a>' : '';
+                $contact_phone = !empty($company['phone_display']) ? escapeHtml($company['phone_display']) : '';
+                if ($contact_email && $contact_phone) {
+                    echo t('Questions about this invoice? Contact {company} at {email} or {phone}.', ['{company}' => $contact_company, '{email}' => $contact_email, '{phone}' => $contact_phone]);
+                } elseif ($contact_email) {
+                    echo t('Questions about this invoice? Contact {company} at {email}.', ['{company}' => $contact_company, '{email}' => $contact_email]);
+                } else {
+                    echo t('Questions about this invoice? Contact {company} or {phone}.', ['{company}' => $contact_company, '{phone}' => $contact_phone]);
+                }
+                ?>
             </div>
         <?php } ?>
 

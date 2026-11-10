@@ -1482,4 +1482,12 @@ return [
     'Write something in the document.' => 'Écrivez quelque chose dans le document.',
     'Save document' => 'Enregistrer le document',
     'That document is not available.' => 'Ce document n’est pas disponible.',
+    'This invoice link isn\'t working' => 'Ce lien de facture ne fonctionne pas',
+    'It may have been mistyped or replaced. Ask whoever sent it for a new link.' => 'Il a peut-être été mal saisi ou remplacé. Demandez un nouveau lien à la personne qui vous l’a envoyé.',
+    'Past its due date' => 'Échéance dépassée',
+    'Securely, by card' => 'Paiement sécurisé, par carte',
+    'Securely, by card - plus a {fee} card fee' => 'Paiement sécurisé, par carte - plus {fee} de frais de carte',
+    'Questions about this invoice? Contact {company} at {email} or {phone}.' => 'Une question sur cette facture ? Contactez {company} à l’adresse {email} ou au {phone}.',
+    'Questions about this invoice? Contact {company} at {email}.' => 'Une question sur cette facture ? Contactez {company} à l’adresse {email}.',
+    'Questions about this invoice? Contact {company} or {phone}.' => 'Une question sur cette facture ? Contactez {company} au {phone}.',
 ];
