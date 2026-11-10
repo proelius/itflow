@@ -69,7 +69,7 @@ function activityUrl(array $changes) {
     </div>
 </div>
 
-<nav class="itflow-portal-tabs" aria-label="Kinds of activity">
+<nav class="itflow-portal-tabs" aria-label="<?= t('Kinds of activity') ?>">
     <?php foreach ($tabs as $key => $info) { ?>
         <a class="<?= $tab === $key ? 'active' : '' ?>" href="<?= escapeHtml(activityUrl(['tab' => $key !== 'all' ? $key : null])) ?>"><i class="fas <?= $info['icon'] ?>"></i><?= $info['label'] ?> <span class="badge rounded-pill"><?= $counts[$key] ?></span></a>
     <?php } ?>

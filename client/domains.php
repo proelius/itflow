@@ -28,18 +28,18 @@ $certificates = mysqli_query($mysqli, "SELECT certificate_id, certificate_name, 
 $counts = ['domains' => mysqli_num_rows($domains), 'certificates' => mysqli_num_rows($certificates)];
 
 /** A domain's or certificate's expiry (domainExpiry(), certificateExpiry()) as a portal state - auto-renewing ones aren't a worry. */
-function domainsState($expiry) {
+function domainsState($expiry, $certificate = false) {
     if (!$expiry) {
         return null;
     }
     if ($expiry['state'] === 'expired') {
-        return ['label' => 'Expired', 'icon' => 'fa-calendar-times', 'class' => 'itflow-portal-state-late'];
+        return ['label' => t('Expired'), 'icon' => 'fa-calendar-times', 'class' => 'itflow-portal-state-late'];
     }
     $auto = !empty($expiry['auto']) || !empty($expiry['short_lived']);
     if ($expiry['state'] === 'soon') {
-        return ['label' => $expiry['text'], 'icon' => $auto ? 'fa-sync-alt' : 'fa-hourglass-half', 'class' => $auto ? 'itflow-portal-state-new' : 'itflow-portal-state-you'];
+        return ['label' => portalExpiryText($expiry, $certificate), 'icon' => $auto ? 'fa-sync-alt' : 'fa-hourglass-half', 'class' => $auto ? 'itflow-portal-state-new' : 'itflow-portal-state-you'];
     }
-    return ['label' => $expiry['text'], 'icon' => $auto ? 'fa-sync-alt' : 'fa-calendar-check', 'class' => 'itflow-portal-state-resolved'];
+    return ['label' => portalExpiryText($expiry, $certificate), 'icon' => $auto ? 'fa-sync-alt' : 'fa-calendar-check', 'class' => 'itflow-portal-state-resolved'];
 }
 ?>
 
@@ -50,7 +50,7 @@ function domainsState($expiry) {
     </div>
 </div>
 
-<nav class="itflow-portal-tabs" aria-label="Domains and certificates">
+<nav class="itflow-portal-tabs" aria-label="<?= t('Domains and certificates') ?>">
     <a class="<?= $tab === 'domains' ? 'active' : '' ?>" href="domains.php"><i class="fas fa-globe"></i><?= t('Domains') ?> <span class="badge rounded-pill"><?= $counts['domains'] ?></span></a>
     <a class="<?= $tab === 'certificates' ? 'active' : '' ?>" href="domains.php?tab=certificates"><i class="fas fa-lock"></i><?= t('Certificates') ?> <span class="badge rounded-pill"><?= $counts['certificates'] ?></span></a>
 </nav>
@@ -88,14 +88,14 @@ function domainsState($expiry) {
         <?php } else { ?>
             <ul class="itflow-portal-list">
                 <?php while ($row = mysqli_fetch_assoc($certificates)) {
-                    $state = domainsState(certificateExpiry($row)); ?>
+                    $state = domainsState(certificateExpiry($row), true); ?>
                     <li class="itflow-portal-ticket">
                         <?= portalTile('fa-lock') ?>
                         <span class="itflow-portal-ticket-main">
                             <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml($row['certificate_name']) ?></span>
                             <span class="itflow-portal-ticket-meta">
                                 <?php if (trim((string) $row['certificate_domain']) !== '') { ?><span><i class="fas fa-globe me-1"></i><?= escapeHtml($row['certificate_domain']) ?></span><?php } ?>
-                                <?php if (trim((string) $row['certificate_issued_by']) !== '') { ?><span>Issued by <?= escapeHtml($row['certificate_issued_by']) ?></span><?php } ?>
+                                <?php if (trim((string) $row['certificate_issued_by']) !== '') { ?><span><?= t('Issued by {issuer}', ['{issuer}' => escapeHtml($row['certificate_issued_by'])]) ?></span><?php } ?>
                             </span>
                         </span>
                         <span class="itflow-portal-ticket-side">

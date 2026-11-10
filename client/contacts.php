@@ -108,7 +108,7 @@ if ($can_invite && portalSignupOn() && intval(mysqli_fetch_row(mysqli_query($mys
 <section class="itflow-portal-panel">
     <?php if (!mysqli_num_rows($contacts)) { ?>
         <?php if ($q !== '') { ?>
-            <?= emptyStateHtml(['thing' => 'people', 'filtered' => true, 'match_text' => 'Nobody here matches &ldquo;' . escapeHtml($q) . '&rdquo;.', 'clear_url' => 'contacts.php']) ?>
+            <?= emptyStateHtml(['thing' => 'people', 'filtered' => true, 'match_title' => t('No people match'), 'match_text' => t('Nobody here matches &ldquo;{search}&rdquo;.', ['{search}' => escapeHtml($q)]), 'clear_url' => 'contacts.php']) ?>
         <?php } else { ?>
             <?= emptyStateHtml(['title' => t('No contacts yet'), 'text' => '', 'icon' => 'fa-address-book', 'filtered' => false]) ?>
         <?php } ?>
