@@ -147,7 +147,7 @@ return [
     
     // Email - Password Reset (client/login_reset.php)
     'Password reset for {company} Client Portal' => 'Réinitialisation du mot de passe pour le portail client de {company}',
-    'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.' => 'Quelqu’un (probablement vous) a demandé un nouveau mot de passe pour votre compte sur le portail client de {company}.',
+    'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.' => 'Quelqu\’un (probablement vous) a demandé un nouveau mot de passe pour votre compte sur le portail client de {company}.',
     'Please {link} to reset your password.' => 'Veuillez {link} pour réinitialiser votre mot de passe.',
     'click here' => 'cliquer ici',
     'Alternatively, copy and paste this URL into your browser:' => 'Vous pouvez aussi copier et coller cette adresse dans votre navigateur :',
@@ -841,12 +841,12 @@ return [
     '{n} months ago' => 'il y a {n} mois',
     '{n} year ago' => 'il y a {n} an',
     'Thank you for your payment of {amount} We\'ve applied your payment to the following invoices, updating their balances accordingly:' => 'Merci pour votre paiement de {amount}. Nous avons appliqué votre paiement aux factures suivantes, mettant à jour leurs soldes en conséquence:',
-    'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.' => 'Quelqu\'un (probablement vous) a demandé un nouveau mot de passe pour votre compte sur le portail client de {company}.',
+    'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.' => 'Quelqu’un (probablement vous) a demandé un nouveau mot de passe pour votre compte sur le portail client de {company}.',
 
-    'If you didn\'t request this change, you can safely ignore this email.' => 'Si vous n\'avez pas demandé ce changement, vous pouvez ignorer cet e-mail en toute sécurité.',
+    'If you didn\'t request this change, you can safely ignore this email.' => 'Si vous n’avez pas demandé ce changement, vous pouvez ignorer cet e-mail en toute sécurité.',
 
     'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!' => 'Votre mot de passe pour votre compte sur le portail client de {company} a été réinitialisé avec succès. Vous devriez être prêt!',
-    'If you didn\'t reset your password, please get in touch ASAP.' => 'Si vous n\'avez pas réinitialisé votre mot de passe, veuillez nous contacter ASAP.',
+    'If you didn\'t reset your password, please get in touch ASAP.' => 'Si vous n’avez pas réinitialisé votre mot de passe, veuillez nous contacter ASAP.',
 
     'You\'ve tried to reply to a ticket that is closed - we won\'t see your response.' => 'Vous avez essayé de répondre à un ticket fermé - nous ne verrons pas votre réponse.',
     'Everyone\'s' => 'De tout le monde',
@@ -881,18 +881,18 @@ return [
     'Received' => 'Reçu',
     'In progress' => 'En cours',
     'No charge' => 'Sans frais',
-    'Due today' => 'Aujourd\'hui',
+    'Due today' => 'Aujourd’hui',
 
-    'That request form isn\'t available any more - tell us what you need here' => 'Ce formulaire de demande n\'est plus disponible - dites-nous ici ce dont vous avez besoin',
+    'That request form isn\'t available any more - tell us what you need here' => 'Ce formulaire de demande n’est plus disponible - dites-nous ici ce dont vous avez besoin',
 
-    'Write a reply first' => 'Écrivez d\'abord une réponse',
+    'Write a reply first' => 'Écrivez d’abord une réponse',
 
-    'There is nothing to put on a statement' => 'Il n\'y a rien à porter sur un relevé',
+    'There is nothing to put on a statement' => 'Il n’y a rien à porter sur un relevé',
 
 
-    'The two new passwords are not the same - your password has not been changed' => 'Les deux nouveaux mots de passe ne sont pas identiques : votre mot de passe n\'a pas été modifié',
+    'The two new passwords are not the same - your password has not been changed' => 'Les deux nouveaux mots de passe ne sont pas identiques : votre mot de passe n’a pas été modifié',
 
-    '{company} asks everyone to use two-step sign-in, so it stays on' => '{company} demande à chacun d\'utiliser la double authentification : elle reste donc activée',
+    '{company} asks everyone to use two-step sign-in, so it stays on' => '{company} demande à chacun d’utiliser la double authentification : elle reste donc activée',
 
     'Give the document a name and write something in it' => 'Donnez un nom au document et écrivez quelque chose dedans',
 
@@ -904,13 +904,13 @@ return [
 
     'That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file' => 'Ce fichier ne peut pas être pris - téléversez un fichier PDF, Word, OpenDocument, RTF ou texte',
 
-    'Something went wrong uploading the file - please try again' => 'Une erreur s\'est produite lors du téléversement du fichier - veuillez réessayer',
+    'Something went wrong uploading the file - please try again' => 'Une erreur s’est produite lors du téléversement du fichier - veuillez réessayer',
 
     '</strong> uploaded' => '</strong> téléversé',
 
     'Saved <strong>' => 'Modifications enregistrées : <strong>',
     'Added <strong>' => 'Ajout effectué : <strong>',
-    'Your password has not been changed.' => 'Votre mot de passe n\'a pas été modifié.',
+    'Your password has not been changed.' => 'Votre mot de passe n’a pas été modifié.',
     'A password is at least 8 characters.' => 'Le mot de passe doit contenir au moins 8 caractères.',
 
 ];
