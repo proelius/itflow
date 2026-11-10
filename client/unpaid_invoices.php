@@ -49,23 +49,23 @@ $pay_token = bin2hex(random_bytes(16));
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1>Pay invoices</h1>
-        <p>Tick what to pay - it goes through as one card payment.</p>
+        <h1><?= t('Pay invoices') ?></h1>
+        <p><?= t('Tick what to pay - it goes through as one card payment.') ?></p>
     </div>
 </div>
 
 <?php if (!$provider) { ?>
 
     <section class="itflow-portal-panel">
-        <?= emptyStateHtml(['title' => 'Card payments are not set up', 'text' => 'To pay, use the payment details on each invoice.', 'icon' => 'fa-credit-card', 'filtered' => false,
-            'actions' => [['label' => 'Invoices to pay', 'href' => 'invoices.php?tab=open', 'icon' => 'fa-file-invoice-dollar']]]) ?>
+        <?= emptyStateHtml(['title' => t('Card payments are not set up'), 'text' => t('To pay, use the payment details on each invoice.'), 'icon' => 'fa-credit-card', 'filtered' => false,
+            'actions' => [['label' => t('Invoices to pay'), 'href' => 'invoices.php?tab=open', 'icon' => 'fa-file-invoice-dollar']]]) ?>
     </section>
 
 <?php } elseif (!$open) { ?>
 
     <section class="itflow-portal-panel">
-        <?= emptyStateHtml(['title' => 'Nothing to pay', 'text' => 'You are all paid up - thank you.', 'icon' => 'fa-check', 'filtered' => false,
-            'actions' => [['label' => 'Your payments', 'href' => 'payments.php', 'icon' => 'fa-receipt']]]) ?>
+        <?= emptyStateHtml(['title' => t('Nothing to pay'), 'text' => t('You are all paid up - thank you.'), 'icon' => 'fa-check', 'filtered' => false,
+            'actions' => [['label' => t('Your payments'), 'href' => 'payments.php', 'icon' => 'fa-receipt']]]) ?>
     </section>
 
 <?php } else { ?>
