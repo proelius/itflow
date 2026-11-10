@@ -829,15 +829,48 @@ return [
     'We replied - waiting on you' => 'We replied - waiting on you',
     'Approve: ' => 'Approve: ',
     'Waiting for your approval · ' => 'Waiting for your approval · ',
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     'right now' => 'right now',
-    'year' => 'year',
-    'month' => 'month',
-    'week' => 'week',
-    'day' => 'day',
-    'hour' => 'hour',
-    'minute' => 'minute',
-    'second' => 'second',
-    's' => 's',
-    'in ' => 'in ',
-    'ago' => 'ago',
+    '{n} second ago' => '{n} second ago',
+    '{n} seconds ago' => '{n} seconds ago',
+    '{n} minute ago' => '{n} minute ago',
+    '{n} minutes ago' => '{n} minutes ago',
+    '{n} hour ago' => '{n} hour ago',
+    '{n} hours ago' => '{n} hours ago',
+    '{n} day ago' => '{n} day ago',
+    '{n} days ago' => '{n} days ago',
+    '{n} week ago' => '{n} week ago',
+    '{n} weeks ago' => '{n} weeks ago',
+    '{n} month ago' => '{n} month ago',
+    '{n} months ago' => '{n} months ago',
+    '{n} year ago' => '{n} year ago',
+    '{n} years ago' => '{n} years ago',
+    'in {n} second' => 'in {n} second',
+    'in {n} seconds' => 'in {n} seconds',
+    'in {n} minute' => 'in {n} minute',
+    'in {n} minutes' => 'in {n} minutes',
+    'in {n} hour' => 'in {n} hour',
+    'in {n} hours' => 'in {n} hours',
+    'in {n} day' => 'in {n} day',
+    'in {n} days' => 'in {n} days',
+    'in {n} week' => 'in {n} week',
+    'in {n} weeks' => 'in {n} weeks',
+    'in {n} month' => 'in {n} month',
+    'in {n} months' => 'in {n} months',
+    'in {n} year' => 'in {n} year',
+    'in {n} years' => 'in {n} years',
+    'Open ticket' => 'Open ticket',
+    'Open tickets' => 'Open tickets',
+    ' of yours' => ' of yours',
+    'Your open tickets' => 'Your open tickets',
 ];

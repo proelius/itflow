@@ -246,21 +246,36 @@ function timeAgo($datetime) {
     $difference = abs($difference); // Absolute value for calculation
 
     $timeRules = array(
-        31536000 => t('year'),
-        2592000 => t('month'),
-        604800 => t('week'),
-        86400 => t('day'),
-        3600 => t('hour'),
-        60 => t('minute'),
-        1 => t('second')
+        31536000 => 'year',
+        2592000 => 'month',
+        604800 => 'week',
+        86400 => 'day',
+        3600 => 'hour',
+        60 => 'minute',
+        1 => 'second'
     );
 
     foreach ($timeRules as $secs => $str) {
         $div = $difference / $secs;
         if ($div >= 1) {
             $t = round($div);
-            $timeStr = $t . ' ' . $str . ($t > 1 ? t('s') : '');
-            return $isFuture ? t('in ') . $timeStr : $timeStr . ' ' . t('ago');
+            $plural = $t > 1 ? 's' : '';
+            $timeStr = $t . ' ' . $str . $plural;
+            if ($isFuture) {
+                // Future: "in X days"
+                if ($t == 1) {
+                    return t('in {n} ' . $str, ['{n}' => $t]);
+                } else {
+                    return t('in {n} ' . $str . 's', ['{n}' => $t]);
+                }
+            } else {
+                // Past: "X days ago"
+                if ($t == 1) {
+                    return t('{n} ' . $str . ' ago', ['{n}' => $t]);
+                } else {
+                    return t('{n} ' . $str . 's ago', ['{n}' => $t]);
+                }
+            }
         }
     }
 }

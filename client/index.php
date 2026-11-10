@@ -206,7 +206,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
             <span class="itflow-portal-stat-icon"><i class="fas fa-reply"></i></span>
             <span>
                 <span class="itflow-portal-stat-value d-block"><?= $you_count ?></span>
-                <span class="itflow-portal-stat-label">Waiting on you</span>
+                <span class="itflow-portal-stat-label"><?= t('Waiting on you') ?></span>
             </span>
         </a>
     </div>

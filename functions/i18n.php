@@ -488,6 +488,18 @@ function i18n_portal_label(string $text): string {
         'Location' => t('Location'),
         'Primary contact' => t('Primary contact'),
         'Technical' => t('Technical'),
+        'Waiting on you' => t('Waiting on you'),
+        'On hold' => t('On hold'),
+        'Received' => t('Received'),
+        'In progress' => t('In progress'),
+        'Open' => t('Open'),
+        'Resolved' => t('Resolved'),
+        'Closed' => t('Closed'),
+        'All' => t('All'),
+        'Paid' => t('Paid'),
+        'Cancelled' => t('Cancelled'),
+        'No charge' => t('No charge'),
+        'Draft' => t('Draft'),
         default => $text,
     };
 }
