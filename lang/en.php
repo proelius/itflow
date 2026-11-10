@@ -1172,4 +1172,11 @@ return [
     'Something wrong with it? Report a problem and we will pick it up.' => 'Something wrong with it? Report a problem and we will pick it up.',
     'Licenses on it' => 'Licenses on it',
     'All licenses' => 'All licenses',
+    'That document isn\'t here' => 'That document isn\'t here',
+    'It may have been moved or is no longer shared with you.' => 'It may have been moved or is no longer shared with you.',
+    'All documents' => 'All documents',
+    'Updated {date}' => 'Updated {date}',
+    'Ask us about it' => 'Ask us about it',
+    '{ext} file' => '{ext} file',
+    'This document is empty' => 'This document is empty',
 ];

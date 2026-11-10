@@ -1187,4 +1187,11 @@ return [
     'Something wrong with it? Report a problem and we will pick it up.' => 'Un problème avec cet appareil ? Signalez-le et nous nous en occuperons.',
     'Licenses on it' => 'Licences installées dessus',
     'All licenses' => 'Toutes les licences',
+    'That document isn\'t here' => 'Ce document est introuvable',
+    'It may have been moved or is no longer shared with you.' => 'Il a peut-être été déplacé ou n’est plus partagé avec vous.',
+    'All documents' => 'Tous les documents',
+    'Updated {date}' => 'Mis à jour le {date}',
+    'Ask us about it' => 'Poser une question à ce sujet',
+    '{ext} file' => 'Fichier {ext}',
+    'This document is empty' => 'Ce document est vide',
 ];
