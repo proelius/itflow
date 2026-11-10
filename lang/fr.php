@@ -796,7 +796,7 @@ return [
     
     
     'ago' => 'd’écoulée',
-    'right now' => 'à l\'instant',
+    'right now' => 'à l’instant',
     '{n} second ago' => 'il y a {n} seconde',
     '{n} seconds ago' => 'il y a {n} secondes',
     '{n} minute ago' => 'il y a {n} minute',
