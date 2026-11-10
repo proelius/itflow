@@ -644,3 +644,58 @@ function portalContactAccessOff($contact_id) {
     }
     return $user_id > 0;
 }
+
+/**
+ * The text of a message made by a helper that agents use too (functions/user.php,
+ * portal_invite.php, billing.php, contract_signature.php, ticket_template.php),
+ * translated for the portal. The helpers keep their English; each branch is a
+ * whole sentence, and anything else comes back unchanged.
+ */
+function portalMessage($text) {
+    $text = (string) $text;
+    $translated = match ($text) {
+        'That person isn\'t here' => t('That person isn\'t here'),
+        'that\'s you' => t('that\'s you'),
+        'already signs in' => t('already signs in'),
+        'an agent signs in with it' => t('an agent signs in with it'),
+        'it signs in to another client portal account' => t('it signs in to another client portal account'),
+        'a primary contact - ask us' => t('a primary contact - ask us'),
+        'the email could not be sent' => t('the email could not be sent'),
+        'This quote is no longer awaiting a response' => t('This quote is no longer awaiting a response'),
+        'Write your full name.' => t('Write your full name.'),
+        'Tick the box to say you agree to sign it.' => t('Tick the box to say you agree to sign it.'),
+        'Draw your signature in the box, or type it.' => t('Draw your signature in the box, or type it.'),
+        'That signature is too big - clear it and draw it again.' => t('That signature is too big - clear it and draw it again.'),
+        'That signature could not be read - clear it and draw it again.' => t('That signature could not be read - clear it and draw it again.'),
+        default => null,
+    };
+    if ($translated !== null) {
+        return $translated;
+    }
+
+    // Messages with a name, an email or a date in them (already escaped by the helper)
+    $period = substr($text, -1) === '.' ? '.' : '';
+    $bare = $period === '.' ? substr($text, 0, -1) : $text;
+    if (preg_match('/^(.*) is not an email address$/s', $bare, $m)) {
+        return t('{email} is not an email address', ['{email}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^(.*) already signs in to another agent account - each account needs its own email$/s', $bare, $m)) {
+        return t('{email} already signs in to another agent account - each account needs its own email', ['{email}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^(.*) already signs in to a client portal account - each account needs its own email$/s', $bare, $m)) {
+        return t('{email} already signs in to a client portal account - each account needs its own email', ['{email}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^This quote ran out on (.*) - ask for an updated one$/s', $bare, $m)) {
+        return t('This quote ran out on {date} - ask for an updated one', ['{date}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^(.*) needs a date$/s', $bare, $m)) {
+        return t('{name} needs a date', ['{name}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^Pick one of the choices for (.*)$/s', $bare, $m)) {
+        return t('Pick one of the choices for {name}', ['{name}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^Fill in (.*) - it is needed for this template$/s', $bare, $m)) {
+        return t('Fill in {name} - it is needed for this template', ['{name}' => $m[1]]) . $period;
+    }
+    return $text;
+}
