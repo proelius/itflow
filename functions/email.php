@@ -50,6 +50,14 @@ const EMAIL_REPLY_MARKER = '##- Please type your reply above this line -##';
  *   footnote a line under the card - why they got it
  */
 function emailHtml(array $email) {
+    // 'lang' - the language to draw it in (a client's), set by the builder that wrote it in that language
+    if (!empty($email['lang'])) {
+        $lang = $email['lang'];
+        unset($email['lang']);
+        return i18n_with($lang, function () use ($email) {
+            return emailHtml($email);
+        });
+    }
     global $config_base_url;
     $e = function ($value) {
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
