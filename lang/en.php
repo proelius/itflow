@@ -884,7 +884,6 @@ return [
     'That request form isn\'t available any more - tell us what you need here' => 'That request form isn\'t available any more - tell us what you need here',
     'Write a reply first' => 'Write a reply first',
     'There is nothing to put on a statement' => 'There is nothing to put on a statement',
-    'Your password has not been changed' => 'Your password has not been changed',
     'The two new passwords are not the same - your password has not been changed' => 'The two new passwords are not the same - your password has not been changed',
     '{company} asks everyone to use two-step sign-in, so it stays on' => '{company} asks everyone to use two-step sign-in, so it stays on',
     'Give the document a name and write something in it' => 'Give the document a name and write something in it',

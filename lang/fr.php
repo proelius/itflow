@@ -889,7 +889,6 @@ return [
 
     'There is nothing to put on a statement' => 'Il n\'y a rien à porter sur un relevé',
 
-    'Your password has not been changed' => 'Votre mot de passe n\'a pas été modifié',
 
     'The two new passwords are not the same - your password has not been changed' => 'Les deux nouveaux mots de passe ne sont pas identiques : votre mot de passe n\'a pas été modifié',
 
