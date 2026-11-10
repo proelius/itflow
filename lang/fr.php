@@ -1717,7 +1717,7 @@ return [
     'The password for your {company} client portal account ({email}) was just set from an emailed link.' => 'Le mot de passe de votre compte du portail client {company} ({email}) vient d’être défini depuis un lien reçu par e-mail.',
     'Two-step sign-in is on for your client portal account' => 'La connexion en deux étapes est activée pour votre compte du portail client',
     'Signing in to the {company} client portal now asks for a code from your authenticator app, as well as your password.' => 'La connexion au portail client {company} demande désormais un code de votre application d’authentification, en plus de votre mot de passe.',
-    'Lost your phone? Ask us and we will reset it.' => 'Vous avez perdu votre téléphone ? Contactez-nous, nous la réinitialiserons.',
+    'Lost your phone? Ask us and we will reset it.' => 'Vous avez perdu votre téléphone ? Contactez-nous, nous réinitialiserons la connexion en deux étapes.',
     'Two-step sign-in is off for your client portal account' => 'La connexion en deux étapes est désactivée pour votre compte du portail client',
     'Signing in to the {company} client portal now asks for your password alone.' => 'La connexion au portail client {company} ne demande désormais que votre mot de passe.',
     'You can turn two-step sign-in back on from Your account.' => 'Vous pouvez réactiver la connexion en deux étapes depuis Votre compte.',
