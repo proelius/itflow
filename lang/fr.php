@@ -846,5 +846,11 @@ return [
     'Received' => 'Reçu',
     'In progress' => 'En cours',
     'No charge' => 'Sans frais',
-    'Due today' => "Aujourd'hui",  
+    'Due today' => "Aujourd'hui",
+    'That request form isn\'t available any more - tell us what you need here' => "Ce formulaire de demande n'est plus disponible - dites-nous ici ce dont vous avez besoin",
+    'Write a reply first' => "Écrivez d'abord une réponse",
+    'There is nothing to put on a statement' => "Il n'y a rien à porter sur un relevé",
+    'Your password has not been changed' => "Votre mot de passe n'a pas été modifié",
+    'The two new passwords are not the same - your password has not been changed' => "Les deux nouveaux mots de passe ne sont pas identiques : votre mot de passe n'a pas été modifié",
+    '{company} asks everyone to use two-step sign-in, so it stays on' => "{company} demande à chacun d'utiliser la double authentification : elle reste donc activée",
 ];

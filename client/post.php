@@ -116,7 +116,7 @@ if (isset($_POST['add_ticket_from_form'])) {
     $sees_all = portalSeesAllTickets();
     $template = ticketTemplatePortalForm(intval($_POST['form'] ?? 0), $session_client_id, $sees_all);
     if (!$template) {
-        flashAlert("That request form isn't available any more - tell us what you need here", 'error');
+        flashAlert(t("That request form isn't available any more - tell us what you need here"), 'error');
         redirect('ticket_add.php');
     }
     $template_id = intval($template['ticket_template_id']);
@@ -166,7 +166,7 @@ if (isset($_POST['add_ticket_comment'])) {
     // Nothing but empty paragraphs from the editor is no reply - a picture on
     // its own is
     if (portalHtmlIsEmpty($raw_comment)) {
-        flashAlert("Write a reply first", 'error');
+        flashAlert(t("Write a reply first"), 'error');
         redirect();
     }
 
@@ -518,7 +518,7 @@ if (isset($_GET['export_statement_pdf'])) {
     $statement = billingStatement($session_client_id, $with_paid ? date('Y-m-d', strtotime('-12 months')) : '', '', $with_paid);
 
     if (!$statement['invoices']) {
-        flashAlert("There is nothing to put on a statement", 'error');
+        flashAlert(t("There is nothing to put on a statement"), 'error');
         redirect("statement.php");
     }
 
@@ -553,11 +553,11 @@ if (isset($_POST['portal_password_change'])) {
         redirect('profile.php#security');
     }
     if (($problem = userPasswordProblem($new_password)) !== '') {
-        flashAlert(escapeHtml($problem) . ' Your password has not been changed.', 'error');
+        flashAlert(escapeHtml($problem) . ' ' . t('Your password has not been changed'), 'error');
         redirect('profile.php#security');
     }
     if ($new_password !== (string) ($_POST['confirm_password'] ?? '')) {
-        flashAlert('The two new passwords are not the same - your password has not been changed', 'error');
+        flashAlert(t('The two new passwords are not the same - your password has not been changed'), 'error');
         redirect('profile.php#security');
     }
 
@@ -613,7 +613,7 @@ if (isset($_POST['portal_mfa_disable'])) {
         redirect('profile.php');
     }
     if (intval($config_client_portal_require_mfa) === 1) {
-        flashAlert(escapeHtml($session_company_name) . " asks everyone to use two-step sign-in, so it stays on", 'error');
+        flashAlert(t('{company} asks everyone to use two-step sign-in, so it stays on', ['{company}' => escapeHtml($session_company_name)]), 'error');
         redirect('profile.php#security');
     }
     if (!portalReauthenticate($_POST['current_password'] ?? '')) {
