@@ -504,6 +504,7 @@ function i18n_portal_label(string $text): string {
         'Declined' => t('Declined'),
         'Expired' => t('Expired'),
         'Due today' => t('Due today'),
+        'A password is at least 8 characters.' => t('A password is at least 8 characters.'),
         default => $text,
     };
 }

@@ -589,19 +589,32 @@ return [
     'You have not set one.' => 'Vous n’en avez pas défini.',
     'You sign in with your Microsoft 365 account - Microsoft looks after your password and its own sign-in checks.' => 'Vous vous connectez avec votre compte Microsoft 365 - Microsoft s’occupe de votre mot de passe et de ses propres vérifications de connexion.',
     'Your details, the emails you get from us and how you sign in' => 'Vos coordonnées, les emails que nous vous envoyons et votre méthode de connexion',
-    'Forget them' => "Les oublier",
-    'Signing in will ask for your password alone.' => "La connexion demandera uniquement votre mot de passe.",
-    'Not now' => "Pas maintenant",
-    'Enter the 6-digit code it shows:' => "Entrez le code à 6 chiffres qu’elle affiche :",
-    "Can't scan it? Type this key in:" => "Impossible de scanner ? Saisissez cette clé :",
-    'Scan this code' => "Scannez ce code",
-    'Open an authenticator app on your phone - Microsoft or Google Authenticator, 1Password, Authy, Bitwarden - and add an account.' => "Ouvrez une application d’authentification sur votre téléphone - Microsoft ou Google Authenticator, 1Password, Authy, Bitwarden - et ajoutez un compte.",
-    'Turn this on to get them again.' => "Activez ceci pour les recevoir à nouveau.",
-    'You replied STOP to our texts, so we send none.' => "Vous avez répondu STOP à nos messages, nous n’en envoyons donc aucun.",
-    'About other tickets at' => "Concernant les autres tickets chez",
-    'About your tickets' => "Concernant vos tickets",
-    'Ask us to change them' => "Demandez-nous de les modifier",
-    'Set it up below to carry on - it takes a minute with an authenticator app on your phone.' => "Configurez-la ci-dessous pour continuer - cela prend une minute avec une application d’authentification sur votre téléphone.",
+    'Forget them' => 'Les oublier',
+
+    'Signing in will ask for your password alone.' => 'La connexion demandera uniquement votre mot de passe.',
+
+    'Not now' => 'Pas maintenant',
+
+    'Enter the 6-digit code it shows:' => 'Entrez le code à 6 chiffres qu’elle affiche :',
+
+    "Can't scan it? Type this key in:" => 'Impossible de scanner ? Saisissez cette clé :',
+
+    'Scan this code' => 'Scannez ce code',
+
+    'Open an authenticator app on your phone - Microsoft or Google Authenticator, 1Password, Authy, Bitwarden - and add an account.' => 'Ouvrez une application d’authentification sur votre téléphone - Microsoft ou Google Authenticator, 1Password, Authy, Bitwarden - et ajoutez un compte.',
+
+    'Turn this on to get them again.' => 'Activez ceci pour les recevoir à nouveau.',
+
+    'You replied STOP to our texts, so we send none.' => 'Vous avez répondu STOP à nos messages, nous n’en envoyons donc aucun.',
+
+    'About other tickets at' => 'Concernant les autres tickets chez',
+
+    'About your tickets' => 'Concernant vos tickets',
+
+    'Ask us to change them' => 'Demandez-nous de les modifier',
+
+    'Set it up below to carry on - it takes a minute with an authenticator app on your phone.' => 'Configurez-la ci-dessous pour continuer - cela prend une minute avec une application d’authentification sur votre téléphone.',
+
     ' (you)' => ' (vous)',
     'No contacts yet' => 'Aucun contact pour le moment',
     'Send again' => 'Renvoyer',
@@ -610,25 +623,43 @@ return [
     'Add a person' => 'Ajouter une personne',
     'Invite people' => 'Inviter des personnes',
     'Name, email, title or phone' => 'Nom, e-mail, titre ou téléphone',
-    "You sign in with it" => "Vous vous connectez avec",
-    "When a ticket is raised for you, every reply and update, when it is fixed and when it is closed" => "Lorsqu’un ticket est créé pour vous, chaque réponse et mise à jour, lorsqu’il est résolu et lorsqu’il est fermé",
-    "Unknown device" => "Appareil inconnu",
-    "Two-step sign-in" => "Validation en deux étapes",
-    "Replies and fixes only" => "Réponses et résolutions uniquement",
-    "Our replies and when it is fixed - not the emails saying a ticket was raised or closed" => "Nos réponses et lorsqu’il est résolu - pas les e-mails annonçant la création ou la fermeture d’un ticket",
-    "Only the tickets I am on" => "Uniquement les tickets où je suis assigné",
-    "Nothing about tickets other people raise" => "Rien concernant les tickets créés par d’autres",
-    "New tickets and every update" => "Nouveaux tickets et chaque mise à jour",
-    "Every email" => "Chaque e-mail",
-    "As if you were copied in on all of them" => "Comme si vous étiez mis en copie de tous ces e-mails",
-    "An email when anyone raises one - in the portal, by email or by calling us" => "Un e-mail lorsque quelqu’en crée un - dans le portail, par e-mail ou en nous appelant",
-    "A code from an app on your phone, as well as your password" => "Un code depuis une application sur votre téléphone, ainsi que votre mot de passe",
+    "You sign in with it" => 'Vous vous connectez avec',
+
+    "When a ticket is raised for you, every reply and update, when it is fixed and when it is closed" => 'Lorsqu’un ticket est créé pour vous, chaque réponse et mise à jour, lorsqu’il est résolu et lorsqu’il est fermé',
+
+    "Unknown device" => 'Appareil inconnu',
+
+    "Two-step sign-in" => 'Validation en deux étapes',
+
+    "Replies and fixes only" => 'Réponses et résolutions uniquement',
+
+    "Our replies and when it is fixed - not the emails saying a ticket was raised or closed" => 'Nos réponses et lorsqu’il est résolu - pas les e-mails annonçant la création ou la fermeture d’un ticket',
+
+    "Only the tickets I am on" => 'Uniquement les tickets où je suis assigné',
+
+    "Nothing about tickets other people raise" => 'Rien concernant les tickets créés par d’autres',
+
+    "New tickets and every update" => 'Nouveaux tickets et chaque mise à jour',
+
+    "Every email" => 'Chaque e-mail',
+
+    "As if you were copied in on all of them" => 'Comme si vous étiez mis en copie de tous ces e-mails',
+
+    "An email when anyone raises one - in the portal, by email or by calling us" => 'Un e-mail lorsque quelqu’en crée un - dans le portail, par e-mail ou en nous appelant',
+
+    "A code from an app on your phone, as well as your password" => 'Un code depuis une application sur votre téléphone, ainsi que votre mot de passe',
+
     'or, as it can' => 'ou, comme cela ne peut',
-    "On" => "Activé",
-    "Off" => "Désactivé",
-    "Signing in asks for a code from your authenticator app" => "La connexion demande un code depuis votre application d’authentification",
-    "{agent} from {company} sent you a time sensitive secure link regarding \"{item}\"." => "{agent} de {company} vous a envoyé un lien sécurisé urgent concernant \"{item}\".",
-    "Thank you for your email. A ticket regarding \"{subject}\" has been automatically created for you." => "Merci pour votre e-mail. Un ticket concernant \"{subject}\" a été créé automatiquement pour vous.",
+    "On" => 'Activé',
+
+    "Off" => 'Désactivé',
+
+    "Signing in asks for a code from your authenticator app" => 'La connexion demande un code depuis votre application d’authentification',
+
+    "{agent} from {company} sent you a time sensitive secure link regarding \"{item}\"." => '{agent} de {company} vous a envoyé un lien sécurisé urgent concernant \"{item}\".',
+
+    "Thank you for your email. A ticket regarding \"{subject}\" has been automatically created for you." => 'Merci pour votre e-mail. Un ticket concernant \"{subject}\" a été créé automatiquement pour vous.',
+
     'The web certificates we watch for you show here.' => 'Les certificats web que nous surveillons pour vous apparaissent ici.',
     'The domain names we look after for you show here.' => 'Les noms de domaine que nous gérons pour vous apparaissent ici.',
     'Certificates' => 'Certificats',
@@ -728,7 +759,8 @@ return [
     'Unknown device' => 'Appareil inconnu',
     'With a password' => 'Avec un mot de passe',
     'With their Microsoft 365 account' => 'Avec leur compte Microsoft 365',
-    'No portal access' => "Pas d’accès au portail",
+    'No portal access' => 'Pas d’accès au portail',
+
     'Portal access off' => 'Accès au portail désactivé',
     'Good morning' => 'Bonjour',
     'Good afternoon' => 'Bon après-midi',
@@ -809,10 +841,13 @@ return [
     '{n} months ago' => 'il y a {n} mois',
     '{n} year ago' => 'il y a {n} an',
     'Thank you for your payment of {amount} We\'ve applied your payment to the following invoices, updating their balances accordingly:' => 'Merci pour votre paiement de {amount}. Nous avons appliqué votre paiement aux factures suivantes, mettant à jour leurs soldes en conséquence:',
-    'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.' => "Quelqu'un (probablement vous) a demandé un nouveau mot de passe pour votre compte sur le portail client de {company}.",
-    'If you didn\'t request this change, you can safely ignore this email.' => "Si vous n'avez pas demandé ce changement, vous pouvez ignorer cet e-mail en toute sécurité.",
+    'Someone (probably you) has requested a new password for your account on {company}\'s Client Portal.' => 'Quelqu\'un (probablement vous) a demandé un nouveau mot de passe pour votre compte sur le portail client de {company}.',
+
+    'If you didn\'t request this change, you can safely ignore this email.' => 'Si vous n\'avez pas demandé ce changement, vous pouvez ignorer cet e-mail en toute sécurité.',
+
     'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!' => 'Votre mot de passe pour votre compte sur le portail client de {company} a été réinitialisé avec succès. Vous devriez être prêt!',
-    'If you didn\'t reset your password, please get in touch ASAP.' => "Si vous n'avez pas réinitialisé votre mot de passe, veuillez nous contacter ASAP.",
+    'If you didn\'t reset your password, please get in touch ASAP.' => 'Si vous n\'avez pas réinitialisé votre mot de passe, veuillez nous contacter ASAP.',
+
     'You\'ve tried to reply to a ticket that is closed - we won\'t see your response.' => 'Vous avez essayé de répondre à un ticket fermé - nous ne verrons pas votre réponse.',
     'Everyone\'s' => 'De tout le monde',
     'Scan this code - or, as it can\'t be shown here, type the key in' => 'Scannez ce code - ou, comme il ne peut pas être affiché ici, tapez la clé',
@@ -846,18 +881,37 @@ return [
     'Received' => 'Reçu',
     'In progress' => 'En cours',
     'No charge' => 'Sans frais',
-    'Due today' => "Aujourd'hui",
-    'That request form isn\'t available any more - tell us what you need here' => "Ce formulaire de demande n'est plus disponible - dites-nous ici ce dont vous avez besoin",
-    'Write a reply first' => "Écrivez d'abord une réponse",
-    'There is nothing to put on a statement' => "Il n'y a rien à porter sur un relevé",
-    'Your password has not been changed' => "Votre mot de passe n'a pas été modifié",
-    'The two new passwords are not the same - your password has not been changed' => "Les deux nouveaux mots de passe ne sont pas identiques : votre mot de passe n'a pas été modifié",
-    '{company} asks everyone to use two-step sign-in, so it stays on' => "{company} demande à chacun d'utiliser la double authentification : elle reste donc activée",
-    'Give the document a name and write something in it' => "Donnez un nom au document et écrivez quelque chose dedans",
-    'Document <strong>' => "Document <strong>",
-    '</strong> saved' => "</strong> enregistré",
-    'Give the document a name and choose a file' => "Donnez un nom au document et choisissez un fichier",
-    'That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file' => "Ce fichier ne peut pas être pris - téléchargez un PDF, Word, OpenDocument, RTF ou fichier texte",
-    'Something went wrong uploading the file - please try again' => "Une erreur s'est produite lors du téléchargement du fichier - veuillez réessayer",
-    '</strong> uploaded' => "</strong> téléchargé",
+    'Due today' => 'Aujourd\'hui',
+
+    'That request form isn\'t available any more - tell us what you need here' => 'Ce formulaire de demande n\'est plus disponible - dites-nous ici ce dont vous avez besoin',
+
+    'Write a reply first' => 'Écrivez d\'abord une réponse',
+
+    'There is nothing to put on a statement' => 'Il n\'y a rien à porter sur un relevé',
+
+    'Your password has not been changed' => 'Votre mot de passe n\'a pas été modifié',
+
+    'The two new passwords are not the same - your password has not been changed' => 'Les deux nouveaux mots de passe ne sont pas identiques : votre mot de passe n\'a pas été modifié',
+
+    '{company} asks everyone to use two-step sign-in, so it stays on' => '{company} demande à chacun d\'utiliser la double authentification : elle reste donc activée',
+
+    'Give the document a name and write something in it' => 'Donnez un nom au document et écrivez quelque chose dedans',
+
+    'Document <strong>' => 'Document <strong>',
+
+    '</strong> saved' => '</strong> enregistré',
+
+    'Give the document a name and choose a file' => 'Donnez un nom au document et choisissez un fichier',
+
+    'That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file' => 'Ce fichier ne peut pas être pris - téléversez un fichier PDF, Word, OpenDocument, RTF ou texte',
+
+    'Something went wrong uploading the file - please try again' => 'Une erreur s\'est produite lors du téléversement du fichier - veuillez réessayer',
+
+    '</strong> uploaded' => '</strong> téléversé',
+
+    'Saved <strong>' => 'Modifications enregistrées : <strong>',
+    'Added <strong>' => 'Ajout effectué : <strong>',
+    'Your password has not been changed.' => 'Votre mot de passe n\'a pas été modifié.',
+    'A password is at least 8 characters.' => 'Le mot de passe doit contenir au moins 8 caractères.',
+
 ];

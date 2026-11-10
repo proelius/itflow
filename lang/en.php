@@ -894,4 +894,8 @@ return [
     'That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file' => 'That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file',
     'Something went wrong uploading the file - please try again' => 'Something went wrong uploading the file - please try again',
     '</strong> uploaded' => '</strong> uploaded',
+    'Saved <strong>' => 'Saved <strong>',
+    'Added <strong>' => 'Added <strong>',
+    'Your password has not been changed.' => 'Your password has not been changed.',
+    'A password is at least 8 characters.' => 'A password is at least 8 characters.',
 ];

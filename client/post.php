@@ -553,7 +553,7 @@ if (isset($_POST['portal_password_change'])) {
         redirect('profile.php#security');
     }
     if (($problem = userPasswordProblem($new_password)) !== '') {
-        flashAlert(escapeHtml($problem) . ' ' . t('Your password has not been changed'), 'error');
+        flashAlert(escapeHtml(i18n_portal_label($problem)) . ' ' . t('Your password has not been changed.'), 'error');
         redirect('profile.php#security');
     }
     if ($new_password !== (string) ($_POST['confirm_password'] ?? '')) {
@@ -773,7 +773,7 @@ if (isset($_POST['portal_contact_save'])) {
         }
         logAudit("Contact", "Edit", "Client contact $session_contact_name changed contact $name_sql in the client portal", $session_client_id, $contact_id);
         triggerCustomAction('contact_update', $contact_id);
-        flashAlert("Saved <strong>" . escapeHtml($in['contact_name']) . "</strong>");
+        flashAlert(t('Saved <strong>') . escapeHtml($in['contact_name']) . t('</strong>'));
         redirect("contact.php?id=$contact_id");
     }
 
@@ -783,7 +783,7 @@ if (isset($_POST['portal_contact_save'])) {
     appNotify("Contact", "$session_contact_name added $name_sql as a contact for " . escapeSql($session_client_name) . " in the client portal", "/agent/contact.php?client_id=$session_client_id&contact_id=$contact_id", $session_client_id, $contact_id);
     triggerCustomAction('contact_create', $contact_id);
 
-    $message = "Added <strong>" . escapeHtml($in['contact_name']) . "</strong>";
+    $message = t('Added <strong>') . escapeHtml($in['contact_name']) . t('</strong>');
     if ($in['invite']) {
         $invite = portalContactInvite($contact_id, $in['method'], (string) ($contact['contact_name'] ?? ''));
         if (!$invite['ok']) {
