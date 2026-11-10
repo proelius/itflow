@@ -22,7 +22,7 @@ if (!empty($_SESSION['portal_view_as']) && (isset($_GET['exit_view_as']) || isse
     redirect($back);
 }
 if (portalViewingAs() && !isset($_GET['export_statement_pdf'])) {
-    flashAlert("You're viewing the portal as " . escapeHtml($portal_view_as['contact_name']) . " - nothing can be changed", 'error');
+    flashAlert(t('You\'re viewing the portal as ') . escapeHtml($portal_view_as['contact_name']) . t(' - nothing can be changed'), 'error');
     redirect();
 }
 
@@ -37,7 +37,7 @@ if (isset($_POST['add_ticket'])) {
     // a page that never loaded it would send them blank
     $raw_details = (string) ($_POST['details'] ?? '');
     if (trim((string) ($_POST['subject'] ?? '')) === '' || portalHtmlIsEmpty($raw_details)) {
-        flashAlert("Give the ticket a subject and tell us what is happening", 'error');
+        flashAlert(t('Give the ticket a subject and tell us what is happening'), 'error');
         redirect('ticket_add.php');
     }
 
@@ -549,7 +549,7 @@ if (isset($_POST['portal_password_change'])) {
     }
     $new_password = (string) ($_POST['new_password'] ?? '');
     if (!portalReauthenticate($_POST['current_password'] ?? '')) {
-        flashAlert("That is not your current password - your password has not been changed", 'error');
+        flashAlert(t('That is not your current password - your password has not been changed'), 'error');
         redirect('profile.php#security');
     }
     if (($problem = userPasswordProblem($new_password)) !== '') {
@@ -570,7 +570,7 @@ if (isset($_POST['portal_password_change'])) {
     logAudit("Contact", "Edit", "Client contact $session_contact_name changed their password in the client portal", $session_client_id, $session_contact_id);
     portalMailAccountChange(stripslashes($session_contact_email), stripslashes($session_contact_name), 'password');
 
-    flashAlert("Your password is changed");
+    flashAlert(t('Your password is changed'));
     redirect('profile.php');
 
 }
@@ -710,7 +710,7 @@ if (isset($_POST['portal_contact_save'])) {
             LEFT JOIN users ON user_id = contact_user_id
             WHERE contact_id = $contact_id AND contact_client_id = $session_client_id AND contact_archived_at IS NULL LIMIT 1"));
         if (!$existing || intval($existing['contact_primary']) || $contact_id === $session_contact_id) {
-            flashAlert("That contact can't be changed here", 'error');
+            flashAlert(t('That contact can\'t be changed here'), 'error');
             redirect('contacts.php');
         }
     }
@@ -810,7 +810,7 @@ if (isset($_POST['portal_contact_access']) || isset($_POST['portal_contact_left'
     $target = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT contact_id, contact_name, contact_email, contact_primary FROM contacts
         WHERE contact_id = $contact_id AND contact_client_id = $session_client_id AND contact_archived_at IS NULL LIMIT 1"));
     if (!$target || intval($target['contact_primary']) || $contact_id === $session_contact_id) {
-        flashAlert("That contact's access can't be changed here", 'error');
+        flashAlert(t('That contact\'s access can\'t be changed here'), 'error');
         redirect('contacts.php');
     }
     $name = (string) $target['contact_name'];
@@ -853,7 +853,7 @@ if (isset($_POST['portal_invites_send'])) {
     enforceContactCan('contacts_manage');
 
     if (!portalInvitesReady() || !portalMailReady()) {
-        flashAlert("Invites can't be sent just now - add the person instead, or ask us", 'error');
+        flashAlert(t('Invites can\'t be sent just now - add the person instead, or ask us'), 'error');
         redirect('contacts.php');
     }
     $typed = mb_substr((string) ($_POST['emails'] ?? ''), 0, 20000);
@@ -896,24 +896,24 @@ if (isset($_POST['portal_invite_resend']) || isset($_POST['portal_invite_cancel'
     $invite = portalInvitesReady() ? portalInviteRow($_POST['invite_id'] ?? 0) : null;
     if (!$invite || intval($invite['invite_client_id']) !== $session_client_id || $invite['invite_kind'] !== 'invite'
         || !in_array(portalInviteState($invite), ['pending', 'expired'], true)) {
-        flashAlert("That invite isn't waiting any more - they may have joined already", 'error');
+        flashAlert(t('That invite isn\'t waiting any more - they may have joined already'), 'error');
         redirect('contacts.php');
     }
     $email = (string) $invite['invite_email'];
 
     if (isset($_POST['portal_invite_resend'])) {
         if (!portalInviteResend($invite['invite_id'], $session_client_id)) {
-            flashAlert("The invite couldn't be sent just now - try again later, or ask us", 'error');
+            flashAlert(t('The invite couldn\'t be sent just now - try again later, or ask us'), 'error');
             redirect('contacts.php');
         }
         logAudit("Contact", "Invite", "Client contact $session_contact_name sent the client portal invite to " . escapeSql($email) . " again", $session_client_id);
-        flashAlert('Sent the invite to <strong>' . escapeHtml($email) . '</strong> again, with a new link');
+        flashAlert(t('Sent the invite to <strong>') . escapeHtml($email) . t('</strong> again, with a new link'));
         redirect('contacts.php');
     }
 
     portalInviteCancel($invite['invite_id'], $session_client_id);
     logAudit("Contact", "Cancel", "Client contact $session_contact_name cancelled the client portal invite to " . escapeSql($email), $session_client_id);
-    flashAlert('Cancelled the invite to <strong>' . escapeHtml($email) . '</strong>');
+    flashAlert(t('Cancelled the invite to <strong>') . escapeHtml($email) . t('</strong>'));
     redirect('contacts.php');
 
 }
