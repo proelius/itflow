@@ -375,15 +375,15 @@ function portalInvoiceState(array $row, $paid) {
         case 'draft':
             return $state + ['label' => 'Draft', 'icon' => 'fa-pencil-alt', 'class' => 'itflow-portal-state-closed'];
         case 'overdue':
-            return $state + ['label' => -$days . ' ' . (-$days === 1 ? 'day' : 'days') . ' overdue', 'icon' => 'fa-exclamation-circle', 'class' => 'itflow-portal-state-late'];
+            return $state + ['label' => -$days === 1 ? t('{n} day overdue', ['{n}' => -$days]) : t('{n} days overdue', ['{n}' => -$days]), 'icon' => 'fa-exclamation-circle', 'class' => 'itflow-portal-state-late'];
     }
     if ($days === 0) {
         return $state + ['label' => 'Due today', 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-you'];
     }
     if ($days <= 7) {
-        return $state + ['label' => "Due in $days " . ($days === 1 ? 'day' : 'days'), 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-you'];
+        return $state + ['label' => $days === 1 ? t('Due in {n} day', ['{n}' => $days]) : t('Due in {n} days', ['{n}' => $days]), 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-you'];
     }
-    return $state + ['label' => 'Due ' . date('M j', strtotime((string) $row['invoice_due'])), 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-new'];
+    return $state + ['label' => t('Due {date}', ['{date}' => date('M j', strtotime((string) $row['invoice_due']))]), 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-new'];
 }
 
 /** Where a quote stands for the client - waiting for their answer, run out, accepted or declined - with a label, icon and class. */
