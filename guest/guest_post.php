@@ -36,9 +36,9 @@ if (isset($_POST['quote_id'], $_POST['url_key']) && (isset($_POST['accept_quote'
         }
 
         if ($accept) {
-            flashAlert("Quote Accepted");
+            flashAlert(t("Quote Accepted"));
         } else {
-            flashAlert("Quote Declined", 'danger');
+            flashAlert(t("Quote Declined"), 'danger');
         }
 
         redirect();
@@ -60,28 +60,28 @@ if (isset($_POST['sign_contract'])) {
     $round = contractSignaturesReady() ? contractSignatureByKey($_POST['contract_signature_id'] ?? 0, $_POST['key'] ?? '') : null;
     if (!$round) {
         http_response_code(404);
-        exit("This contract link isn't working - open it again from the email.");
+        exit(t("This contract link isn't working - open it again from the email."));
     }
     $back = '/guest/guest_view_contract.php?id=' . intval($round['contract_signature_id']) . '&key=' . rawurlencode((string) $round['contract_signature_url_key']);
     $state = contractSignatureState($round);
     if (!in_array($state['key'], ['sent', 'viewed'], true)) {
-        flashAlert($state['key'] === 'withdrawn' ? "This request was withdrawn, so it wasn't signed." : "It has already been signed.", 'error');
+        flashAlert($state['key'] === 'withdrawn' ? t("This request was withdrawn, so it wasn't signed.") : t("It has already been signed."), 'error');
         redirect($back);
     }
     if (!hash_equals((string) $round['contract_signature_document_hash'], (string) ($_POST['document_hash'] ?? ''))) {
-        flashAlert("The contract changed while you had it open - read it again before signing.", 'error');
+        flashAlert(t("The contract changed while you had it open - read it again before signing."), 'error');
         redirect($back);
     }
     [$f, $error] = contractSignatureFromInput($_POST);
     if ($error !== '') {
-        flashAlert(escapeHtml($error) . ' It was not signed yet.', 'error');
+        flashAlert(escapeHtml($error) . ' ' . t('It was not signed yet.'), 'error');
         redirect($back);
     }
     if (!contractSignatureClientSign($round, $f, 'link')) {
-        flashAlert("It couldn't be signed - it may have just been withdrawn.", 'error');
+        flashAlert(t("It couldn't be signed - it may have just been withdrawn."), 'error');
         redirect($back);
     }
-    flashAlert("Signed - thank you. We'll countersign it and email you a copy.");
+    flashAlert(t("Signed - thank you. We'll countersign it and email you a copy."));
     redirect($back);
 
 }
@@ -91,7 +91,7 @@ if (isset($_GET['export_contract_pdf'])) {
     $round = contractSignaturesReady() ? contractSignatureByKey($_GET['id'] ?? 0, $_GET['key'] ?? '') : null;
     if (!$round) {
         http_response_code(404);
-        exit("This contract link isn't working - open it again from the email.");
+        exit(t("This contract link isn't working - open it again from the email."));
     }
     billingPdfSend(contractPdf(contractRow(intval($round['contract_id'])), $round), true);
 
@@ -111,7 +111,7 @@ if (isset($_POST['close_ticket']) || isset($_POST['reopen_ticket']) || isset($_P
     $row = ticketByGuestKey($_POST['ticket_id'] ?? 0, $_POST['url_key'] ?? '');
     if (!$row) {
         http_response_code(404);
-        exit("This ticket link isn't working - open it again from the email.");
+        exit(t("This ticket link isn't working - open it again from the email."));
     }
 
     $ticket_id = intval($row['ticket_id']);
@@ -128,7 +128,7 @@ if (isset($_POST['close_ticket']) || isset($_POST['reopen_ticket']) || isset($_P
             mysqli_query($mysqli, "INSERT INTO ticket_replies SET ticket_reply = 'Ticket closed by client (guest URL).', ticket_reply_type = 'Internal', ticket_reply_by = 0, ticket_reply_ticket_id = $ticket_id");
             logAudit("Ticket", "Edit", "Ticket $reference closed from its guest link", $client_id, $ticket_id);
             triggerCustomAction('ticket_close', $ticket_id);
-            flashAlert("Ticket closed - thank you");
+            flashAlert(t("Ticket closed - thank you"));
         }
 
     } elseif (isset($_POST['reopen_ticket'])) {
@@ -144,7 +144,7 @@ if (isset($_POST['close_ticket']) || isset($_POST['reopen_ticket']) || isset($_P
             // Nothing else tells you - no reply came with it
             appNotify("Ticket", "Ticket $reference was reopened from its guest link - " . escapeSql($row['ticket_subject']), "/agent/ticket.php?ticket_id=$ticket_id" . ($client_id ? "&client_id=$client_id" : ''), $client_id, $ticket_id);
             triggerCustomAction('ticket_update', $ticket_id);
-            flashAlert("Ticket reopened - now tell us what is still wrong: reply to our email, or give us a call");
+            flashAlert(t("Ticket reopened - now tell us what is still wrong: reply to our email, or give us a call"));
         }
 
     } else {
@@ -158,7 +158,7 @@ if (isset($_POST['close_ticket']) || isset($_POST['reopen_ticket']) || isset($_P
                 appNotify("Feedback", "Guest rated ticket number $reference (ID: $ticket_id) as bad", "/agent/ticket.php?ticket_id=$ticket_id" . ($client_id ? "&client_id=$client_id" : ''), $client_id, $ticket_id);
             }
             triggerCustomAction('ticket_feedback', $ticket_id);
-            flashAlert("Feedback recorded - thank you");
+            flashAlert(t("Feedback recorded - thank you"));
         }
 
     }
@@ -177,7 +177,7 @@ if (isset($_GET['ticket_calendar'])) {
     $row = ticketByGuestKey($_GET['ticket_calendar'], $_GET['url_key'] ?? '');
     if (!$row || empty($row['ticket_schedule']) || !ticketIsOpen($row)) {
         http_response_code(404);
-        exit('Nothing is booked on this ticket.');
+        exit(t('Nothing is booked on this ticket.'));
     }
 
     $ics = ticketScheduleIcs(ticketScheduleRow($row['ticket_id']), $row['ticket_schedule']);
@@ -229,7 +229,7 @@ if (isset($_GET['export_quote_pdf'])) {
     $quote = billingRow('quote', intval($_GET['export_quote_pdf']), false);
     if (!$quote || (string) $quote['quote_url_key'] === '' || !hash_equals((string) $quote['quote_url_key'], (string) ($_GET['url_key'] ?? ''))) {
         http_response_code(404);
-        exit('That quote is not available.');
+        exit(t('That quote is not available.'));
     }
 
     billingPdfSend(billingPdf('quote', $quote));
@@ -242,7 +242,7 @@ if (isset($_GET['export_invoice_pdf'])) {
     $invoice = billingRow('invoice', intval($_GET['export_invoice_pdf']), false);
     if (!$invoice || (string) $invoice['invoice_url_key'] === '' || !hash_equals((string) $invoice['invoice_url_key'], (string) ($_GET['url_key'] ?? ''))) {
         http_response_code(404);
-        exit('That invoice is not available.');
+        exit(t('That invoice is not available.'));
     }
 
     billingPdfSend(billingPdf('invoice', $invoice));
@@ -263,10 +263,10 @@ if (isset($_POST['guest_quote_upload_file'])) {
         if (!empty($_FILES['file'])) {
             $upload = billingQuoteAddFiles($quote_id, $_FILES['file']);
             foreach ($upload['added'] as $added) {
-                flashAlert('File uploaded!');
+                flashAlert(t('File uploaded!'));
             }
             if ($upload['failed']) {
-                flashAlert('Something went wrong uploading the file - please let the support team know.', 'error');
+                flashAlert(t('Something went wrong uploading the file - please let the support team know.'), 'error');
                 logApp("Guest", "error", "Error uploading file to invoice");
             }
         }
