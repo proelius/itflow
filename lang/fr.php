@@ -846,7 +846,7 @@ return [
     'If you didn\'t request this change, you can safely ignore this email.' => 'Si vous n’avez pas demandé ce changement, vous pouvez ignorer cet e-mail en toute sécurité.',
 
     'Your password for your account on {company}\'s Client Portal was successfully reset. You should be all set!' => 'Votre mot de passe pour votre compte sur le portail client de {company} a été réinitialisé avec succès. Vous devriez être prêt!',
-    'If you didn\'t reset your password, please get in touch ASAP.' => 'Si vous n’avez pas réinitialisé votre mot de passe, veuillez nous contacter ASAP.',
+    'If you didn\'t reset your password, please get in touch ASAP.' => 'Si vous n’avez pas réinitialisé votre mot de passe, veuillez nous contacter dès que possible.',
 
     'You\'ve tried to reply to a ticket that is closed - we won\'t see your response.' => 'Vous avez essayé de répondre à un ticket fermé - nous ne verrons pas votre réponse.',
     'Everyone\'s' => 'De tout le monde',
