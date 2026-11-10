@@ -818,4 +818,9 @@ return [
     'Sent the invite to <strong>' => 'Sent the invite to <strong>',
     '</strong> again, with a new link' => '</strong> again, with a new link',
     'Cancelled the invite to <strong>' => 'Cancelled the invite to <strong>',
+    'That is not your current password - two-step sign-in is still on' => 'That is not your current password - two-step sign-in is still on',
+    'Two-step sign-in is off' => 'Two-step sign-in is off',
+    'Two-step sign-in is on - signing in will ask for a code from your app' => 'Two-step sign-in is on - signing in will ask for a code from your app',
+    'Done - every browser asks for a code next time' => 'Done - every browser asks for a code next time',
+    'That code did not match - check the time on your phone is right, and enter the newest code' => 'That code did not match - check the time on your phone is right, and enter the newest code',
 ];

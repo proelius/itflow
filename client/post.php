@@ -589,7 +589,7 @@ if (isset($_POST['portal_mfa_enable'])) {
         redirect('profile.php');
     }
     if (!preg_match('/^[0-9]{6}$/', $code) || !TokenAuth6238::verify($secret, $code, 1)) {
-        flashAlert("That code did not match - check the time on your phone is right, and enter the newest code", 'error');
+        flashAlert(t('That code did not match - check the time on your phone is right, and enter the newest code'), 'error');
         redirect('profile.php?mfa=setup#security');
     }
 
@@ -600,7 +600,7 @@ if (isset($_POST['portal_mfa_enable'])) {
     logAudit("Contact", "Edit", "Client contact $session_contact_name turned on two-step sign-in in the client portal", $session_client_id, $session_contact_id);
     portalMailAccountChange(stripslashes($session_contact_email), stripslashes($session_contact_name), 'mfa_on');
 
-    flashAlert("Two-step sign-in is on - signing in will ask for a code from your app");
+    flashAlert(t('Two-step sign-in is on - signing in will ask for a code from your app'));
     redirect('profile.php');
 
 }
@@ -617,7 +617,7 @@ if (isset($_POST['portal_mfa_disable'])) {
         redirect('profile.php#security');
     }
     if (!portalReauthenticate($_POST['current_password'] ?? '')) {
-        flashAlert("That is not your current password - two-step sign-in is still on", 'error');
+        flashAlert(t('That is not your current password - two-step sign-in is still on'), 'error');
         redirect('profile.php#security');
     }
 
@@ -626,7 +626,7 @@ if (isset($_POST['portal_mfa_disable'])) {
     logAudit("Contact", "Edit", "Client contact $session_contact_name turned off two-step sign-in in the client portal", $session_client_id, $session_contact_id);
     portalMailAccountChange(stripslashes($session_contact_email), stripslashes($session_contact_name), 'mfa_off');
 
-    flashAlert("Two-step sign-in is off");
+    flashAlert(t('Two-step sign-in is off'));
     redirect('profile.php');
 
 }
@@ -641,7 +641,7 @@ if (isset($_POST['portal_forget_browsers'])) {
 
     logAudit("Contact", "Edit", "Client contact $session_contact_name made their remembered browsers ask for a code again", $session_client_id, $session_contact_id);
 
-    flashAlert("Done - every browser asks for a code next time");
+    flashAlert(t('Done - every browser asks for a code next time'));
     redirect('profile.php#security');
 
 }

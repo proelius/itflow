@@ -774,4 +774,9 @@ return [
     'Sent the invite to <strong>' => 'Invitation envoyée à <strong>',
     '</strong> again, with a new link' => '</strong> à nouveau, avec un nouveau lien',
     'Cancelled the invite to <strong>' => 'Invitation annulée pour <strong>',
+    'That is not your current password - two-step sign-in is still on' => 'Ce n\'est pas votre mot de passe actuel : la double authentification est toujours activée',
+    'Two-step sign-in is off' => 'La double authentification est désactivée',
+    'Two-step sign-in is on - signing in will ask for a code from your app' => 'La double authentification est activée : la connexion demandera un code de votre application',
+    'Done - every browser asks for a code next time' => 'Fait : chaque navigateur demandera un code la prochaine fois',
+    'That code did not match - check the time on your phone is right, and enter the newest code' => 'Ce code ne correspondait pas - vérifiez que l\'heure de votre téléphone est correcte et entrez le code le plus récent',
 ];
