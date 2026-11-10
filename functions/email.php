@@ -50,6 +50,14 @@ const EMAIL_REPLY_MARKER = '##- Please type your reply above this line -##';
  *   footnote a line under the card - why they got it
  */
 function emailHtml(array $email) {
+    // 'lang' - the language to draw it in (a client's), set by the builder that wrote it in that language
+    if (!empty($email['lang'])) {
+        $lang = $email['lang'];
+        unset($email['lang']);
+        return i18n_with($lang, function () use ($email) {
+            return emailHtml($email);
+        });
+    }
     global $config_base_url;
     $e = function ($value) {
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
@@ -72,7 +80,7 @@ function emailHtml(array $email) {
 
     $body = '';
     if (array_key_exists('name', $email) && $email['name'] !== null) {
-        $body .= $paragraph(trim((string) $email['name']) !== '' ? 'Hello ' . $email['name'] . ',' : 'Hello,');
+        $body .= $paragraph(trim((string) $email['name']) !== '' ? t('Hello {name},', ['{name}' => $email['name']]) : t('Hello,'));
     }
     foreach ((array) ($email['intro'] ?? []) as $text_value) {
         $body .= $paragraph($text_value);
@@ -86,7 +94,7 @@ function emailHtml(array $email) {
     }
     if (!empty($email['message']['html']) && trim(strip_tags((string) $email['message']['html'], '<img>')) !== '') {
         $by = trim((string) ($email['message']['by'] ?? ''));
-        $label = (string) ($email['message']['label'] ?? ($by !== '' ? "$by wrote" : ''));
+        $label = (string) ($email['message']['label'] ?? ($by !== '' ? t('{name} wrote', ['{name}' => $by]) : ''));
         $when = trim((string) ($email['message']['when'] ?? ''));
         $head = $label !== '' || $when !== ''
             ? '<div style="margin:0 0 8px;font-size:13px;color:' . $muted . ';"><strong style="color:' . $text . ';">' . $e($label) . '</strong>' . ($when !== '' ? ($label !== '' ? ' &middot; ' : '') . $e($when) : '') . '</div>'
@@ -139,7 +147,7 @@ function emailHtml(array $email) {
             . '<a href="' . $e($email['button']['url']) . '" style="display:inline-block;padding:12px 26px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:6px;' . $font . '">' . $e($email['button']['label']) . '</a>'
             . '</td></tr></table>';
         if (!empty($email['button']['show_url'])) {
-            $body .= '<p style="margin:-10px 0 18px;font-size:12px;line-height:1.5;color:' . $muted . ';word-break:break-all;">Or copy this into your browser: ' . $e($email['button']['url']) . '</p>';
+            $body .= '<p style="margin:-10px 0 18px;font-size:12px;line-height:1.5;color:' . $muted . ';word-break:break-all;">' . $e(t('Or copy this into your browser: {url}', ['{url}' => $email['button']['url']])) . '</p>';
         }
     }
     foreach ((array) ($email['after'] ?? []) as $text_value) {
@@ -151,7 +159,7 @@ function emailHtml(array $email) {
         foreach ($email['history']['items'] as $item) {
             if (isset($item['gap'])) {
                 $gap = intval($item['gap']);
-                $items .= '<p style="margin:0 0 14px;font-size:13px;color:' . $muted . ';">&middot;&middot;&middot; ' . $gap . ' earlier ' . ($gap === 1 ? 'message' : 'messages') . ' - see the ticket</p>';
+                $items .= '<p style="margin:0 0 14px;font-size:13px;color:' . $muted . ';">&middot;&middot;&middot; ' . ($gap === 1 ? t('1 earlier message - see the ticket') : t('{n} earlier messages - see the ticket', ['{n}' => $gap])) . '</p>';
                 continue;
             }
             $meta = '<strong style="color:' . $text . ';">' . $e($item['by'] ?? '') . '</strong>';
@@ -167,7 +175,7 @@ function emailHtml(array $email) {
                 . '</td></tr></table>';
         }
         $body .= '<div style="margin:8px 0 0;padding-top:16px;border-top:1px solid ' . $line . ';">'
-            . '<div style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:' . $muted . ';">' . $e($email['history']['label'] ?? 'Earlier messages') . '</div>'
+            . '<div style="margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:' . $muted . ';">' . $e($email['history']['label'] ?? t('Earlier messages')) . '</div>'
             . $items . '</div>';
     }
 
