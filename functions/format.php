@@ -649,7 +649,7 @@ function emptyStateHtml(array $o) {
         $icon = 'fas fa-filter';
         $title = $o['match_title'] ?? 'No ' . escapeHtml($thing) . ' match';
         $text = $o['match_text'] ?? 'Try a different search, or clear the filters to see everything.';
-        $buttons = '<a class="btn btn-outline-secondary" href="' . escapeHtml($o['clear_url'] ?? emptyStateClearUrl($views)) . '"><i class="fas fa-times me-2"></i>Clear filters</a>';
+        $buttons = '<a class="btn btn-outline-secondary" href="' . escapeHtml($o['clear_url'] ?? emptyStateClearUrl($views)) . '"><i class="fas fa-times me-2"></i>' . t('Clear filters') . '</a>';
     } elseif (!empty($o['archived'])) {
         $icon = 'fas fa-archive';
         $title = $o['archived_title'] ?? 'No archived ' . escapeHtml($thing);
