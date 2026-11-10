@@ -532,24 +532,49 @@ function contractSignatureSend(array $row, $to_name, $to_email, $contact_id, $no
 
 /** Email the signing link of a round to whoever it was sent to - with $note when given. Whether it was queued. */
 function contractSignatureRequestEmail(array $round, $note = '') {
+    $lang = client_language();
+    return i18n_with($lang, fn() => _contractSignatureRequestEmail($round, $note, $lang));
+}
+
+/** contractSignatureRequestEmail() in the language that is current. */
+function _contractSignatureRequestEmail(array $round, $note, $lang) {
     global $mysqli;
     $company = billingCompany();
     $company_name = (string) ($company['company_name'] ?? '');
     $by = mysqli_fetch_row(mysqli_query($mysqli, "SELECT user_name FROM users WHERE user_id = " . intval($round['contract_signature_sent_by'])))[0] ?? '';
-    $term = contractTermLabel($round['contract_term_months']) . (!empty($round['contract_start_date']) ? ' from ' . date('M j, Y', strtotime($round['contract_start_date'])) : '');
+    $term = contractTermText($round['contract_term_months']);
+    if (!empty($round['contract_start_date'])) {
+        $term = t('{term} from {date}', ['{term}' => $term, '{date}' => date('M j, Y', strtotime($round['contract_start_date']))]);
+    }
     $sent = emailQueue([[
         'email' => (string) $round['contract_signature_sent_to_email'],
         'name' => (string) $round['contract_signature_sent_to_name'],
-        'footnote' => "You received this because $company_name asked you to sign for {$round['client_name']}. The link is for you - please don't forward it.",
-    ]], "Please sign: {$round['contract_name']} - $company_name", [
-        'kind' => 'Contract', 'tone' => 'primary',
-        'title' => "$company_name sent you {$round['contract_name']} to sign",
-        'intro' => ['Please read it and sign it online - it takes a minute, on a phone or a computer. Once we have countersigned, you will get a copy signed by both of us.'],
+        'footnote' => t('You received this because {company} asked you to sign for {client}. The link is for you - please don\'t forward it.', ['{company}' => $company_name, '{client}' => $round['client_name']]),
+    ]], t('Please sign: {contract} - {company}', ['{contract}' => $round['contract_name'], '{company}' => $company_name]), [
+        'lang' => $lang,
+        'kind' => t('Contract'), 'tone' => 'primary',
+        'title' => t('{company} sent you {contract} to sign', ['{company}' => $company_name, '{contract}' => $round['contract_name']]),
+        'intro' => [t('Please read it and sign it online - it takes a minute, on a phone or a computer. Once we have countersigned, you will get a copy signed by both of us.')],
         'note' => trim((string) $note),
-        'summary' => array_filter(['Contract' => (string) $round['contract_name'], 'For' => (string) $round['client_name'], 'Term' => $term, 'Sent by' => (string) $by]),
-        'button' => ['label' => 'Review and sign', 'url' => contractSignatureUrl($round)],
+        'summary' => array_filter([t('Contract') => (string) $round['contract_name'], t('For') => (string) $round['client_name'], t('Term') => $term, t('Sent by') => (string) $by]),
+        'button' => ['label' => t('Review and sign'), 'url' => contractSignatureUrl($round)],
     ], ['from' => contractEmailFrom()]);
     return (bool) $sent;
+}
+
+/** A contract's term in words in the current language - contractTermLabel(): "1 year", "18 months". */
+function contractTermText($months) {
+    $months = intval($months);
+    if ($months === 1) {
+        return t('Monthly');
+    }
+    if ($months === 12) {
+        return t('1 year');
+    }
+    if ($months > 0 && $months % 12 === 0) {
+        return t('{n} years', ['{n}' => $months / 12]);
+    }
+    return t('{n} months', ['{n}' => $months]);
 }
 
 /** The mailbox contract emails to clients come from - the quotes one (Admin > Mail), else ITFlow's own. */
@@ -691,6 +716,12 @@ function contractSignatureAgentSign(array $round, array $f, $user_id, $email = t
  * PDF. $attach false leaves the PDF off (the email previews). Who it went to.
  */
 function contractSignatureSignedEmail(array $round, $attach = true) {
+    $lang = client_language();
+    return i18n_with($lang, fn() => _contractSignatureSignedEmail($round, $attach, $lang));
+}
+
+/** contractSignatureSignedEmail() in the language that is current. */
+function _contractSignatureSignedEmail(array $round, $attach, $lang) {
     global $mysqli;
     $company = billingCompany();
     $company_name = (string) ($company['company_name'] ?? '');
@@ -708,7 +739,7 @@ function contractSignatureSignedEmail(array $round, $attach = true) {
         return [];
     }
     foreach ($recipients as $i => $recipient) {
-        $recipients[$i]['footnote'] = "You received this as the signer for {$round['client_name']}.";
+        $recipients[$i]['footnote'] = t('You received this as the signer for {client}.', ['{client}' => $round['client_name']]);
     }
     $attachments = [];
     if ($attach) {
@@ -717,14 +748,18 @@ function contractSignatureSignedEmail(array $round, $attach = true) {
             $attachments[] = $file;
         }
     }
-    return emailQueue($recipients, "Signed: {$round['contract_name']} - $company_name", [
-        'kind' => 'Contract', 'tone' => 'success',
-        'title' => "{$round['contract_name']} is signed",
-        'intro' => ["Thank you - both of us have signed it. A copy signed by both is attached" . ($attach ? '' : ' as a PDF') . '. Keep it for your records.'],
+    $signed_by = function ($name, $at) {
+        return !empty($at) ? t('{name} on {date}', ['{name}' => $name, '{date}' => date('M j, Y', strtotime($at))]) : trim((string) $name);
+    };
+    return emailQueue($recipients, t('Signed: {contract} - {company}', ['{contract}' => $round['contract_name'], '{company}' => $company_name]), [
+        'lang' => $lang,
+        'kind' => t('Contract'), 'tone' => 'success',
+        'title' => t('{contract} is signed', ['{contract}' => $round['contract_name']]),
+        'intro' => [$attach ? t('Thank you - both of us have signed it. A copy signed by both is attached. Keep it for your records.') : t('Thank you - both of us have signed it. A copy signed by both is attached as a PDF. Keep it for your records.')],
         'summary' => array_filter([
-            'Contract' => (string) $round['contract_name'],
-            'Signed for ' . $round['client_name'] => trim($round['contract_signature_client_name'] . ' ' . (!empty($round['contract_signature_client_signed_at']) ? 'on ' . date('M j, Y', strtotime($round['contract_signature_client_signed_at'])) : '')),
-            "Signed for $company_name" => trim($round['contract_signature_agent_name'] . ' ' . (!empty($round['contract_signature_agent_signed_at']) ? 'on ' . date('M j, Y', strtotime($round['contract_signature_agent_signed_at'])) : '')),
+            t('Contract') => (string) $round['contract_name'],
+            t('Signed for {client}', ['{client}' => $round['client_name']]) => $signed_by($round['contract_signature_client_name'], $round['contract_signature_client_signed_at'] ?? ''),
+            t('Signed for {company}', ['{company}' => $company_name]) => $signed_by($round['contract_signature_agent_name'], $round['contract_signature_agent_signed_at'] ?? ''),
         ]),
     ], ['from' => contractEmailFrom(), 'attachments' => $attachments]);
 }
