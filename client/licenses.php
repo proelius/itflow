@@ -18,9 +18,9 @@ portalItGate();
 
 $q = trim((string) ($_GET['q'] ?? ''));
 $tabs = [
-    'all' => ['label' => 'All', 'icon' => 'fa-list', 'where' => '1 = 1'],
-    'soon' => ['label' => 'Renewing soon', 'icon' => 'fa-hourglass-half', 'where' => 'software_expire BETWEEN CURDATE() AND CURDATE() + INTERVAL 30 DAY'],
-    'expired' => ['label' => 'Expired', 'icon' => 'fa-calendar-times', 'where' => 'software_expire < CURDATE()'],
+    'all' => ['label' => t('All'), 'icon' => 'fa-list', 'where' => '1 = 1'],
+    'soon' => ['label' => t('Renewing soon'), 'icon' => 'fa-hourglass-half', 'where' => 'software_expire BETWEEN CURDATE() AND CURDATE() + INTERVAL 30 DAY'],
+    'expired' => ['label' => t('Expired'), 'icon' => 'fa-calendar-times', 'where' => 'software_expire < CURDATE()'],
 ];
 $where = "software_client_id = $session_client_id AND software_archived_at IS NULL";
 if ($q !== '') {
@@ -52,19 +52,19 @@ function licensesUrl(array $changes) {
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1>Licenses</h1>
-        <p>The software you are licensed for, and when it renews</p>
+        <h1><?= t('Licenses') ?></h1>
+        <p><?= t('The software you are licensed for, and when it renews') ?></p>
     </div>
     <form method="get" class="d-flex" role="search">
         <?php if ($tab !== 'all') { ?><input type="hidden" name="tab" value="<?= escapeHtml($tab) ?>"><?php } ?>
         <div class="input-group">
             <span class="input-group-text"><i class="fas fa-fw fa-search"></i></span>
-            <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="Name, kind or vendor" aria-label="Search licenses" maxlength="200">
+            <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Name, kind or vendor') ?>" aria-label="<?= t('Search licenses') ?>" maxlength="200">
         </div>
     </form>
 </div>
 
-<nav class="itflow-portal-tabs" aria-label="Licenses">
+<nav class="itflow-portal-tabs" aria-label="<?= t('Licenses') ?>">
     <?php foreach ($tabs as $key => $t) { ?>
         <a class="<?= $key === $tab ? 'active' : '' ?><?= $key !== 'all' && $counts[$key] ? ' itflow-portal-tab-alert' : '' ?>" href="<?= escapeHtml(licensesUrl(['tab' => $key])) ?>">
             <i class="fas <?= $t['icon'] ?>"></i><?= escapeHtml($t['label']) ?>
@@ -76,18 +76,18 @@ function licensesUrl(array $changes) {
 <section class="itflow-portal-panel">
     <?php if (!mysqli_num_rows($licenses)) { ?>
         <?php if ($q !== '') { ?>
-            <?= emptyStateHtml(['thing' => 'licenses', 'filtered' => true, 'match_text' => 'No license has &ldquo;' . escapeHtml($q) . '&rdquo; in its name, kind or vendor.', 'clear_url' => licensesUrl(['q' => null])]) ?>
+            <?= emptyStateHtml(['thing' => 'licenses', 'filtered' => true, 'match_title' => t('No licenses match'), 'match_text' => t('No license has &ldquo;{search}&rdquo; in its name, kind or vendor.', ['{search}' => escapeHtml($q)]), 'clear_url' => licensesUrl(['q' => null])]) ?>
         <?php } elseif ($tab === 'soon') { ?>
-            <?= emptyStateHtml(['title' => 'Nothing renewing soon', 'text' => 'Licenses renewing in the next 30 days show here.', 'icon' => 'fa-check', 'filtered' => false]) ?>
+            <?= emptyStateHtml(['title' => t('Nothing renewing soon'), 'text' => t('Licenses renewing in the next 30 days show here.'), 'icon' => 'fa-check', 'filtered' => false]) ?>
         <?php } elseif ($tab === 'expired') { ?>
-            <?= emptyStateHtml(['title' => 'Nothing has run out', 'text' => '', 'icon' => 'fa-check', 'filtered' => false]) ?>
+            <?= emptyStateHtml(['title' => t('Nothing has run out'), 'text' => '', 'icon' => 'fa-check', 'filtered' => false]) ?>
         <?php } else { ?>
-            <?= emptyStateHtml(['title' => 'No licenses yet', 'text' => 'The software we manage for you shows here.', 'icon' => 'fa-cube', 'filtered' => false]) ?>
+            <?= emptyStateHtml(['title' => t('No licenses yet'), 'text' => t('The software we manage for you shows here.'), 'icon' => 'fa-cube', 'filtered' => false]) ?>
         <?php } ?>
     <?php } else { ?>
         <ul class="itflow-portal-list">
             <?php while ($row = mysqli_fetch_assoc($licenses)) {
-                $seats = softwareSeats($row['seats_used'], $row['software_seats']);
+                $seats = portalSeats($row['seats_used'], $row['software_seats']);
                 $renewal = portalRenewalState(softwareRenewal($row['software_expire'])); ?>
                 <li class="itflow-portal-ticket">
                     <?= portalTile(softwareTypeStyle($row['software_type'])['icon']) ?>
@@ -95,7 +95,7 @@ function licensesUrl(array $changes) {
                         <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml(trim($row['software_name'] . ' ' . $row['software_version'])) ?></span>
                         <span class="itflow-portal-ticket-meta">
                             <?php foreach (array_filter([$row['software_type'], $row['software_license_type'], $row['vendor_name']]) as $part) { ?><span><?= escapeHtml($part) ?></span><?php } ?>
-                            <span class="<?= $seats['state'] === 'over' ? 'text-danger-emphasis' : '' ?>" title="<?= escapeHtml($seats['title']) ?>"><i class="fas fa-users me-1"></i><?= $seats['state'] === 'unlimited' ? escapeHtml($seats['text']) : $seats['used'] . ' of ' . $seats['total'] . ' seats in use' ?></span>
+                            <span class="<?= $seats['state'] === 'over' ? 'text-danger-emphasis' : '' ?>" title="<?= escapeHtml($seats['title']) ?>"><i class="fas fa-users me-1"></i><?= $seats['state'] === 'unlimited' ? escapeHtml($seats['text']) : t('{used} of {total} seats in use', ['{used}' => $seats['used'], '{total}' => $seats['total']]) ?></span>
                         </span>
                     </span>
                     <?php if ($renewal) { ?>

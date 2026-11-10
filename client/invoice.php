@@ -161,7 +161,7 @@ $paper = [
                             <a class="itflow-portal-todo" href="receipt.php?id=<?= intval($payment['payment_id']) ?>">
                                 <span class="itflow-portal-todo-main">
                                     <div class="itflow-money"><?= escapeHtml(billingMoney($payment['payment_amount'], $payment['payment_currency_code'])) ?></div>
-                                    <div><?= escapeHtml(billingPaymentMethodText($payment['payment_method'], $payment['payment_reference'])) ?> · <?= escapeHtml(date('M j, Y', strtotime($payment['payment_date']))) ?></div>
+                                    <div><?= escapeHtml(portalPaymentMethodText($payment['payment_method'], $payment['payment_reference'])) ?> · <?= escapeHtml(date('M j, Y', strtotime($payment['payment_date']))) ?></div>
                                 </span>
                                 <span class="small text-body-secondary"><?= t('Receipt') ?><i class="fas fa-chevron-right ms-2"></i></span>
                             </a>

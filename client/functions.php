@@ -542,6 +542,36 @@ function portalHoursWords($hours) {
     return $hours == 1 ? t('{n} hour', ['{n}' => $n]) : t('{n} hours', ['{n}' => $n]);
 }
 
+/** How a payment was made, in the portal's language - billingPaymentMethodText(): "Card" for a Stripe payment, the method as it was typed, or "Payment". */
+function portalPaymentMethodText($method, $reference = '') {
+    $method = trim((string) $method);
+    if (strcasecmp($method, 'Stripe') === 0 || stripos((string) $reference, 'Stripe - pi_') === 0) {
+        return t('Card');
+    }
+    return $method !== '' ? $method : t('Payment');
+}
+
+/** Seats in use against seats bought, with the words in the portal's language - softwareSeats() with its 'text' and 'title' translated. */
+function portalSeats($used, $total) {
+    $seats = softwareSeats($used, $total);
+    $used = $seats['used'];
+    if ($seats['state'] === 'unlimited') {
+        $seats['text'] = $used === 1 ? t('1 in use') : t('{n} in use', ['{n}' => $used]);
+        $seats['title'] = $used === 1 ? t('1 in use, no seat limit') : t('{n} in use, no seat limit', ['{n}' => $used]);
+        return $seats;
+    }
+    $seats['text'] = match ($seats['state']) {
+        'over' => t('{n} over', ['{n}' => $seats['over']]),
+        'full' => t('All in use'),
+        'unused' => t('None in use'),
+        default => t('{n} free', ['{n}' => $seats['free']]),
+    };
+    $seats['title'] = $seats['over']
+        ? t('{used} of {total} seats in use - {over} over', ['{used}' => $used, '{total}' => $seats['total'], '{over}' => $seats['over']])
+        : t('{used} of {total} seats in use', ['{used}' => $used, '{total}' => $seats['total']]);
+    return $seats;
+}
+
 /*
  * ---------- Your IT ----------
  *
