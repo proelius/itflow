@@ -34,10 +34,10 @@ if (!$new) {
         LEFT JOIN locations ON location_id = contact_location_id AND location_archived_at IS NULL
         WHERE contact_id = $contact_id AND contact_client_id = $session_client_id AND contact_archived_at IS NULL LIMIT 1"));
     if (!$contact) { ?>
-        <a class="itflow-portal-back" href="contacts.php"><i class="fas fa-chevron-left"></i>Contacts</a>
+        <a class="itflow-portal-back" href="contacts.php"><i class="fas fa-chevron-left"></i><?= t('Contacts') ?></a>
         <section class="itflow-portal-panel">
-            <?= emptyStateHtml(['title' => "That person isn't here", 'text' => 'They may have been removed from your company\'s contacts.', 'icon' => 'fa-address-book', 'filtered' => false,
-                'actions' => [['label' => 'All contacts', 'href' => 'contacts.php', 'icon' => 'fa-arrow-left']]]) ?>
+            <?= emptyStateHtml(['title' => t('That person isn\'t here'), 'text' => t('They may have been removed from your company\'s contacts.'), 'icon' => 'fa-address-book', 'filtered' => false,
+                'actions' => [['label' => t('All contacts'), 'href' => 'contacts.php', 'icon' => 'fa-arrow-left']]]) ?>
         </section>
         <?php
         require_once "includes/footer.php";
@@ -63,14 +63,14 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
 };
 ?>
 
-<a class="itflow-portal-back" href="contacts.php"><i class="fas fa-chevron-left"></i>Contacts</a>
+<a class="itflow-portal-back" href="contacts.php"><i class="fas fa-chevron-left"></i><?= t('Contacts') ?></a>
 
 <?php if ($new) { ?>
 
     <div class="itflow-portal-page-head">
         <div>
-            <h1>Add a person</h1>
-            <p>Someone new at <?= escapeHtml($session_client_name) ?> - and whether they can sign in here</p>
+            <h1><?= t('Add a person') ?></h1>
+            <p><?= t('Someone new at {client} - and whether they can sign in here', ['{client}' => escapeHtml($session_client_name)]) ?></p>
         </div>
     </div>
     <div class="row">
@@ -83,6 +83,7 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
     $access = portalContactAccess($contact);
     $last = $contact['user_id'] ? portalContactLastSignIn($contact['user_id']) : null;
     $roles = portalContactRoles($contact);
+    $sign_in_params = ['{email}' => escapeHtml($contact['contact_email']), '{client}' => escapeHtml($session_client_name)];
     $devices = [];
     if ($config_module_enable_itdoc && contactCan('itdoc')) {
         $sql = mysqli_query($mysqli, "SELECT asset_id, asset_name, asset_type, asset_make, asset_model FROM assets
@@ -96,12 +97,12 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
         <div class="d-flex align-items-center gap-3 min-w-0">
             <?= portalAvatarHtml((string) $contact['contact_name'], !empty($contact['contact_photo']) ? "/uploads/clients/$session_client_id/" . rawurlencode(basename($contact['contact_photo'])) : '', 'lg') ?>
             <div class="min-w-0">
-                <h1 class="text-truncate"><?= escapeHtml($contact['contact_name']) ?><?= $self ? '<span class="fw-normal text-body-secondary fs-5"> (you)</span>' : '' ?></h1>
-                <p><?= escapeHtml(implode(' · ', array_filter(array_merge([$contact['contact_title']], $roles)))) ?: 'Contact' ?></p>
+                <h1 class="text-truncate"><?= escapeHtml($contact['contact_name']) ?><?= $self ? '<span class="fw-normal text-body-secondary fs-5">' . t(' (you)') . '</span>' : '' ?></h1>
+                <p><?= escapeHtml(implode(' · ', array_filter(array_merge([$contact['contact_title']], $roles)))) ?: t('Contact') ?></p>
             </div>
         </div>
         <?php if ($self) { ?>
-            <a class="btn btn-outline-secondary" href="profile.php"><i class="fas fa-user me-2"></i>Your account</a>
+            <a class="btn btn-outline-secondary" href="profile.php"><i class="fas fa-user me-2"></i><?= t('Your account') ?></a>
         <?php } ?>
     </div>
 
@@ -113,17 +114,17 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
                 $phone = !empty($contact['contact_phone']) ? formatPhoneNumber($contact['contact_phone'], $contact['contact_phone_country_code']) . (!empty($contact['contact_extension']) ? ' x' . $contact['contact_extension'] : '') : '';
                 $mobile = !empty($contact['contact_mobile']) ? formatPhoneNumber($contact['contact_mobile'], $contact['contact_mobile_country_code']) : '';
                 $facts = array_filter([
-                    'Email' => !empty($contact['contact_email']) ? '<a href="mailto:' . escapeHtml($contact['contact_email']) . '">' . escapeHtml($contact['contact_email']) . '</a>' : '',
-                    'Phone' => $phone !== '' ? '<a href="tel:' . escapeHtml(phoneDialNumber($contact['contact_phone'], $contact['contact_phone_country_code'])) . '">' . escapeHtml($phone) . '</a>' : '',
-                    'Mobile' => $mobile !== '' ? '<a href="tel:' . escapeHtml(phoneDialNumber($contact['contact_mobile'], $contact['contact_mobile_country_code'])) . '">' . escapeHtml($mobile) . '</a>' : '',
-                    'Title' => escapeHtml($contact['contact_title']),
-                    'Department' => escapeHtml($contact['contact_department']),
-                    'Location' => escapeHtml($contact['location_name'] ?? ''),
-                    'Roles' => escapeHtml(implode(', ', $roles)),
+                    t('Email') => !empty($contact['contact_email']) ? '<a href="mailto:' . escapeHtml($contact['contact_email']) . '">' . escapeHtml($contact['contact_email']) . '</a>' : '',
+                    t('Phone') => $phone !== '' ? '<a href="tel:' . escapeHtml(phoneDialNumber($contact['contact_phone'], $contact['contact_phone_country_code'])) . '">' . escapeHtml($phone) . '</a>' : '',
+                    t('Mobile') => $mobile !== '' ? '<a href="tel:' . escapeHtml(phoneDialNumber($contact['contact_mobile'], $contact['contact_mobile_country_code'])) . '">' . escapeHtml($mobile) . '</a>' : '',
+                    t('Title') => escapeHtml($contact['contact_title']),
+                    t('Department') => escapeHtml($contact['contact_department']),
+                    t('Location') => escapeHtml($contact['location_name'] ?? ''),
+                    t('Roles') => escapeHtml(implode(', ', $roles)),
                 ], function ($v) { return trim((string) $v) !== ''; }); ?>
                 <section class="itflow-portal-panel">
                     <div class="itflow-portal-panel-head">
-                        <h2><i class="fas fa-address-card"></i>Details</h2>
+                        <h2><i class="fas fa-address-card"></i><?= t('Details') ?></h2>
                     </div>
                     <div class="itflow-portal-panel-body">
                         <dl class="itflow-portal-facts">
@@ -132,9 +133,9 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
                             <?php } ?>
                         </dl>
                         <?php if ($manage && !$self) { ?>
-                            <p class="small text-body-secondary mt-3 mb-0">This is the company's primary contact - <a href="<?= escapeHtml(portalAskUrl('Change the primary contact')) ?>">ask us</a> to change who that is.</p>
+                            <p class="small text-body-secondary mt-3 mb-0"><?= t('This is the company\'s primary contact - <a href="{url}">ask us</a> to change who that is.', ['{url}' => escapeHtml(portalAskUrl('Change the primary contact'))]) ?></p>
                         <?php } elseif ($self) { ?>
-                            <p class="small text-body-secondary mt-3 mb-0">Change your own phone numbers and sign-in in <a href="profile.php">Your account</a>.</p>
+                            <p class="small text-body-secondary mt-3 mb-0"><?= t('Change your own phone numbers and sign-in in <a href="profile.php">Your account</a>.') ?></p>
                         <?php } ?>
                     </div>
                 </section>
@@ -145,33 +146,35 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
             <?php if ($editable) { ?>
                 <section class="itflow-portal-panel mb-4">
                     <div class="itflow-portal-panel-head">
-                        <h2><i class="fas fa-key"></i>Portal access</h2>
+                        <h2><i class="fas fa-key"></i><?= t('Portal access') ?></h2>
                     </div>
                     <div class="itflow-portal-panel-body">
                         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                             <?= portalStateBadge($access) ?>
                             <?php if (in_array($access['key'], ['local', 'azure'], true)) { ?>
-                                <span class="small text-body-secondary"><?= $last ? 'Last signed in ' . escapeHtml(timeAgo($last)) : "Hasn't signed in yet" ?></span>
+                                <span class="small text-body-secondary"><?= $last ? t('Last signed in {when}', ['{when}' => escapeHtml(timeAgo($last))]) : t('Hasn\'t signed in yet') ?></span>
                             <?php } ?>
                         </div>
                         <?php if (in_array($access['key'], ['local', 'azure'], true)) { ?>
-                            <p class="small text-body-secondary">They can sign in here as <strong><?= escapeHtml($contact['contact_email']) ?></strong> and see <?= $contact['contact_technical'] ? 'every ticket at ' . escapeHtml($session_client_name) : 'the tickets they raise' ?><?= $contact['contact_billing'] ? ', and the billing' : '' ?>.</p>
+                            <p class="small text-body-secondary"><?= $contact['contact_technical']
+                                ? ($contact['contact_billing'] ? t('They can sign in here as <strong>{email}</strong> and see every ticket at {client}, and the billing.', $sign_in_params) : t('They can sign in here as <strong>{email}</strong> and see every ticket at {client}.', $sign_in_params))
+                                : ($contact['contact_billing'] ? t('They can sign in here as <strong>{email}</strong> and see the tickets they raise, and the billing.', $sign_in_params) : t('They can sign in here as <strong>{email}</strong> and see the tickets they raise.', $sign_in_params)) ?></p>
                             <form action="post.php" method="post" class="d-flex flex-wrap gap-2">
                                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                                 <input type="hidden" name="contact_id" value="<?= intval($contact['contact_id']) ?>">
                                 <input type="hidden" name="method" value="<?= escapeHtml($access['key']) ?>">
-                                <button type="submit" class="btn btn-outline-primary" name="portal_contact_access" value="invite"><i class="fas fa-paper-plane me-2"></i>Email the invite again</button>
+                                <button type="submit" class="btn btn-outline-primary" name="portal_contact_access" value="invite"><i class="fas fa-paper-plane me-2"></i><?= t('Email the invite again') ?></button>
                                 <button type="submit" class="btn btn-outline-danger confirm-link" name="portal_contact_access" value="off"
-                                    data-confirm-title="Turn off <?= escapeHtml($contact['contact_name']) ?>'s access?" data-confirm-text="They are signed out straight away and can't sign in again until you give them access." data-confirm-button="Turn off"><i class="fas fa-ban me-2"></i>Turn off access</button>
+                                    data-confirm-title="<?= t('Turn off {name}\'s access?', ['{name}' => escapeHtml($contact['contact_name'])]) ?>" data-confirm-text="<?= t('They are signed out straight away and can\'t sign in again until you give them access.') ?>" data-confirm-button="<?= t('Turn off') ?>"><i class="fas fa-ban me-2"></i><?= t('Turn off access') ?></button>
                             </form>
                         <?php } else { ?>
-                            <p class="small text-body-secondary">Give them access and we email <strong><?= escapeHtml($contact['contact_email'] ?: 'them') ?></strong> a link to sign in.</p>
+                            <p class="small text-body-secondary"><?= t('Give them access and we email <strong>{email}</strong> a link to sign in.', ['{email}' => escapeHtml($contact['contact_email'] ?: t('them'))]) ?></p>
                             <form action="post.php" method="post">
                                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                                 <input type="hidden" name="contact_id" value="<?= intval($contact['contact_id']) ?>">
                                 <?php if (count($methods) > 1) { ?>
                                     <div class="mb-3">
-                                        <label class="form-label" for="accessMethod">They sign in</label>
+                                        <label class="form-label" for="accessMethod"><?= t('They sign in') ?></label>
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="fa fa-fw fa-sign-in-alt"></i></span>
                                             <select class="form-select" id="accessMethod" name="method">
@@ -184,7 +187,7 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
                                 <?php } else { ?>
                                     <input type="hidden" name="method" value="local">
                                 <?php } ?>
-                                <button type="submit" class="btn btn-primary" name="portal_contact_access" value="invite"<?= empty($contact['contact_email']) ? ' disabled' : '' ?>><i class="fas fa-paper-plane me-2"></i>Give access and email an invite</button>
+                                <button type="submit" class="btn btn-primary" name="portal_contact_access" value="invite"<?= empty($contact['contact_email']) ? ' disabled' : '' ?>><i class="fas fa-paper-plane me-2"></i><?= t('Give access and email an invite') ?></button>
                             </form>
                         <?php } ?>
                     </div>
@@ -192,15 +195,15 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
 
                 <section class="itflow-portal-panel mb-4">
                     <div class="itflow-portal-panel-head">
-                        <h2><i class="fas fa-door-open"></i>Left the company?</h2>
+                        <h2><i class="fas fa-door-open"></i><?= t('Left the company?') ?></h2>
                     </div>
                     <div class="itflow-portal-panel-body">
-                        <p class="small text-body-secondary">We turn off their portal access now, and you tell us what else to close down - their email, accounts and devices - on a ticket.</p>
+                        <p class="small text-body-secondary"><?= t('We turn off their portal access now, and you tell us what else to close down - their email, accounts and devices - on a ticket.') ?></p>
                         <form action="post.php" method="post">
                             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                             <input type="hidden" name="contact_id" value="<?= intval($contact['contact_id']) ?>">
                             <button type="submit" class="btn btn-outline-danger confirm-link" name="portal_contact_left" value="1"
-                                data-confirm-title="Has <?= escapeHtml($contact['contact_name']) ?> left?" data-confirm-text="Their portal access is turned off, and a new ticket opens for you to tell us what else to close down." data-confirm-button="Yes, they've left"><i class="fas fa-user-slash me-2"></i><?= escapeHtml(strtok($contact['contact_name'], ' ')) ?> has left</button>
+                                data-confirm-title="<?= t('Has {name} left?', ['{name}' => escapeHtml($contact['contact_name'])]) ?>" data-confirm-text="<?= t('Their portal access is turned off, and a new ticket opens for you to tell us what else to close down.') ?>" data-confirm-button="<?= t('Yes, they\'ve left') ?>"><i class="fas fa-user-slash me-2"></i><?= t('{name} has left', ['{name}' => escapeHtml(strtok($contact['contact_name'], ' '))]) ?></button>
                         </form>
                     </div>
                 </section>
@@ -209,7 +212,7 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
             <?php if ($devices) { ?>
                 <section class="itflow-portal-panel">
                     <div class="itflow-portal-panel-head">
-                        <h2><i class="fas fa-desktop"></i>Devices they use</h2>
+                        <h2><i class="fas fa-desktop"></i><?= t('Devices they use') ?></h2>
                     </div>
                     <ul class="itflow-portal-list">
                         <?php foreach ($devices as $device) { ?>

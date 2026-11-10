@@ -564,12 +564,67 @@ function portalRenewalState($renewal, $active_label = '') {
         return null;
     }
     if ($renewal['state'] === 'expired') {
-        return ['label' => 'Expired', 'icon' => 'fa-calendar-times', 'class' => 'itflow-portal-state-late'];
+        return ['label' => t('Expired'), 'icon' => 'fa-calendar-times', 'class' => 'itflow-portal-state-late'];
     }
     if ($renewal['state'] === 'soon') {
-        return ['label' => $renewal['text'], 'icon' => 'fa-hourglass-half', 'class' => 'itflow-portal-state-you'];
+        return ['label' => portalRenewalText($renewal), 'icon' => 'fa-hourglass-half', 'class' => 'itflow-portal-state-you'];
     }
-    return ['label' => $active_label !== '' ? $active_label : $renewal['text'], 'icon' => 'fa-calendar-check', 'class' => 'itflow-portal-state-resolved'];
+    return ['label' => $active_label !== '' ? ($active_label === 'Active' ? t('Active') : $active_label) : portalRenewalText($renewal), 'icon' => 'fa-calendar-check', 'class' => 'itflow-portal-state-resolved'];
+}
+
+/** The words of a renewal from softwareRenewal() - "Renews in 5 days", "Expired yesterday" - in the portal's language. */
+function portalRenewalText(array $renewal) {
+    $days = $renewal['days'];
+    if ($renewal['state'] === 'expired') {
+        $ago = -$days;
+        return $ago === 1 ? t('Expired yesterday') : ($ago < 60 ? t('Expired {n} days ago', ['{n}' => $ago]) : t('Expired {when}', ['{when}' => timeAgo($renewal['date'])]));
+    }
+    if ($renewal['state'] === 'soon') {
+        return $days === 0 ? t('Renews today') : ($days === 1 ? t('Renews tomorrow') : t('Renews in {n} days', ['{n}' => $days]));
+    }
+    return t('Renews {when}', ['{when}' => timeAgo($renewal['date'])]);
+}
+
+/** "Warranty expired" / "Warranty 5 days left" for a warranty from assetWarranty() that is not covered. */
+function portalWarrantyShort(array $warranty) {
+    if ($warranty['days'] < 0) {
+        return t('Warranty expired');
+    }
+    if ($warranty['days'] === 0) {
+        return t('Warranty today');
+    }
+    return $warranty['days'] === 1 ? t('Warranty 1 day left') : t('Warranty {n} days left', ['{n}' => $warranty['days']]);
+}
+
+/** The warranty from assetWarranty() in words - "Expires in 3 days", "Until 2027-05-01" - in the portal's language. */
+function portalWarrantyText(array $warranty) {
+    if ($warranty['days'] < 0) {
+        return t('Expired {when}', ['{when}' => timeAgo($warranty['date'])]);
+    }
+    if ($warranty['tone'] === 'warning') {
+        return $warranty['days'] === 0 ? t('Expires today') : ($warranty['days'] === 1 ? t('Expires in 1 day') : t('Expires in {n} days', ['{n}' => $warranty['days']]));
+    }
+    return t('Until {date}', ['{date}' => $warranty['date']]);
+}
+
+/** "3 yrs 2 mos" since a date, or '' without one - assetAge() in the portal's language. */
+function portalAssetAge($date) {
+    if (assetAge($date) === '') {
+        return '';
+    }
+    $from = DateTime::createFromFormat('!Y-m-d', substr(trim((string) $date), 0, 10));
+    $diff = $from->diff(new DateTime('today'));
+    $parts = [];
+    if ($diff->y) {
+        $parts[] = $diff->y === 1 ? t('{n} yr', ['{n}' => $diff->y]) : t('{n} yrs', ['{n}' => $diff->y]);
+    }
+    if ($diff->m) {
+        $parts[] = $diff->m === 1 ? t('{n} mo', ['{n}' => $diff->m]) : t('{n} mos', ['{n}' => $diff->m]);
+    }
+    if (!$parts) {
+        return $diff->d <= 1 ? t('new') : t('{n} days', ['{n}' => $diff->d]);
+    }
+    return implode(' ', $parts);
 }
 
 /** A contact's roles in words - Primary contact, Billing, Technical - or [] for none. */

@@ -25,10 +25,10 @@ $document = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT document_id, docume
     LIMIT 1"));
 
 if (!$document) { ?>
-    <a class="itflow-portal-back" href="documents.php"><i class="fas fa-chevron-left"></i>Documents</a>
+    <a class="itflow-portal-back" href="documents.php"><i class="fas fa-chevron-left"></i><?= t('Documents') ?></a>
     <section class="itflow-portal-panel">
-        <?= emptyStateHtml(['title' => "That document isn't here", 'text' => 'It may have been moved or is no longer shared with you.', 'icon' => 'fa-folder-open', 'filtered' => false,
-            'actions' => [['label' => 'All documents', 'href' => 'documents.php', 'icon' => 'fa-arrow-left']]]) ?>
+        <?= emptyStateHtml(['title' => t('That document isn\'t here'), 'text' => t('It may have been moved or is no longer shared with you.'), 'icon' => 'fa-folder-open', 'filtered' => false,
+            'actions' => [['label' => t('All documents'), 'href' => 'documents.php', 'icon' => 'fa-arrow-left']]]) ?>
     </section>
     <?php
     require_once "includes/footer.php";
@@ -58,7 +58,7 @@ foreach ($files as $file) {
 }
 ?>
 
-<a class="itflow-portal-back d-print-none" href="documents.php"><i class="fas fa-chevron-left"></i>Documents</a>
+<a class="itflow-portal-back d-print-none" href="documents.php"><i class="fas fa-chevron-left"></i><?= t('Documents') ?></a>
 
 <div class="itflow-portal-page-head">
     <div class="min-w-0">
@@ -66,12 +66,12 @@ foreach ($files as $file) {
         <p>
             <?= trim((string) $document['document_description']) !== '' ? escapeHtml($document['document_description']) . ' · ' : '' ?>
             <?php if (!empty($document['folder_name'])) { ?><i class="fas fa-folder me-1"></i><?= escapeHtml($document['folder_name']) ?> · <?php } ?>
-            Updated <?= escapeHtml(date('M j, Y', strtotime($updated))) ?>
+            <?= t('Updated {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($updated)))]) ?>
         </p>
     </div>
     <div class="d-flex flex-wrap gap-2 d-print-none">
-        <button type="button" class="btn btn-outline-secondary" data-portal-print><i class="fas fa-print me-2"></i>Print</button>
-        <a class="btn btn-outline-secondary" href="<?= escapeHtml(portalAskUrl('Question about ' . $document['document_name'])) ?>"><i class="fas fa-question-circle me-2"></i>Ask us about it</a>
+        <button type="button" class="btn btn-outline-secondary" data-portal-print><i class="fas fa-print me-2"></i><?= t('Print') ?></button>
+        <a class="btn btn-outline-secondary" href="<?= escapeHtml(portalAskUrl('Question about ' . $document['document_name'])) ?>"><i class="fas fa-question-circle me-2"></i><?= t('Ask us about it') ?></a>
     </div>
 </div>
 
@@ -83,11 +83,11 @@ foreach ($files as $file) {
                     <?= portalTile('fa-' . getFileIcon($file['file_ext'])) ?>
                     <span class="itflow-portal-ticket-main">
                         <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml($file['file_name']) ?></span>
-                        <span class="itflow-portal-ticket-meta"><span><?= escapeHtml(strtoupper((string) $file['file_ext'])) ?> file</span><span><?= escapeHtml(formatBytes(intval($file['file_size']))) ?></span></span>
+                        <span class="itflow-portal-ticket-meta"><span><?= t('{ext} file', ['{ext}' => escapeHtml(strtoupper((string) $file['file_ext']))]) ?></span><span><?= escapeHtml(formatBytes(intval($file['file_size']))) ?></span></span>
                     </span>
                     <span class="d-flex gap-2">
-                        <a class="btn btn-sm btn-outline-secondary" href="file.php?file_id=<?= intval($file['file_id']) ?>&amp;action=view" target="_blank" rel="noopener"><i class="fas fa-external-link-alt me-1"></i>Open</a>
-                        <a class="btn btn-sm btn-outline-primary" href="file.php?file_id=<?= intval($file['file_id']) ?>"><i class="fas fa-download me-1"></i>Download</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="file.php?file_id=<?= intval($file['file_id']) ?>&amp;action=view" target="_blank" rel="noopener"><i class="fas fa-external-link-alt me-1"></i><?= t('Open') ?></a>
+                        <a class="btn btn-sm btn-outline-primary" href="file.php?file_id=<?= intval($file['file_id']) ?>"><i class="fas fa-download me-1"></i><?= t('Download') ?></a>
                     </span>
                 </li>
             <?php } ?>
@@ -111,7 +111,7 @@ foreach ($files as $file) {
     </article>
 <?php } elseif (!$files) { ?>
     <section class="itflow-portal-panel">
-        <?= emptyStateHtml(['title' => 'This document is empty', 'text' => '', 'icon' => 'fa-file-alt', 'filtered' => false]) ?>
+        <?= emptyStateHtml(['title' => t('This document is empty'), 'text' => '', 'icon' => 'fa-file-alt', 'filtered' => false]) ?>
     </section>
 <?php } ?>
 
