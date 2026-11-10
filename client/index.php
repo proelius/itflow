@@ -111,8 +111,8 @@ if ($can_billing) {
                 'href' => 'contract.php?id=' . intval($row['contract_id']),
                 'icon' => 'fa-file-signature',
                 'tone' => '',
-                'title' => $row['contract_name'] . ' is waiting for your signature',
-                'line' => contractTypeLabel($row['contract_type']) . ' contract - read it and sign it here',
+                'title' => t('{name} is waiting for your signature', ['{name}' => $row['contract_name']]),
+                'line' => t('{type} contract - read it and sign it here', ['{type}' => portalContractTypeLabel($row['contract_type'])]),
             ];
         }
     }
