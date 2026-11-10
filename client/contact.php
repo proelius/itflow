@@ -176,7 +176,7 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
                                             <span class="input-group-text"><i class="fa fa-fw fa-sign-in-alt"></i></span>
                                             <select class="form-select" id="accessMethod" name="method">
                                                 <?php foreach ($methods as $key => $label) { ?>
-                                                    <option value="<?= $key ?>"><?= escapeHtml($label) ?></option>
+                                                    <option value="<?= $key ?>"><?= i18n_portal_label($label) ?></option>
                                                 <?php } ?>
                                             </select>
                                         </div>

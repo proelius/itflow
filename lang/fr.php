@@ -670,7 +670,7 @@ return [
     'New document' => 'Nouveau document',
     'None - you see your own tickets' => 'Aucun - vous voyez vos propres tickets',
 
-    'Invoices, quotes, receipts and statements go to {company}’s billing contacts - ask us if they should go somewhere else.' => 'Les factures, devis, reçus et relevés sont envoyés aux contacts de facturation de {company} - demandez-nous s’ils doivent aller ailleurs.',
+    'Invoices, quotes, receipts and statements go to {company}\'s billing contacts - ask us if they should go somewhere else.' => 'Les factures, devis, reçus et relevés sont envoyés aux contacts de facturation de {company} - demandez-nous s’ils doivent aller ailleurs.',
     'The people at {company}' => 'Les personnes de {company}',
     'The people at {company}, and who can sign in here' => 'Les personnes de {company}, et qui peuvent se connecter ici',
     '{count} browsers skip the code for {days} days after signing in' => '{count} navigateurs omettent le code pendant {days} jours après la connexion',
@@ -722,4 +722,6 @@ return [
     'Asset' => 'Équipement',
     'Saved Payments' => 'Paiements enregistrés',
     'Account' => 'Compte',
+    'Somewhere you don\'t recognise? Change your password and let us know.' => 'Quelque part où vous ne vous reconnaissez pas ? Changez votre mot de passe et informez-nous.',
+    'Unknown device' => 'Appareil inconnu',
 ];

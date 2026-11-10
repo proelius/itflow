@@ -57,7 +57,7 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title><?= escapeHtml($session_company_name) ?> | <?= t('Client Portal') ?></title>
+    <title><?= escapeHtml($session_company_name) ?> | <?= i18n_portal_label('Client Portal') ?></title>
 
     <!-- Tell the browser to be responsive to screen width -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -113,6 +113,7 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
         <div class="container d-flex flex-wrap align-items-center gap-2">
             <i class="fas fa-eye"></i>
             <span class="me-auto">You're viewing the portal as <strong><?= escapeHtml($portal_view_as['contact_name']) ?></strong> - read only<?= empty($portal_view_as['billing']) ? '. Billing is hidden, as your role doesn\'t see it' : '' ?></span>
+
             <a class="btn btn-sm btn-light" href="/client/post.php?exit_view_as"><i class="fas fa-times me-1"></i>Exit</a>
         </div>
     </div>
@@ -126,7 +127,9 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
                 <img src="/uploads/settings/<?= escapeHtml($session_company_logo) ?>" alt="<?= escapeHtml($session_company_name) ?>">
             <?php } else { ?>
                 <span class="itflow-brand-mark itflow-brand-mark-initials" aria-hidden="true"><?= escapeHtml(clientInitials('', $session_company_name)) ?></span>
+
                 <span class="itflow-portal-brand-name"><?= escapeHtml($session_company_name) ?></span>
+
             <?php } ?>
         </a>
 
@@ -136,19 +139,19 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
                 if (!empty($item['children'])) { ?>
                     <div class="dropdown">
                         <a class="itflow-portal-nav-link dropdown-toggle<?= $active ? ' active' : '' ?>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-fw <?= escapeHtml($item['icon']) ?>"></i><?= t($item['label']) ?>
+                            <i class="fas fa-fw <?= escapeHtml($item['icon']) ?>"></i><?= i18n_portal_label($item['label']) ?>
                         </a>
                         <div class="dropdown-menu">
                             <?php foreach ($item['children'] as $child) { ?>
                                 <a class="dropdown-item<?= in_array($portal_page, $child['pages'], true) ? ' active' : '' ?>" href="<?= escapeHtml($child['href']) ?>">
-                                    <i class="fas fa-fw <?= escapeHtml($child['icon']) ?> me-2"></i><?= t($child['label']) ?>
+                                    <i class="fas fa-fw <?= escapeHtml($child['icon']) ?> me-2"></i><?= i18n_portal_label($child['label']) ?>
                                 </a>
                             <?php } ?>
                         </div>
                     </div>
                 <?php } else { ?>
                     <a class="itflow-portal-nav-link<?= $active ? ' active' : '' ?>" href="<?= escapeHtml($item['href']) ?>"<?= !empty($item['new_tab']) ? ' target="_blank" rel="noopener noreferrer"' : '' ?><?= !empty($item['title']) ? ' title="' . escapeHtml($item['title']) . '"' : '' ?>>
-                        <i class="<?= escapeHtml($item['icon_class'] ?? 'fas fa-fw ' . $item['icon']) ?>"></i><?= t($item['label']) ?>
+                        <i class="<?= escapeHtml($item['icon_class'] ?? 'fas fa-fw ' . $item['icon']) ?>"></i><?= i18n_portal_label($item['label']) ?>
                     </a>
                 <?php } ?>
             <?php } ?>
@@ -161,6 +164,7 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
                 <button type="button" class="itflow-portal-account" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Your account">
                     <?= portalAvatarHtml($portal_contact_name, $session_contact_photo ? "/uploads/clients/$session_client_id/$session_contact_photo" : '') ?>
                     <span class="d-none d-md-inline text-truncate"><?= escapeHtml($portal_contact_name) ?></span>
+
                     <i class="fas fa-chevron-down small text-body-secondary d-none d-md-inline"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end">
@@ -169,16 +173,20 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
                         <div class="small"><?= escapeHtml($session_client_name) ?></div>
                     </div>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item<?= $portal_page === 'profile.php' ? ' active' : '' ?>" href="/client/profile.php"><i class="fas fa-fw fa-user me-2"></i><?= t('Your account') ?></a>
-                    <a class="dropdown-item<?= $portal_page === 'activity.php' ? ' active' : '' ?>" href="/client/activity.php"><i class="fas fa-fw fa-list me-2"></i><?= t('Activity') ?></a>
+                    <a class="dropdown-item<?= $portal_page === 'profile.php' ? ' active' : '' ?>" href="/client/profile.php"><i class="fas fa-fw fa-user me-2"></i><?= i18n_portal_label('Your account') ?></a>
+
+                    <a class="dropdown-item<?= $portal_page === 'activity.php' ? ' active' : '' ?>" href="/client/activity.php"><i class="fas fa-fw fa-list me-2"></i><?= i18n_portal_label('Activity') ?></a>
+
                     <button type="button" class="dropdown-item" data-portal-theme-toggle>
-                        <i class="fas fa-fw <?= $portal_dark ? 'fa-sun' : 'fa-moon' ?> me-2"></i><?= $portal_dark ? t('Light mode') : t('Dark mode') ?>
+                        <i class="fas fa-fw <?= $portal_dark ? 'fa-sun' : 'fa-moon' ?> me-2"></i><?= $portal_dark ? i18n_portal_label('Light mode') : i18n_portal_label('Dark mode') ?>
                     </button>
                     <div class="dropdown-divider"></div>
                     <?php if ($portal_view_as) { ?>
-                        <a class="dropdown-item" href="/client/post.php?exit_view_as"><i class="fas fa-fw fa-times me-2"></i><?= t('Exit view') ?></a>
+                        <a class="dropdown-item" href="/client/post.php?exit_view_as"><i class="fas fa-fw fa-times me-2"></i><?= i18n_portal_label('Exit view') ?></a>
+
                     <?php } else { ?>
-                        <a class="dropdown-item" href="/client/post.php?logout"><i class="fas fa-fw fa-sign-out-alt me-2"></i><?= t('Sign out') ?></a>
+                        <a class="dropdown-item" href="/client/post.php?logout"><i class="fas fa-fw fa-sign-out-alt me-2"></i><?= i18n_portal_label('Sign out') ?></a>
+
                     <?php } ?>
                 </div>
             </div>
@@ -190,13 +198,13 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
 <?php /* Phone: the sections along the bottom of the screen, where a thumb
          reaches them, and everything else in a menu that slides in. */ ?>
 <nav class="itflow-portal-tabbar d-lg-none" aria-label="Portal">
-    <a href="/client/index.php" class="<?= $portal_page === 'index.php' ? 'active' : '' ?>"><i class="fas fa-home"></i><span><?= t('Home') ?></span></a>
-    <a href="/client/tickets.php" class="<?= in_array($portal_page, $portal_nav['tickets']['pages'], true) && $portal_page !== 'ticket_add.php' ? 'active' : '' ?>"><i class="fas fa-life-ring"></i><span><?= t('Tickets') ?></span></a>
-    <a href="/client/ticket_add.php" class="itflow-portal-tabbar-new<?= $portal_page === 'ticket_add.php' ? ' active' : '' ?>"><i class="fas fa-plus"></i><span><?= t('New') ?></span></a>
+    <a href="/client/index.php" class="<?= $portal_page === 'index.php' ? 'active' : '' ?>"><i class="fas fa-home"></i><span><?= i18n_portal_label('Home') ?></span></a>
+    <a href="/client/tickets.php" class="<?= in_array($portal_page, $portal_nav['tickets']['pages'], true) && $portal_page !== 'ticket_add.php' ? 'active' : '' ?>"><i class="fas fa-life-ring"></i><span><?= i18n_portal_label('Tickets') ?></span></a>
+    <a href="/client/ticket_add.php" class="itflow-portal-tabbar-new<?= $portal_page === 'ticket_add.php' ? ' active' : '' ?>"><i class="fas fa-plus"></i><span><?= i18n_portal_label('New') ?></span></a>
     <?php if (isset($portal_nav['billing'])) { ?>
-        <a href="/client/invoices.php" class="<?= in_array($portal_page, $portal_nav['billing']['pages'], true) ? 'active' : '' ?>"><i class="fas fa-file-invoice-dollar"></i><span><?= t('Billing') ?></span></a>
+        <a href="/client/invoices.php" class="<?= in_array($portal_page, $portal_nav['billing']['pages'], true) ? 'active' : '' ?>"><i class="fas fa-file-invoice-dollar"></i><span><?= i18n_portal_label('Billing') ?></span></a>
     <?php } ?>
-    <a href="#portalMenu" data-bs-toggle="offcanvas" role="button" aria-controls="portalMenu"><i class="fas fa-bars"></i><span><?= t('Menu') ?></span></a>
+    <a href="#portalMenu" data-bs-toggle="offcanvas" role="button" aria-controls="portalMenu"><i class="fas fa-bars"></i><span><?= i18n_portal_label('Menu') ?></span></a>
 </nav>
 
 <div class="offcanvas offcanvas-end itflow-portal-menu" tabindex="-1" id="portalMenu" aria-label="Menu">
@@ -210,22 +218,28 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
     <div class="offcanvas-body">
         <?php foreach ($portal_nav as $item) { ?>
             <?php if (!empty($item['children'])) { ?>
-                <div class="itflow-portal-menu-heading"><?= t($item['label']) ?></div>
+                <div class="itflow-portal-menu-heading"><?= i18n_portal_label($item['label']) ?></div>
                 <?php foreach ($item['children'] as $child) { ?>
-                    <a class="itflow-portal-menu-link<?= in_array($portal_page, $child['pages'], true) ? ' active' : '' ?>" href="<?= escapeHtml($child['href']) ?>"><i class="fas fa-fw <?= escapeHtml($child['icon']) ?>"></i><?= t($child['label']) ?></a>
+                    <a class="itflow-portal-menu-link<?= in_array($portal_page, $child['pages'], true) ? ' active' : '' ?>" href="<?= escapeHtml($child['href']) ?>"><i class="fas fa-fw <?= escapeHtml($child['icon']) ?>"></i><?= i18n_portal_label($child['label']) ?></a>
+
                 <?php } ?>
             <?php } else { ?>
-                <a class="itflow-portal-menu-link<?= in_array($portal_page, $item['pages'], true) ? ' active' : '' ?>" href="<?= escapeHtml($item['href']) ?>"<?= !empty($item['new_tab']) ? ' target="_blank" rel="noopener noreferrer"' : '' ?><?= !empty($item['title']) ? ' title="' . escapeHtml($item['title']) . '"' : '' ?>><i class="<?= escapeHtml($item['icon_class'] ?? 'fas fa-fw ' . $item['icon']) ?>"></i><?= t($item['label']) ?></a>
+                <a class="itflow-portal-menu-link<?= in_array($portal_page, $item['pages'], true) ? ' active' : '' ?>" href="<?= escapeHtml($item['href']) ?>"<?= !empty($item['new_tab']) ? ' target="_blank" rel="noopener noreferrer"' : '' ?><?= !empty($item['title']) ? ' title="' . escapeHtml($item['title']) . '"' : '' ?>><i class="<?= escapeHtml($item['icon_class'] ?? 'fas fa-fw ' . $item['icon']) ?>"></i><?= i18n_portal_label($item['label']) ?></a>
+
             <?php } ?>
         <?php } ?>
-        <div class="itflow-portal-menu-heading"><?= t('Your account') ?></div>
-        <a class="itflow-portal-menu-link<?= $portal_page === 'profile.php' ? ' active' : '' ?>" href="/client/profile.php"><i class="fas fa-fw fa-user"></i><?= t('Your account') ?></a>
-        <a class="itflow-portal-menu-link<?= $portal_page === 'activity.php' ? ' active' : '' ?>" href="/client/activity.php"><i class="fas fa-fw fa-list"></i><?= t('Activity') ?></a>
-        <button type="button" class="itflow-portal-menu-link" data-portal-theme-toggle><i class="fas fa-fw <?= $portal_dark ? 'fa-sun' : 'fa-moon' ?>"></i><?= $portal_dark ? t('Light mode') : t('Dark mode') ?></button>
+        <div class="itflow-portal-menu-heading"><?= i18n_portal_label('Your account') ?></div>
+        <a class="itflow-portal-menu-link<?= $portal_page === 'profile.php' ? ' active' : '' ?>" href="/client/profile.php"><i class="fas fa-fw fa-user"></i><?= i18n_portal_label('Your account') ?></a>
+
+        <a class="itflow-portal-menu-link<?= $portal_page === 'activity.php' ? ' active' : '' ?>" href="/client/activity.php"><i class="fas fa-fw fa-list"></i><?= i18n_portal_label('Activity') ?></a>
+
+        <button type="button" class="itflow-portal-menu-link" data-portal-theme-toggle><i class="fas fa-fw <?= $portal_dark ? 'fa-sun' : 'fa-moon' ?>"></i><?= $portal_dark ? i18n_portal_label('Light mode') : i18n_portal_label('Dark mode') ?></button>
         <?php if ($portal_view_as) { ?>
-            <a class="itflow-portal-menu-link" href="/client/post.php?exit_view_as"><i class="fas fa-fw fa-times"></i><?= t('Exit view') ?></a>
+            <a class="itflow-portal-menu-link" href="/client/post.php?exit_view_as"><i class="fas fa-fw fa-times"></i><?= i18n_portal_label('Exit view') ?></a>
+
         <?php } else { ?>
-            <a class="itflow-portal-menu-link" href="/client/post.php?logout"><i class="fas fa-fw fa-sign-out-alt"></i><?= t('Sign out') ?></a>
+            <a class="itflow-portal-menu-link" href="/client/post.php?logout"><i class="fas fa-fw fa-sign-out-alt"></i><?= i18n_portal_label('Sign out') ?></a>
+
         <?php } ?>
     </div>
 </div>
