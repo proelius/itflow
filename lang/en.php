@@ -725,4 +725,13 @@ return [
     'At least {min} characters' => 'At least {min} characters',
     'To {number}, from {from_number}. Reply to a text about a ticket to add to it. Reply STOP to any text and they stop. Message and data rates may apply.' => 'To {number}, from {from_number}. Reply to a text about a ticket to add to it. Reply STOP to any text and they stop. Message and data rates may apply.',
     '{company} asks everyone to use two-step sign-in.' => '{company} asks everyone to use two-step sign-in.',
+    'Company' => 'Company',
+    'Roles' => 'Roles',
+    'Email' => 'Email',
+    'Mobile' => 'Mobile',
+    'Department' => 'Department',
+    'Location' => 'Location',
+    'Primary contact' => 'Primary contact',
+    'Billing' => 'Billing',
+    'Technical' => 'Technical',
 ];

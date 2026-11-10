@@ -447,6 +447,8 @@ function i18n_portal_label(string $text): string {
         'New tickets and every update' => t('New tickets and every update'),
         'As if you were copied in on all of them' => t('As if you were copied in on all of them'),
         'Unknown device' => t('Unknown device'),
+        'Signs in with a password' => t('Signs in with a password'),
+        'Signs in with Microsoft' => t('Signs in with Microsoft'),
         default => $text,
     };
 }

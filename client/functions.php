@@ -575,14 +575,14 @@ function portalRenewalState($renewal, $active_label = '') {
 /** A contact's roles in words - Primary contact, Billing, Technical - or [] for none. */
 function portalContactRoles(array $row) {
     if (intval($row['contact_primary'] ?? 0)) {
-        return ['Primary contact'];
+        return [t('Primary contact')];
     }
     $roles = [];
     if (intval($row['contact_billing'] ?? 0)) {
-        $roles[] = 'Billing';
+        $roles[] = t('Billing');
     }
     if (intval($row['contact_technical'] ?? 0)) {
-        $roles[] = 'Technical';
+        $roles[] = t('Technical');
     }
     return $roles;
 }
