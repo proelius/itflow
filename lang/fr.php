@@ -853,4 +853,11 @@ return [
     'Your password has not been changed' => "Votre mot de passe n'a pas été modifié",
     'The two new passwords are not the same - your password has not been changed' => "Les deux nouveaux mots de passe ne sont pas identiques : votre mot de passe n'a pas été modifié",
     '{company} asks everyone to use two-step sign-in, so it stays on' => "{company} demande à chacun d'utiliser la double authentification : elle reste donc activée",
+    'Give the document a name and write something in it' => "Donnez un nom au document et écrivez quelque chose dedans",
+    'Document <strong>' => "Document <strong>",
+    '</strong> saved' => "</strong> enregistré",
+    'Give the document a name and choose a file' => "Donnez un nom au document et choisissez un fichier",
+    'That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file' => "Ce fichier ne peut pas être pris - téléchargez un PDF, Word, OpenDocument, RTF ou fichier texte",
+    'Something went wrong uploading the file - please try again' => "Une erreur s'est produite lors du téléchargement du fichier - veuillez réessayer",
+    '</strong> uploaded' => "</strong> téléchargé",
 ];

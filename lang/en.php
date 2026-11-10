@@ -887,4 +887,11 @@ return [
     'Your password has not been changed' => 'Your password has not been changed',
     'The two new passwords are not the same - your password has not been changed' => 'The two new passwords are not the same - your password has not been changed',
     '{company} asks everyone to use two-step sign-in, so it stays on' => '{company} asks everyone to use two-step sign-in, so it stays on',
+    'Give the document a name and write something in it' => 'Give the document a name and write something in it',
+    'Document <strong>' => 'Document <strong>',
+    '</strong> saved' => '</strong> saved',
+    'Give the document a name and choose a file' => 'Give the document a name and choose a file',
+    'That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file' => 'That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file',
+    'Something went wrong uploading the file - please try again' => 'Something went wrong uploading the file - please try again',
+    '</strong> uploaded' => '</strong> uploaded',
 ];

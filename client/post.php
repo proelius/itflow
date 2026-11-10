@@ -1592,7 +1592,7 @@ if (isset($_POST['client_add_document'])) {
     $name = trim(mb_substr((string) ($_POST['document_name'] ?? ''), 0, 200));
     $description = trim(mb_substr((string) ($_POST['document_description'] ?? ''), 0, 255));
     if ($name === '' || portalHtmlIsEmpty($raw_content)) {
-        flashAlert('Give the document a name and write something in it', 'error');
+        flashAlert(t('Give the document a name and write something in it'), 'error');
         redirect('document_add.php');
     }
 
@@ -1619,7 +1619,7 @@ if (isset($_POST['client_add_document'])) {
     logAudit("Document", "Create", "Client contact $session_contact_name created document $document_name in the client portal", $session_client_id, $document_id);
     appNotify("Document", "$session_contact_name added the document $document_name in the client portal", "/agent/document.php?document_id=$document_id", $session_client_id, $document_id);
 
-    flashAlert("Document <strong>" . escapeHtml($name) . "</strong> saved");
+    flashAlert(t('Document <strong>') . escapeHtml($name) . t('</strong> saved'));
 
     redirect("document.php?id=$document_id");
 
@@ -1635,13 +1635,13 @@ if (isset($_POST['client_upload_document'])) {
     $name = trim(mb_substr((string) ($_POST['document_name'] ?? ''), 0, 200));
     $description = trim(mb_substr((string) ($_POST['document_description'] ?? ''), 0, 255));
     if ($name === '' || empty($_FILES['document_file']) || intval($_FILES['document_file']['error']) !== 0) {
-        flashAlert('Give the document a name and choose a file', 'error');
+        flashAlert(t('Give the document a name and choose a file'), 'error');
         redirect('document_add.php?upload=1');
     }
 
     $file_reference_name = checkFileUpload($_FILES['document_file'], ['pdf', 'doc', 'docx', 'txt', 'md', 'odt', 'rtf']);
     if (!$file_reference_name) {
-        flashAlert('That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file', 'error');
+        flashAlert(t('That file could not be taken - upload a PDF, Word, OpenDocument, RTF or text file'), 'error');
         redirect('document_add.php?upload=1');
     }
 
@@ -1650,7 +1650,7 @@ if (isset($_POST['client_upload_document'])) {
         mkdir($client_dir, 0755, true);
     }
     if (!move_uploaded_file($_FILES['document_file']['tmp_name'], "$client_dir/$file_reference_name")) {
-        flashAlert('Something went wrong uploading the file - please try again', 'error');
+        flashAlert(t('Something went wrong uploading the file - please try again'), 'error');
         redirect('document_add.php?upload=1');
     }
 
@@ -1692,7 +1692,7 @@ if (isset($_POST['client_upload_document'])) {
     logAudit("Document", "Upload", "Client contact $session_contact_name uploaded document $document_name with file $file_name in the client portal", $session_client_id, $document_id);
     appNotify("Document", "$session_contact_name uploaded the document $document_name in the client portal", "/agent/document.php?document_id=$document_id", $session_client_id, $document_id);
 
-    flashAlert("Document <strong>" . escapeHtml($name) . "</strong> uploaded");
+    flashAlert(t('Document <strong>') . escapeHtml($name) . t('</strong> uploaded'));
 
     redirect("document.php?id=$document_id");
 }
