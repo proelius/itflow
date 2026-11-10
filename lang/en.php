@@ -770,4 +770,8 @@ return [
     'Unknown device' => 'Unknown device',
     'Somewhere you don\'t recognise? Change your password and let us know.' => 'Somewhere you don\'t recognise? Change your password and let us know.',
     'Unknown device' => 'Unknown device',
+    'With a password' => 'With a password',
+    'With their Microsoft 365 account' => 'With their Microsoft 365 account',
+    'No portal access' => 'No portal access',
+    'Portal access off' => 'Portal access off',
 ];

@@ -726,4 +726,8 @@ return [
     'Unknown device' => 'Appareil inconnu',
     'Somewhere you don\'t recognise? Change your password and let us know.' => 'Quelque part où vous ne vous reconnaissez pas ? Changez votre mot de passe et informez-nous.',
     'Unknown device' => 'Appareil inconnu',
+    'With a password' => 'Avec un mot de passe',
+    'With their Microsoft 365 account' => 'Avec leur compte Microsoft 365',
+    'No portal access' => "Pas d'accès au portail",
+    'Portal access off' => 'Accès au portail désactivé',
 ];

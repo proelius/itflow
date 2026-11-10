@@ -456,7 +456,7 @@ function userDeviceHtml($user_agent) {
     $parts = array_filter([getOS((string) $user_agent), getWebBrowser((string) $user_agent)], function ($part) {
         return $part !== '-';
     });
-    return $parts ? implode(' ', $parts) : 'Unknown device';
+    return $parts ? implode(' ', $parts) : t('Unknown device');
 }
 
 /** A sign in, in words: when, and from what - "2 hours ago · Windows · Chrome · 203.0.113.9". Raw values in, HTML out. */
