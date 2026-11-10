@@ -68,9 +68,10 @@ if (!$ticket) {
     ?>
     <div class="d-flex align-items-center py-3"><span class="itflow-portal-brand"><?= $brand_html ?></span></div>
     <section class="itflow-portal-panel my-4">
-        <?= emptyStateHtml(['title' => "This ticket link isn't working", 'filtered' => false, 'icon' => 'fa-life-ring',
-            'text' => 'It may have been cut short when it was copied. Open it again from the email'
-                . ($company_phone !== '' ? ', or call us on ' . escapeHtml($company_phone) : '') . '.']) ?>
+        <?= emptyStateHtml(['title' => t("This ticket link isn't working"), 'filtered' => false, 'icon' => 'fa-life-ring',
+            'text' => $company_phone !== ''
+                ? t('It may have been cut short when it was copied. Open it again from the email, or call us on {phone}.', ['{phone}' => escapeHtml($company_phone)])
+                : t('It may have been cut short when it was copied. Open it again from the email.')]) ?>
     </section>
     <?php
     require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php';
@@ -85,7 +86,7 @@ $closed = !empty($ticket['ticket_closed_at']);
 $open = !$resolved && !$closed;
 $url_key = (string) $ticket['ticket_url_key'];
 $query = "ticket_id=$ticket_id&amp;url_key=" . rawurlencode($url_key);
-$page_title = escapeHtml("Ticket $number");
+$page_title = escapeHtml(t('Ticket {number}', ['{number}' => $number]));
 
 // Replying: by email when the ticket mailbox is read (Admin > Mail), with the number in the subject so it lands on
 // this ticket - and in the portal, for a ticket that belongs to a client, when the portal is on
@@ -141,9 +142,9 @@ function guestTicketMessageHtml($name, $avatar_url, $when, $body_html, array $fi
         $html .= '<div class="itflow-portal-files">';
         foreach ($files as $file) {
             $href = 'guest_ticket_attachment.php?' . $file_query . '&amp;attachment_id=' . intval($file['ticket_attachment_id']);
-            $html .= '<a class="itflow-portal-file-chip" href="' . $href . '&amp;action=view" target="_blank" rel="noopener" title="Open">'
+            $html .= '<a class="itflow-portal-file-chip" href="' . $href . '&amp;action=view" target="_blank" rel="noopener" title="' . t('Open') . '">'
                 . '<i class="fas fa-paperclip"></i><span class="text-truncate">' . escapeHtml($file['ticket_attachment_name']) . '</span></a>'
-                . '<a class="itflow-portal-file-chip" href="' . $href . '" title="Download ' . escapeHtml($file['ticket_attachment_name']) . '" aria-label="Download"><i class="fas fa-download"></i></a>';
+                . '<a class="itflow-portal-file-chip" href="' . $href . '" title="' . t('Download {name}', ['{name}' => escapeHtml($file['ticket_attachment_name'])]) . '" aria-label="' . t('Download') . '"><i class="fas fa-download"></i></a>';
         }
         $html .= '</div>';
     }
@@ -170,7 +171,7 @@ if ($booked && !empty($ticket['ticket_onsite'])) {
 // A resolved ticket closes by itself after Admin > Ticket's hours, as the resolved email says
 $autoclose_hours = intval($config_ticket_autoclose_hours);
 $autoclose_text = $autoclose_hours > 0
-    ? ($autoclose_hours % 24 === 0 ? ($autoclose_hours / 24) . ' day' . ($autoclose_hours === 24 ? '' : 's') : "$autoclose_hours hours")
+    ? ($autoclose_hours % 24 === 0 ? ($autoclose_hours === 24 ? t('{n} day', ['{n}' => '1']) : t('{n} days', ['{n}' => (string) ($autoclose_hours / 24)])) : t('{n} hours', ['{n}' => (string) $autoclose_hours]))
     : '';
 
 $requester = (string) ($ticket['contact_name'] ?? '');
@@ -183,7 +184,7 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
 <div class="d-flex flex-wrap align-items-center gap-2 py-3">
     <span class="itflow-portal-brand"><?= $brand_html ?></span>
     <?php if ($portal_url) { ?>
-        <a class="btn btn-sm btn-light border ms-auto" href="<?= escapeHtml($portal_url) ?>"><i class="fas fa-sign-in-alt me-2"></i>Client portal</a>
+        <a class="btn btn-sm btn-light border ms-auto" href="<?= escapeHtml($portal_url) ?>"><i class="fas fa-sign-in-alt me-2"></i><?= t('Client portal') ?></a>
     <?php } ?>
 </div>
 
@@ -191,8 +192,11 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
     <div class="min-w-0">
         <h1><?= escapeHtml($ticket['ticket_subject']) ?></h1>
         <p>
-            <?= escapeHtml($number) ?> · opened <?= portalDateTime($ticket['ticket_created_at']) ?>
-            <?php if ($requester !== '') { ?>by <?= escapeHtml($requester) ?><?php } ?>
+            <?php if ($requester !== '') {
+                echo t('{number} · opened {when} by {name}', ['{number}' => escapeHtml($number), '{when}' => portalDateTime($ticket['ticket_created_at']), '{name}' => escapeHtml($requester)]);
+            } else {
+                echo t('{number} · opened {when}', ['{number}' => escapeHtml($number), '{when}' => portalDateTime($ticket['ticket_created_at'])]);
+            } ?>
         </p>
     </div>
     <?= portalTicketStateHtml($ticket) ?>
@@ -204,11 +208,11 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
         <section class="itflow-portal-panel itflow-portal-panel-body mb-4">
             <ol class="itflow-portal-steps">
                 <?php foreach ($steps as $i => $step) { ?>
-                    <li class="<?= $i < $at ? 'done' : ($i === $at ? 'current' : '') ?>"><?= $i === 1 && $state['key'] === 'you' ? 'Waiting on you' : ($i === 1 && $state['key'] === 'hold' ? escapeHtml($state['label']) : $step) ?></li>
+                    <li class="<?= $i < $at ? 'done' : ($i === $at ? 'current' : '') ?>"><?= $i === 1 && $state['key'] === 'you' ? t('Waiting on you') : ($i === 1 && $state['key'] === 'hold' ? escapeHtml(i18n_portal_label($state['label'])) : i18n_portal_label($step)) ?></li>
                 <?php } ?>
             </ol>
             <?php if ($reply_by !== '') { ?>
-                <p class="text-center text-body-secondary small mt-3 mb-0"><i class="far fa-clock me-1"></i>We aim to reply by <?= portalDateTime($reply_by) ?></p>
+                <p class="text-center text-body-secondary small mt-3 mb-0"><i class="far fa-clock me-1"></i><?= t('We aim to reply by {when}', ['{when}' => portalDateTime($reply_by)]) ?></p>
             <?php } ?>
         </section>
 
@@ -219,19 +223,19 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
                         <li class="itflow-portal-todo itflow-portal-todo-wrap">
                             <span class="itflow-portal-todo-icon is-info"><i class="fas fa-calendar-check"></i></span>
                             <span class="itflow-portal-todo-main">
-                                <div>Booked for <?= escapeHtml(date('l, F j', strtotime($ticket['ticket_schedule'])) . ' at ' . date($config_time_format, strtotime($ticket['ticket_schedule']))) ?></div>
-                                <div><?= !empty($ticket['ticket_onsite']) ? 'Onsite' . ($booked_where !== '' ? ' at ' . escapeHtml($booked_where) : '') : 'Remote - we will connect to you' ?></div>
+                                <div><?= t('Booked for {when}', ['{when}' => escapeHtml(date('l, F j', strtotime($ticket['ticket_schedule'])) . ' at ' . date($config_time_format, strtotime($ticket['ticket_schedule'])))]) ?></div>
+                                <div><?= !empty($ticket['ticket_onsite']) ? ($booked_where !== '' ? t('Onsite at {where}', ['{where}' => escapeHtml($booked_where)]) : t('Onsite')) : t('Remote - we will connect to you') ?></div>
                             </span>
-                            <a class="btn btn-sm btn-light border" href="guest_post.php?ticket_calendar=<?= $ticket_id ?>&amp;url_key=<?= rawurlencode($url_key) ?>"><i class="far fa-calendar-plus me-1"></i>Add to calendar</a>
+                            <a class="btn btn-sm btn-light border" href="guest_post.php?ticket_calendar=<?= $ticket_id ?>&amp;url_key=<?= rawurlencode($url_key) ?>"><i class="far fa-calendar-plus me-1"></i><?= t('Add to calendar') ?></a>
                         </li>
                     <?php } ?>
                     <?php foreach ($approvals as $approval) {
-                        $approver = ['technical' => 'your technical contacts', 'billing' => 'your billing contacts'][$approval['approval_type']] ?? ($requester !== '' ? $requester : 'the ticket\'s contact'); ?>
+                        $approver = ['technical' => t('your technical contacts'), 'billing' => t('your billing contacts')][$approval['approval_type']] ?? ($requester !== '' ? $requester : t('the ticket\'s contact')); ?>
                         <li class="itflow-portal-todo itflow-portal-todo-wrap">
                             <span class="itflow-portal-todo-icon"><i class="fas fa-clipboard-check"></i></span>
                             <span class="itflow-portal-todo-main">
-                                <div>Waiting for approval: <?= escapeHtml($approval['task_name']) ?></div>
-                                <div>We need a go-ahead before we do this - we have emailed <?= escapeHtml($approver) ?> a link to approve it</div>
+                                <div><?= t('Waiting for approval: {task}', ['{task}' => escapeHtml($approval['task_name'])]) ?></div>
+                                <div><?= t('We need a go-ahead before we do this - we have emailed {who} a link to approve it', ['{who}' => escapeHtml($approver)]) ?></div>
                             </span>
                         </li>
                     <?php } ?>
@@ -240,7 +244,7 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
         <?php } ?>
 
         <div class="itflow-portal-thread mb-4">
-            <?= guestTicketMessageHtml($requester ?: 'Request', $requester_photo, $ticket['ticket_created_at'], $purifier->purify($ticket['ticket_details']),
+            <?= guestTicketMessageHtml($requester ?: t('Request'), $requester_photo, $ticket['ticket_created_at'], $purifier->purify($ticket['ticket_details']),
                 $attachments[0] ?? [], true, $query) ?>
 
             <?php while ($reply = mysqli_fetch_assoc($replies)) {
@@ -251,7 +255,7 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
                     <?php continue;
                 }
                 if ($client_reply) {
-                    $name = (string) ($reply['contact_name'] ?: 'Client');
+                    $name = (string) ($reply['contact_name'] ?: t('Client'));
                     $photo = $reply['contact_photo'] && $client_id ? "/uploads/clients/$client_id/" . $reply['contact_photo'] : '';
                 } else {
                     $name = (string) ($reply['user_name'] ?: $session_company_name);
@@ -267,30 +271,34 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
 
             <section class="itflow-portal-panel" id="reply">
                 <div class="itflow-portal-panel-head">
-                    <h2><i class="fas fa-reply"></i><?= $state['key'] === 'you' ? 'We are waiting on you' : 'Need to add something?' ?></h2>
+                    <h2><i class="fas fa-reply"></i><?= $state['key'] === 'you' ? t('We are waiting on you') : t('Need to add something?') ?></h2>
                 </div>
                 <div class="itflow-portal-panel-body">
                     <p class="mb-3">
                         <?php if ($state['key'] === 'you') { ?>
-                            Our last message needs an answer before we can carry on.
+                            <?= t('Our last message needs an answer before we can carry on.') ?>
+
                         <?php } ?>
                         <?php if ($reply_mailto) { ?>
-                            Reply to any of our emails about this ticket - it goes straight onto it. Screenshots and files can go with it.
+                            <?= t('Reply to any of our emails about this ticket - it goes straight onto it. Screenshots and files can go with it.') ?>
+
                         <?php } elseif ($portal_url) { ?>
-                            Sign in to the client portal to reply - screenshots and files can go with it.
+                            <?= t('Sign in to the client portal to reply - screenshots and files can go with it.') ?>
+
                         <?php } elseif ($company_phone !== '') { ?>
-                            Give us a call on <?= escapeHtml($company_phone) ?>.
+                            <?= t('Give us a call on {phone}.', ['{phone}' => escapeHtml($company_phone)]) ?>
+
                         <?php } ?>
                     </p>
                     <div class="d-flex flex-wrap gap-2">
                         <?php if ($reply_mailto) { ?>
-                            <a class="btn btn-primary" href="<?= escapeHtml($reply_mailto) ?>"><i class="fas fa-envelope me-2"></i>Reply by email</a>
+                            <a class="btn btn-primary" href="<?= escapeHtml($reply_mailto) ?>"><i class="fas fa-envelope me-2"></i><?= t('Reply by email') ?></a>
                         <?php } ?>
                         <?php if ($portal_url) { ?>
-                            <a class="btn <?= $reply_mailto ? 'btn-outline-primary' : 'btn-primary' ?>" href="<?= escapeHtml($portal_url) ?>"><i class="fas fa-sign-in-alt me-2"></i>Reply in the client portal</a>
+                            <a class="btn <?= $reply_mailto ? 'btn-outline-primary' : 'btn-primary' ?>" href="<?= escapeHtml($portal_url) ?>"><i class="fas fa-sign-in-alt me-2"></i><?= t('Reply in the client portal') ?></a>
                         <?php } ?>
                         <?php if ($urgent) { ?>
-                            <a class="btn btn-outline-secondary" href="tel:<?= escapeHtml($company_tel) ?>"><i class="fas fa-phone me-2"></i>Call <?= escapeHtml($company_phone) ?></a>
+                            <a class="btn btn-outline-secondary" href="tel:<?= escapeHtml($company_tel) ?>"><i class="fas fa-phone me-2"></i><?= t('Call {phone}', ['{phone}' => escapeHtml($company_phone)]) ?></a>
                         <?php } ?>
                     </div>
                 </div>
@@ -300,41 +308,51 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
         } elseif (!$closed) { ?>
 
             <section class="itflow-portal-panel">
-                <?= emptyStateHtml(['title' => 'We think this is fixed', 'icon' => 'fa-check', 'filtered' => false,
-                    'text' => 'Close it if everything is working' . ($autoclose_text !== '' ? ' - or leave it, and it closes by itself after ' . $autoclose_text : '')
-                        . '. If it is not, reopen it and tell us what is still wrong.']) ?>
+                <?= emptyStateHtml(['title' => t('We think this is fixed'), 'icon' => 'fa-check', 'filtered' => false,
+                    'text' => $autoclose_text !== ''
+                        ? t('Close it if everything is working - or leave it, and it closes by itself after {time}. If it is not, reopen it and tell us what is still wrong.', ['{time}' => $autoclose_text])
+                        : t('Close it if everything is working. If it is not, reopen it and tell us what is still wrong.')]) ?>
                 <form action="guest_post.php" method="post" class="d-flex flex-wrap justify-content-center gap-2 pb-4 px-3">
                     <input type="hidden" name="ticket_id" value="<?= $ticket_id ?>">
                     <input type="hidden" name="url_key" value="<?= escapeHtml($url_key) ?>">
-                    <button type="submit" class="btn btn-success confirm-link" name="close_ticket" value="1" data-confirm-title="Close this ticket?" data-confirm-text="Glad it is sorted." data-confirm-button="Close it" data-confirm-icon="question"><i class="fas fa-check-circle me-2"></i>Yes, close it</button>
-                    <button type="submit" class="btn btn-outline-secondary confirm-link" name="reopen_ticket" value="1" data-confirm-title="Reopen this ticket?" data-confirm-text="We will pick it up again. Then reply to our email, or call us, and tell us what is still wrong." data-confirm-button="Reopen it" data-confirm-icon="question"><i class="fas fa-redo me-2"></i>No, reopen it</button>
+                    <button type="submit" class="btn btn-success confirm-link" name="close_ticket" value="1" data-confirm-title="<?= t('Close this ticket?') ?>" data-confirm-text="<?= t('Glad it is sorted.') ?>" data-confirm-button="<?= t('Close it') ?>" data-confirm-icon="question"><i class="fas fa-check-circle me-2"></i><?= t('Yes, close it') ?></button>
+                    <button type="submit" class="btn btn-outline-secondary confirm-link" name="reopen_ticket" value="1" data-confirm-title="<?= t('Reopen this ticket?') ?>" data-confirm-text="<?= t('We will pick it up again. Then reply to our email, or call us, and tell us what is still wrong.') ?>" data-confirm-button="<?= t('Reopen it') ?>" data-confirm-icon="question"><i class="fas fa-redo me-2"></i><?= t('No, reopen it') ?></button>
                 </form>
             </section>
 
         <?php } elseif (empty($ticket['ticket_feedback'])) { ?>
 
             <section class="itflow-portal-panel">
-                <?= emptyStateHtml(['title' => 'How did we do?', 'text' => 'One click tells us how this one went.', 'icon' => 'fa-star', 'filtered' => false]) ?>
+                <?= emptyStateHtml(['title' => t('How did we do?'), 'text' => t('One click tells us how this one went.'), 'icon' => 'fa-star', 'filtered' => false]) ?>
                 <form action="guest_post.php" method="post" class="d-flex flex-wrap justify-content-center gap-2 pb-4 px-3">
                     <input type="hidden" name="ticket_id" value="<?= $ticket_id ?>">
                     <input type="hidden" name="url_key" value="<?= escapeHtml($url_key) ?>">
-                    <button type="submit" class="btn btn-outline-success" name="add_ticket_feedback" value="Good"><i class="far fa-smile me-2"></i>Good</button>
-                    <button type="submit" class="btn btn-outline-danger" name="add_ticket_feedback" value="Bad"><i class="far fa-frown me-2"></i>Not good</button>
+                    <button type="submit" class="btn btn-outline-success" name="add_ticket_feedback" value="Good"><i class="far fa-smile me-2"></i><?= t('Good') ?></button>
+                    <button type="submit" class="btn btn-outline-danger" name="add_ticket_feedback" value="Bad"><i class="far fa-frown me-2"></i><?= t('Not good') ?></button>
                 </form>
             </section>
 
         <?php } else { ?>
 
-            <div class="itflow-portal-event"><span>Closed and rated <?= $ticket['ticket_feedback'] === 'Bad' ? 'not good' : 'good' ?> - thank you for the feedback.</span></div>
+            <div class="itflow-portal-event"><span><?= $ticket['ticket_feedback'] === 'Bad' ? t('Closed and rated not good - thank you for the feedback.') : t('Closed and rated good - thank you for the feedback.') ?></span></div>
             <?php if ($ticket['ticket_feedback'] === 'Bad' && $company_phone !== '') { ?>
-                <p class="text-center text-body-secondary mt-3 mb-0">Sorry this one didn't go the way it should have. Call us on <?= escapeHtml($company_phone) ?> and we will put it right.</p>
+                <p class="text-center text-body-secondary mt-3 mb-0"><?= t('Sorry this one didn\'t go the way it should have. Call us on {phone} and we will put it right.', ['{phone}' => escapeHtml($company_phone)]) ?></p>
             <?php } ?>
 
         <?php } ?>
 
         <?php if ($closed && ($portal_url || $support_email !== '')) { ?>
             <p class="text-center text-body-secondary small mt-3 mb-0">
-                Need more help with this? Replies to a closed ticket don't reach us - raise a new one<?= $portal_url ? ' in the <a href="/client/ticket_add.php">client portal</a>' : '' ?><?= $portal_url && $support_email !== '' ? ' or' : '' ?><?= $support_email !== '' ? ' by emailing <a href="mailto:' . escapeHtml($support_email) . '">' . escapeHtml($support_email) . '</a>' : '' ?>.
+                <?php
+                $help_email = $support_email !== '' ? '<a href="mailto:' . escapeHtml($support_email) . '">' . escapeHtml($support_email) . '</a>' : '';
+                if ($portal_url && $help_email) {
+                    echo t('Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the <a href="/client/ticket_add.php">client portal</a> or by emailing {email}.', ['{email}' => $help_email]);
+                } elseif ($portal_url) {
+                    echo t('Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the <a href="/client/ticket_add.php">client portal</a>.');
+                } else {
+                    echo t('Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one by emailing {email}.', ['{email}' => $help_email]);
+                }
+                ?>
             </p>
         <?php } ?>
 
@@ -342,21 +360,21 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
     <div class="col-lg-4">
         <section class="itflow-portal-panel">
             <div class="itflow-portal-panel-head">
-                <h2><i class="fas fa-info-circle"></i>Details</h2>
+                <h2><i class="fas fa-info-circle"></i><?= t('Details') ?></h2>
             </div>
             <dl class="itflow-portal-facts itflow-portal-panel-body py-1">
-                <div><dt>Ticket</dt><dd><?= escapeHtml($number) ?></dd></div>
-                <div><dt>Status</dt><dd><?= escapeHtml($state['label']) ?></dd></div>
-                <div><dt>Priority</dt><dd><?= escapeHtml($ticket['ticket_priority']) ?></dd></div>
+                <div><dt><?= t('Ticket') ?></dt><dd><?= escapeHtml($number) ?></dd></div>
+                <div><dt><?= t('Status') ?></dt><dd><?= escapeHtml(i18n_portal_label($state['label'])) ?></dd></div>
+                <div><dt><?= t('Priority') ?></dt><dd><?= escapeHtml(i18n_ticket_priority_label($ticket['ticket_priority'])) ?></dd></div>
                 <?php if (!empty($ticket['category_name'])) { ?>
-                    <div><dt>Category</dt><dd><?= escapeHtml($ticket['category_name']) ?></dd></div>
+                    <div><dt><?= t('Category') ?></dt><dd><?= escapeHtml($ticket['category_name']) ?></dd></div>
                 <?php } ?>
                 <?php if ($requester !== '') { ?>
-                    <div><dt>Raised by</dt><dd><?= escapeHtml($requester) ?></dd></div>
+                    <div><dt><?= t('Raised by') ?></dt><dd><?= escapeHtml($requester) ?></dd></div>
                 <?php } ?>
                 <?php if ($agent_name !== '' && !$closed) { ?>
                     <div>
-                        <dt>Working on it</dt>
+                        <dt><?= t('Working on it') ?></dt>
                         <dd class="d-flex align-items-center justify-content-end gap-2">
                             <?= portalAvatarHtml($agent_name, $ticket['user_avatar'] ? '/uploads/users/' . intval($ticket['ticket_assigned_to']) . '/' . $ticket['user_avatar'] : '', 'sm') ?>
                             <?= escapeHtml($agent_name) ?>
@@ -364,18 +382,18 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
                     </div>
                 <?php } ?>
                 <?php if (!empty($ticket['asset_name'])) { ?>
-                    <div><dt>Device</dt><dd><i class="fas fa-<?= getAssetIcon($ticket['asset_type']) ?> me-1 text-body-secondary"></i><?= escapeHtml($ticket['asset_name']) ?></dd></div>
+                    <div><dt><?= t('Device') ?></dt><dd><i class="fas fa-<?= getAssetIcon($ticket['asset_type']) ?> me-1 text-body-secondary"></i><?= escapeHtml($ticket['asset_name']) ?></dd></div>
                 <?php } ?>
                 <?php if ($task_count && !$closed) { ?>
-                    <div><dt>Tasks</dt><dd><?= $task_done ?> of <?= $task_count ?> done</dd></div>
+                    <div><dt><?= t('Tasks') ?></dt><dd><?= t('{done} of {total} done', ['{done}' => $task_done, '{total}' => $task_count]) ?></dd></div>
                 <?php } ?>
-                <div><dt>Opened</dt><dd><?= portalDateTime($ticket['ticket_created_at']) ?></dd></div>
+                <div><dt><?= t('Opened') ?></dt><dd><?= portalDateTime($ticket['ticket_created_at']) ?></dd></div>
                 <?php if ($closed) { ?>
-                    <div><dt>Closed</dt><dd><?= portalDateTime($ticket['ticket_closed_at']) ?></dd></div>
+                    <div><dt><?= t('Closed') ?></dt><dd><?= portalDateTime($ticket['ticket_closed_at']) ?></dd></div>
                 <?php } elseif ($resolved) { ?>
-                    <div><dt>Resolved</dt><dd><?= portalDateTime($ticket['ticket_resolved_at']) ?></dd></div>
+                    <div><dt><?= t('Resolved') ?></dt><dd><?= portalDateTime($ticket['ticket_resolved_at']) ?></dd></div>
                 <?php } elseif (!empty($ticket['ticket_updated_at'])) { ?>
-                    <div><dt>Last update</dt><dd><?= portalDateTime($ticket['ticket_updated_at']) ?></dd></div>
+                    <div><dt><?= t('Last update') ?></dt><dd><?= portalDateTime($ticket['ticket_updated_at']) ?></dd></div>
                 <?php } ?>
             </dl>
         </section>
@@ -388,12 +406,12 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
         if ($request_answers) { ?>
             <section class="itflow-portal-panel mt-4">
                 <div class="itflow-portal-panel-head">
-                    <h2><i class="fas fa-clipboard-list"></i>Request details</h2>
+                    <h2><i class="fas fa-clipboard-list"></i><?= t('Request details') ?></h2>
                 </div>
                 <dl class="itflow-portal-facts itflow-portal-panel-body py-1">
                     <?php foreach ($request_answers as $answer) {
                         $answer_text = ticketFillInText($answer); ?>
-                        <div><dt><?= escapeHtml($answer['name']) ?></dt><dd><?= $answer_text !== '' ? escapeHtml($answer_text) : '<span class="text-body-secondary">Not given</span>' ?></dd></div>
+                        <div><dt><?= escapeHtml($answer['name']) ?></dt><dd><?= $answer_text !== '' ? escapeHtml($answer_text) : '<span class="text-body-secondary">' . t('Not given') . '</span>' ?></dd></div>
                     <?php } ?>
                 </dl>
             </section>
@@ -402,22 +420,23 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
         <?php if ($company_phone !== '' || $support_email !== '' || $company_website !== '') { ?>
             <section class="itflow-portal-panel mt-4">
                 <div class="itflow-portal-panel-head">
-                    <h2><i class="fas fa-headset"></i>Contact us</h2>
+                    <h2><i class="fas fa-headset"></i><?= t('Contact us') ?></h2>
                 </div>
                 <?php if ($urgent && $state['key'] !== 'you') { ?>
                     <div class="alert alert-warning small mx-3 mt-3 mb-0">
-                        <i class="fas fa-exclamation-triangle me-1"></i>This ticket is marked <?= escapeHtml($ticket['ticket_priority']) ?>. If it is stopping work right now, call us rather than waiting for a reply.
+                        <i class="fas fa-exclamation-triangle me-1"></i><?= t('This ticket is marked {priority}. If it is stopping work right now, call us rather than waiting for a reply.', ['{priority}' => escapeHtml(i18n_ticket_priority_label($ticket['ticket_priority']))]) ?>
+
                     </div>
                 <?php } ?>
                 <dl class="itflow-portal-facts itflow-portal-panel-body py-1">
                     <?php if ($company_phone !== '') { ?>
-                        <div><dt>Phone</dt><dd><a href="tel:<?= escapeHtml($company_tel) ?>"><?= escapeHtml($company_phone) ?></a></dd></div>
+                        <div><dt><?= t('Phone') ?></dt><dd><a href="tel:<?= escapeHtml($company_tel) ?>"><?= escapeHtml($company_phone) ?></a></dd></div>
                     <?php } ?>
                     <?php if ($support_email !== '') { ?>
-                        <div><dt>Email</dt><dd class="text-break"><a href="mailto:<?= escapeHtml($support_email) ?>"><?= escapeHtml($support_email) ?></a></dd></div>
+                        <div><dt><?= t('Email') ?></dt><dd class="text-break"><a href="mailto:<?= escapeHtml($support_email) ?>"><?= escapeHtml($support_email) ?></a></dd></div>
                     <?php } ?>
                     <?php if ($company_website !== '') { ?>
-                        <div><dt>Website</dt><dd class="text-break"><a href="<?= escapeHtml(preg_match('#^https?://#i', $company_website) ? $company_website : "https://$company_website") ?>" target="_blank" rel="noopener noreferrer"><?= escapeHtml(preg_replace('#^https?://#i', '', $company_website)) ?></a></dd></div>
+                        <div><dt><?= t('Website') ?></dt><dd class="text-break"><a href="<?= escapeHtml(preg_match('#^https?://#i', $company_website) ? $company_website : "https://$company_website") ?>" target="_blank" rel="noopener noreferrer"><?= escapeHtml(preg_replace('#^https?://#i', '', $company_website)) ?></a></dd></div>
                     <?php } ?>
                 </dl>
             </section>
