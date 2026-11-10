@@ -1965,7 +1965,22 @@ function ticketScheduleValue($input) {
  * are on (Admin > Ticket) to the contact and the watchers. $row has the
  * ticket's id and, for a booking, location_address.
  */
-function ticketMailSchedule($row, $cal_str, $cancelled, $when_text) {
+/** When booked work is, in words, in the current language - "Thursday, November 12, 2026 at 10:30am" in English. */
+function ticketEmailWhen($timestamp) {
+    if (i18n_current_language() === 'en' || !class_exists('IntlDateFormatter')) {
+        return date('l, F j, Y \a\t g:ia', $timestamp);
+    }
+    $lang = i18n_current_language();
+    $locale = $lang === 'fr' ? 'fr_CH' : $lang;
+    $format = function ($pattern) use ($locale, $timestamp) {
+        return (new IntlDateFormatter($locale, IntlDateFormatter::NONE, IntlDateFormatter::NONE, date_default_timezone_get(), IntlDateFormatter::GREGORIAN, $pattern))->format($timestamp);
+    };
+    $date = $format('EEEE d MMMM y');
+    $time = $format('HH:mm');
+    return $date !== false && $time !== false ? t('{date} at {time}', ['{date}' => $date, '{time}' => $time]) : date('l, F j, Y \a\t g:ia', $timestamp);
+}
+
+function ticketMailSchedule($row, $cal_str, $cancelled, $when_text, $when_timestamp = 0) {
     global $config_ticket_client_general_notifications;
     $ticket = ticketRow($row['ticket_id']);
     if (!$ticket || !emailReady()) {
@@ -1980,6 +1995,9 @@ function ticketMailSchedule($row, $cal_str, $cancelled, $when_text) {
     }
     if (intval($config_ticket_client_general_notifications) === 1) {
         $client_subject = i18n_with(client_language(), function () use ($cancelled) { return $cancelled ? t('Ticket Schedule Cancelled') : t('Ticket Scheduled'); }) . " - [$reference] - " . $ticket['ticket_subject'];
+        if ($when_timestamp > 0) {
+            $opts['when'] = i18n_with(client_language(), function () use ($when_timestamp) { return ticketEmailWhen($when_timestamp); });
+        }
         ticketMailSend($ticket['ticket_id'], $client_subject, ticketEmailContent($ticket, 'scheduled', $opts), ['cal_str' => $cal_str]);
     }
 }
@@ -2044,7 +2062,7 @@ function ticketSetSchedule(array $row, $schedule, $onsite) {
     $mail_row = ticketScheduleRow($ticket_id);
     $cal_str = ticketScheduleIcs($mail_row, $schedule);
     $when_text = date('l, F j, Y \a\t g:ia', strtotime($schedule));
-    ticketMailSchedule($mail_row, $cal_str, false, $when_text);
+    ticketMailSchedule($mail_row, $cal_str, false, $when_text, strtotime($schedule));
 
     // Note it on the ticket
     $note = escapeSql("Ticket scheduled for $when_text " . ($onsite ? '(onsite).' : '(remote).'));
