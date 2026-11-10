@@ -16,6 +16,8 @@ header("Referrer-Policy: no-referrer");
 
 require_once '../config.php';
 require_once '../functions.php';
+require_once __DIR__ . '/functions.php';
+i18n_set_language(client_language());
 require_once '../includes/load_global_settings.php';
 
 if (intval($config_client_portal_enable) !== 1 || !portalInvitesReady()) {
@@ -61,9 +63,9 @@ if ($invite && $link['state'] === 'pending') {
         ], $error);
         if ($contact_id) {
             $first = strtok(trim(preg_replace('/\s+/', ' ', $in['name'])), ' ');
-            $_SESSION['login_message'] = "Welcome, $first - your account is ready. " . (isset($methods[$method]) && $method === 'azure'
-                ? 'Sign in with your Microsoft 365 account below.'
-                : 'Sign in with ' . $invite['invite_email'] . ' and your new password.');
+            $_SESSION['login_message'] = isset($methods[$method]) && $method === 'azure'
+                ? t('Welcome, {first} - your account is ready. Sign in with your Microsoft 365 account below.', ['{first}' => $first])
+                : t('Welcome, {first} - your account is ready. Sign in with {email} and your new password.', ['{first}' => $first, '{email}' => $invite['invite_email']]);
             $_SESSION['login_message_type'] = 'success';
             header("Location: /login.php");
             exit();
@@ -76,15 +78,15 @@ if ($invite && $link['state'] === 'pending') {
 
 $signup = $invite && $invite['invite_kind'] === 'signup';
 $by = $invite ? portalInviteBy($invite) : '';
-$ask = $by !== '' ? "Ask $by to send it again." : 'Ask your company\'s primary contact or us to invite you.';
+$ask = $by !== '' ? t('Ask {name} to send it again.', ['{name}' => $by]) : t('Ask your company\'s primary contact or us to invite you.');
 $notes = [
-    'gone' => ["That link doesn't work", 'It may have been copied only in part - or a newer email replaced it, so use the link in the latest one.'],
-    'expired' => ['That link has run out', $signup ? 'Links to finish signing up work for ' . PORTAL_SIGNUP_LINK_HOURS . ' hours - ask for a new one.' : 'Invites work for ' . PORTAL_INVITE_LINK_DAYS . " days. $ask"],
-    'accepted' => ["You've joined already", 'Sign in with ' . ($invite['invite_email'] ?? 'your email address') . '. Forgot your password? Choose Forgot password on the sign-in page.'],
-    'cancelled' => ['That invite was cancelled', $ask],
+    'gone' => [t('That link doesn\'t work'), t('It may have been copied only in part - or a newer email replaced it, so use the link in the latest one.')],
+    'expired' => [t('That link has run out'), $signup ? t('Links to finish signing up work for {hours} hours - ask for a new one.', ['{hours}' => PORTAL_SIGNUP_LINK_HOURS]) : t('Invites work for {days} days. {ask}', ['{days}' => PORTAL_INVITE_LINK_DAYS, '{ask}' => $ask])],
+    'accepted' => [t('You\'ve joined already'), t('Sign in with {email}. Forgot your password? Choose Forgot password on the sign-in page.', ['{email}' => $invite['invite_email'] ?? ''])],
+    'cancelled' => [t('That invite was cancelled'), $ask],
 ];
 $state = $link['state'];
-$title = $state === 'pending' ? ($signup ? 'Finish signing up' : 'Join ' . $invite['client_name']) : $notes[$state][0];
+$title = $state === 'pending' ? ($signup ? t('Finish signing up') : t('Join {client}', ['{client}' => $invite['client_name']])) : $notes[$state][0];
 ?>
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="light" data-lte-color-mode="off">
@@ -105,7 +107,7 @@ $title = $state === 'pending' ? ($signup ? 'Finish signing up' : 'Join ' . $invi
 <div class="login-box itflow-join-box">
     <div class="login-logo">
         <?php if (!empty($company['company_logo'])) { ?>
-            <img alt="<?= escapeHtml($company_name) ?> logo" height="110" width="380" class="img-fluid" src="/uploads/settings/<?= escapeHtml($company['company_logo']) ?>">
+            <img alt="<?= t('{company} logo', ['{company}' => escapeHtml($company_name)]) ?>" height="110" width="380" class="img-fluid" src="/uploads/settings/<?= escapeHtml($company['company_logo']) ?>">
         <?php } else { ?>
             <span class="fw-semibold"><?= escapeHtml($company_name) ?></span>
         <?php } ?>
@@ -119,14 +121,18 @@ $title = $state === 'pending' ? ($signup ? 'Finish signing up' : 'Join ' . $invi
                 <h1 class="h5 mb-1" data-join="<?= $signup ? 'signup' : 'invite' ?>"><?= escapeHtml($title) ?></h1>
                 <p class="text-body-secondary small mb-3">
                     <?php if ($signup) { ?>
-                        Your client portal account for <?= escapeHtml($invite['client_name']) ?>, as <strong><?= escapeHtml($invite['invite_email']) ?></strong>.
+                        <?= t('Your client portal account for {client}, as <strong>{email}</strong>.', ['{client}' => escapeHtml($invite['client_name']), '{email}' => escapeHtml($invite['invite_email'])]) ?>
+
                     <?php } else { ?>
-                        <?= $by !== '' ? escapeHtml($by) . ' invited' : 'You are invited as' ?> <strong><?= escapeHtml($invite['invite_email']) ?></strong> to the <?= escapeHtml($company_name) ?> client portal - where you raise and follow support tickets.
+                        <?= $by !== ''
+                            ? t('{name} invited <strong>{email}</strong> to the {company} client portal - where you raise and follow support tickets.', ['{name}' => escapeHtml($by), '{email}' => escapeHtml($invite['invite_email']), '{company}' => escapeHtml($company_name)])
+                            : t('You are invited as <strong>{email}</strong> to the {company} client portal - where you raise and follow support tickets.', ['{email}' => escapeHtml($invite['invite_email']), '{company}' => escapeHtml($company_name)]) ?>
+
                     <?php } ?>
                 </p>
 
                 <?php if ($error !== '') { ?>
-                    <div class="alert alert-danger small" data-join-error><?= escapeHtml($error) ?></div>
+                    <div class="alert alert-danger small" data-join-error><?= escapeHtml(i18n_portal_label(portalMessage($error))) ?></div>
                 <?php } ?>
 
                 <form method="post" autocomplete="off">
@@ -136,21 +142,21 @@ $title = $state === 'pending' ? ($signup ? 'Finish signing up' : 'Join ' . $invi
                     <input type="hidden" name="method" value="local">
                     <input type="text" class="d-none" name="username" value="<?= escapeHtml($invite['invite_email']) ?>" autocomplete="username" aria-hidden="true" tabindex="-1">
 
-                    <label class="form-label small mb-1" for="joinName">Your name <strong class="text-danger">*</strong></label>
+                    <label class="form-label small mb-1" for="joinName"><?= t('Your name') ?> <strong class="text-danger">*</strong></label>
                     <div class="input-group mb-3">
                         <span class="input-group-text"><i class="fas fa-fw fa-user"></i></span>
                         <input type="text" class="form-control" id="joinName" name="name" value="<?= escapeHtml($in['name']) ?>" maxlength="200" autocomplete="name" required<?= $in['name'] === '' ? ' autofocus' : '' ?>>
                     </div>
                     <div class="row g-2">
                         <div class="col-sm-6">
-                            <label class="form-label small mb-1" for="joinTitle">Job title</label>
+                            <label class="form-label small mb-1" for="joinTitle"><?= t('Job title') ?></label>
                             <div class="input-group mb-3">
                                 <span class="input-group-text"><i class="fas fa-fw fa-id-badge"></i></span>
                                 <input type="text" class="form-control" id="joinTitle" name="title" value="<?= escapeHtml($in['title']) ?>" maxlength="200" autocomplete="organization-title">
                             </div>
                         </div>
                         <div class="col-sm-6">
-                            <label class="form-label small mb-1" for="joinPhone">Phone</label>
+                            <label class="form-label small mb-1" for="joinPhone"><?= t('Phone') ?></label>
                             <div class="input-group mb-3">
                                 <span class="input-group-text"><i class="fas fa-fw fa-phone"></i></span>
                                 <input type="tel" class="form-control" id="joinPhone" name="phone" value="<?= escapeHtml($in['phone']) ?>" maxlength="40" autocomplete="tel">
@@ -158,20 +164,20 @@ $title = $state === 'pending' ? ($signup ? 'Finish signing up' : 'Join ' . $invi
                         </div>
                     </div>
 
-                    <label class="form-label small mb-1" for="joinPassword">Choose a password <span class="text-body-secondary">- at least <?= USER_PASSWORD_MIN ?> characters</span></label>
+                    <label class="form-label small mb-1" for="joinPassword"><?= t('Choose a password <span class="text-body-secondary">- at least {n} characters</span>', ['{n}' => USER_PASSWORD_MIN]) ?></label>
                     <div class="input-group mb-3">
                         <span class="input-group-text"><i class="fas fa-fw fa-lock"></i></span>
                         <input type="password" class="form-control" id="joinPassword" name="new_password" minlength="<?= USER_PASSWORD_MIN ?>" autocomplete="new-password" required<?= $in['name'] !== '' ? ' autofocus' : '' ?>>
                     </div>
                     <div class="input-group mb-3">
                         <span class="input-group-text"><i class="fas fa-fw fa-check-double"></i></span>
-                        <input type="password" class="form-control" name="confirm_password" minlength="<?= USER_PASSWORD_MIN ?>" autocomplete="new-password" placeholder="The same again" aria-label="The password again" required>
+                        <input type="password" class="form-control" name="confirm_password" minlength="<?= USER_PASSWORD_MIN ?>" autocomplete="new-password" placeholder="<?= t('The same again') ?>" aria-label="<?= t('The password again') ?>" required>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 mb-2"><i class="fas fa-check me-2"></i><?= $signup ? 'Create my account' : 'Join' ?></button>
+                    <button type="submit" class="btn btn-primary w-100 mb-2"><i class="fas fa-check me-2"></i><?= $signup ? t('Create my account') : t('Join') ?></button>
                     <?php if (isset($methods['azure'])) { ?>
-                        <div class="text-center small text-body-secondary my-2">or, with no password here</div>
-                        <button type="submit" class="btn btn-outline-secondary w-100 mb-3" name="method" value="azure" formnovalidate data-join-microsoft><i class="fab fa-microsoft me-2"></i>Use my Microsoft 365 account</button>
+                        <div class="text-center small text-body-secondary my-2"><?= t('or, with no password here') ?></div>
+                        <button type="submit" class="btn btn-outline-secondary w-100 mb-3" name="method" value="azure" formnovalidate data-join-microsoft><i class="fab fa-microsoft me-2"></i><?= t('Use my Microsoft 365 account') ?></button>
                     <?php } ?>
                 </form>
 
@@ -180,14 +186,14 @@ $title = $state === 'pending' ? ($signup ? 'Finish signing up' : 'Join ' . $invi
                 <h1 class="h5 mb-1" data-join-state="<?= escapeHtml($state) ?>"><?= escapeHtml($title) ?></h1>
                 <p class="text-body-secondary small mb-3"><?= escapeHtml($notes[$state][1]) ?></p>
                 <?php if ($state === 'accepted') { ?>
-                    <a class="btn btn-primary w-100 mb-3" href="/login.php"><i class="fas fa-sign-in-alt me-2"></i>Sign in</a>
+                    <a class="btn btn-primary w-100 mb-3" href="/login.php"><i class="fas fa-sign-in-alt me-2"></i><?= t('Sign in') ?></a>
                 <?php } elseif ($signup && portalSignupOpen()) { ?>
-                    <a class="btn btn-primary w-100 mb-3" href="/client/signup.php"><i class="fas fa-paper-plane me-2"></i>Ask for a new link</a>
+                    <a class="btn btn-primary w-100 mb-3" href="/client/signup.php"><i class="fas fa-paper-plane me-2"></i><?= t('Ask for a new link') ?></a>
                 <?php } ?>
 
             <?php } ?>
 
-            <a href="/login.php"><i class="fas fa-arrow-left me-1"></i>Back to sign in</a>
+            <a href="/login.php"><i class="fas fa-arrow-left me-1"></i><?= t('Back to sign in') ?></a>
 
         </div>
     </div>
