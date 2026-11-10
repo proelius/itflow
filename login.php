@@ -697,21 +697,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['login']) || isset($_
                             unset($_SESSION['pending_dual_login']);
 
                             $token_field = "
-                                <p class='small text-body-secondary mb-2'>Enter the 6-digit code from your authenticator app.</p>
+                                <p class='small text-body-secondary mb-2'>" . t('Enter the 6-digit code from your authenticator app.') . "</p>
                                 <div class='input-group mb-3'>
                                     <span class='input-group-text'><span class='fas fa-fw fa-mobile-alt'></span></span>
                                     <input type='text' inputmode='numeric' pattern='[0-9]{6}' maxlength='6' minlength='6'
-                                           class='form-control' placeholder='6-digit code' aria-label='6-digit code'
+                                           class='form-control' placeholder='" . t('6-digit code') . "' aria-label='" . t('6-digit code') . "'
                                            name='current_code' autocomplete='one-time-code' required autofocus>
                                 </div>";
 
                             if ($client_mfa_locked) {
                                 // As for agents: no log row while locked, so the window can run out
                                 header("HTTP/1.1 429 Too Many Requests");
-                                $response = "<div class='alert alert-danger'>Too many wrong codes. Wait 10 minutes and sign in again.</div>";
+                                $response = "<div class='alert alert-danger'>" . t('Too many wrong codes. Wait 10 minutes and sign in again.') . "</div>";
                             } elseif ($client_code !== '' || isset($_POST['current_code'])) {
                                 signInLogFailure('Client Login', 'MFA Failed', "Client contact $user_email entered a wrong two-step sign-in code - the password was right", $user_id, $client_id);
-                                $response = "<div class='alert alert-danger'>That code is not right - try the newest one in your app.</div>";
+                                $response = "<div class='alert alert-danger'>" . t('That code is not right - try the newest one in your app.') . "</div>";
                             }
 
                         } elseif ($client_id && $contact_id && $user_auth_method === 'local') {
@@ -904,7 +904,7 @@ $show_login_form = (!$show_role_choice && !$show_mfa_form);
                     <div class="mb-3 mb-3">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
-                            <label class="form-check-label" for="remember_me">Remember this browser for <?= $config_login_remember_me_expire ?> day<?= $config_login_remember_me_expire === 1 ? '' : 's' ?></label>
+                            <label class="form-check-label" for="remember_me"><?= $config_login_remember_me_expire === 1 ? t('Remember this browser for {n} day', ['{n}' => $config_login_remember_me_expire]) : t('Remember this browser for {n} days', ['{n}' => $config_login_remember_me_expire]) ?></label>
                         </div>
                     </div>
 
@@ -917,11 +917,11 @@ $show_login_form = (!$show_role_choice && !$show_mfa_form);
                 <hr>
                 <div class="d-flex flex-wrap justify-content-between gap-2">
                     <?php if (!empty($config_smtp_provider)) { ?>
-                        <a href="client/login_reset.php">Forgot password?</a>
+                        <a href="client/login_reset.php"><?= t('Forgot password?') ?></a>
                     <?php } ?>
                     <?php if (portalSignupOpen()) { ?>
                         <!-- People at a client that lets them can make their own portal account (functions/portal_invite.php) -->
-                        <a href="client/signup.php" data-login-signup><i class="fas fa-user-plus me-1"></i>Create an account</a>
+                        <a href="client/signup.php" data-login-signup><i class="fas fa-user-plus me-1"></i><?= t('Create an account') ?></a>
                     <?php } ?>
                 </div>
                 <?php if (!empty($azure_client_id)) { ?>

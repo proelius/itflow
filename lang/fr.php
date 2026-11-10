@@ -1776,4 +1776,9 @@ return [
     'Forgot your password? Choose a new one with the button below.' => 'Mot de passe oublié ? Choisissez-en un nouveau avec le bouton ci-dessous.',
     'The link works once, for the next {n} minutes. If you did not ask, ignore this email - your account stays as it is.' => 'Le lien ne fonctionne qu’une fois, pendant les {n} prochaines minutes. Si vous ne l’avez pas demandé, ignorez cet e-mail – votre compte reste inchangé.',
     'If you did not ask, ignore this email - your account stays as it is.' => 'Si vous ne l’avez pas demandé, ignorez cet e-mail – votre compte reste inchangé.',
+    'Enter the 6-digit code from your authenticator app.' => 'Saisissez le code à 6 chiffres de votre application d’authentification.',
+    'Too many wrong codes. Wait 10 minutes and sign in again.' => 'Trop de codes erronés. Patientez 10 minutes, puis reconnectez-vous.',
+    'That code is not right - try the newest one in your app.' => 'Ce code n’est pas correct. Essayez le plus récent dans votre application.',
+    'Remember this browser for {n} day' => 'Se souvenir de ce navigateur pendant {n} jour',
+    'Remember this browser for {n} days' => 'Se souvenir de ce navigateur pendant {n} jours',
 ];
