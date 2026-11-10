@@ -347,12 +347,12 @@ function ticketEmailSla($ticket_id) {
     $phone = billingCompany()['phone_display'] ?? '';
     $callout = '';
     if ($phone !== '' && $row['ticket_priority'] === 'Urgent') {
-        $callout = "This ticket is marked Urgent. If it is stopping work right now, call us on $phone rather than waiting for a reply.";
+        $callout = t('This ticket is marked Urgent. If it is stopping work right now, call us on {phone} rather than waiting for a reply.', ['{phone}' => $phone]);
     } elseif ($phone !== '' && $row['ticket_priority'] === 'High') {
-        $callout = "This ticket is marked High priority. If it is holding up your business, calling us on $phone gets you the fastest answer.";
+        $callout = t('This ticket is marked High priority. If it is holding up your business, calling us on {phone} gets you the fastest answer.', ['{phone}' => $phone]);
     }
     return [
-        'summary' => ['We will respond' => 'within ' . formatSlaMinutes(intval($row['sla_response_minutes'])) . ', by ' . date('D j M, g:i A', strtotime($row['ticket_response_due_at']))],
+        'summary' => [t('We will respond') => t('within {time}, by {date}', ['{time}' => formatSlaMinutes(intval($row['sla_response_minutes'])), '{date}' => i18n_format_sla_due(strtotime($row['ticket_response_due_at']))])],
         'callout' => $callout,
     ];
 }
@@ -406,9 +406,9 @@ function ticketEmailHistory(array $row, array $opts = []) {
                 continue;
             }
             $items[] = [
-                'by' => $client ? ((string) $reply['contact_name'] ?: 'Client') : ((string) $reply['user_name'] ?: $company_name),
+                'by' => $client ? ((string) $reply['contact_name'] ?: t('Client')) : ((string) $reply['user_name'] ?: $company_name),
                 'org' => $client ? '' : $company_name,
-                'when' => date('D j M, g:i A', strtotime($reply['ticket_reply_created_at'])),
+                'when' => i18n_format_sla_due(strtotime($reply['ticket_reply_created_at'])),
                 'text' => $text,
                 'client' => $client,
             ];
@@ -424,15 +424,15 @@ function ticketEmailHistory(array $row, array $opts = []) {
             }
             $asked_by = trim((string) ($row['contact_name'] ?? ''));
             $items[] = [
-                'by' => $asked_by !== '' ? $asked_by : 'The request',
-                'action' => $asked_by !== '' ? 'the request' : '',
-                'when' => date('D j M, g:i A', strtotime($row['ticket_created_at'])),
+                'by' => $asked_by !== '' ? $asked_by : t('The request'),
+                'action' => $asked_by !== '' ? t('the request') : '',
+                'when' => i18n_format_sla_due(strtotime($row['ticket_created_at'])),
                 'text' => $text,
                 'client' => true,
             ];
         }
     }
-    return $items ? ['label' => (string) ($opts['label'] ?? 'Earlier on this ticket'), 'items' => $items] : [];
+    return $items ? ['label' => (string) ($opts['label'] ?? t('Earlier on this ticket')), 'items' => $items] : [];
 }
 
 /** A ticket message as a short plain-text excerpt - without the "Email from: ... :-" line the email parser puts on what it saves. */
@@ -453,86 +453,108 @@ function ticketEmailExcerpt($html, $limit = 700) {
  *   scheduled the work was booked - when (words), where (the site's address), or cancelled: true
  */
 function ticketEmailContent(array $row, $kind, array $opts = []) {
+    $lang = client_language();
+    $email = i18n_with($lang, function () use ($row, $kind, $opts) {
+        return _ticketEmailContent($row, $kind, $opts);
+    });
+    $email['lang'] = $lang;
+    return $email;
+}
+
+function _ticketEmailContent(array $row, $kind, array $opts = []) {
     global $config_ticket_autoclose_hours;
     $reference = ticketReference($row);
     $subject = (string) $row['ticket_subject'];
     $url = ticketEmailUrl($row);
     $company_name = (string) (billingCompany()['company_name'] ?? '');
     $by = trim((string) ($opts['by'] ?? '')) !== '' ? trim((string) $opts['by']) : $company_name;
-    $summary = ['Ticket' => $reference, 'Subject' => $subject, 'Status' => (string) ($row['ticket_status_name'] ?? '')];
+    $n = ['{reference}' => $reference, '{by}' => $by, '{name}' => $by];
+    $summary = [t('Ticket') => $reference, t('Subject') => $subject, t('Status') => i18n_ticket_status_label((string) ($row['ticket_status_name'] ?? ''))];
     $email = [
         'marker' => true,
         'preview' => "$reference - $subject",
         'tone' => 'primary',
         'contact' => ticketEmailContactLine(),
-        'button' => ['label' => 'View the ticket', 'url' => $url],
+        'button' => ['label' => t('View the ticket'), 'url' => $url],
     ];
 
     if ($kind === 'created') {
         $how = (string) ($opts['how'] ?? 'agent');
         $sla = ticketEmailSla($row['ticket_id']);
-        $email['kind'] = 'New ticket';
+        $email['kind'] = t('New ticket');
         if ($how === 'email') {
-            $email['title'] = 'We have your email';
-            $email['intro'] = ["Thank you - it is ticket $reference now, and we will reply to you here. To add anything, just reply to this email."];
+            $email['title'] = t('We have your email');
+            $email['intro'] = [t('Thank you - it is ticket {reference} now, and we will reply to you here. To add anything, just reply to this email.', $n)];
             // Never their own words back: the sender of an email can be forged, and an echo would carry whatever it said to them
         } else {
-            $email['title'] = $how === 'scheduled' ? 'A scheduled ticket was opened for you' : 'We have opened a ticket for you';
-            $email['intro'] = [($how === 'scheduled' ? "Ticket $reference was opened for you, as scheduled." : "We have opened ticket $reference for you.")
-                . " We will keep you posted here - to add anything, just reply to this email."];
-            $email['message'] = ['html' => (string) $row['ticket_details'], 'label' => 'Details'];
+            $email['title'] = $how === 'scheduled' ? t('A scheduled ticket was opened for you') : t('We have opened a ticket for you');
+            $email['intro'] = [$how === 'scheduled'
+                ? t('Ticket {reference} was opened for you, as scheduled. We will keep you posted here - to add anything, just reply to this email.', $n)
+                : t('We have opened ticket {reference} for you. We will keep you posted here - to add anything, just reply to this email.', $n)];
+            $email['message'] = ['html' => (string) $row['ticket_details'], 'label' => t('Details')];
         }
-        $email['summary'] = $summary + ['Priority' => (string) $row['ticket_priority']] + $sla['summary'];
+        $email['summary'] = $summary + [t('Priority') => i18n_ticket_priority_label((string) $row['ticket_priority'])] + $sla['summary'];
         $email['callout'] = $sla['callout'];
-        $email['button']['label'] = 'View your ticket';
+        $email['button']['label'] = t('View your ticket');
     } elseif ($kind === 'reply') {
-        $email['kind'] = 'Ticket update';
+        $email['kind'] = t('Ticket update');
         $email['title'] = $subject;
-        $email['intro'] = ["There is a new reply on your ticket $reference."];
-        $email['message'] = ['html' => (string) ($opts['message'] ?? ''), 'label' => "$by replied"];
+        $email['intro'] = [t('There is a new reply on your ticket {reference}.', $n)];
+        $email['message'] = ['html' => (string) ($opts['message'] ?? ''), 'label' => t('{name} replied', $n)];
         $email['summary'] = $summary;
-        $email['after'] = ['To answer, just reply to this email.'];
+        $email['after'] = [t('To answer, just reply to this email.')];
         $email['history'] = ticketEmailHistory($row, ['skip' => (string) ($opts['message'] ?? '')]);
     } elseif ($kind === 'resolved') {
         $hours = intval($config_ticket_autoclose_hours);
-        $closes = $hours > 0 ? ' - it closes by itself after ' . ($hours % 24 === 0 ? ($hours / 24) . ' day' . ($hours === 24 ? '' : 's') : "$hours hours") : '';
-        $email['kind'] = 'Resolved';
+        if ($hours <= 0) {
+            $sorted = t('If that sorts it, there is nothing more to do. If not, reply to this email or reopen it and tell us what is still wrong.');
+        } elseif ($hours % 24 === 0) {
+            $days = ['{n}' => $hours / 24];
+            $sorted = $hours === 24
+                ? t('If that sorts it, there is nothing more to do - it closes by itself after {n} day. If not, reply to this email or reopen it and tell us what is still wrong.', $days)
+                : t('If that sorts it, there is nothing more to do - it closes by itself after {n} days. If not, reply to this email or reopen it and tell us what is still wrong.', $days);
+        } else {
+            $sorted = t('If that sorts it, there is nothing more to do - it closes by itself after {n} hours. If not, reply to this email or reopen it and tell us what is still wrong.', ['{n}' => $hours]);
+        }
+        $email['kind'] = t('Resolved');
         $email['tone'] = 'success';
-        $email['title'] = 'Your ticket is resolved';
-        $email['intro'] = ["We have marked ticket $reference resolved.", "If that sorts it, there is nothing more to do$closes. If not, reply to this email or reopen it and tell us what is still wrong."];
-        $email['message'] = ['html' => (string) ($opts['message'] ?? ''), 'label' => "$by wrote"];
+        $email['title'] = t('Your ticket is resolved');
+        $email['intro'] = [t('We have marked ticket {reference} resolved.', $n), $sorted];
+        $email['message'] = ['html' => (string) ($opts['message'] ?? ''), 'label' => t('{name} wrote', $n)];
         $email['summary'] = $summary;
-        $email['button']['label'] = 'View or reopen it';
+        $email['button']['label'] = t('View or reopen it');
         // Resolved from the button or the board there is no note - the conversation says what was done
         $email['history'] = ticketEmailHistory($row, ['skip' => (string) ($opts['message'] ?? ''),
-            'label' => emailPlainText($opts['message'] ?? '') !== '' ? 'Earlier on this ticket' : 'The conversation']);
+            'label' => emailPlainText($opts['message'] ?? '') !== '' ? t('Earlier on this ticket') : t('The conversation')]);
     } elseif ($kind === 'closed') {
         $email['marker'] = false;
-        $email['kind'] = 'Closed';
+        $email['kind'] = t('Closed');
         $email['tone'] = 'secondary';
-        $email['title'] = 'Your ticket is closed';
-        $email['intro'] = ["Ticket $reference is closed. We hope it was sorted the way you wanted."];
+        $email['title'] = t('Your ticket is closed');
+        $email['intro'] = [t('Ticket {reference} is closed. We hope it was sorted the way you wanted.', $n)];
         $email['summary'] = $summary;
-        $email['button']['label'] = 'Tell us how we did';
-        $email['after'] = ['Need more help with this? Raise a new ticket - replies to this email do not reach us.'];
-        $email['history'] = ticketEmailHistory($row, ['limit' => 3, 'label' => 'The conversation']);
+        $email['button']['label'] = t('Tell us how we did');
+        $email['after'] = [t('Need more help with this? Raise a new ticket - replies to this email do not reach us.')];
+        $email['history'] = ticketEmailHistory($row, ['limit' => 3, 'label' => t('The conversation')]);
     } elseif ($kind === 'scheduled') {
         $cancelled = !empty($opts['cancelled']);
-        $email['kind'] = $cancelled ? 'Visit cancelled' : 'Work booked';
+        $email['kind'] = $cancelled ? t('Visit cancelled') : t('Work booked');
         $email['tone'] = $cancelled ? 'secondary' : 'primary';
-        $email['title'] = $cancelled ? 'The booked work is cancelled' : 'Your ticket is booked in';
+        $email['title'] = $cancelled ? t('The booked work is cancelled') : t('Your ticket is booked in');
         $email['intro'] = [$cancelled
-            ? "The work booked on ticket $reference is cancelled - the calendar file with this email takes it out of your calendar. We will be in touch to book it again."
-            : "We have booked the work on ticket $reference for " . $opts['when'] . ". The calendar file with this email adds it to your calendar."];
-        $email['summary'] = $summary + ($cancelled ? [] : ['When' => (string) $opts['when'], 'Where' => !empty($row['ticket_onsite']) ? (trim((string) ($opts['where'] ?? '')) !== '' ? (string) $opts['where'] : 'Onsite') : 'Remote']);
-        $email['history'] = $cancelled ? [] : ticketEmailHistory($row, ['limit' => 2, 'label' => 'What it is about']);
+            ? t('The work booked on ticket {reference} is cancelled - the calendar file with this email takes it out of your calendar. We will be in touch to book it again.', $n)
+            : t('We have booked the work on ticket {reference} for {when}. The calendar file with this email adds it to your calendar.', $n + ['{when}' => (string) $opts['when']])];
+        $email['summary'] = $summary + ($cancelled ? [] : [t('When') => (string) $opts['when'], t('Where') => !empty($row['ticket_onsite']) ? (trim((string) ($opts['where'] ?? '')) !== '' ? (string) $opts['where'] : t('Onsite')) : t('Remote')]);
+        $email['history'] = $cancelled ? [] : ticketEmailHistory($row, ['limit' => 2, 'label' => t('What it is about')]);
     } elseif ($kind === 'watcher') {
-        $email['kind'] = 'Watching';
-        $email['title'] = 'You were added to a ticket';
-        $email['intro'] = ["$by added you to ticket $reference" . (!empty($row['client_name']) ? ' for ' . $row['client_name'] : '') . ", so you will get its updates. To add anything, just reply to this email."];
-        $email['message'] = ['html' => (string) $row['ticket_details'], 'label' => 'Details'];
+        $email['kind'] = t('Watching');
+        $email['title'] = t('You were added to a ticket');
+        $email['intro'] = [!empty($row['client_name'])
+            ? t('{by} added you to ticket {reference} for {client}, so you will get its updates. To add anything, just reply to this email.', $n + ['{client}' => $row['client_name']])
+            : t('{by} added you to ticket {reference}, so you will get its updates. To add anything, just reply to this email.', $n)];
+        $email['message'] = ['html' => (string) $row['ticket_details'], 'label' => t('Details')];
         $email['summary'] = $summary;
-        $email['history'] = ticketEmailHistory($row, ['request' => false, 'label' => 'Replies so far']);
+        $email['history'] = ticketEmailHistory($row, ['request' => false, 'label' => t('Replies so far')]);
     }
     return ticketEmailPreview($email);
 }
@@ -585,27 +607,31 @@ function ticketMailSend($ticket_id, $subject, array $email, array $opts = []) {
         return 0;
     }
     $reference = ticketReference($row);
-    $company_name = (string) (billingCompany()['company_name'] ?? 'us');
+    $company_name = (string) (billingCompany()['company_name'] ?? t('us'));
+    $n = ['{reference}' => $reference, '{company}' => $company_name];
     $recipients = [];
-    if (isset($opts['to'])) {
-        foreach ((array) $opts['to'] as $to) {
-            $recipients[] = ['email' => $to['email'], 'name' => (string) ($to['name'] ?? ''), 'footnote' => "You get this because you emailed $company_name."];
+    // Why they get it, in the client's language
+    i18n_with(client_language(), function () use (&$recipients, $opts, $row, $kind, $to_watchers, $mysqli, $ticket_id, $n) {
+        if (isset($opts['to'])) {
+            foreach ((array) $opts['to'] as $to) {
+                $recipients[] = ['email' => $to['email'], 'name' => (string) ($to['name'] ?? ''), 'footnote' => t('You get this because you emailed {company}.', $n)];
+            }
+        } elseif (($opts['to_contact'] ?? true) && ticketContactWantsEmail($row['contact_ticket_emails'] ?? 'all', $kind)) {
+            $recipients[] = ['email' => (string) $row['contact_email'], 'name' => (string) $row['contact_name'], 'footnote' => t('You get this as the contact on ticket {reference} with {company}.', $n)];
         }
-    } elseif (($opts['to_contact'] ?? true) && ticketContactWantsEmail($row['contact_ticket_emails'] ?? 'all', $kind)) {
-        $recipients[] = ['email' => (string) $row['contact_email'], 'name' => (string) $row['contact_name'], 'footnote' => "You get this as the contact on ticket $reference with $company_name."];
-    }
-    if ($to_watchers) {
-        $sql = mysqli_query($mysqli, "SELECT watcher_email FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id");
-        while ($watcher = mysqli_fetch_assoc($sql)) {
-            $recipients[] = ['email' => trim((string) $watcher['watcher_email']), 'greet' => '', 'footnote' => "You get this because you are watching ticket $reference - ask $company_name if you would like to stop."];
-        }
-        // A new ticket reaches them by ticketMailColleaguesNew(), in an email of its own
-        if ($kind !== 'created') {
-            foreach (ticketColleagueRecipients($ticket_id, $kind) as $address => $colleague) {
-                $recipients[] = ['email' => $address, 'name' => $colleague['name'], 'footnote' => "You get this because you asked for every update on " . $colleague['client_name'] . "'s tickets - change that under Your account in the client portal."];
+        if ($to_watchers) {
+            $sql = mysqli_query($mysqli, "SELECT watcher_email FROM ticket_watchers WHERE watcher_ticket_id = $ticket_id");
+            while ($watcher = mysqli_fetch_assoc($sql)) {
+                $recipients[] = ['email' => trim((string) $watcher['watcher_email']), 'greet' => '', 'footnote' => t('You get this because you are watching ticket {reference} - ask {company} if you would like to stop.', $n)];
+            }
+            // A new ticket reaches them by ticketMailColleaguesNew(), in an email of its own
+            if ($kind !== 'created') {
+                foreach (ticketColleagueRecipients($ticket_id, $kind) as $address => $colleague) {
+                    $recipients[] = ['email' => $address, 'name' => $colleague['name'], 'footnote' => t("You get this because you asked for every update on {client}'s tickets - change that under Your account in the client portal.", ['{client}' => $colleague['client_name']])];
+                }
             }
         }
-    }
+    });
     return count(emailQueue($recipients, $subject, $email, ['from' => ticketEmailFrom(), 'attachments' => $opts['attachments'] ?? [], 'cal_str' => $opts['cal_str'] ?? '',
         'ticket_reply_id' => intval($opts['ticket_reply_id'] ?? 0)]));
 }
@@ -664,23 +690,30 @@ function ticketMailColleaguesNew($ticket_id) {
     $ticket_id = intval($ticket['ticket_id']);
     $reference = ticketReference($ticket);
     $raised_by = trim((string) $ticket['contact_name']) !== '' ? (string) $ticket['contact_name'] : 'We';
+    $lang = client_language();
     // What was asked - not for an emailed ticket, sent on by itself: a forged sender would have us carry their words to the client
     $echo = (string) $ticket['ticket_source'] !== 'Email';
     $sent = 0;
     foreach (ticketColleagueRecipients($ticket_id, 'created') as $email => $colleague) {
         $url = $colleague['portal'] ? "https://$config_base_url/client/ticket.php?id=$ticket_id" : ticketEmailUrl($ticket);
-        $sent += count(emailQueue([[
-            'email' => $email, 'name' => $colleague['name'],
-            'footnote' => "You get this because you asked to hear about new tickets at " . $colleague['client_name'] . ($colleague['portal'] ? ' - change that under Your account in the client portal.' : '.'),
-        ]], "New ticket - [$reference] - " . $ticket['ticket_subject'], [
-            'kind' => 'New ticket', 'tone' => 'primary', 'preview' => ($echo ? preg_replace('/\s+/', ' ', emailPlainText($ticket['ticket_details'], 140)) : '') ?: "$reference - " . $ticket['ticket_subject'],
-            'title' => "New ticket at " . $colleague['client_name'],
-            'intro' => ["$raised_by raised a ticket at " . $colleague['client_name'] . '.'],
-            'message' => ['html' => $echo ? (string) $ticket['ticket_details'] : '', 'label' => 'Details'],
-            'summary' => ['Ticket' => $reference, 'Subject' => (string) $ticket['ticket_subject'], 'Priority' => (string) $ticket['ticket_priority'], 'Raised by' => $raised_by === 'We' ? 'Us' : $raised_by],
-            'button' => ['label' => $colleague['portal'] ? 'View it in the portal' : 'View the ticket', 'url' => $url],
-            'contact' => ticketEmailContactLine(),
-        ], ['from' => ticketEmailFrom()]));
+        $sent += i18n_with($lang, function () use ($email, $colleague, $reference, $ticket, $echo, $raised_by, $url, $lang) {
+            $n = ['{client}' => $colleague['client_name'], '{name}' => $raised_by];
+            return count(emailQueue([[
+                'email' => $email, 'name' => $colleague['name'],
+                'footnote' => $colleague['portal']
+                    ? t('You get this because you asked to hear about new tickets at {client} - change that under Your account in the client portal.', $n)
+                    : t('You get this because you asked to hear about new tickets at {client}.', $n),
+            ]], t('New ticket') . " - [$reference] - " . $ticket['ticket_subject'], [
+                'kind' => t('New ticket'), 'tone' => 'primary', 'preview' => ($echo ? preg_replace('/\s+/', ' ', emailPlainText($ticket['ticket_details'], 140)) : '') ?: "$reference - " . $ticket['ticket_subject'],
+                'title' => t('New ticket at {client}', $n),
+                'intro' => [t('{name} raised a ticket at {client}.', $n)],
+                'message' => ['html' => $echo ? (string) $ticket['ticket_details'] : '', 'label' => t('Details')],
+                'summary' => [t('Ticket') => $reference, t('Subject') => (string) $ticket['ticket_subject'], t('Priority') => i18n_ticket_priority_label((string) $ticket['ticket_priority']), t('Raised by') => $raised_by === 'We' ? t('Us') : $raised_by],
+                'button' => ['label' => $colleague['portal'] ? t('View it in the portal') : t('View the ticket'), 'url' => $url],
+                'contact' => ticketEmailContactLine(),
+                'lang' => $lang,
+            ], ['from' => ticketEmailFrom()]));
+        });
     }
     return $sent;
 }
@@ -695,6 +728,15 @@ function ticketMailCreated($ticket_id, $subject_prefix, $attachments = [], $to_w
     if (!$row) {
         return 0;
     }
+    // The subject's first words in the client's language - what follows them (a dash) stays
+    $word = rtrim($subject_prefix, ' -');
+    $subject_prefix = i18n_with(client_language(), function () use ($word) {
+        return match ($word) {
+            'Ticket Created' => t('Ticket Created'),
+            'Ticket created' => t('Ticket created'),
+            default => $word,
+        };
+    }) . substr($subject_prefix, strlen($word));
     return ticketMailSend($row['ticket_id'], "$subject_prefix [" . ticketReference($row) . "] - " . $row['ticket_subject'], ticketEmailContent($row, 'created', ['how' => $how]),
         ['attachments' => $attachments, 'to_watchers' => $to_watchers, 'kind' => 'created'] + ($to !== null ? ['to' => $to] : []));
 }
@@ -711,7 +753,7 @@ function ticketMailReply($ticket_id, $reply_html, $by, $resolved = false, $attac
         ticketReplyEmailed($reply_id, false);
         return 0;
     }
-    $sent = ticketMailSend($row['ticket_id'], ($resolved ? 'Ticket resolved' : 'Ticket update') . " - [" . ticketReference($row) . "] - " . $row['ticket_subject'] . ($resolved ? ' | (pending closure)' : ''),
+    $sent = ticketMailSend($row['ticket_id'], i18n_with(client_language(), function () use ($resolved) { return $resolved ? t('Ticket resolved') : t('Ticket update'); }) . " - [" . ticketReference($row) . "] - " . $row['ticket_subject'] . ($resolved ? ' | ' . i18n_with(client_language(), function () { return t('(pending closure)'); }) : ''),
         ticketEmailContent($row, $resolved ? 'resolved' : 'reply', ['message' => (string) $reply_html, 'by' => (string) $by]), ['attachments' => $attachments, 'ticket_reply_id' => intval($reply_id)]);
     ticketReplyEmailed($reply_id, $sent > 0);
     return $sent;
@@ -821,10 +863,12 @@ function ticketMailWatchersAdded($ticket_id, array $emails, $by) {
     if (!$row || !$emails) {
         return 0;
     }
-    $company_name = (string) (billingCompany()['company_name'] ?? 'us');
-    return count(emailQueue(array_map(function ($watcher_email) use ($row, $company_name) {
-        return ['email' => $watcher_email, 'greet' => '', 'footnote' => "You get this because you are watching ticket " . ticketReference($row) . " - ask $company_name if you would like to stop."];
-    }, $emails), "Ticket Notification - [" . ticketReference($row) . "] - " . $row['ticket_subject'], ticketEmailContent($row, 'watcher', ['by' => (string) $by]), ['from' => ticketEmailFrom()]));
+    $company_name = (string) (billingCompany()['company_name'] ?? t('us'));
+    return i18n_with(client_language(), function () use ($row, $emails, $by, $company_name) {
+        return count(emailQueue(array_map(function ($watcher_email) use ($row, $company_name) {
+            return ['email' => $watcher_email, 'greet' => '', 'footnote' => t('You get this because you are watching ticket {reference} - ask {company} if you would like to stop.', ['{reference}' => ticketReference($row), '{company}' => $company_name])];
+        }, $emails), t('Ticket Notification') . " - [" . ticketReference($row) . "] - " . $row['ticket_subject'], ticketEmailContent($row, 'watcher', ['by' => (string) $by]), ['from' => ticketEmailFrom()]));
+    });
 }
 
 /* ------------------------------------------------------------ Emails about a ticket, to agents */
@@ -1024,32 +1068,40 @@ function ticketMailTaskApproval($approval_id, $by) {
     if (!$row) {
         return 0;
     }
-    $reference = ticketReference($row);
-    $client_id = intval($row['ticket_client_id']);
-    $type = (string) $approval['approval_type'];
-    $recipients = [];
-    if ($approval['approval_scope'] === 'internal' && $type === 'specific' && intval($approval['approval_required_user_id']) !== intval($session_user_id)) {
-        if ($agent = ticketMailAgent($approval['approval_required_user_id'])) {
-            $recipients[] = $agent + ['footnote' => "You get this because $by asked you to approve it."];
+    // The client's language when it is the client who is asked, else the agent's
+    $lang = $approval['approval_scope'] === 'client' ? client_language() : i18n_current_language();
+    return i18n_with($lang, function () use ($row, $approval, $by, $mysqli, $config_base_url, $session_user_id, $lang) {
+        $reference = ticketReference($row);
+        $client_id = intval($row['ticket_client_id']);
+        $type = (string) $approval['approval_type'];
+        $recipients = [];
+        if ($approval['approval_scope'] === 'internal' && $type === 'specific' && intval($approval['approval_required_user_id']) !== intval($session_user_id)) {
+            if ($agent = ticketMailAgent($approval['approval_required_user_id'])) {
+                $recipients[] = $agent + ['footnote' => t('You get this because {by} asked you to approve it.', ['{by}' => $by])];
+            }
+        } elseif ($approval['approval_scope'] === 'client') {
+            $where = $type === 'technical' ? "contact_client_id = $client_id AND contact_technical = 1"
+                : ($type === 'billing' ? "contact_client_id = $client_id AND contact_billing = 1" : "contact_id = " . intval($row['ticket_contact_id']));
+            $sql_contacts = mysqli_query($mysqli, "SELECT contact_name, contact_email FROM contacts WHERE $where AND contact_archived_at IS NULL AND contact_email != ''");
+            while ($contact = mysqli_fetch_assoc($sql_contacts)) {
+                $recipients[] = ['email' => $contact['contact_email'], 'name' => $contact['contact_name'],
+                    'footnote' => $type === 'any'
+                        ? t('You get this as the contact on ticket {reference}.', ['{reference}' => $reference])
+                        : ($type === 'technical' ? t('You get this as a technical contact for {client}.', ['{client}' => $row['client_name']]) : ($type === 'billing' ? t('You get this as a billing contact for {client}.', ['{client}' => $row['client_name']]) : t('You get this as a {type} contact for {client}.', ['{type}' => $type, '{client}' => $row['client_name']])))];
+            }
         }
-    } elseif ($approval['approval_scope'] === 'client') {
-        $where = $type === 'technical' ? "contact_client_id = $client_id AND contact_technical = 1"
-            : ($type === 'billing' ? "contact_client_id = $client_id AND contact_billing = 1" : "contact_id = " . intval($row['ticket_contact_id']));
-        $sql_contacts = mysqli_query($mysqli, "SELECT contact_name, contact_email FROM contacts WHERE $where AND contact_archived_at IS NULL AND contact_email != ''");
-        while ($contact = mysqli_fetch_assoc($sql_contacts)) {
-            $recipients[] = ['email' => $contact['contact_email'], 'name' => $contact['contact_name'],
-                'footnote' => $type === 'any' ? "You get this as the contact on ticket $reference." : "You get this as a $type contact for " . $row['client_name'] . "."];
-        }
-    }
-    return count(emailQueue($recipients, "Ticket task approval required - [$reference] - " . $row['ticket_subject'], [
-        'marker' => true, 'kind' => 'Approval needed', 'tone' => 'warning', 'preview' => "$by needs your approval - " . $approval['task_name'],
-        'title' => 'Your approval is needed',
-        'intro' => ["$by needs your approval for a task on ticket $reference before the work goes ahead."],
-        'summary' => ['Task' => (string) $approval['task_name'], 'Ticket' => $reference, 'Subject' => (string) $row['ticket_subject'], 'Status' => (string) $row['ticket_status_name']],
-        'button' => ['label' => 'Review and approve', 'url' => "https://$config_base_url/guest/guest_approve_ticket_task.php?task_approval_id=" . intval($approval['approval_id']) . '&url_key=' . rawurlencode((string) $approval['approval_url_key'])],
-        'after' => ['Want to know more first? Just reply to this email.'],
-        'contact' => ticketEmailContactLine(),
-    ], ['from' => ticketEmailFrom()]));
+        $n = ['{by}' => $by, '{reference}' => $reference];
+        return count(emailQueue($recipients, t('Ticket task approval required') . " - [$reference] - " . $row['ticket_subject'], [
+            'marker' => true, 'kind' => t('Approval needed'), 'tone' => 'warning', 'preview' => t('{by} needs your approval - {task}', $n + ['{task}' => $approval['task_name']]),
+            'title' => t('Your approval is needed'),
+            'intro' => [t('{by} needs your approval for a task on ticket {reference} before the work goes ahead.', $n)],
+            'summary' => [t('Task') => (string) $approval['task_name'], t('Ticket') => $reference, t('Subject') => (string) $row['ticket_subject'], t('Status') => i18n_ticket_status_label((string) $row['ticket_status_name'])],
+            'button' => ['label' => t('Review and approve'), 'url' => "https://$config_base_url/guest/guest_approve_ticket_task.php?task_approval_id=" . intval($approval['approval_id']) . '&url_key=' . rawurlencode((string) $approval['approval_url_key'])],
+            'after' => [t('Want to know more first? Just reply to this email.')],
+            'contact' => ticketEmailContactLine(),
+            'lang' => $lang,
+        ], ['from' => ticketEmailFrom()]));
+    });
 }
 
 /*
@@ -1062,13 +1114,17 @@ function ticketMailClosedReply($ticket_id, $from_email) {
         return 0;
     }
     $support = ticketEmailFrom()['email'];
-    return count(emailQueue([['email' => (string) $from_email, 'greet' => '', 'footnote' => 'You get this because you replied to a closed ticket.']], "Action required: This ticket is already closed", [
-        'kind' => 'Ticket closed', 'tone' => 'warning', 'preview' => 'Your reply did not reach us - raise a new ticket instead',
-        'title' => 'That ticket is closed',
-        'intro' => ["You replied to ticket " . ticketReference($closed) . " - \"" . $closed['ticket_subject'] . "\" - which is closed, so your reply won't reach us.", "To raise a new ticket, send a new email to $support."],
-        'button' => ['label' => 'Email us', 'url' => "mailto:$support"],
-        'contact' => ticketEmailContactLine(),
-    ], ['from' => ticketEmailFrom()]));
+    $lang = client_language();
+    return i18n_with($lang, function () use ($closed, $from_email, $support, $lang) {
+        return count(emailQueue([['email' => (string) $from_email, 'greet' => '', 'footnote' => t('You get this because you replied to a closed ticket.')]], t('Action required: This ticket is already closed'), [
+            'kind' => t('Ticket closed'), 'tone' => 'warning', 'preview' => t('Your reply did not reach us - raise a new ticket instead'),
+            'title' => t('That ticket is closed'),
+            'intro' => [t('You replied to ticket {reference} - "{subject}" - which is closed, so your reply won\'t reach us.', ['{reference}' => ticketReference($closed), '{subject}' => $closed['ticket_subject']]), t('To raise a new ticket, send a new email to {email}.', ['{email}' => $support])],
+            'button' => ['label' => t('Email us'), 'url' => "mailto:$support"],
+            'contact' => ticketEmailContactLine(),
+            'lang' => $lang,
+        ], ['from' => ticketEmailFrom()]));
+    });
 }
 
 /*
@@ -1276,7 +1332,7 @@ function ticketMailClosed($ticket_id) {
     if (!$row) {
         return 0;
     }
-    return ticketMailSend($row['ticket_id'], "Ticket closed - [" . ticketReference($row) . "] - " . $row['ticket_subject'] . " | (do not reply)",
+    return ticketMailSend($row['ticket_id'], i18n_with(client_language(), function () { return t('Ticket closed'); }) . " - [" . ticketReference($row) . "] - " . $row['ticket_subject'] . " | " . i18n_with(client_language(), function () { return t('(do not reply)'); }),
         ticketEmailContent($row, 'closed'), ['kind' => 'closed']);
 }
 
@@ -1354,7 +1410,7 @@ function ticketMailResolved($ticket_id, $note = '', $reply_id = 0) {
         ticketReplyEmailed($reply_id, false);
         return 0;
     }
-    $sent = ticketMailSend($row['ticket_id'], "Ticket resolved - [" . ticketReference($row) . "] - " . $row['ticket_subject'] . " | (pending closure)",
+    $sent = ticketMailSend($row['ticket_id'], i18n_with(client_language(), function () { return t('Ticket resolved'); }) . " - [" . ticketReference($row) . "] - " . $row['ticket_subject'] . " | " . i18n_with(client_language(), function () { return t('(pending closure)'); }),
         ticketEmailContent($row, 'resolved', ['message' => (string) $note, 'by' => stripslashes((string) ($session_name ?? ''))]), ['ticket_reply_id' => intval($reply_id)]);
     ticketReplyEmailed($reply_id, $sent > 0);
     return $sent;
@@ -1781,7 +1837,7 @@ function recurringTicketRaise($recurring_ticket_id, $by = 'Cron') {
     // The client is told (when general notifications are on) - the contact alone
     $new = ticketRow($ticket_id);
     if (intval($config_ticket_client_general_notifications) === 1 && $new) {
-        ticketMailSend($ticket_id, "Ticket created - [" . ticketReference($new) . "] - " . $new['ticket_subject'] . " (scheduled)",
+        ticketMailSend($ticket_id, i18n_with(client_language(), function () { return t('Ticket created'); }) . " - [" . ticketReference($new) . "] - " . $new['ticket_subject'] . " " . i18n_with(client_language(), function () { return t('(scheduled)'); }),
             ticketEmailContent($new, 'created', ['how' => 'scheduled']), ['kind' => 'created', 'to_watchers' => false]);
     }
 
@@ -1909,7 +1965,22 @@ function ticketScheduleValue($input) {
  * are on (Admin > Ticket) to the contact and the watchers. $row has the
  * ticket's id and, for a booking, location_address.
  */
-function ticketMailSchedule($row, $cal_str, $cancelled, $when_text) {
+/** When booked work is, in words, in the current language - "Thursday, November 12, 2026 at 10:30am" in English. */
+function ticketEmailWhen($timestamp) {
+    if (i18n_current_language() === 'en' || !class_exists('IntlDateFormatter')) {
+        return date('l, F j, Y \a\t g:ia', $timestamp);
+    }
+    $lang = i18n_current_language();
+    $locale = $lang === 'fr' ? 'fr_CH' : $lang;
+    $format = function ($pattern) use ($locale, $timestamp) {
+        return (new IntlDateFormatter($locale, IntlDateFormatter::NONE, IntlDateFormatter::NONE, date_default_timezone_get(), IntlDateFormatter::GREGORIAN, $pattern))->format($timestamp);
+    };
+    $date = $format('EEEE d MMMM y');
+    $time = $format('HH:mm');
+    return $date !== false && $time !== false ? t('{date} at {time}', ['{date}' => $date, '{time}' => $time]) : date('l, F j, Y \a\t g:ia', $timestamp);
+}
+
+function ticketMailSchedule($row, $cal_str, $cancelled, $when_text, $when_timestamp = 0) {
     global $config_ticket_client_general_notifications;
     $ticket = ticketRow($row['ticket_id']);
     if (!$ticket || !emailReady()) {
@@ -1923,7 +1994,11 @@ function ticketMailSchedule($row, $cal_str, $cancelled, $when_text) {
             ticketAgentEmailContent($ticket, 'scheduled', $opts), ['from' => ticketEmailFrom(), 'cal_str' => $cal_str]);
     }
     if (intval($config_ticket_client_general_notifications) === 1) {
-        ticketMailSend($ticket['ticket_id'], $subject, ticketEmailContent($ticket, 'scheduled', $opts), ['cal_str' => $cal_str]);
+        $client_subject = i18n_with(client_language(), function () use ($cancelled) { return $cancelled ? t('Ticket Schedule Cancelled') : t('Ticket Scheduled'); }) . " - [$reference] - " . $ticket['ticket_subject'];
+        if ($when_timestamp > 0) {
+            $opts['when'] = i18n_with(client_language(), function () use ($when_timestamp) { return ticketEmailWhen($when_timestamp); });
+        }
+        ticketMailSend($ticket['ticket_id'], $client_subject, ticketEmailContent($ticket, 'scheduled', $opts), ['cal_str' => $cal_str]);
     }
 }
 
@@ -1987,7 +2062,7 @@ function ticketSetSchedule(array $row, $schedule, $onsite) {
     $mail_row = ticketScheduleRow($ticket_id);
     $cal_str = ticketScheduleIcs($mail_row, $schedule);
     $when_text = date('l, F j, Y \a\t g:ia', strtotime($schedule));
-    ticketMailSchedule($mail_row, $cal_str, false, $when_text);
+    ticketMailSchedule($mail_row, $cal_str, false, $when_text, strtotime($schedule));
 
     // Note it on the ticket
     $note = escapeSql("Ticket scheduled for $when_text " . ($onsite ? '(onsite).' : '(remote).'));
