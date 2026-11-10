@@ -992,4 +992,10 @@ return [
     'It is getting in the way' => 'It is getting in the way',
     'It is stopping my work' => 'It is stopping my work',
     'It is stopping everyone' => 'It is stopping everyone',
+    'What happens next' => 'What happens next',
+    'We get your ticket straight away and pick it up.' => 'We get your ticket straight away and pick it up.',
+    'You hear from us by email, and every reply shows on the ticket here.' => 'You hear from us by email, and every reply shows on the ticket here.',
+    'Answer us by replying to the email or on the ticket - whichever is easier.' => 'Answer us by replying to the email or on the ticket - whichever is easier.',
+    'When it is done we mark it resolved, and you close it - or reopen it if it is not.' => 'When it is done we mark it resolved, and you close it - or reopen it if it is not.',
+    '<strong>Stopping everyone?</strong> Call us as well:' => '<strong>Stopping everyone?</strong> Call us as well:',
 ];

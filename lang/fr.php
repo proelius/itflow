@@ -1007,4 +1007,10 @@ return [
     'It is getting in the way' => 'Cela me gêne',
     'It is stopping my work' => 'Cela bloque mon travail',
     'It is stopping everyone' => 'Cela bloque tout le monde',
+    'What happens next' => 'La suite',
+    'We get your ticket straight away and pick it up.' => 'Nous recevons votre ticket immédiatement et nous nous en occupons.',
+    'You hear from us by email, and every reply shows on the ticket here.' => 'Nous vous répondons par e-mail, et chaque réponse s’affiche aussi sur le ticket ici.',
+    'Answer us by replying to the email or on the ticket - whichever is easier.' => 'Répondez-nous par e-mail ou directement sur le ticket - comme vous préférez.',
+    'When it is done we mark it resolved, and you close it - or reopen it if it is not.' => 'Lorsque c’est terminé, nous le marquons comme résolu, et vous le fermez - ou vous le rouvrez si ce n’est pas le cas.',
+    '<strong>Stopping everyone?</strong> Call us as well:' => '<strong>Cela bloque tout le monde ?</strong> Appelez-nous aussi :',
 ];
