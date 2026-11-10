@@ -43,7 +43,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
         'icon' => $resolved ? 'fa-check' : 'fa-reply',
         'tone' => $resolved ? 'is-info' : '',
         'title' => $row['ticket_subject'],
-        'line' => ($resolved ? 'Resolved - is it fixed? Close it, or reopen it' : 'We replied - waiting on you') . ' · ' . $row['ticket_prefix'] . $row['ticket_number'],
+        'line' => ($resolved ? t('Resolved - is it fixed? Close it, or reopen it') : t('We replied - waiting on you')) . ' · ' . $row['ticket_prefix'] . $row['ticket_number'],
     ];
 }
 
@@ -59,8 +59,8 @@ while ($row = mysqli_fetch_assoc($sql)) {
         'href' => 'ticket.php?id=' . intval($row['ticket_id']),
         'icon' => 'fa-clipboard-check',
         'tone' => '',
-        'title' => 'Approve: ' . $row['task_name'],
-        'line' => 'Waiting for your approval · ' . $row['ticket_prefix'] . $row['ticket_number'],
+        'title' => t('Approve: ') . $row['task_name'],
+        'line' => t('Waiting for your approval · ') . $row['ticket_prefix'] . $row['ticket_number'],
     ];
 }
 

@@ -825,4 +825,8 @@ return [
     'That code did not match - check the time on your phone is right, and enter the newest code' => 'That code did not match - check the time on your phone is right, and enter the newest code',
     'Signs in with a password' => 'Signs in with a password',
     'Signs in with Microsoft' => 'Signs in with Microsoft',
+    'Resolved - is it fixed? Close it, or reopen it' => 'Resolved - is it fixed? Close it, or reopen it',
+    'We replied - waiting on you' => 'We replied - waiting on you',
+    'Approve: ' => 'Approve: ',
+    'Waiting for your approval · ' => 'Waiting for your approval · ',
 ];

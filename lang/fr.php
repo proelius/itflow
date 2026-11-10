@@ -781,4 +781,8 @@ return [
     'That code did not match - check the time on your phone is right, and enter the newest code' => 'Ce code ne correspondait pas - vérifiez que l’heure de votre téléphone est correcte et entrez le code le plus récent',
     'Signs in with a password' => 'Se connecte avec un mot de passe',
     'Signs in with Microsoft' => 'Se connecte avec Microsoft',
+    'Resolved - is it fixed? Close it, or reopen it' => 'Résolu - est-ce que c’est réparé ? Fermez-le ou rouvrez-le',
+    'We replied - waiting on you' => 'Nous avons répondu - en attente de vous',
+    'Approve: ' => 'Approuver : ',
+    'Waiting for your approval · ' => 'En attente de votre approbation · ',
 ];
