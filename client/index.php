@@ -43,7 +43,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
         'icon' => $resolved ? 'fa-check' : 'fa-reply',
         'tone' => $resolved ? 'is-info' : '',
         'title' => $row['ticket_subject'],
-        'line' => ($resolved ? t('Resolved - is it fixed? Close it, or reopen it') : t('We replied - waiting on you')) . ' · ' . $row['ticket_prefix'] . $row['ticket_number'],
+        'line' => ($resolved ? 'Resolved - is it fixed? Close it, or reopen it' : 'We replied - waiting on you') . ' · ' . $row['ticket_prefix'] . $row['ticket_number'],
     ];
 }
 
@@ -59,7 +59,7 @@ while ($row = mysqli_fetch_assoc($sql)) {
         'href' => 'ticket.php?id=' . intval($row['ticket_id']),
         'icon' => 'fa-clipboard-check',
         'tone' => '',
-        'title' => t('Approve: ') . $row['task_name'],
+        'title' => 'Approve: ' . $row['task_name'],
         'line' => 'Waiting for your approval · ' . $row['ticket_prefix'] . $row['ticket_number'],
     ];
 }
@@ -160,7 +160,7 @@ $request_forms = ticketTemplatePortalForms($session_client_id, $sees_all);
 $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, company_phone_country_code, company_email, company_website FROM companies WHERE company_id = 1"));
 
 $hour = intval(date('G'));
-$greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
+$greeting = $hour < 12 ? t('Good morning') : ($hour < 18 ? t('Good afternoon') : t('Good evening'));
 $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
 ?>
 
@@ -171,7 +171,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
     </div>
     <div class="d-flex flex-wrap gap-2">
         <?php if ($can_billing && $balance > 0) { ?>
-            <a class="btn btn-outline-primary" href="<?= $pay_href ?>"><i class="fas fa-<?= $pay_href === 'unpaid_invoices.php' ? 'credit-card' : 'file-invoice-dollar' ?> me-2"></i><?= $pay_href === 'unpaid_invoices.php' ? 'Pay invoices' : 'Invoices' ?></a>
+            <a class="btn btn-outline-primary" href="<?= $pay_href ?>"><i class="fas fa-<?= $pay_href === 'unpaid_invoices.php' ? 'credit-card' : 'file-invoice-dollar' ?> me-2"></i><?= $pay_href === 'unpaid_invoices.php' ? t('Pay invoices') : t('Invoices') ?></a>
         <?php } ?>
     </div>
 </div>
@@ -197,7 +197,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
             <span class="itflow-portal-stat-icon"><i class="fas fa-life-ring"></i></span>
             <span>
                 <span class="itflow-portal-stat-value d-block"><?= $open_count ?></span>
-                <span class="itflow-portal-stat-label"><?= $open_count === 1 ? 'Open ticket' : 'Open tickets' ?><?= $sees_all ? '' : ' of yours' ?></span>
+                <span class="itflow-portal-stat-label"><?= $open_count === 1 ? t('Open ticket') : t('Open tickets') ?><?= $sees_all ? '' : t(' of yours') ?></span>
             </span>
         </a>
     </div>
@@ -235,7 +235,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
                 <span class="itflow-portal-stat-icon"><i class="fas fa-calendar-alt"></i></span>
                 <span>
                     <span class="itflow-portal-stat-value d-block"><?= count($renewals) ?></span>
-                    <span class="itflow-portal-stat-label"><?= count($renewals) === 1 ? 'Renewal' : t('Renewals') ?> coming up</span>
+                    <span class="itflow-portal-stat-label"><?= count($renewals) === 1 ? t('Renewal') : t('Renewals') ?> coming up</span>
                 </span>
             </a>
         </div>
@@ -247,10 +247,10 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
 
         <section class="itflow-portal-panel mb-4">
             <div class="itflow-portal-panel-head">
-                <h2><i class="fas fa-bell"></i>Needs you</h2>
+                <h2><i class="fas fa-bell"></i><?= t('Needs you') ?></h2>
             </div>
             <?php if (!$needs_you) { ?>
-                <?= emptyStateHtml(['title' => "You're all caught up", 'text' => 'Nothing is waiting on you right now.', 'icon' => 'fa-check', 'filtered' => false]) ?>
+                <?= emptyStateHtml(['title' => "You're all caught up", 'text' => t('Nothing is waiting on you right now.'), 'icon' => 'fa-check', 'filtered' => false]) ?>
             <?php } else { ?>
                 <ul class="itflow-portal-list">
                     <?php foreach (array_slice($needs_you, 0, 8) as $item) { ?>
@@ -271,12 +271,12 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
 
         <section class="itflow-portal-panel">
             <div class="itflow-portal-panel-head">
-                <h2><i class="fas fa-life-ring"></i><?= $sees_all ? 'Open tickets' : t('Your open tickets') ?></h2>
-                <a href="tickets.php">All tickets</a>
+                <h2><i class="fas fa-life-ring"></i><?= $sees_all ? t('Open tickets') : t('Your open tickets') ?></h2>
+                <a href="tickets.php"><?= t('All tickets') ?></a>
             </div>
             <?php if (!mysqli_num_rows($recent)) { ?>
-                <?= emptyStateHtml(['title' => 'No open tickets', 'text' => 'Something not working? Raise a ticket and we will pick it up.', 'icon' => 'fa-life-ring', 'filtered' => false,
-                    'actions' => [['label' => 'New ticket', 'href' => 'ticket_add.php']]]) ?>
+                <?= emptyStateHtml(['title' => t('No open tickets'), 'text' => t('Something not working? Raise a ticket and we will pick it up.'), 'icon' => 'fa-life-ring', 'filtered' => false,
+                    'actions' => [['label' => t('New ticket'), 'href' => 'ticket_add.php']]]) ?>
             <?php } else { ?>
                 <ul class="itflow-portal-list">
                     <?php while ($row = mysqli_fetch_assoc($recent)) {
@@ -307,8 +307,8 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
         <?php if ($request_forms) { ?>
             <section class="itflow-portal-panel mb-4">
                 <div class="itflow-portal-panel-head">
-                    <h2><i class="fas fa-clipboard-list"></i>Ask for something</h2>
-                    <?php if (count($request_forms) > 5) { ?><a href="ticket_add.php">All <?= count($request_forms) ?></a><?php } ?>
+                    <h2><i class="fas fa-clipboard-list"></i><?= t('Ask for something') ?></h2>
+                    <?php if (count($request_forms) > 5) { ?><a href="ticket_add.php"><?= t('All') . ' ' ?><?= count($request_forms) ?></a><?php } ?>
                 </div>
                 <ul class="itflow-portal-list">
                     <?php foreach (array_slice($request_forms, 0, 5) as $row) { ?>
@@ -330,8 +330,8 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
         <?php if ($devices) { ?>
             <section class="itflow-portal-panel mb-4">
                 <div class="itflow-portal-panel-head">
-                    <h2><i class="fas fa-desktop"></i>Your devices</h2>
-                    <?php if ($can_it) { ?><a href="assets.php">All devices</a><?php } ?>
+                    <h2><i class="fas fa-desktop"></i><?= t('Your devices') ?></h2>
+                    <?php if ($can_it) { ?><a href="assets.php"><?= t('All devices') ?></a><?php } ?>
                 </div>
                 <ul class="itflow-portal-list">
                     <?php foreach ($devices as $device) {
@@ -361,10 +361,10 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
         <?php if ($can_it) { ?>
             <section class="itflow-portal-panel mb-4" id="renewals">
                 <div class="itflow-portal-panel-head">
-                    <h2><i class="fas fa-calendar-alt"></i>Coming up</h2>
+                    <h2><i class="fas fa-calendar-alt"></i><?= t('Coming up') ?></h2>
                 </div>
                 <?php if (!$renewals) { ?>
-                    <?= emptyStateHtml(['title' => 'Nothing renewing soon', 'text' => 'Domains, certificates, licenses and warranties due in the next 45 days show here.', 'icon' => 'fa-check', 'filtered' => false]) ?>
+                    <?= emptyStateHtml(['title' => t('Nothing renewing soon'), 'text' => t('Domains, certificates, licenses and warranties due in the next 45 days show here.'), 'icon' => 'fa-check', 'filtered' => false]) ?>
                 <?php } else { ?>
                     <ul class="itflow-portal-list">
                         <?php foreach (array_slice($renewals, 0, 8) as $item) {
@@ -374,7 +374,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
                                     <span class="itflow-portal-todo-icon<?= $lapsed ? ' is-danger' : '' ?>"><i class="fas <?= $item['icon'] ?>"></i></span>
                                     <span class="itflow-portal-todo-main">
                                         <div><?= escapeHtml($item['name']) ?></div>
-                                        <div><?= escapeHtml($item['kind']) ?> · <?= $lapsed ? 'expired' : 'renews' ?> <?= escapeHtml(date('M j, Y', strtotime($item['date']))) ?> (<?= timeAgo($item['date']) ?>)</div>
+                                        <div><?= escapeHtml($item['kind']) ?> · <?= $lapsed ? t('expired') : 'renews' ?> <?= escapeHtml(date('M j, Y', strtotime($item['date']))) ?> (<?= timeAgo($item['date']) ?>)</div>
                                     </span>
                                     <i class="fas fa-chevron-right text-body-secondary small"></i>
                                 </a>
@@ -388,10 +388,10 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
         <?php if (!empty($company['company_phone']) || !empty($company['company_email'])) { ?>
             <section class="itflow-portal-panel">
                 <div class="itflow-portal-panel-head">
-                    <h2><i class="fas fa-headset"></i>Need us fast?</h2>
+                    <h2><i class="fas fa-headset"></i><?= t('Need us fast?') ?></h2>
                 </div>
                 <div class="itflow-portal-panel-body">
-                    <p class="text-body-secondary small mb-2">For anything urgent, call us - and raise a ticket so it is on record.</p>
+                    <p class="text-body-secondary small mb-2"><?= t('For anything urgent, call us - and raise a ticket so it is on record.') ?></p>
                     <?php if (!empty($company['company_phone'])) { ?>
                         <div class="mb-1"><i class="fas fa-fw fa-phone me-2 text-body-secondary"></i><a href="tel:<?= escapeHtml(phoneDialNumber($company['company_phone'], $company['company_phone_country_code'])) ?>"><?= escapeHtml(formatPhoneNumber($company['company_phone'], $company['company_phone_country_code'])) ?></a></div>
                     <?php } ?>
