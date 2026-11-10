@@ -484,25 +484,62 @@ function portalContractRound($contract_id) {
 function portalContractState(array $row, $round = null) {
     $signing = contractSignatureState($round);
     if ($signing && in_array($signing['key'], ['sent', 'viewed'], true)) {
-        return ['key' => 'waiting', 'label' => 'Waiting for your signature', 'icon' => 'fa-file-signature', 'class' => 'itflow-portal-state-you'];
+        return ['key' => 'waiting', 'label' => t('Waiting for your signature'), 'icon' => 'fa-file-signature', 'class' => 'itflow-portal-state-you'];
     }
     if ($signing && $signing['key'] === 'countersign') {
-        return ['key' => 'countersign', 'label' => 'Signed - with us to countersign', 'icon' => 'fa-pen-nib', 'class' => 'itflow-portal-state-progress'];
+        return ['key' => 'countersign', 'label' => t('Signed - with us to countersign'), 'icon' => 'fa-pen-nib', 'class' => 'itflow-portal-state-progress'];
     }
     $state = contractState($row);
     switch ($state['key']) {
         case 'draft':
-            return ['key' => 'draft', 'label' => 'Being prepared', 'icon' => 'fa-pencil-alt', 'class' => 'itflow-portal-state-hold'];
+            return ['key' => 'draft', 'label' => t('Being prepared'), 'icon' => 'fa-pencil-alt', 'class' => 'itflow-portal-state-hold'];
         case 'upcoming':
-            return ['key' => 'upcoming', 'label' => $state['when'], 'icon' => 'fa-hourglass-start', 'class' => 'itflow-portal-state-new'];
+            return ['key' => 'upcoming', 'label' => t('Starts {date}', ['{date}' => date('M j, Y', strtotime((string) $row['contract_start_date']))]), 'icon' => 'fa-hourglass-start', 'class' => 'itflow-portal-state-new'];
         case 'ending':
-            return ['key' => 'ending', 'label' => $state['when'], 'icon' => 'fa-hourglass-end', 'class' => 'itflow-portal-state-hold'];
+            return ['key' => 'ending', 'label' => t('Ends {date}', ['{date}' => date('M j, Y', strtotime((string) $row['contract_end_date']))]), 'icon' => 'fa-hourglass-end', 'class' => 'itflow-portal-state-hold'];
         case 'ended':
-            return ['key' => 'ended', 'label' => 'Ended', 'icon' => 'fa-flag-checkered', 'class' => 'itflow-portal-state-closed'];
+            return ['key' => 'ended', 'label' => t('Ended'), 'icon' => 'fa-flag-checkered', 'class' => 'itflow-portal-state-closed'];
         case 'cancelled':
-            return ['key' => 'cancelled', 'label' => 'Cancelled', 'icon' => 'fa-ban', 'class' => 'itflow-portal-state-closed'];
+            return ['key' => 'cancelled', 'label' => t('Cancelled'), 'icon' => 'fa-ban', 'class' => 'itflow-portal-state-closed'];
     }
-    return ['key' => 'active', 'label' => 'In force', 'icon' => 'fa-check-circle', 'class' => 'itflow-portal-state-resolved'];
+    return ['key' => 'active', 'label' => t('In force'), 'icon' => 'fa-check-circle', 'class' => 'itflow-portal-state-resolved'];
+}
+
+/** A contract's type in the portal's language - contractTypeLabel(), with the label as a literal t(). */
+function portalContractTypeLabel($type) {
+    return match ((string) $type) {
+        'managed' => t('Fully managed'),
+        'comanaged' => t('Co-managed'),
+        'block' => t('Block hours'),
+        'time_materials' => t('Time and materials'),
+        'break_fix' => t('Break/fix'),
+        'project' => t('Project'),
+        'other' => t('Other'),
+        '' => t('Contract'),
+        default => (string) $type,
+    };
+}
+
+/** A contract's term in words in the portal's language - contractTermLabel(): "1 year", "18 months". */
+function portalContractTermLabel($months) {
+    $months = intval($months);
+    if ($months === 1) {
+        return t('Monthly');
+    }
+    if ($months === 12) {
+        return t('1 year');
+    }
+    if ($months > 0 && $months % 12 === 0) {
+        return t('{n} years', ['{n}' => $months / 12]);
+    }
+    return t('{n} months', ['{n}' => $months]);
+}
+
+/** Hours in words in the portal's language - contractHoursWords(): "12.5 hours", "1 hour". */
+function portalHoursWords($hours) {
+    $hours = round(floatval($hours), 2);
+    $n = rtrim(rtrim(number_format($hours, 2, '.', ''), '0'), '.');
+    return $hours == 1 ? t('{n} hour', ['{n}' => $n]) : t('{n} hours', ['{n}' => $n]);
 }
 
 /*
