@@ -354,7 +354,7 @@ function portalBillingGate() {
 
 /** A badge from a state - label, icon and class (portalInvoiceState(), portalQuoteState()). */
 function portalStateBadge(array $state) {
-    return '<span class="itflow-portal-state ' . $state['class'] . '"><i class="fas fa-fw ' . $state['icon'] . '"></i>' . escapeHtml($state['label']) . '</span>';
+    return '<span class="itflow-portal-state ' . $state['class'] . '"><i class="fas fa-fw ' . $state['icon'] . '"></i>' . escapeHtml(i18n_portal_label($state['label'])) . '</span>';
 }
 
 /**
