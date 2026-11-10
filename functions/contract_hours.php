@@ -53,7 +53,8 @@ function contractHoursText($hours) {
 /** Hours in words - "12.5 hours", "1 hour". */
 function contractHoursWords($hours) {
     $hours = round(floatval($hours), 2);
-    return rtrim(rtrim(number_format($hours, 2, '.', ''), '0'), '.') . ($hours == 1 ? ' hour' : ' hours');
+    $n = rtrim(rtrim(number_format($hours, 2, '.', ''), '0'), '.');
+    return $hours == 1 ? t('{n} hour', ['{n}' => $n]) : t('{n} hours', ['{n}' => $n]);
 }
 
 /*
