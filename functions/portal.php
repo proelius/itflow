@@ -183,12 +183,16 @@ function portalAccountEmail($email, $name, $subject, $intro, $button = null) {
     if (!portalMailReady()) {
         return false;
     }
-    return (bool) emailQueue([['email' => (string) $email, 'name' => (string) $name, 'greet' => trim((string) $name) !== '' ? (string) $name : null,
-        'footnote' => 'You received this because of a change to your client portal account. If it was not you, reply to this email straight away.']], (string) $subject, array_filter([
-        'kind' => 'Client portal', 'tone' => 'primary', 'title' => (string) $subject, 'preview' => (string) ((array) $intro)[0],
-        'intro' => (array) $intro,
-        'button' => $button,
-    ]));
+    $lang = client_language();
+    return i18n_with($lang, function () use ($email, $name, $subject, $intro, $button, $lang) {
+        return (bool) emailQueue([['email' => (string) $email, 'name' => (string) $name, 'greet' => trim((string) $name) !== '' ? (string) $name : null,
+            'footnote' => t('You received this because of a change to your client portal account. If it was not you, reply to this email straight away.')]], (string) $subject, array_filter([
+            'kind' => t('Client portal'), 'tone' => 'primary', 'title' => (string) $subject, 'preview' => (string) ((array) $intro)[0],
+            'intro' => (array) $intro,
+            'button' => $button,
+            'lang' => $lang,
+        ]));
+    });
 }
 
 /*
@@ -198,13 +202,16 @@ function portalAccountEmail($email, $name, $subject, $intro, $button = null) {
  */
 function portalMailAccountChange($email, $name, $change) {
     $company = (string) (billingCompany()['company_name'] ?? '');
-    $changes = [
-        'password' => ["Your $company client portal password was changed", ["The password for your $company client portal account was just changed from Your account.", 'If that was you, there is nothing more to do.']],
-        'password_link' => ["Your $company client portal password was changed", ["The password for your $company client portal account ($email) was just set from an emailed link.", 'If that was you, there is nothing more to do.']],
-        'mfa_on' => ['Two-step sign-in is on for your client portal account', ["Signing in to the $company client portal now asks for a code from your authenticator app, as well as your password.", 'Lost your phone? Ask us and we will reset it.']],
-        'mfa_off' => ['Two-step sign-in is off for your client portal account', ["Signing in to the $company client portal now asks for your password alone.", 'You can turn two-step sign-in back on from Your account.']],
-        'mfa_off_by_us' => ['Two-step sign-in was turned off for your client portal account', ['We turned off two-step sign-in for your client portal account, so it asks only for your password now.', 'You can turn it back on from Your account in the portal.']],
-    ];
+    $n = ['{company}' => $company, '{email}' => (string) $email];
+    $changes = i18n_with(client_language(), function () use ($n) {
+        return [
+            'password' => [t('Your {company} client portal password was changed', $n), [t('The password for your {company} client portal account was just changed from Your account.', $n), t('If that was you, there is nothing more to do.')]],
+            'password_link' => [t('Your {company} client portal password was changed', $n), [t('The password for your {company} client portal account ({email}) was just set from an emailed link.', $n), t('If that was you, there is nothing more to do.')]],
+            'mfa_on' => [t('Two-step sign-in is on for your client portal account'), [t('Signing in to the {company} client portal now asks for a code from your authenticator app, as well as your password.', $n), t('Lost your phone? Ask us and we will reset it.')]],
+            'mfa_off' => [t('Two-step sign-in is off for your client portal account'), [t('Signing in to the {company} client portal now asks for your password alone.', $n), t('You can turn two-step sign-in back on from Your account.')]],
+            'mfa_off_by_us' => [t('Two-step sign-in was turned off for your client portal account'), [t('We turned off two-step sign-in for your client portal account, so it asks only for your password now.'), t('You can turn it back on from Your account in the portal.')]],
+        ];
+    });
     if (!isset($changes[$change])) {
         return false;
     }
@@ -230,25 +237,32 @@ function portalMailInvite($user_id, $by = '') {
     $company_name = (string) (billingCompany()['company_name'] ?? '');
     $by = trim((string) $by);
     $who = $by !== '' ? $by : $company_name;
+    $lang = client_language();
+    $n = ['{company}' => $company_name, '{by}' => $by, '{who}' => $who, '{client}' => $row['client_name'], '{n}' => PORTAL_INVITE_LINK_DAYS];
     if ($row['user_auth_method'] === 'local') {
-        $button = ['label' => 'Set your password', 'url' => portalPasswordLink($user_id, PORTAL_INVITE_LINK_DAYS * 1440)];
-        $how = 'Set a password with the button below, then sign in with this email address.';
-        $after = 'The link works once, for ' . PORTAL_INVITE_LINK_DAYS . ' days. After that, choose Forgot password on the sign-in page.';
+        $button = ['label' => i18n_with($lang, function () { return t('Set your password'); }), 'url' => portalPasswordLink($user_id, PORTAL_INVITE_LINK_DAYS * 1440)];
+        $how = i18n_with($lang, function () { return t('Set a password with the button below, then sign in with this email address.'); });
+        $after = i18n_with($lang, function () use ($n) { return t('The link works once, for {n} days. After that, choose Forgot password on the sign-in page.', $n); });
     } else {
         portalPasswordLinkClear($user_id);
-        $button = ['label' => 'Sign in', 'url' => "https://$config_base_url/login.php"];
-        $how = 'Sign in with your Microsoft 365 account - choose Login with Microsoft on the sign-in page.';
-        $after = 'Questions? Reply to this email.';
+        $button = ['label' => i18n_with($lang, function () { return t('Sign in'); }), 'url' => "https://$config_base_url/login.php"];
+        $how = i18n_with($lang, function () { return t('Sign in with your Microsoft 365 account - choose Login with Microsoft on the sign-in page.'); });
+        $after = i18n_with($lang, function () { return t('Questions? Reply to this email.'); });
     }
-    return (bool) emailQueue([['email' => $row['user_email'], 'name' => $row['contact_name'],
-        'footnote' => "You received this because $who added you to the $company_name client portal."]], "Your $company_name client portal", [
-        'kind' => 'Client portal', 'tone' => 'primary', 'preview' => "Your access to the $company_name client portal",
-        'title' => "Your $company_name client portal",
-        'intro' => [($by !== '' ? "$by has" : 'We have') . " given you access to the $company_name client portal for " . $row['client_name'] . ' - where you can raise and follow support tickets.', $how],
-        'summary' => ['Sign in as' => (string) $row['user_email']],
-        'button' => $button,
-        'after' => [$after],
-    ]);
+    return i18n_with($lang, function () use ($row, $n, $by, $button, $how, $after, $lang) {
+        return (bool) emailQueue([['email' => $row['user_email'], 'name' => $row['contact_name'],
+            'footnote' => t('You received this because {who} added you to the {company} client portal.', $n)]], t('Your {company} client portal', $n), [
+            'kind' => t('Client portal'), 'tone' => 'primary', 'preview' => t('Your access to the {company} client portal', $n),
+            'title' => t('Your {company} client portal', $n),
+            'intro' => [$by !== ''
+                ? t('{by} has given you access to the {company} client portal for {client} - where you can raise and follow support tickets.', $n)
+                : t('We have given you access to the {company} client portal for {client} - where you can raise and follow support tickets.', $n), $how],
+            'summary' => [t('Sign in as') => (string) $row['user_email']],
+            'button' => $button,
+            'after' => [$after],
+            'lang' => $lang,
+        ]);
+    });
 }
 
 /** A Forgot password link for a portal user, good for PORTAL_RESET_LINK_MINUTES. False when it can't go. */
@@ -261,15 +275,20 @@ function portalMailPasswordReset($user_id) {
         return false;
     }
     $company_name = (string) (billingCompany()['company_name'] ?? '');
-    return (bool) emailQueue([['email' => $row['user_email'], 'name' => $row['contact_name'],
-        'footnote' => 'You received this because someone asked to reset the password for this client portal account.']], "Reset your $company_name client portal password", [
-        'kind' => 'Client portal', 'tone' => 'primary', 'preview' => 'A link to choose a new password',
-        'title' => "Reset your $company_name client portal password",
-        'intro' => ["Someone - probably you - asked to reset the password for your $company_name client portal account.", 'Choose a new one with the button below.'],
-        'summary' => ['Account' => (string) $row['user_email']],
-        'button' => ['label' => 'Set a new password', 'url' => portalPasswordLink($user_id, PORTAL_RESET_LINK_MINUTES)],
-        'after' => ['The link works once, for the next ' . PORTAL_RESET_LINK_MINUTES . ' minutes. If you did not ask for it, ignore this email - your password stays as it is.'],
-    ]);
+    $lang = client_language();
+    $n = ['{company}' => $company_name, '{n}' => PORTAL_RESET_LINK_MINUTES];
+    return i18n_with($lang, function () use ($row, $user_id, $n, $lang) {
+        return (bool) emailQueue([['email' => $row['user_email'], 'name' => $row['contact_name'],
+            'footnote' => t('You received this because someone asked to reset the password for this client portal account.')]], t('Reset your {company} client portal password', $n), [
+            'kind' => t('Client portal'), 'tone' => 'primary', 'preview' => t('A link to choose a new password'),
+            'title' => t('Reset your {company} client portal password', $n),
+            'intro' => [t('Someone - probably you - asked to reset the password for your {company} client portal account.', $n), t('Choose a new one with the button below.')],
+            'summary' => [t('Account') => (string) $row['user_email']],
+            'button' => ['label' => t('Set a new password'), 'url' => portalPasswordLink($user_id, PORTAL_RESET_LINK_MINUTES)],
+            'after' => [t('The link works once, for the next {n} minutes. If you did not ask for it, ignore this email - your password stays as it is.', $n)],
+            'lang' => $lang,
+        ]);
+    });
 }
 
 /*
