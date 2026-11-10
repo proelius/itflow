@@ -100,12 +100,12 @@
         pad.querySelector('[data-signature-clear]').addEventListener('click', function () {
             strokes.length = 0;
             redraw();
-            setHint('Sign here with your mouse, finger or pen', false);
+            setHint(pad.getAttribute('data-text-hint') || 'Sign here with your mouse, finger or pen', false);
         });
 
         function drawTyped() {
             const value = name ? name.value.trim() : '';
-            typed.textContent = value || 'Write your full name above';
+            typed.textContent = value || pad.getAttribute('data-text-typed') || 'Write your full name above';
             typed.classList.toggle('is-empty', !value);
         }
         if (name) {
@@ -144,7 +144,7 @@
                 if (drawn < 6) {
                     event.preventDefault();
                     event.stopImmediatePropagation();
-                    setHint('Draw your signature here first - or choose Type', true);
+                    setHint(pad.getAttribute('data-text-needed') || 'Draw your signature here first - or choose Type', true);
                     canvas.scrollIntoView({ block: 'center', behavior: 'smooth' });
                     return;
                 }
