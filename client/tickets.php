@@ -61,24 +61,24 @@ function ticketsUrl(array $changes) {
 }
 
 $empty_titles = [
-    'open' => ['No open tickets', 'Nothing is being worked on right now.', 'fa-check'],
-    'you' => ['Nothing waiting on you', 'When we need something from you, the ticket shows here.', 'fa-check'],
-    'resolved' => ['Nothing to confirm', 'Tickets we have resolved wait here for you to close or reopen.', 'fa-check'],
-    'closed' => ['No closed tickets', '', 'fa-check-circle'],
-    'all' => ['No tickets yet', 'Something not working? Raise a ticket and we will pick it up.', 'fa-life-ring'],
+    'open' => [t('No open tickets'), t('Nothing is being worked on right now.'), 'fa-check'],
+    'you' => [t('Nothing waiting on you'), t('When we need something from you, the ticket shows here.'), 'fa-check'],
+    'resolved' => [t('Nothing to confirm'), t('Tickets we have resolved wait here for you to close or reopen.'), 'fa-check'],
+    'closed' => [t('No closed tickets'), '', 'fa-check-circle'],
+    'all' => [t('No tickets yet'), t('Something not working? Raise a ticket and we will pick it up.'), 'fa-life-ring'],
 ];
 ?>
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1>Tickets</h1>
-        <p><?= $scope === 'all' ? 'Everyone at ' . escapeHtml($session_client_name) : 'The ones you raised' ?></p>
+        <h1><?= t('Tickets') ?></h1>
+        <p><?= $scope === 'all' ? t('Everyone at {name}', ['{name}' => escapeHtml($session_client_name)]) : t('The ones you raised') ?></p>
     </div>
     <div class="d-flex flex-wrap align-items-center gap-2">
         <?php if ($sees_all) { ?>
-            <div class="btn-group" role="group" aria-label="Whose tickets">
-                <a class="btn btn-outline-secondary<?= $scope === 'all' ? ' active' : '' ?>" href="<?= escapeHtml(ticketsUrl(['scope' => null, 'page' => null])) ?>"><i class="fas fa-users me-2"></i>Everyone</a>
-                <a class="btn btn-outline-secondary<?= $scope === 'mine' ? ' active' : '' ?>" href="<?= escapeHtml(ticketsUrl(['scope' => 'mine', 'page' => null])) ?>"><i class="fas fa-user me-2"></i>Mine</a>
+            <div class="btn-group" role="group" aria-label="<?= t('Whose tickets') ?>">
+                <a class="btn btn-outline-secondary<?= $scope === 'all' ? ' active' : '' ?>" href="<?= escapeHtml(ticketsUrl(['scope' => null, 'page' => null])) ?>"><i class="fas fa-users me-2"></i><?= t('Everyone') ?></a>
+                <a class="btn btn-outline-secondary<?= $scope === 'mine' ? ' active' : '' ?>" href="<?= escapeHtml(ticketsUrl(['scope' => 'mine', 'page' => null])) ?>"><i class="fas fa-user me-2"></i><?= t('Mine') ?></a>
             </div>
         <?php } ?>
         <form method="get" class="d-flex" role="search">
@@ -86,16 +86,16 @@ $empty_titles = [
             <?php if ($sees_all && $scope === 'mine') { ?><input type="hidden" name="scope" value="mine"><?php } ?>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-fw fa-search"></i></span>
-                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="Search subject or number" aria-label="Search tickets" maxlength="200">
+                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Search subject or number') ?>" aria-label="<?= t('Search tickets') ?>" maxlength="200">
             </div>
         </form>
     </div>
 </div>
 
-<nav class="itflow-portal-tabs" aria-label="Ticket status">
+<nav class="itflow-portal-tabs" aria-label="<?= t('Ticket status') ?>">
     <?php foreach ($tabs as $key => $t) { ?>
         <a class="<?= $key === $tab ? 'active' : '' ?><?= $key === 'you' && $counts['you'] ? ' itflow-portal-tab-alert' : '' ?>" href="<?= escapeHtml(ticketsUrl(['tab' => $key, 'page' => null])) ?>">
-            <i class="fas <?= $t['icon'] ?>"></i><?= escapeHtml($t['label']) ?>
+            <i class="fas <?= $t['icon'] ?>"></i><?= escapeHtml(i18n_portal_label($t['label'])) ?>
             <span class="badge rounded-pill"><?= $counts[$key] ?></span>
         </a>
     <?php } ?>
@@ -104,11 +104,11 @@ $empty_titles = [
 <section class="itflow-portal-panel">
     <?php if (!$total) { ?>
         <?php if ($q !== '') { ?>
-            <?= emptyStateHtml(['thing' => 'tickets', 'filtered' => true, 'match_text' => 'Nothing here has &ldquo;' . escapeHtml($q) . '&rdquo; in its subject or number.', 'clear_url' => ticketsUrl(['q' => null, 'page' => null])]) ?>
+            <?= emptyStateHtml(['thing' => 'tickets', 'filtered' => true, 'match_title' => t('No tickets match'), 'match_text' => t('Nothing here has &ldquo;{search}&rdquo; in its subject or number.', ['{search}' => escapeHtml($q)]), 'clear_url' => ticketsUrl(['q' => null, 'page' => null])]) ?>
         <?php } else {
             [$title, $text, $icon] = $empty_titles[$tab]; ?>
             <?= emptyStateHtml(['title' => $title, 'text' => $text, 'icon' => $icon, 'filtered' => false,
-                'actions' => in_array($tab, ['open', 'all'], true) ? [['label' => 'New ticket', 'href' => 'ticket_add.php']] : []]) ?>
+                'actions' => in_array($tab, ['open', 'all'], true) ? [['label' => t('New ticket'), 'href' => 'ticket_add.php']] : []]) ?>
         <?php } ?>
     <?php } else { ?>
         <ul class="itflow-portal-list">
@@ -126,12 +126,12 @@ $empty_titles = [
                                 <?php if (!empty($row['category_name'])) { ?>
                                     <span><i class="fas fa-layer-group me-1"></i><?= escapeHtml($row['category_name']) ?></span>
                                 <?php } ?>
-                                <span>Opened <?= escapeHtml(date('M j, Y', strtotime($row['ticket_created_at']))) ?></span>
+                                <span><?= t('Opened {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($row['ticket_created_at'])))]) ?></span>
                             </span>
                         </span>
                         <span class="itflow-portal-ticket-side">
                             <?= portalTicketStateHtml($row) ?>
-                            <small title="<?= escapeHtml($updated) ?>"><?= $row['ticket_closed_at'] ? 'Closed ' : 'Updated ' ?><?= timeAgo($updated) ?></small>
+                            <small title="<?= escapeHtml($updated) ?>"><?= $row['ticket_closed_at'] ? t('Closed {when}', ['{when}' => timeAgo($updated)]) : t('Updated {when}', ['{when}' => timeAgo($updated)]) ?></small>
                         </span>
                     </a>
                 </li>
@@ -139,10 +139,10 @@ $empty_titles = [
         </ul>
         <?php if ($pages > 1) { ?>
             <div class="itflow-portal-pager">
-                <span><?= $offset + 1 ?>-<?= min($offset + $per_page, $total) ?> of <?= $total ?></span>
+                <span><?= t('{from}-{to} of {total}', ['{from}' => $offset + 1, '{to}' => min($offset + $per_page, $total), '{total}' => $total]) ?></span>
                 <div class="btn-group">
-                    <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(ticketsUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="Newer"><i class="fas fa-chevron-left"></i></a>
-                    <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(ticketsUrl(['page' => $page + 1])) ?>" aria-label="Older"><i class="fas fa-chevron-right"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(ticketsUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="<?= t('Newer') ?>"><i class="fas fa-chevron-left"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(ticketsUrl(['page' => $page + 1])) ?>" aria-label="<?= t('Older') ?>"><i class="fas fa-chevron-right"></i></a>
                 </div>
             </div>
         <?php } ?>
