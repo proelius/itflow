@@ -873,4 +873,12 @@ return [
     'Open tickets' => 'Open tickets',
     ' of yours' => ' of yours',
     'Your open tickets' => 'Your open tickets',
+    '</strong>' => '</strong>',
+    'in {n} ' => 'in {n} ',
+    '{n} ' => '{n} ',
+    'On hold' => 'On hold',
+    'Received' => 'Received',
+    'In progress' => 'In progress',
+    'No charge' => 'No charge',
+    'Due today' => 'Due today',
 ];

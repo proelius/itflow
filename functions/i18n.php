@@ -500,6 +500,10 @@ function i18n_portal_label(string $text): string {
         'Cancelled' => t('Cancelled'),
         'No charge' => t('No charge'),
         'Draft' => t('Draft'),
+        'Accepted' => t('Accepted'),
+        'Declined' => t('Declined'),
+        'Expired' => t('Expired'),
+        'Due today' => t('Due today'),
         default => $text,
     };
 }

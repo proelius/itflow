@@ -298,7 +298,7 @@ function portalTicketState($row) {
 /** The state as a badge. */
 function portalTicketStateHtml($row) {
     $state = portalTicketState($row);
-    return '<span class="itflow-portal-state ' . $state['class'] . '"><i class="fas fa-fw ' . $state['icon'] . '"></i>' . escapeHtml($state['label']) . '</span>';
+    return '<span class="itflow-portal-state ' . $state['class'] . '"><i class="fas fa-fw ' . $state['icon'] . '"></i>' . escapeHtml(i18n_portal_label($state['label'])) . '</span>';
 }
 
 /** The ticket list's tabs - each with its label, icon and SQL. Needs tickets joined to ticket_statuses. */
