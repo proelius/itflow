@@ -768,4 +768,6 @@ return [
     'Account' => 'Account',
     'Somewhere you don\'t recognise? Change your password and let us know.' => 'Somewhere you don\'t recognise? Change your password and let us know.',
     'Unknown device' => 'Unknown device',
+    'Somewhere you don\'t recognise? Change your password and let us know.' => 'Somewhere you don\'t recognise? Change your password and let us know.',
+    'Unknown device' => 'Unknown device',
 ];

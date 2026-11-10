@@ -724,4 +724,6 @@ return [
     'Account' => 'Compte',
     'Somewhere you don\'t recognise? Change your password and let us know.' => 'Quelque part où vous ne vous reconnaissez pas ? Changez votre mot de passe et informez-nous.',
     'Unknown device' => 'Appareil inconnu',
+    'Somewhere you don\'t recognise? Change your password and let us know.' => 'Quelque part où vous ne vous reconnaissez pas ? Changez votre mot de passe et informez-nous.',
+    'Unknown device' => 'Appareil inconnu',
 ];
