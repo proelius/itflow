@@ -115,8 +115,8 @@ function assetsUrl(array $changes) {
                         <?php if ($warranty && $warranty['tone'] !== 'success') { ?>
                             <span class="itflow-portal-ticket-side">
                                 <?= portalStateBadge($warranty['tone'] === 'danger'
-                                    ? ['label' => t('Warranty expired'), 'icon' => 'fa-shield-alt', 'class' => 'itflow-portal-state-late']
-                                    : ['label' => $warranty['days'] === 0 ? t('Warranty today') : ($warranty['days'] === 1 ? t('Warranty 1 day left') : t('Warranty {n} days left', ['{n}' => $warranty['days']])), 'icon' => 'fa-shield-alt', 'class' => 'itflow-portal-state-you']) ?>
+                                    ? ['label' => portalWarrantyShort($warranty), 'icon' => 'fa-shield-alt', 'class' => 'itflow-portal-state-late']
+                                    : ['label' => portalWarrantyShort($warranty), 'icon' => 'fa-shield-alt', 'class' => 'itflow-portal-state-you']) ?>
                             </span>
                         <?php } ?>
                     </a>

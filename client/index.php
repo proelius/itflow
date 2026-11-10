@@ -346,7 +346,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
                                     <div>
                                         <?= escapeHtml($what) ?>
                                         <?php if ($warranty && $warranty['tone'] !== 'success') { ?>
-                                            · <span class="text-<?= $warranty['tone'] ?>-emphasis">Warranty <?= escapeHtml(strtolower($warranty['short'])) ?></span>
+                                            · <span class="text-<?= $warranty['tone'] ?>-emphasis"><?= escapeHtml(portalWarrantyShort($warranty)) ?></span>
                                         <?php } ?>
                                     </div>
                                 </span>
