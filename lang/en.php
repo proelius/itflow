@@ -1761,4 +1761,9 @@ return [
     'Forgot your password? Choose a new one with the button below.' => 'Forgot your password? Choose a new one with the button below.',
     'The link works once, for the next {n} minutes. If you did not ask, ignore this email - your account stays as it is.' => 'The link works once, for the next {n} minutes. If you did not ask, ignore this email - your account stays as it is.',
     'If you did not ask, ignore this email - your account stays as it is.' => 'If you did not ask, ignore this email - your account stays as it is.',
+    'Enter the 6-digit code from your authenticator app.' => 'Enter the 6-digit code from your authenticator app.',
+    'Too many wrong codes. Wait 10 minutes and sign in again.' => 'Too many wrong codes. Wait 10 minutes and sign in again.',
+    'That code is not right - try the newest one in your app.' => 'That code is not right - try the newest one in your app.',
+    'Remember this browser for {n} day' => 'Remember this browser for {n} day',
+    'Remember this browser for {n} days' => 'Remember this browser for {n} days',
 ];
