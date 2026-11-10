@@ -22,7 +22,7 @@ if (!empty($_SESSION['portal_view_as']) && (isset($_GET['exit_view_as']) || isse
     redirect($back);
 }
 if (portalViewingAs() && !isset($_GET['export_statement_pdf'])) {
-    flashAlert(t('You\'re viewing the portal as ') . escapeHtml($portal_view_as['contact_name']) . t(' - nothing can be changed'), 'error');
+    flashAlert(t('You\'re viewing the portal as {name} - nothing can be changed', ['{name}' => escapeHtml($portal_view_as['contact_name'])]), 'error');
     redirect();
 }
 
@@ -125,7 +125,7 @@ if (isset($_POST['add_ticket_from_form'])) {
     // What it asks the client, answered as it needs
     $answers = ticketTemplatePortalAnswers(ticketTemplateFillInsFor($template_id), $_POST['fill_ins'] ?? [], $fill_in_error);
     if ($answers === null) {
-        flashAlert($fill_in_error, 'error');
+        flashAlert(portalMessage($fill_in_error), 'error');
         redirect($form_url);
     }
 
@@ -666,7 +666,7 @@ if (isset($_POST['portal_email_prefs'])) {
 
     logAudit("Contact", "Edit", "Client contact $session_contact_name changed the ticket emails they get in the client portal", $session_client_id, $session_contact_id);
 
-    flashAlert("Saved - those are the emails you will get");
+    flashAlert(t('Saved - those are the emails you will get'));
     redirect('profile.php#emails');
 
 }
@@ -678,7 +678,7 @@ if (isset($_POST['portal_sms_prefs'])) {
 
     $state = smsContactTextState(intval($session_contact_id));
     if (!$state['ready'] || $state['number'] === '') {
-        flashAlert('Add your mobile first.', 'error');
+        flashAlert(t('Add your mobile first.'), 'error');
         redirect('profile.php#texts');
     }
     $want = !empty($_POST['sms_opt_in']);
@@ -686,7 +686,7 @@ if (isset($_POST['portal_sms_prefs'])) {
         smsOptInSet(intval($session_contact_id), $want, 'them, in the client portal');
         logAudit("Contact", "Edit", "Client contact $session_contact_name turned " . ($want ? 'on' : 'off') . " texts about their tickets, visits and invoices in the client portal", $session_client_id, $session_contact_id);
     }
-    flashAlert($want ? 'Saved - we\'ll text you about your tickets, visits and invoices' : 'Saved - we won\'t text you');
+    flashAlert($want ? t('Saved - we\'ll text you about your tickets, visits and invoices') : t('Saved - we won\'t text you'));
     redirect('profile.php#texts');
 
 }
@@ -745,11 +745,11 @@ if (isset($_POST['portal_contact_save'])) {
 
     $error = '';
     if ($in['contact_name'] === '') {
-        $error = 'A contact needs a name';
+        $error = t('A contact needs a name');
     } elseif (!filter_var($in['contact_email'], FILTER_VALIDATE_EMAIL)) {
-        $error = ($in['contact_email'] === '' ? 'Nothing' : escapeHtml($in['contact_email'])) . ' is not an email address';
+        $error = $in['contact_email'] === '' ? t('Nothing is not an email address') : t('{email} is not an email address', ['{email}' => escapeHtml($in['contact_email'])]);
     } elseif (($in['invite'] || intval($existing['user_id'] ?? 0)) && userCheckIdentity(['name' => $in['contact_name'], 'email' => $in['contact_email']], intval($existing['user_id'] ?? 0), $identity_error) === null) {
-        $error = rtrim($identity_error, '.');
+        $error = portalMessage(rtrim($identity_error, '.'));
     }
     if ($error !== '') {
         $_SESSION['portal_contact_form'] = $in;
@@ -773,7 +773,7 @@ if (isset($_POST['portal_contact_save'])) {
         }
         logAudit("Contact", "Edit", "Client contact $session_contact_name changed contact $name_sql in the client portal", $session_client_id, $contact_id);
         triggerCustomAction('contact_update', $contact_id);
-        flashAlert(t('Saved <strong>') . escapeHtml($in['contact_name']) . t('</strong>'));
+        flashAlert(t('Saved <strong>{name}</strong>', ['{name}' => escapeHtml($in['contact_name'])]));
         redirect("contact.php?id=$contact_id");
     }
 
@@ -783,14 +783,17 @@ if (isset($_POST['portal_contact_save'])) {
     appNotify("Contact", "$session_contact_name added $name_sql as a contact for " . escapeSql($session_client_name) . " in the client portal", "/agent/contact.php?client_id=$session_client_id&contact_id=$contact_id", $session_client_id, $contact_id);
     triggerCustomAction('contact_create', $contact_id);
 
-    $message = t('Added <strong>') . escapeHtml($in['contact_name']) . t('</strong>');
+    $name_html = escapeHtml($in['contact_name']);
+    $message = t('Added <strong>{name}</strong>', ['{name}' => $name_html]);
     if ($in['invite']) {
         $invite = portalContactInvite($contact_id, $in['method'], (string) ($contact['contact_name'] ?? ''));
         if (!$invite['ok']) {
-            $message .= ' - but their portal access could not be set up: ' . escapeHtml($invite['error']);
+            $message = t('Added <strong>{name}</strong> - but their portal access could not be set up: {error}', ['{name}' => $name_html, '{error}' => escapeHtml(portalMessage($invite['error']))]);
         } else {
             logAudit("Contact", "Edit", "Client contact $session_contact_name gave $name_sql portal access in the client portal", $session_client_id, $contact_id);
-            $message .= $invite['emailed'] ? ' and emailed them an invite to the portal' : ' and gave them portal access - email is not set up here, so ask us to send them how to sign in';
+            $message = $invite['emailed']
+                ? t('Added <strong>{name}</strong> and emailed them an invite to the portal', ['{name}' => $name_html])
+                : t('Added <strong>{name}</strong> and gave them portal access - email is not set up here, so ask us to send them how to sign in', ['{name}' => $name_html]);
         }
     }
     flashAlert($message);
@@ -821,7 +824,7 @@ if (isset($_POST['portal_contact_access']) || isset($_POST['portal_contact_left'
         portalContactAccessOff($contact_id);
         logAudit("Contact", "Edit", "Client contact $session_contact_name said $name_sql has left and turned off their portal access", $session_client_id, $contact_id);
         appNotify("Contact", "$session_contact_name says $name_sql has left " . escapeSql($session_client_name) . " - their portal access is off", $agent_link, $session_client_id, $contact_id);
-        flashAlert(escapeHtml($name) . "'s portal access is off. Tell us below what else to close down - their email, accounts and devices - and their last day.");
+        flashAlert(t('{name}\'s portal access is off. Tell us below what else to close down - their email, accounts and devices - and their last day.', ['{name}' => escapeHtml($name)]));
         redirect('ticket_add.php?' . http_build_query(['subject' => "Offboarding: $name has left"]));
     }
 
@@ -829,18 +832,20 @@ if (isset($_POST['portal_contact_access']) || isset($_POST['portal_contact_left'
         portalContactAccessOff($contact_id);
         logAudit("Contact", "Edit", "Client contact $session_contact_name turned off portal access for $name_sql", $session_client_id, $contact_id);
         appNotify("Contact", "$session_contact_name turned off client portal access for $name_sql", $agent_link, $session_client_id, $contact_id);
-        flashAlert(escapeHtml($name) . "'s portal access is off");
+        flashAlert(t('{name}\'s portal access is off', ['{name}' => escapeHtml($name)]));
         redirect("contact.php?id=$contact_id");
     }
 
     $invite = portalContactInvite($contact_id, (string) ($_POST['method'] ?? 'local'), (string) ($contact['contact_name'] ?? ''));
     if (!$invite['ok']) {
-        flashAlert(escapeHtml($invite['error']), 'error');
+        flashAlert(escapeHtml(portalMessage($invite['error'])), 'error');
         redirect("contact.php?id=$contact_id");
     }
     logAudit("Contact", "Edit", "Client contact $session_contact_name gave $name_sql portal access and sent an invite", $session_client_id, $contact_id);
     appNotify("Contact", "$session_contact_name gave $name_sql client portal access", $agent_link, $session_client_id, $contact_id);
-    flashAlert($invite['emailed'] ? "Invite emailed to <strong>" . escapeHtml($target['contact_email']) . "</strong>" : escapeHtml($name) . " can sign in now - email is not set up here, so ask us to send them how");
+    flashAlert($invite['emailed']
+        ? t('Invite emailed to <strong>{email}</strong>', ['{email}' => escapeHtml($target['contact_email'])])
+        : t('{name} can sign in now - email is not set up here, so ask us to send them how', ['{name}' => escapeHtml($name)]));
     redirect("contact.php?id=$contact_id");
 
 }
@@ -860,8 +865,8 @@ if (isset($_POST['portal_invites_send'])) {
     $parsed = portalInviteParse($typed);
     if (!$parsed['people'] || count($parsed['people']) > PORTAL_INVITE_MAX) {
         $_SESSION['portal_invite_form'] = $typed;
-        flashAlert(!$parsed['people'] ? ($parsed['bad'] ? escapeHtml($parsed['bad'][0]) . ' is not an email address' : 'Put in an email address to invite')
-            : 'That is ' . count($parsed['people']) . ' addresses - invite up to ' . PORTAL_INVITE_MAX . ' at a time', 'error');
+        flashAlert(!$parsed['people'] ? ($parsed['bad'] ? t('{email} is not an email address', ['{email}' => escapeHtml($parsed['bad'][0])]) : t('Put in an email address to invite'))
+            : t('That is {n} addresses - invite up to {max} at a time', ['{n}' => (string) count($parsed['people']), '{max}' => (string) PORTAL_INVITE_MAX]), 'error');
         redirect('invite.php');
     }
 
@@ -870,16 +875,18 @@ if (isset($_POST['portal_invites_send'])) {
     if ($sent) {
         logAudit("Contact", "Invite", "Client contact $session_contact_name invited " . escapeSql(implode(', ', $sent)) . " to the client portal", $session_client_id);
     }
-    $left_out = array_map(function ($bad) { return escapeHtml($bad) . ' (not an email address)'; }, $parsed['bad']);
+    $left_out = array_map(function ($bad) { return t('{email} (not an email address)', ['{email}' => escapeHtml($bad)]); }, $parsed['bad']);
     foreach ($done['skipped'] as $email => $why) {
-        $left_out[] = escapeHtml($email) . ' (' . escapeHtml($why) . ')';
+        $left_out[] = t('{email} ({reason})', ['{email}' => escapeHtml($email), '{reason}' => escapeHtml(portalMessage($why))]);
     }
     $lines = [];
     if ($sent) {
-        $lines[] = 'Invited <strong>' . (count($sent) === 1 ? escapeHtml($sent[0]) : count($sent) . ' people') . '</strong> - we email you when they join';
+        $lines[] = count($sent) === 1
+            ? t('Invited <strong>{email}</strong> - we email you when they join', ['{email}' => escapeHtml($sent[0])])
+            : t('Invited <strong>{n} people</strong> - we email you when they join', ['{n}' => (string) count($sent)]);
     }
     if ($left_out) {
-        $lines[] = 'Left out: ' . implode(', ', $left_out);
+        $lines[] = t('Left out: {list}', ['{list}' => implode(', ', $left_out)]);
     }
     flashAlert(implode('<br>', $lines), $sent ? 'success' : 'error');
     redirect('contacts.php');
@@ -907,13 +914,13 @@ if (isset($_POST['portal_invite_resend']) || isset($_POST['portal_invite_cancel'
             redirect('contacts.php');
         }
         logAudit("Contact", "Invite", "Client contact $session_contact_name sent the client portal invite to " . escapeSql($email) . " again", $session_client_id);
-        flashAlert(t('Sent the invite to <strong>') . escapeHtml($email) . t('</strong> again, with a new link'));
+        flashAlert(t('Sent the invite to <strong>{email}</strong> again, with a new link', ['{email}' => escapeHtml($email)]));
         redirect('contacts.php');
     }
 
     portalInviteCancel($invite['invite_id'], $session_client_id);
     logAudit("Contact", "Cancel", "Client contact $session_contact_name cancelled the client portal invite to " . escapeSql($email), $session_client_id);
-    flashAlert(t('Cancelled the invite to <strong>') . escapeHtml($email) . t('</strong>'));
+    flashAlert(t('Cancelled the invite to <strong>{email}</strong>', ['{email}' => escapeHtml($email)]));
     redirect('contacts.php');
 
 }
@@ -933,22 +940,24 @@ if (isset($_POST['portal_quote_answer'])) {
 
     $quote = billingRow('quote', $quote_id, false);
     if (!$quote || intval($quote['client_id']) !== $session_client_id || $quote['quote_status'] === 'Draft') {
-        flashAlert("That quote isn't here", 'error');
+        flashAlert(t('That quote isn\'t here'), 'error');
         redirect('quotes.php');
     }
     if ($name === '' || ($accept && empty($_POST['authorised']))) {
-        flashAlert($name === '' ? 'Put your name to your answer' : 'Tick to confirm you can accept the quote', 'error');
+        flashAlert($name === '' ? t('Put your name to your answer') : t('Tick to confirm you can accept the quote'), 'error');
         redirect("quote.php?id=$quote_id");
     }
 
     $answer = billingQuoteAnswer($quote_id, $accept, ['name' => $name, 'note' => $note]);
     if (!$answer['ok']) {
-        flashAlert($answer['error'], 'error');
+        flashAlert(portalMessage($answer['error']), 'error');
         redirect("quote.php?id=$quote_id");
     }
 
     $number = escapeHtml(billingNumber('quote', $quote));
-    flashAlert($accept ? "Thank you - quote <strong>$number</strong> is accepted and our team has been told" : "Quote <strong>$number</strong> declined - thank you for letting us know");
+    flashAlert($accept
+        ? t('Thank you - quote <strong>{number}</strong> is accepted and our team has been told', ['{number}' => $number])
+        : t('Quote <strong>{number}</strong> declined - thank you for letting us know', ['{number}' => $number]));
 
     redirect("quote.php?id=$quote_id");
 
@@ -964,29 +973,29 @@ if (isset($_POST['portal_sign_contract'])) {
     $round = contractSignaturesReady() ? contractSignatureRow(intval($_POST['contract_signature_id'] ?? 0)) : null;
     $visible = $round && mysqli_num_rows(mysqli_query($mysqli, "SELECT contract_id FROM contracts WHERE contract_id = " . intval($round['contract_id']) . " AND " . portalContractScopeSql()));
     if (!$visible) {
-        flashAlert("That contract isn't here", 'error');
+        flashAlert(t('That contract isn\'t here'), 'error');
         redirect('contracts.php');
     }
     $back = 'contract.php?id=' . intval($round['contract_id']);
     $state = contractSignatureState($round);
     if (!in_array($state['key'], ['sent', 'viewed'], true) || (string) $round['contract_signature_url_key'] === '') {
-        flashAlert($state['key'] === 'withdrawn' ? "That request was withdrawn, so it wasn't signed" : 'It has already been signed', 'error');
+        flashAlert($state['key'] === 'withdrawn' ? t('That request was withdrawn, so it wasn\'t signed') : t('It has already been signed'), 'error');
         redirect($back);
     }
     if (!hash_equals((string) $round['contract_signature_document_hash'], (string) ($_POST['document_hash'] ?? ''))) {
-        flashAlert('The contract changed while you had it open - read it again before signing', 'error');
+        flashAlert(t('The contract changed while you had it open - read it again before signing'), 'error');
         redirect($back);
     }
     [$f, $error] = contractSignatureFromInput($_POST);
     if ($error !== '') {
-        flashAlert(escapeHtml($error) . ' It was not signed yet.', 'error');
+        flashAlert(t('{error} It was not signed yet.', ['{error}' => escapeHtml(portalMessage($error))]), 'error');
         redirect($back);
     }
     if (!contractSignatureClientSign($round, $f, 'portal', $session_contact_id)) {
-        flashAlert("It couldn't be signed - it may have just been withdrawn", 'error');
+        flashAlert(t('It couldn\'t be signed - it may have just been withdrawn'), 'error');
         redirect($back);
     }
-    flashAlert("Signed - thank you. We'll countersign <strong>" . escapeHtml($round['contract_name']) . "</strong> and email you a copy.");
+    flashAlert(t('Signed - thank you. We\'ll countersign <strong>{name}</strong> and email you a copy.', ['{name}' => escapeHtml($round['contract_name'])]));
 
     redirect($back);
 
@@ -1002,17 +1011,17 @@ if (isset($_POST['portal_quote_file'])) {
     $quote_id = intval($_POST['quote_id'] ?? 0);
     $quote = billingRow('quote', $quote_id, false);
     if (!$quote || intval($quote['client_id']) !== $session_client_id || $quote['quote_status'] !== 'Accepted') {
-        flashAlert("Files can only be sent with an accepted quote", 'error');
+        flashAlert(t('Files can only be sent with an accepted quote'), 'error');
         redirect($quote ? "quote.php?id=$quote_id" : 'quotes.php');
     }
 
     $upload = billingQuoteAddFiles($quote_id, $_FILES['file'] ?? [], ['name' => (string) ($contact['contact_name'] ?? '')]);
     if ($upload['added'] && !$upload['failed']) {
-        flashAlert('Sent - thank you. ' . escapeHtml(implode(', ', $upload['added'])) . ' is with us now');
+        flashAlert(t('Sent - thank you. {files} is with us now', ['{files}' => escapeHtml(implode(', ', $upload['added']))]));
     } elseif ($upload['added']) {
-        flashAlert('Sent ' . escapeHtml(implode(', ', $upload['added'])) . ' - but ' . $upload['failed'] . ' could not be taken. Only PDFs can be sent', 'error');
+        flashAlert(t('Sent {files} - but {n} could not be taken. Only PDFs can be sent', ['{files}' => escapeHtml(implode(', ', $upload['added'])), '{n}' => (string) $upload['failed']]), 'error');
     } else {
-        flashAlert('That file could not be taken - only PDFs can be sent', 'error');
+        flashAlert(t('That file could not be taken - only PDFs can be sent'), 'error');
     }
 
     redirect("quote.php?id=$quote_id");
