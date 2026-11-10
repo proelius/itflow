@@ -1567,4 +1567,9 @@ return [
     'That invoice is not available.' => 'Cette facture n’est pas disponible.',
     'Ticket <span class="text-bold">{number}</span>' => 'Ticket <span class="text-bold">{number}</span>',
     'That file is not available.' => 'Ce fichier n’est pas disponible.',
+    '{name} wrote' => '{name} a écrit',
+    'Or copy this into your browser: {url}' => 'Ou copiez cette adresse dans votre navigateur : {url}',
+    '1 earlier message - see the ticket' => '1 message précédent – voir le ticket',
+    '{n} earlier messages - see the ticket' => '{n} messages précédents – voir le ticket',
+    'Earlier messages' => 'Messages précédents',
 ];

@@ -1552,4 +1552,9 @@ return [
     'That invoice is not available.' => 'That invoice is not available.',
     'Ticket <span class="text-bold">{number}</span>' => 'Ticket <span class="text-bold">{number}</span>',
     'That file is not available.' => 'That file is not available.',
+    '{name} wrote' => '{name} wrote',
+    'Or copy this into your browser: {url}' => 'Or copy this into your browser: {url}',
+    '1 earlier message - see the ticket' => '1 earlier message - see the ticket',
+    '{n} earlier messages - see the ticket' => '{n} earlier messages - see the ticket',
+    'Earlier messages' => 'Earlier messages',
 ];
