@@ -247,31 +247,40 @@ function portalInviteMail($invite_id, $token) {
     $url = portalInviteUrl($row['invite_id'], $token);
     $greet = trim((string) $row['invite_name']);
 
-    if ($row['invite_kind'] === 'signup') {
-        $subject = "Finish signing up for the $company_name client portal";
-        $email = [
-            'kind' => 'Client portal', 'tone' => 'primary', 'preview' => 'One more step to your client portal account',
-            'title' => $subject,
-            'intro' => ["Someone - probably you - asked to sign up for the $company_name client portal with this address, for $client_name.", 'Finish with the button below - you choose your password there.'],
-            'summary' => ['Signing up as' => (string) $row['invite_email']],
-            'button' => ['label' => 'Finish signing up', 'url' => $url],
-            'after' => ['The link works once, for the next ' . PORTAL_SIGNUP_LINK_HOURS . ' hours. If you did not ask for it, ignore this email - nothing is set up unless the link is used.'],
-        ];
-        $footnote = 'You received this because someone asked to sign up for the client portal with this address.';
-    } else {
-        $by = portalInviteBy($row);
-        $who = $by !== '' ? $by : $company_name;
-        $subject = ($by !== '' ? "$by invited you" : 'You are invited') . " to the $company_name client portal";
-        $email = [
-            'kind' => 'Client portal', 'tone' => 'primary', 'preview' => "Join $client_name on the $company_name client portal",
-            'title' => "Join $client_name on the $company_name client portal",
-            'intro' => [($by !== '' ? "$by has" : 'We have') . " invited you to the $company_name client portal for $client_name - where you can raise and follow support tickets.", 'Accept with the button below - you put in your name and choose a password there. It takes a minute.'],
-            'summary' => ['Invited' => (string) $row['invite_email']],
-            'button' => ['label' => 'Accept the invite', 'url' => $url],
-            'after' => ['The invite works for ' . PORTAL_INVITE_LINK_DAYS . ' days. If you were not expecting it, you can ignore this email.'],
-        ];
-        $footnote = "You received this because $who invited this address to the $company_name client portal.";
-    }
+    $lang = client_language();
+    $n = ['{company}' => $company_name, '{client}' => $client_name];
+    [$subject, $email, $footnote] = i18n_with($lang, function () use ($row, $n, $url, $company_name, $client_name) {
+        if ($row['invite_kind'] === 'signup') {
+            $subject = t('Finish signing up for the {company} client portal', $n);
+            $email = [
+                'kind' => t('Client portal'), 'tone' => 'primary', 'preview' => t('One more step to your client portal account'),
+                'title' => $subject,
+                'intro' => [t('Someone - probably you - asked to sign up for the {company} client portal with this address, for {client}.', $n), t('Finish with the button below - you choose your password there.')],
+                'summary' => [t('Signing up as') => (string) $row['invite_email']],
+                'button' => ['label' => t('Finish signing up'), 'url' => $url],
+                'after' => [t('The link works once, for the next {n} hours. If you did not ask for it, ignore this email - nothing is set up unless the link is used.', ['{n}' => PORTAL_SIGNUP_LINK_HOURS])],
+            ];
+            $footnote = t('You received this because someone asked to sign up for the client portal with this address.');
+        } else {
+            $by = portalInviteBy($row);
+            $n += ['{by}' => $by, '{who}' => $by !== '' ? $by : $company_name];
+            $subject = $by !== '' ? t('{by} invited you to the {company} client portal', $n) : t('You are invited to the {company} client portal', $n);
+            $email = [
+                'kind' => t('Client portal'), 'tone' => 'primary', 'preview' => t('Join {client} on the {company} client portal', $n),
+                'title' => t('Join {client} on the {company} client portal', $n),
+                'intro' => [$by !== ''
+                    ? t('{by} has invited you to the {company} client portal for {client} - where you can raise and follow support tickets.', $n)
+                    : t('We have invited you to the {company} client portal for {client} - where you can raise and follow support tickets.', $n),
+                    t('Accept with the button below - you put in your name and choose a password there. It takes a minute.')],
+                'summary' => [t('Invited') => (string) $row['invite_email']],
+                'button' => ['label' => t('Accept the invite'), 'url' => $url],
+                'after' => [t('The invite works for {n} days. If you were not expecting it, you can ignore this email.', ['{n}' => PORTAL_INVITE_LINK_DAYS])],
+            ];
+            $footnote = t('You received this because {who} invited this address to the {company} client portal.', $n);
+        }
+        return [$subject, $email, $footnote];
+    });
+    $email['lang'] = $lang;
     $sent = (bool) emailQueue([['email' => (string) $row['invite_email'], 'name' => $greet, 'greet' => $greet !== '' ? $greet : null, 'footnote' => $footnote]], $subject, $email);
     if ($sent && !emailCapturing()) {
         mysqli_query($mysqli, "UPDATE portal_invites SET invite_sent_at = NOW(), invite_sent_count = invite_sent_count + 1 WHERE invite_id = " . intval($row['invite_id']));
@@ -552,26 +561,31 @@ function portalMailSignupJoined($contact_id) {
     }
     $client_id = intval($joined['contact_client_id']);
     $company_name = (string) (billingCompany()['company_name'] ?? '');
-    $to = [];
-    $sql = mysqli_query($mysqli, "SELECT contact_name, contact_email FROM contacts JOIN users ON user_id = contact_user_id
-        WHERE contact_client_id = $client_id AND contact_primary = 1 AND contact_archived_at IS NULL AND contact_id <> $contact_id
-          AND user_type = 2 AND user_status = 1 AND user_archived_at IS NULL AND user_auth_method IN ('local', 'azure')");
-    while ($row = mysqli_fetch_assoc($sql)) {
-        $to[] = ['email' => $row['contact_email'], 'name' => $row['contact_name'],
-            'footnote' => 'You received this because you are the primary contact for ' . $joined['client_name'] . ' in the client portal.'];
-    }
-    if (!$to) {
-        return false;
-    }
+    $lang = client_language();
     $name = (string) $joined['contact_name'];
-    return (bool) emailQueue($to, "$name joined the $company_name client portal", [
-        'kind' => 'Client portal', 'tone' => 'primary', 'preview' => "$name signed up with their work email",
-        'title' => "$name joined the client portal",
-        'intro' => ["$name signed up for the $company_name client portal for " . $joined['client_name'] . ' with their work email address. They see the tickets they raise.',
-            'If they should not have access, turn it off from their page under Contacts.'],
-        'summary' => ['Who' => $name, 'Email' => (string) $joined['contact_email']],
-        'button' => ['label' => 'See them', 'url' => "https://$config_base_url/client/contact.php?id=$contact_id"],
-    ]);
+    $n = ['{name}' => $name, '{company}' => $company_name, '{client}' => $joined['client_name']];
+    return i18n_with($lang, function () use ($mysqli, $config_base_url, $client_id, $contact_id, $joined, $n, $name, $lang) {
+        $to = [];
+        $sql = mysqli_query($mysqli, "SELECT contact_name, contact_email FROM contacts JOIN users ON user_id = contact_user_id
+            WHERE contact_client_id = $client_id AND contact_primary = 1 AND contact_archived_at IS NULL AND contact_id <> $contact_id
+              AND user_type = 2 AND user_status = 1 AND user_archived_at IS NULL AND user_auth_method IN ('local', 'azure')");
+        while ($row = mysqli_fetch_assoc($sql)) {
+            $to[] = ['email' => $row['contact_email'], 'name' => $row['contact_name'],
+                'footnote' => t('You received this because you are the primary contact for {client} in the client portal.', $n)];
+        }
+        if (!$to) {
+            return false;
+        }
+        return (bool) emailQueue($to, t('{name} joined the {company} client portal', $n), [
+            'kind' => t('Client portal'), 'tone' => 'primary', 'preview' => t('{name} signed up with their work email', $n),
+            'title' => t('{name} joined the client portal', $n),
+            'intro' => [t('{name} signed up for the {company} client portal for {client} with their work email address. They see the tickets they raise.', $n),
+                t('If they should not have access, turn it off from their page under Contacts.')],
+            'summary' => [t('Who') => $name, t('Email') => (string) $joined['contact_email']],
+            'button' => ['label' => t('See them'), 'url' => "https://$config_base_url/client/contact.php?id=$contact_id"],
+            'lang' => $lang,
+        ]);
+    });
 }
 
 /** Tell the primary contact who sent an invite that it was accepted. False when they can't be told. */
@@ -590,14 +604,19 @@ function portalMailInviteAccepted($invite_id) {
     $joined = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT contact_name, contact_email FROM contacts WHERE contact_id = " . intval($row['invite_contact_id'])));
     $name = (string) ($joined['contact_name'] ?? $row['invite_email']);
     $company_name = (string) (billingCompany()['company_name'] ?? '');
-    return (bool) emailQueue([['email' => $by['contact_email'], 'name' => $by['contact_name'],
-        'footnote' => 'You received this because you invited ' . $row['invite_email'] . ' to the client portal.']], "$name accepted your invite", [
-        'kind' => 'Client portal', 'tone' => 'success', 'preview' => "$name can sign in to the client portal now",
-        'title' => "$name accepted your invite",
-        'intro' => ["$name has joined the $company_name client portal for " . $row['client_name'] . ' and can sign in now.'],
-        'summary' => ['Who' => $name, 'Email' => (string) ($joined['contact_email'] ?? $row['invite_email'])],
-        'button' => ['label' => 'See them', 'url' => "https://$config_base_url/client/contact.php?id=" . intval($row['invite_contact_id'])],
-    ]);
+    $lang = client_language();
+    $n = ['{name}' => $name, '{company}' => $company_name, '{client}' => $row['client_name'], '{email}' => $row['invite_email']];
+    return i18n_with($lang, function () use ($by, $row, $joined, $n, $name, $config_base_url, $lang) {
+        return (bool) emailQueue([['email' => $by['contact_email'], 'name' => $by['contact_name'],
+            'footnote' => t('You received this because you invited {email} to the client portal.', $n)]], t('{name} accepted your invite', $n), [
+            'kind' => t('Client portal'), 'tone' => 'success', 'preview' => t('{name} can sign in to the client portal now', $n),
+            'title' => t('{name} accepted your invite', $n),
+            'intro' => [t('{name} has joined the {company} client portal for {client} and can sign in now.', $n)],
+            'summary' => [t('Who') => $name, t('Email') => (string) ($joined['contact_email'] ?? $row['invite_email'])],
+            'button' => ['label' => t('See them'), 'url' => "https://$config_base_url/client/contact.php?id=" . intval($row['invite_contact_id'])],
+            'lang' => $lang,
+        ]);
+    });
 }
 
 /*
@@ -799,16 +818,21 @@ function portalMailSignupExists($user_id) {
     }
     $company_name = (string) (billingCompany()['company_name'] ?? '');
     $local = $row['user_auth_method'] === 'local';
-    return (bool) emailQueue([['email' => $row['user_email'], 'name' => $row['contact_name'],
-        'footnote' => 'You received this because someone tried to sign up for the client portal with this address.']], "You already have a $company_name client portal account", [
-        'kind' => 'Client portal', 'tone' => 'primary', 'preview' => 'Sign in with the account you have',
-        'title' => "You already have a $company_name client portal account",
-        'intro' => ["Someone - probably you - tried to sign up for the $company_name client portal with this address, but it has an account already.",
-            $local ? 'Forgot your password? Choose a new one with the button below.' : 'Sign in with your Microsoft 365 account - choose Login with Microsoft on the sign-in page.'],
-        'summary' => ['Account' => (string) $row['user_email']],
-        'button' => $local ? ['label' => 'Set a new password', 'url' => portalPasswordLink($user_id, PORTAL_RESET_LINK_MINUTES)] : ['label' => 'Sign in', 'url' => "https://$config_base_url/login.php"],
-        'after' => [$local ? 'The link works once, for the next ' . PORTAL_RESET_LINK_MINUTES . ' minutes. If you did not ask, ignore this email - your account stays as it is.' : 'If you did not ask, ignore this email - your account stays as it is.'],
-    ]);
+    $lang = client_language();
+    $n = ['{company}' => $company_name, '{n}' => PORTAL_RESET_LINK_MINUTES];
+    return i18n_with($lang, function () use ($row, $user_id, $local, $n, $config_base_url, $lang) {
+        return (bool) emailQueue([['email' => $row['user_email'], 'name' => $row['contact_name'],
+            'footnote' => t('You received this because someone tried to sign up for the client portal with this address.')]], t('You already have a {company} client portal account', $n), [
+            'kind' => t('Client portal'), 'tone' => 'primary', 'preview' => t('Sign in with the account you have'),
+            'title' => t('You already have a {company} client portal account', $n),
+            'intro' => [t('Someone - probably you - tried to sign up for the {company} client portal with this address, but it has an account already.', $n),
+                $local ? t('Forgot your password? Choose a new one with the button below.') : t('Sign in with your Microsoft 365 account - choose Login with Microsoft on the sign-in page.')],
+            'summary' => [t('Account') => (string) $row['user_email']],
+            'button' => $local ? ['label' => t('Set a new password'), 'url' => portalPasswordLink($user_id, PORTAL_RESET_LINK_MINUTES)] : ['label' => t('Sign in'), 'url' => "https://$config_base_url/login.php"],
+            'after' => [$local ? t('The link works once, for the next {n} minutes. If you did not ask, ignore this email - your account stays as it is.', $n) : t('If you did not ask, ignore this email - your account stays as it is.')],
+            'lang' => $lang,
+        ]);
+    });
 }
 
 /** Set whether people at a client can sign up. True when it changed. */
