@@ -56,10 +56,10 @@ function assetsUrl(array $changes) {
 <div class="itflow-portal-page-head">
     <div>
         <h1><?= t('Devices') ?></h1>
-        <p><?= $mine ? t('The ones you use') : t('Everything we look after at ') . escapeHtml($session_client_name) ?></p>
+        <p><?= $mine ? t('The ones you use') : t('Everything we look after at {client}', ['{client}' => escapeHtml($session_client_name)]) ?></p>
     </div>
     <div class="d-flex flex-wrap align-items-center gap-2">
-        <div class="btn-group" role="group" aria-label="Whose devices">
+        <div class="btn-group" role="group" aria-label="<?= t('Whose devices') ?>">
             <a class="btn btn-outline-secondary<?= !$mine ? ' active' : '' ?>" href="<?= escapeHtml(assetsUrl(['scope' => null, 'page' => null])) ?>"><i class="fas fa-building me-2"></i><?= t("Everyone's") ?></a>
             <a class="btn btn-outline-secondary<?= $mine ? ' active' : '' ?>" href="<?= escapeHtml(assetsUrl(['scope' => 'mine', 'page' => null])) ?>"><i class="fas fa-user me-2"></i><?= t('Mine') ?></a>
         </div>
@@ -68,13 +68,13 @@ function assetsUrl(array $changes) {
             <?php if ($mine) { ?><input type="hidden" name="scope" value="mine"><?php } ?>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-fw fa-search"></i></span>
-                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Name, model, serial or person') ?>" aria-label="Search devices" maxlength="200">
+                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Name, model, serial or person') ?>" aria-label="<?= t('Search devices') ?>" maxlength="200">
             </div>
         </form>
     </div>
 </div>
 
-<nav class="itflow-portal-tabs" aria-label="Kinds of device">
+<nav class="itflow-portal-tabs" aria-label="<?= t('Kinds of device') ?>">
     <?php foreach ($groups as $key => $group) {
         if ($key !== 'all' && !$counts[$key] && $key !== $tab) {
             continue;
@@ -89,7 +89,7 @@ function assetsUrl(array $changes) {
 <section class="itflow-portal-panel">
     <?php if (!$total) { ?>
         <?php if ($q !== '') { ?>
-            <?= emptyStateHtml(['thing' => 'devices', 'filtered' => true, 'match_text' => 'Nothing here has &ldquo;' . escapeHtml($q) . '&rdquo; in its name, model, serial or person.', 'clear_url' => assetsUrl(['q' => null, 'page' => null])]) ?>
+            <?= emptyStateHtml(['thing' => 'devices', 'filtered' => true, 'match_title' => t('No devices match'), 'match_text' => t('Nothing here has &ldquo;{search}&rdquo; in its name, model, serial or person.', ['{search}' => escapeHtml($q)]), 'clear_url' => assetsUrl(['q' => null, 'page' => null])]) ?>
         <?php } elseif ($mine) { ?>
             <?= emptyStateHtml(['title' => t('No devices of yours'), 'text' => t('Devices we have down as yours show here.'), 'icon' => 'fa-desktop', 'filtered' => false]) ?>
         <?php } else { ?>
@@ -107,7 +107,7 @@ function assetsUrl(array $changes) {
                             <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml($row['asset_name']) ?></span>
                             <span class="itflow-portal-ticket-meta">
                                 <span><?= escapeHtml($what !== '' ? $what : $row['asset_type']) ?></span>
-                                <?php if (!empty($row['contact_name'])) { ?><span><i class="fas fa-user me-1"></i><?= escapeHtml($row['contact_name']) ?><?= intval($row['asset_contact_id']) === $session_contact_id ? ' (you)' : '' ?></span><?php } ?>
+                                <?php if (!empty($row['contact_name'])) { ?><span><i class="fas fa-user me-1"></i><?= escapeHtml($row['contact_name']) ?><?= intval($row['asset_contact_id']) === $session_contact_id ? t(' (you)') : '' ?></span><?php } ?>
                                 <?php if (!empty($row['location_name'])) { ?><span><i class="fas fa-map-marker-alt me-1"></i><?= escapeHtml($row['location_name']) ?></span><?php } ?>
                                 <?php if ((string) $row['asset_status'] !== '' && $row['asset_status'] !== 'Deployed') { ?><span><?= escapeHtml($row['asset_status']) ?></span><?php } ?>
                             </span>
@@ -116,7 +116,7 @@ function assetsUrl(array $changes) {
                             <span class="itflow-portal-ticket-side">
                                 <?= portalStateBadge($warranty['tone'] === 'danger'
                                     ? ['label' => t('Warranty expired'), 'icon' => 'fa-shield-alt', 'class' => 'itflow-portal-state-late']
-                                    : ['label' => t('Warranty ') . $warranty['short'], 'icon' => 'fa-shield-alt', 'class' => 'itflow-portal-state-you']) ?>
+                                    : ['label' => $warranty['days'] === 0 ? t('Warranty today') : ($warranty['days'] === 1 ? t('Warranty 1 day left') : t('Warranty {n} days left', ['{n}' => $warranty['days']])), 'icon' => 'fa-shield-alt', 'class' => 'itflow-portal-state-you']) ?>
                             </span>
                         <?php } ?>
                     </a>
@@ -125,10 +125,10 @@ function assetsUrl(array $changes) {
         </ul>
         <?php if ($pages > 1) { ?>
             <div class="itflow-portal-pager">
-                <span><?= $offset + 1 ?>-<?= min($offset + $per_page, $total) ?> of <?= $total ?></span>
+                <span><?= t('{from}-{to} of {total}', ['{from}' => $offset + 1, '{to}' => min($offset + $per_page, $total), '{total}' => $total]) ?></span>
                 <div class="btn-group">
-                    <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(assetsUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="Previous page"><i class="fas fa-chevron-left"></i></a>
-                    <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(assetsUrl(['page' => $page + 1])) ?>" aria-label="Next page"><i class="fas fa-chevron-right"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(assetsUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="<?= t('Previous page') ?>"><i class="fas fa-chevron-left"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(assetsUrl(['page' => $page + 1])) ?>" aria-label="<?= t('Next page') ?>"><i class="fas fa-chevron-right"></i></a>
                 </div>
             </div>
         <?php } ?>
