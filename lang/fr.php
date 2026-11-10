@@ -778,5 +778,7 @@ return [
     'Two-step sign-in is off' => 'La double authentification est désactivée',
     'Two-step sign-in is on - signing in will ask for a code from your app' => 'La double authentification est activée : la connexion demandera un code de votre application',
     'Done - every browser asks for a code next time' => 'Fait : chaque navigateur demandera un code la prochaine fois',
-    'That code did not match - check the time on your phone is right, and enter the newest code' => 'Ce code ne correspondait pas - vérifiez que l\'heure de votre téléphone est correcte et entrez le code le plus récent',
+    'That code did not match - check the time on your phone is right, and enter the newest code' => 'Ce code ne correspondait pas - vérifiez que l’heure de votre téléphone est correcte et entrez le code le plus récent',
+    'Signs in with a password' => 'Se connecte avec un mot de passe',
+    'Signs in with Microsoft' => 'Se connecte avec Microsoft',
 ];

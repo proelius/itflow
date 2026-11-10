@@ -823,4 +823,6 @@ return [
     'Two-step sign-in is on - signing in will ask for a code from your app' => 'Two-step sign-in is on - signing in will ask for a code from your app',
     'Done - every browser asks for a code next time' => 'Done - every browser asks for a code next time',
     'That code did not match - check the time on your phone is right, and enter the newest code' => 'That code did not match - check the time on your phone is right, and enter the newest code',
+    'Signs in with a password' => 'Signs in with a password',
+    'Signs in with Microsoft' => 'Signs in with Microsoft',
 ];
