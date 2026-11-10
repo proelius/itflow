@@ -1467,4 +1467,12 @@ return [
     'Write something in the document.' => 'Write something in the document.',
     'Save document' => 'Save document',
     'That document is not available.' => 'That document is not available.',
+    'This invoice link isn\'t working' => 'This invoice link isn\'t working',
+    'It may have been mistyped or replaced. Ask whoever sent it for a new link.' => 'It may have been mistyped or replaced. Ask whoever sent it for a new link.',
+    'Past its due date' => 'Past its due date',
+    'Securely, by card' => 'Securely, by card',
+    'Securely, by card - plus a {fee} card fee' => 'Securely, by card - plus a {fee} card fee',
+    'Questions about this invoice? Contact {company} at {email} or {phone}.' => 'Questions about this invoice? Contact {company} at {email} or {phone}.',
+    'Questions about this invoice? Contact {company} at {email}.' => 'Questions about this invoice? Contact {company} at {email}.',
+    'Questions about this invoice? Contact {company} or {phone}.' => 'Questions about this invoice? Contact {company} or {phone}.',
 ];
