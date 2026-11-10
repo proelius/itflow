@@ -239,28 +239,28 @@ function timeAgo($datetime) {
     $difference = $time - time(); // Changed to handle future dates
 
     if ($difference == 0) {
-        return 'right now';
+        return t('right now');
     }
 
     $isFuture = $difference > 0; // Check if the date is in the future
     $difference = abs($difference); // Absolute value for calculation
 
     $timeRules = array(
-        31536000 => 'year',
-        2592000 => 'month',
-        604800 => 'week',
-        86400 => 'day',
-        3600 => 'hour',
-        60 => 'minute',
-        1 => 'second'
+        31536000 => t('year'),
+        2592000 => t('month'),
+        604800 => t('week'),
+        86400 => t('day'),
+        3600 => t('hour'),
+        60 => t('minute'),
+        1 => t('second')
     );
 
     foreach ($timeRules as $secs => $str) {
         $div = $difference / $secs;
         if ($div >= 1) {
             $t = round($div);
-            $timeStr = $t . ' ' . $str . ($t > 1 ? 's' : '');
-            return $isFuture ? 'in ' . $timeStr : $timeStr . ' ago';
+            $timeStr = $t . ' ' . $str . ($t > 1 ? t('s') : '');
+            return $isFuture ? t('in ') . $timeStr : $timeStr . ' ' . t('ago');
         }
     }
 }
