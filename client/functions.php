@@ -786,6 +786,12 @@ function portalMessage($text) {
         'This quote is no longer awaiting a response' => t('This quote is no longer awaiting a response'),
         'Write your full name.' => t('Write your full name.'),
         'Tick the box to say you agree to sign it.' => t('Tick the box to say you agree to sign it.'),
+        'Put in your name.' => t('Put in your name.'),
+        'The two passwords are not the same - type it again in both.' => t('The two passwords are not the same - type it again in both.'),
+        'This address already has a client portal account - sign in with it, or choose Forgot password on the sign-in page.' => t('This address already has a client portal account - sign in with it, or choose Forgot password on the sign-in page.'),
+        'This address signs in to another account here, so it can\'t be used for the client portal too - ask us about it.' => t('This address signs in to another account here, so it can\'t be used for the client portal too - ask us about it.'),
+        'This address can\'t sign up - ask your company\'s primary contact or us to give you access.' => t('This address can\'t sign up - ask your company\'s primary contact or us to give you access.'),
+        'That link has been used already.' => t('That link has been used already.'),
         'Draw your signature in the box, or type it.' => t('Draw your signature in the box, or type it.'),
         'That signature is too big - clear it and draw it again.' => t('That signature is too big - clear it and draw it again.'),
         'That signature could not be read - clear it and draw it again.' => t('That signature could not be read - clear it and draw it again.'),
@@ -812,6 +818,9 @@ function portalMessage($text) {
     }
     if (preg_match('/^(.*) needs a date$/s', $bare, $m)) {
         return t('{name} needs a date', ['{name}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^Signing up has been turned off for (.*) - ask your company\'s primary contact or us to invite you$/s', $bare, $m)) {
+        return t('Signing up has been turned off for {client} - ask your company\'s primary contact or us to invite you.', ['{client}' => $m[1]]);
     }
     if (preg_match('/^Pick one of the choices for (.*)$/s', $bare, $m)) {
         return t('Pick one of the choices for {name}', ['{name}' => $m[1]]) . $period;
