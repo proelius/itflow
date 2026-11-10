@@ -25,3 +25,34 @@ function guestDuePill($state) {
     $text = $days === 1 ? t('Due in {n} day', ['{n}' => $days]) : t('Due in {n} days', ['{n}' => $days]);
     return '<span class="badge rounded-pill ' . $class . ' fw-normal"><i class="far fa-clock me-1"></i>' . $text . '</span>';
 }
+
+/** What a quote comes to, in words - like quoteAmountText(), in the client's language. */
+function guestQuoteAmountText(array $groups, $currency) {
+    $parts = [];
+    foreach ($groups as $frequency => $group) {
+        $amount = billingMoney($group['total'], $currency);
+        if ($frequency === '') {
+            if ($group['items'] || count($groups) === 1) {
+                $parts[] = count($groups) > 1 ? t('{amount} up front', ['{amount}' => $amount]) : $amount;
+            }
+        } else {
+            $parts[] = match (recurringInvoicePeriodWord($frequency)) {
+                'quarter' => t('{amount} a quarter', ['{amount}' => $amount]),
+                'year' => t('{amount} a year', ['{amount}' => $amount]),
+                default => t('{amount} a month', ['{amount}' => $amount]),
+            };
+        }
+    }
+    return count($parts) > 1 ? t('{list} and {last}', ['{list}' => implode(', ', array_slice($parts, 0, -1)), '{last}' => end($parts)]) : (string) reset($parts);
+}
+
+/** The heading of a group of a quote's lines - One-time, Each month... - in the client's language. */
+function guestQuoteGroupLabel($label) {
+    return match ((string) $label) {
+        'One-time' => t('One-time'),
+        'Each month' => t('Each month'),
+        'Each quarter' => t('Each quarter'),
+        'Each year' => t('Each year'),
+        default => (string) $label,
+    };
+}
