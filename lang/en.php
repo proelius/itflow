@@ -1550,4 +1550,6 @@ return [
     'Nothing is booked on this ticket.' => 'Nothing is booked on this ticket.',
     'That quote is not available.' => 'That quote is not available.',
     'That invoice is not available.' => 'That invoice is not available.',
+    'Ticket <span class="text-bold">{number}</span>' => 'Ticket <span class="text-bold">{number}</span>',
+    'That file is not available.' => 'That file is not available.',
 ];

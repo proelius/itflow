@@ -39,7 +39,7 @@ $path = $row && $folder ? realpath("$folder/" . basename((string) $row['ticket_a
 
 if (!$row || !$folder || !$path || strpos($path, $folder . DIRECTORY_SEPARATOR) !== 0 || !is_file($path) || !is_readable($path)) {
     http_response_code(404);
-    exit('That file is not available.');
+    exit(i18n_with(client_language(), function () { return t('That file is not available.'); }));
 }
 
 // No type is stored - read it from the file, as the senders of emailed files can't be trusted to say

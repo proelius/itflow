@@ -1565,4 +1565,6 @@ return [
     'Nothing is booked on this ticket.' => 'Aucune intervention n’est prévue sur ce ticket.',
     'That quote is not available.' => 'Ce devis n’est pas disponible.',
     'That invoice is not available.' => 'Cette facture n’est pas disponible.',
+    'Ticket <span class="text-bold">{number}</span>' => 'Ticket <span class="text-bold">{number}</span>',
+    'That file is not available.' => 'Ce fichier n’est pas disponible.',
 ];

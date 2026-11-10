@@ -11,7 +11,7 @@ $purifier_config->set('URI.AllowedSchemes', ['data' => true, 'src' => true, 'htt
 $purifier = new HTMLPurifier($purifier_config);
 
 if (!isset($_GET['task_approval_id'], $_GET['url_key'])) {
-    echo "<br><h2>Oops, something went wrong! Please raise a ticket if you believe this is an error.</h2>";
+    echo "<br><h2>" . t('Oops, something went wrong! Please raise a ticket if you believe this is an error.') . "</h2>";
     require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php';
     exit();
 }
@@ -49,7 +49,7 @@ $task_row = mysqli_fetch_assoc(mysqli_query($mysqli,
 
 if (!$task_row) {
     // Invalid
-    echo "<br><h2>Oops, something went wrong! Please raise a ticket if you believe this is an error.</h2>";
+    echo "<br><h2>" . t('Oops, something went wrong! Please raise a ticket if you believe this is an error.') . "</h2>";
     require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php';
     exit();
 }
@@ -100,7 +100,7 @@ $approve_link = "guest_post.php?approve_ticket_task=$task_id&approval_id=$approv
             <h4 class="mb-3"><?= ucfirst($task_name) ?></h4>
 
             <p class="text-muted mb-4">
-                Ticket <span class="text-bold"><?= $ticket_prefix, $ticket_number ?></span> &mdash; <?= $ticket_subject ?>
+                <?= t('Ticket <span class="text-bold">{number}</span>', ['{number}' => $ticket_prefix . $ticket_number]) ?> &mdash; <?= $ticket_subject ?>
             </p>
 
             <?php if ($approval_status == 'pending') { ?>
