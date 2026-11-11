@@ -2085,4 +2085,5 @@ return [
     'Guest Calendar Feed' => 'Guest Calendar Feed',
     'Share' => 'Share',
     'M d, Y' => 'M d, Y',
+    '{first} {second}' => '{first} {second}',
 ];
