@@ -73,14 +73,6 @@ $v = function ($key, $default = '') use ($d) {
             <label class="form-label">Stage</label>
             <select class="form-select" name="stage_id"><?= crmOptions(array_map(function ($s) { return $s['stage_name']; }, forkCrmStages()), 0) ?></select>
         </div>
-    <?php } elseif (!empty($quote_choices)) { ?>
-        <div class="col-md-3 mb-3">
-            <label class="form-label">ITFlow quote</label>
-            <select class="form-select" name="quote_id">
-                <option value="0">-</option>
-                <?= crmOptions($quote_choices, $d['deal_quote_id'] ?? 0) ?>
-            </select>
-        </div>
     <?php } ?>
 </div>
 <div class="mb-3">

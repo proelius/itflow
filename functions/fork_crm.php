@@ -6,7 +6,7 @@
  * figures that come out of them (pipeline value, forecast, win rate).
  *
  *  - A deal belongs to a client or lead of ITFlow (deal_client_id), or, before there is one, to a
- *    prospect named in free text (deal_prospect). It may point to an ITFlow quote (deal_quote_id).
+ *    prospect named in free text (deal_prospect). It may be linked to several ITFlow quotes of that client (fork_crm_deal_quotes).
  *  - A stage is open, won or lost. Moving a deal to a won or lost stage closes it (and sets its
  *    probability to 100 or 0); moving it back to an open stage reopens it.
  *  - Activities are notes, calls, e-mails, meetings and tasks; one with a due date is a task for
@@ -16,6 +16,36 @@
  * needed (forkCrmEnsure()), outside ITFlow's numbered database updates and db.sql. The
  * functions that clean input, count and summarise take plain values and no database.
  */
+
+/*
+ * Who may use the CRM: the Administrator and Accountant roles (an admin role, or a role named
+ * Accountant), and then only as far as the Sales module lets them - level 1 reads, 2 changes,
+ * 3 archives deals and sets the stages. Any other role is turned away.
+ */
+function forkCrmRoleAllowed() {
+    global $session_is_admin;
+    static $allowed = null;
+    if (!empty($session_is_admin)) {
+        return true;
+    }
+    if ($allowed === null) {
+        $allowed = strcasecmp(trim(permissionRoleName()), 'Accountant') === 0;
+    }
+    return $allowed;
+}
+
+/** The agent's level in the CRM: 0 for a role that may not use it, else their Sales module level. */
+function forkCrmLevel() {
+    return forkCrmRoleAllowed() ? lookupUserPermission('module_sales') : 0;
+}
+
+/** Turn the agent away unless they have at least $level in the CRM. */
+function forkCrmEnforce($level = 1) {
+    if (!forkCrmRoleAllowed()) {
+        permissionRefuse("The CRM is for the Administrator and Accountant roles.");
+    }
+    enforceUserPermission('module_sales', $level);
+}
 
 /** The three kinds of stage. */
 function forkCrmKinds() {
@@ -227,7 +257,6 @@ function forkCrmEnsure() {
         `deal_probability` tinyint(3) unsigned NOT NULL DEFAULT 0,
         `deal_expected_close` date DEFAULT NULL,
         `deal_source` varchar(20) NOT NULL DEFAULT '',
-        `deal_quote_id` int(11) NOT NULL DEFAULT 0,
         `deal_owner_id` int(11) NOT NULL DEFAULT 0,
         `deal_note` text DEFAULT NULL,
         `deal_lost_reason` varchar(255) DEFAULT NULL,
@@ -239,6 +268,13 @@ function forkCrmEnsure() {
         PRIMARY KEY (`deal_id`),
         KEY `deal_stage_id` (`deal_stage_id`, `deal_archived_at`),
         KEY `deal_client_id` (`deal_client_id`)
+    $tail");
+    mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_crm_deal_quotes` (
+        `dq_deal_id` int(11) NOT NULL,
+        `dq_quote_id` int(11) NOT NULL,
+        `dq_added_at` datetime NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`dq_deal_id`, `dq_quote_id`),
+        KEY `dq_quote_id` (`dq_quote_id`)
     $tail");
     mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_crm_activities` (
         `activity_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -397,12 +433,10 @@ function forkCrmStageDelete($stage_id) {
 
 /** The SELECT of a deal with its stage, client, quote and owner. */
 function forkCrmDealSelect() {
-    return "SELECT d.*, s.stage_name, s.stage_kind, c.client_name, c.client_lead, q.quote_prefix, q.quote_number, q.quote_status,
-            q.quote_amount, q.quote_currency_code, u.user_name AS owner_name
+    return "SELECT d.*, s.stage_name, s.stage_kind, c.client_name, c.client_lead, u.user_name AS owner_name
         FROM fork_crm_deals d
         JOIN fork_crm_stages s ON s.stage_id = d.deal_stage_id
         LEFT JOIN clients c ON c.client_id = d.deal_client_id
-        LEFT JOIN quotes q ON q.quote_id = d.deal_quote_id AND d.deal_quote_id > 0
         LEFT JOIN users u ON u.user_id = d.deal_owner_id AND d.deal_owner_id > 0";
 }
 
@@ -459,8 +493,8 @@ function forkCrmDealWho(array $deal) {
 
 /**
  * Make a deal ($deal_id 0) or change one. $data: title, client_id, prospect, contact, email, phone,
- * amount, probability, expected_close, source, quote_id, owner_id, note. The stage is not changed
- * here - see forkCrmDealMove(). The quote must be the client's. Returns the deal id, 0 on failure.
+ * amount, probability, expected_close, source, owner_id, note. The stage is not changed
+ * here - see forkCrmDealMove(); the quotes are linked with forkCrmDealQuoteAdd(). Returns the deal id, 0 on failure.
  */
 function forkCrmDealSave($deal_id, array $data, $stage_id = 0, $user_id = 0) {
     global $mysqli;
@@ -472,10 +506,6 @@ function forkCrmDealSave($deal_id, array $data, $stage_id = 0, $user_id = 0) {
     $client_id = intval($data['client_id'] ?? 0);
     if ($client_id > 0 && !mysqli_fetch_row(mysqli_query($mysqli, "SELECT client_id FROM clients WHERE client_id = $client_id AND client_archived_at IS NULL"))) {
         $client_id = 0;
-    }
-    $quote_id = intval($data['quote_id'] ?? 0);
-    if ($quote_id > 0 && ($client_id === 0 || !mysqli_fetch_row(mysqli_query($mysqli, "SELECT quote_id FROM quotes WHERE quote_id = $quote_id AND quote_client_id = $client_id")))) {
-        $quote_id = 0;
     }
     $owner_id = intval($data['owner_id'] ?? 0);
     if ($owner_id > 0 && !mysqli_fetch_row(mysqli_query($mysqli, "SELECT user_id FROM users WHERE user_id = $owner_id AND user_archived_at IS NULL"))) {
@@ -505,9 +535,12 @@ function forkCrmDealSave($deal_id, array $data, $stage_id = 0, $user_id = 0) {
     $note = escapeSql(forkCrmTextClean($data['note'] ?? '', 5000));
     $set = "deal_title = '$title_sql', deal_client_id = $client_id, deal_prospect = '$prospect', deal_contact = '$contact',
         deal_email = '$email', deal_phone = '$phone', deal_amount = $amount, deal_probability = $probability,
-        deal_expected_close = $close_sql, deal_source = '$source', deal_quote_id = $quote_id, deal_owner_id = $owner_id, deal_note = '$note'";
+        deal_expected_close = $close_sql, deal_source = '$source', deal_owner_id = $owner_id, deal_note = '$note'";
     if ($deal_id > 0) {
         mysqli_query($mysqli, "UPDATE fork_crm_deals SET $set WHERE deal_id = $deal_id AND deal_archived_at IS NULL");
+        // Quotes are the client's: when the deal changes client, the quotes of the old one come off
+        mysqli_query($mysqli, "DELETE FROM fork_crm_deal_quotes WHERE dq_deal_id = $deal_id AND dq_quote_id NOT IN
+            (SELECT quote_id FROM quotes WHERE quote_client_id = $client_id)");
         return $deal_id;
     }
     $stage_id = intval($stage['stage_id']);
@@ -549,6 +582,124 @@ function forkCrmDealMove(array $deal, $stage_id, $lost_reason = '') {
 function forkCrmDealArchive($deal_id) {
     global $mysqli;
     mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_archived_at = NOW() WHERE deal_id = " . intval($deal_id));
+}
+
+/* ---------- prospect to client ---------- */
+
+/** A client or lead of ITFlow with this name (any case), not archived - or null. */
+function forkCrmClientByName($name) {
+    global $mysqli;
+    $name = escapeSql(forkCrmTextClean($name, 200));
+    if ($name === '') {
+        return null;
+    }
+    $result = mysqli_query($mysqli, "SELECT client_id, client_name, client_lead FROM clients WHERE client_archived_at IS NULL AND LOWER(client_name) = LOWER('$name') ORDER BY client_lead, client_id LIMIT 1");
+    return $result ? (mysqli_fetch_assoc($result) ?: null) : null;
+}
+
+/**
+ * Make a deal's prospect a lead (a "Prospect") in ITFlow's contacts, with the deal's contact person,
+ * and tie the deal to it. A client or lead with the same name is not made twice: the deal is tied to
+ * that one. The caller checks the agent may add clients. Returns [client_id, 'created'|'existing',
+ * error] - client_id 0 and an error text on failure.
+ */
+function forkCrmProspectCreate(array $deal) {
+    global $mysqli, $session_company_currency;
+    if (intval($deal['deal_client_id']) > 0) {
+        return [intval($deal['deal_client_id']), 'existing', ''];
+    }
+    $name = forkCrmTextClean($deal['deal_prospect'] ?? '', 200);
+    if ($name === '') {
+        return [0, '', 'Type the prospect\'s name in the deal first.'];
+    }
+    $found = forkCrmClientByName($name);
+    if ($found) {
+        $client_id = intval($found['client_id']);
+        $state = 'existing';
+    } else {
+        $name_sql = escapeSql($name);
+        $abbreviation = escapeSql(shortenClientName($name_sql));
+        mysqli_query($mysqli, "INSERT INTO clients SET client_name = '$name_sql', client_type = '', client_website = '', client_referral = '',
+            client_currency_code = '" . escapeSql($session_company_currency) . "', client_reminders = 1, client_lead = 1, client_abbreviation = '$abbreviation',
+            client_notes = '', client_accessed_at = NOW()" . billingClientLegacySql());
+        $client_id = intval(mysqli_insert_id($mysqli));
+        if ($client_id <= 0) {
+            return [0, '', 'The prospect could not be made.'];
+        }
+        $folder = ($_SERVER['DOCUMENT_ROOT'] ?? '') . "/uploads/clients/$client_id";
+        if (($_SERVER['DOCUMENT_ROOT'] ?? '') !== '' && !file_exists($folder)) {
+            @mkdir($folder);
+            @file_put_contents("$folder/index.php", "");
+        }
+        $contact = escapeSql(forkCrmTextClean($deal['deal_contact'] ?? '', 200));
+        $email = escapeSql(forkCrmTextClean($deal['deal_email'] ?? '', 200));
+        $phone = preg_replace('/[^0-9]/', '', (string) ($deal['deal_phone'] ?? ''));
+        if ($contact !== '' || $email !== '' || $phone !== '') {
+            mysqli_query($mysqli, "INSERT INTO contacts SET contact_name = '" . ($contact !== '' ? $contact : $name_sql) . "', contact_email = '$email', contact_phone = '$phone',
+                contact_primary = 1, contact_important = 1, contact_client_id = $client_id");
+        }
+        $state = 'created';
+    }
+    mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_client_id = $client_id WHERE deal_id = " . intval($deal['deal_id']));
+    return [$client_id, $state, ''];
+}
+
+/* ---------- quotes ---------- */
+
+/** The ITFlow quotes linked to a deal, oldest link first. */
+function forkCrmDealQuotes($deal_id) {
+    global $mysqli;
+    forkCrmEnsure();
+    $out = [];
+    $result = mysqli_query($mysqli, "SELECT q.quote_id, q.quote_prefix, q.quote_number, q.quote_scope, q.quote_status, q.quote_amount, q.quote_currency_code, q.quote_date
+        FROM fork_crm_deal_quotes dq JOIN quotes q ON q.quote_id = dq.dq_quote_id
+        WHERE dq.dq_deal_id = " . intval($deal_id) . " ORDER BY dq.dq_added_at, q.quote_id");
+    while ($result && ($row = mysqli_fetch_assoc($result))) {
+        $out[] = $row;
+    }
+    return $out;
+}
+
+/**
+ * What the quotes come to: those in $currency, leaving out the ones turned down, expired or
+ * cancelled. Plain values, no database.
+ */
+function forkCrmQuotesTotal(array $quotes, $currency) {
+    $total = 0.0;
+    foreach ($quotes as $quote) {
+        if ((string) $quote['quote_currency_code'] !== (string) $currency || in_array(strtolower((string) $quote['quote_status']), ['declined', 'expired', 'cancelled'], true)) {
+            continue;
+        }
+        $total += floatval($quote['quote_amount']);
+    }
+    return round($total, 2);
+}
+
+/** Link a quote of the deal's client to the deal. Returns an error text, or ''. */
+function forkCrmDealQuoteAdd(array $deal, $quote_id) {
+    global $mysqli;
+    $quote_id = intval($quote_id);
+    $client_id = intval($deal['deal_client_id']);
+    if ($client_id <= 0) {
+        return 'Link the deal to a client or lead first - quotes belong to a client.';
+    }
+    if (!mysqli_fetch_row(mysqli_query($mysqli, "SELECT quote_id FROM quotes WHERE quote_id = $quote_id AND quote_client_id = $client_id AND quote_archived_at IS NULL"))) {
+        return 'That quote is not one of this client\'s.';
+    }
+    mysqli_query($mysqli, "INSERT IGNORE INTO fork_crm_deal_quotes SET dq_deal_id = " . intval($deal['deal_id']) . ", dq_quote_id = $quote_id");
+    return '';
+}
+
+/** Take a quote off a deal (the quote itself stays). */
+function forkCrmDealQuoteRemove($deal_id, $quote_id) {
+    global $mysqli;
+    mysqli_query($mysqli, "DELETE FROM fork_crm_deal_quotes WHERE dq_deal_id = " . intval($deal_id) . " AND dq_quote_id = " . intval($quote_id));
+}
+
+/** Set a deal's amount (and nothing else). */
+function forkCrmDealAmountSet($deal_id, $amount) {
+    global $mysqli;
+    mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_amount = " . forkCrmAmountClean($amount) . " WHERE deal_id = " . intval($deal_id));
 }
 
 /** The quotes of a client to pick from: [quote_id => text]. */

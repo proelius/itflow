@@ -9,9 +9,9 @@
 require_once "includes/inc_all.php";
 require_once "includes/crm_common.php";
 
-enforceUserPermission('module_sales');
+forkCrmEnforce(1);
 
-$can_edit = lookupUserPermission('module_sales') >= 2;
+$can_edit = forkCrmLevel() >= 2;
 $year = intval($_GET['year'] ?? date('Y'));
 $year = $year >= 2000 && $year <= 2100 ? $year : intval(date('Y'));
 $owner = intval($_GET['owner'] ?? 0);

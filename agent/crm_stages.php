@@ -9,7 +9,7 @@
 require_once "includes/inc_all.php";
 require_once "includes/crm_common.php";
 
-enforceUserPermission('module_sales', 3);
+forkCrmEnforce(3);
 
 $stages = forkCrmStages();
 $counts = forkCrmStageCounts();

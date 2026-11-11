@@ -9,7 +9,7 @@
 require_once "includes/inc_all.php";
 require_once "includes/crm_common.php";
 
-enforceUserPermission('module_sales');
+forkCrmEnforce(1);
 
 $year = intval($_GET['year'] ?? date('Y'));
 $year = $year >= 2000 && $year <= 2100 ? $year : intval(date('Y'));

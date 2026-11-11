@@ -9,7 +9,7 @@
 require_once "includes/inc_all.php";
 require_once "includes/crm_common.php";
 
-enforceUserPermission('module_sales');
+forkCrmEnforce(1);
 
 $deal = forkCrmDeal($_GET['deal_id'] ?? 0);
 if (!$deal) {
@@ -20,13 +20,21 @@ if (intval($deal['deal_client_id']) > 0) {
     enforceClientAccess(intval($deal['deal_client_id']));
 }
 
-$can_edit = lookupUserPermission('module_sales') >= 2;
-$can_archive = lookupUserPermission('module_sales') >= 3;
+$can_edit = forkCrmLevel() >= 2;
+$can_archive = forkCrmLevel() >= 3;
 $stages = forkCrmStages();
 $activities = forkCrmActivities($deal['deal_id']);
 $client_choices = $can_edit ? forkCrmClientChoices() : [];
 $user_choices = forkCrmUsers();
-$quote_choices = forkCrmClientQuotes($deal['deal_client_id']);
+$quotes = forkCrmDealQuotes($deal['deal_id']);
+$linked_ids = array_map('intval', array_column($quotes, 'quote_id'));
+$quote_choices = array_diff_key(forkCrmClientQuotes($deal['deal_client_id']), array_flip($linked_ids));
+$quotes_total = forkCrmQuotesTotal($quotes, $session_company_currency);
+$has_client = intval($deal['deal_client_id']) > 0;
+$is_lead = $has_client && intval($deal['client_lead']) === 1;
+$can_client = lookupUserPermission('module_client') >= 2;
+$prospect_name = trim((string) $deal['deal_prospect']);
+$same_name = !$has_client && $prospect_name !== '' ? forkCrmClientByName($prospect_name) : null;
 $today = date('Y-m-d');
 $closed = $deal['stage_kind'] !== 'open';
 $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-danger'][$deal['stage_kind']];
@@ -43,9 +51,6 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
             <a class="btn btn-secondary" href="crm.php"><i class="fas fa-arrow-left me-2"></i>Pipeline</a>
             <?php if (intval($deal['deal_client_id']) > 0) { ?>
                 <a class="btn btn-secondary" href="client_overview.php?client_id=<?= intval($deal['deal_client_id']) ?>"><i class="fas fa-user me-2"></i>Client</a>
-            <?php } ?>
-            <?php if (intval($deal['deal_quote_id']) > 0) { ?>
-                <a class="btn btn-secondary" href="quote.php?quote_id=<?= intval($deal['deal_quote_id']) ?>"><i class="fas fa-comment-dollar me-2"></i>Quote <?= escapeHtml($deal['quote_prefix'] . $deal['quote_number']) ?></a>
             <?php } ?>
         </div>
     </div>
@@ -74,6 +79,91 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
                     </select>
                 </div>
             </form>
+        <?php } ?>
+    </div>
+
+    <?php if ($can_edit && !$has_client) { ?>
+        <div class="card-body border-bottom">
+            <?php if ($prospect_name === '') { ?>
+                <span class="text-secondary"><i class="fas fa-user-plus me-2"></i>To make this prospect a client, type its name in <em>Prospect</em> below and save.</span>
+            <?php } elseif ($same_name) { ?>
+                <span class="me-3"><i class="fas fa-info-circle me-2"></i>ITFlow already has <strong><?= escapeHtml($same_name['client_name']) ?></strong> as a <?= intval($same_name['client_lead']) ? 'prospect' : 'client' ?>.</span>
+            <?php } else { ?>
+                <span class="me-3"><i class="fas fa-user-plus me-2"></i><strong><?= escapeHtml($prospect_name) ?></strong> is not in ITFlow's contacts yet.</span>
+            <?php } ?>
+            <?php if ($prospect_name !== '' && $can_client) { ?>
+                <form action="post.php" method="post" class="d-inline">
+                    <?= crmCsrf() ?>
+                    <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                    <button type="submit" name="make_crm_prospect" value="1" class="btn btn-sm btn-primary"><i class="fas fa-user-plus me-2"></i><?= $same_name ? 'Tie the deal to it' : 'Add as a prospect' ?></button>
+                    <?php if (!$same_name || intval($same_name['client_lead'])) { ?>
+                        <button type="submit" name="make_crm_prospect" value="1" class="btn btn-sm btn-success" onclick="this.form.onboard.value=1"><i class="fas fa-user-check me-2"></i>Make it a client</button>
+                        <input type="hidden" name="onboard" value="">
+                    <?php } ?>
+                </form>
+            <?php } ?>
+        </div>
+    <?php } elseif ($is_lead && $can_client) { ?>
+        <div class="card-body border-bottom">
+            <span class="me-3"><i class="fas fa-user-clock me-2"></i><strong><?= escapeHtml($deal['client_name']) ?></strong> is still a prospect in ITFlow.</span>
+            <a class="btn btn-sm btn-success" href="<?= escapeHtml(clientOnboardingUrl($deal['deal_client_id'], 'company')) ?>"><i class="fas fa-user-check me-2"></i>Make it a client</a>
+        </div>
+    <?php } ?>
+
+    <div class="card-body border-bottom">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">Quotes</h5>
+            <?php if ($quotes) { ?>
+                <span class="text-secondary">In play: <strong><?= escapeHtml(billingMoney($quotes_total)) ?></strong></span>
+            <?php } ?>
+        </div>
+        <?php if (!$has_client) { ?>
+            <p class="text-secondary mb-0">Quotes belong to a client: tie the deal to a client or prospect first (see above, or choose one in the details).</p>
+        <?php } else { ?>
+            <?php if (!$quotes) { ?><p class="text-secondary mb-2">No quote linked yet.</p><?php } ?>
+            <?php foreach ($quotes as $quote) { ?>
+                <div class="d-flex justify-content-between align-items-center border-bottom py-1">
+                    <div>
+                        <a href="quote.php?quote_id=<?= intval($quote['quote_id']) ?>"><?= escapeHtml($quote['quote_prefix'] . $quote['quote_number']) ?></a>
+                        <?= (string) $quote['quote_scope'] !== '' ? '&middot; ' . escapeHtml($quote['quote_scope']) : '' ?>
+                        <span class="badge bg-secondary ms-1"><?= escapeHtml($quote['quote_status']) ?></span>
+                        <span class="text-secondary ms-1"><?= escapeHtml($quote['quote_date']) ?></span>
+                    </div>
+                    <div class="text-nowrap">
+                        <?= escapeHtml(billingMoney($quote['quote_amount'], $quote['quote_currency_code'])) ?>
+                        <?php if ($can_edit) { ?>
+                            <form action="post.php" method="post" class="d-inline ms-2">
+                                <?= crmCsrf() ?>
+                                <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                                <input type="hidden" name="quote_id" value="<?= intval($quote['quote_id']) ?>">
+                                <button type="submit" name="unlink_crm_quote" value="1" class="btn btn-sm btn-outline-danger" title="Take it off the deal"><i class="fas fa-unlink"></i></button>
+                            </form>
+                        <?php } ?>
+                    </div>
+                </div>
+            <?php } ?>
+            <?php if ($can_edit) { ?>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <?php if ($quote_choices) { ?>
+                        <form action="post.php" method="post" class="d-flex gap-2">
+                            <?= crmCsrf() ?>
+                            <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                            <select class="form-select form-select-sm" name="quote_id"><?= crmOptions($quote_choices, 0) ?></select>
+                            <button type="submit" name="link_crm_quote" value="1" class="btn btn-sm btn-primary text-nowrap"><i class="fas fa-link me-2"></i>Link</button>
+                        </form>
+                    <?php } else { ?>
+                        <span class="text-secondary small align-self-center">No other quote for this client.</span>
+                    <?php } ?>
+                    <a class="btn btn-sm btn-secondary" href="quotes.php?client_id=<?= intval($deal['deal_client_id']) ?>"><i class="fas fa-comment-dollar me-2"></i>Client's quotes</a>
+                    <?php if ($quotes) { ?>
+                        <form action="post.php" method="post">
+                            <?= crmCsrf() ?>
+                            <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                            <button type="submit" name="amount_from_crm_quotes" value="1" class="btn btn-sm btn-secondary"><i class="fas fa-equals me-2"></i>Set the deal's amount to <?= escapeHtml(billingMoney($quotes_total)) ?></button>
+                        </form>
+                    <?php } ?>
+                </div>
+            <?php } ?>
         <?php } ?>
     </div>
 

@@ -15,7 +15,7 @@ function crmTabs($active) {
     ];
     $html = '<ul class="nav nav-pills mb-3">';
     foreach ($tabs as $key => [$href, $icon, $label, $level]) {
-        if (lookupUserPermission('module_sales') < $level) {
+        if (forkCrmLevel() < $level) {
             continue;
         }
         $html .= '<li class="nav-item"><a class="nav-link' . ($key === $active ? ' active' : '') . '" href="' . $href . '"><i class="fas fa-fw ' . $icon . ' me-2"></i>' . $label . '</a></li>';

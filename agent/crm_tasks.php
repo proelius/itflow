@@ -9,9 +9,9 @@
 require_once "includes/inc_all.php";
 require_once "includes/crm_common.php";
 
-enforceUserPermission('module_sales');
+forkCrmEnforce(1);
 
-$can_edit = lookupUserPermission('module_sales') >= 2;
+$can_edit = forkCrmLevel() >= 2;
 $everyone = !empty($_GET['all']);
 $tasks = forkCrmTasks($everyone ? 0 : $session_user_id);
 $today = date('Y-m-d');

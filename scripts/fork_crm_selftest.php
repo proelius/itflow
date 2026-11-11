@@ -88,6 +88,22 @@ crm_test('forecast amounts', $f['2026-11']['amount'] === 2000.0 && $f['2026-11']
 $g = forkCrmGroupSummary($deals, 'deal_source');
 crm_test('by source', $g['referral']['won_count'] === 2 && $g['website']['open_count'] === 2 && $g['website']['lost_count'] === 1);
 
+echo "\nQuotes of a deal\n";
+$quotes = [
+    ['quote_amount' => '1000.00', 'quote_currency_code' => 'CHF', 'quote_status' => 'Sent'],
+    ['quote_amount' => '500.50', 'quote_currency_code' => 'CHF', 'quote_status' => 'Accepted'],
+    ['quote_amount' => '900.00', 'quote_currency_code' => 'CHF', 'quote_status' => 'Declined'],
+    ['quote_amount' => '300.00', 'quote_currency_code' => 'EUR', 'quote_status' => 'Sent'],
+    ['quote_amount' => '200.00', 'quote_currency_code' => 'CHF', 'quote_status' => 'Expired'],
+];
+crm_test('total: the quotes still in play, in the company currency', forkCrmQuotesTotal($quotes, 'CHF') === 1500.5);
+crm_test('total of none is 0', forkCrmQuotesTotal([], 'CHF') === 0.0);
+crm_test('total in another currency', forkCrmQuotesTotal($quotes, 'EUR') === 300.0);
+
+echo "\nWho may use it\n";
+$GLOBALS['session_is_admin'] = true;
+crm_test('an admin role is let in', forkCrmRoleAllowed() === true);
+
 echo "\nStages\n";
 $stages = forkCrmDefaultStages();
 $kinds = array_column($stages, 1);
@@ -114,15 +130,18 @@ foreach ($blocks as $block) {
     if (strpos($block[2], 'validateCSRFToken()') === false) {
         $bad[] = $block[1] . ' (csrf)';
     }
-    if (strpos($block[2], 'enforceUserPermission(') === false && strpos($block[2], 'crmPostDeal(') === false && strpos($block[2], 'crmPostActivity(') === false) {
+    if (strpos($block[2], 'forkCrmEnforce(') === false && strpos($block[2], 'enforceUserPermission(') === false && strpos($block[2], 'crmPostDeal(') === false && strpos($block[2], 'crmPostActivity(') === false) {
         $bad[] = $block[1] . ' (permission)';
     }
 }
 crm_test('every action checks the CSRF token and a permission' . ($bad ? ': ' . implode(', ', $bad) : ''), !$bad);
+crm_test('the handler does not look at the Sales level on its own', strpos($handler, "'module_sales'") === false);
+crm_test('the menu and the common parts go through the CRM level', strpos(file_get_contents($itflow_dir . '/agent/includes/crm_common.php'), "'module_sales'") === false);
 crm_test('no GET action in the handler', strpos($handler, '$_GET') === false);
 foreach (glob($itflow_dir . '/agent/crm*.php') as $page) {
     $code = file_get_contents($page);
-    crm_test(basename($page) . ' checks the permission', strpos($code, "enforceUserPermission('module_sales'") !== false);
+    crm_test(basename($page) . ' checks the role and the permission', strpos($code, 'forkCrmEnforce(') !== false);
+    crm_test(basename($page) . ' does not look at the Sales level on its own', strpos($code, "'module_sales'") === false);
     crm_test(basename($page) . ' escapes nothing raw: no echo of $_GET/$_POST', !preg_match('/<\?=\s*\$_(GET|POST|REQUEST)/', $code));
 }
 

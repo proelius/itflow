@@ -140,7 +140,7 @@
                     <?php } ?>
                 <?php } ?>
 
-                <?php if (lookupUserPermission("module_sales") >= 1) { ?>
+                <?php if (forkCrmLevel() >= 1) { ?>
                     <li class="nav-header mt-3">CRM</li>
                     <li class="nav-item">
                         <a href="/agent/crm.php" class="nav-link <?php if (in_array(basename($_SERVER["PHP_SELF"]), ["crm.php", "crm_deal.php", "crm_stages.php"])) { echo "active"; } ?>">
