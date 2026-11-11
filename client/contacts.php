@@ -70,7 +70,7 @@ if ($can_invite && portalSignupOn() && intval(mysqli_fetch_row(mysqli_query($mys
         </div>
         <?php if ($signup_domains) { ?>
             <div class="itflow-portal-panel-body pb-0">
-                <p class="small text-body-secondary mb-<?= $waiting ? '2' : '3' ?>"><i class="fas fa-door-open me-1"></i><?= t('Anyone with an address at') ?> <strong><?= escapeHtml(implode(', ', $signup_domains)) ?></strong> can also make their own account from the sign-in page - we email you when they do.</p>
+                <p class="small text-body-secondary mb-<?= $waiting ? '2' : '3' ?>"><i class="fas fa-door-open me-1"></i><?= t('Anyone with an address at {domains} can also make their own account from the sign-in page - we email you when they do.', ['{domains}' => '<strong>' . escapeHtml(implode(', ', $signup_domains)) . '</strong>']) ?></p>
             </div>
         <?php } ?>
         <?php if ($waiting) { ?>
@@ -93,9 +93,9 @@ if ($can_invite && portalSignupOn() && intval(mysqli_fetch_row(mysqli_query($mys
                             <form action="post.php" method="post" class="d-flex gap-1">
                                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                                 <input type="hidden" name="invite_id" value="<?= intval($invite['invite_id']) ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-primary" name="portal_invite_resend" value="1" title="Email it again, with a new link"><i class="fas fa-paper-plane"></i><span class="d-none d-md-inline ms-1"><?= t('Send again') ?></span></button>
-                                <button type="submit" class="btn btn-sm btn-outline-danger confirm-link" name="portal_invite_cancel" value="1" title="Cancel the invite"
-                                    data-confirm-title="Cancel the invite to <?= escapeHtml($invite['invite_email']) ?>?" data-confirm-text="Its link stops working. You can invite them again later." data-confirm-button="Cancel invite"><i class="fas fa-times"></i><span class="d-none d-md-inline ms-1"><?= t('Cancel') ?></span></button>
+                                <button type="submit" class="btn btn-sm btn-outline-primary" name="portal_invite_resend" value="1" title="<?= escapeHtml(t('Email it again, with a new link')) ?>"><i class="fas fa-paper-plane"></i><span class="d-none d-md-inline ms-1"><?= t('Send again') ?></span></button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger confirm-link" name="portal_invite_cancel" value="1" title="<?= escapeHtml(t('Cancel the invite')) ?>"
+                                    data-confirm-title="<?= t('Cancel the invite to {email}?', ['{email}' => escapeHtml($invite['invite_email'])]) ?>" data-confirm-text="<?= escapeHtml(t('Its link stops working. You can invite them again later.')) ?>" data-confirm-button="<?= escapeHtml(t('Cancel invite')) ?>"><i class="fas fa-times"></i><span class="d-none d-md-inline ms-1"><?= t('Cancel') ?></span></button>
                             </form>
                         </span>
                     </li>

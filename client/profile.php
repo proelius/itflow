@@ -357,7 +357,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
             <div class="itflow-portal-panel-body">
                 <p class="small text-body-secondary mb-0"><?= t('We ask for it to make sure it is really you when you call.') ?>
 
-                    <?= empty($me['contact_pin']) ? t('You have not set one.') : 'Yours is <span class="font-monospace fw-semibold">' . escapeHtml($me['contact_pin']) . '</span>.' ?></p>
+                    <?= empty($me['contact_pin']) ? t('You have not set one.') : t('Yours is {pin}.', ['{pin}' => '<span class="font-monospace fw-semibold">' . escapeHtml($me['contact_pin']) . '</span>']) ?></p>
             </div>
             <form class="collapse itflow-portal-panel-body border-top" id="pinForm" action="post.php" method="post" autocomplete="off" data-portal-once>
                 <input type="hidden" name="csrf_token" value="<?= $csrf ?>">

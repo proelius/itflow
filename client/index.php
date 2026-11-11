@@ -82,8 +82,8 @@ if ($can_billing) {
                 'href' => 'invoice.php?id=' . intval($invoice['invoice_id']),
                 'icon' => 'fa-file-invoice-dollar',
                 'tone' => 'is-danger',
-                'title' => 'Invoice ' . $invoice['invoice_prefix'] . $invoice['invoice_number'] . ' is past due',
-                'line' => numfmt_format_currency($currency_format, $left, $client_currency) . ' left - due ' . date('M j, Y', strtotime($invoice['invoice_due'])),
+                'title' => t('Invoice {number} is past due', ['{number}' => $invoice['invoice_prefix'] . $invoice['invoice_number']]),
+                'line' => t('{amount} left - due {date}', ['{amount}' => numfmt_format_currency($currency_format, $left, $client_currency), '{date}' => date('M j, Y', strtotime($invoice['invoice_due']))]),
             ];
         } elseif ($next_due === null || $invoice['invoice_due'] < $next_due) {
             $next_due = $invoice['invoice_due'];
@@ -98,8 +98,8 @@ if ($can_billing) {
             'href' => 'quote.php?id=' . intval($row['quote_id']),
             'icon' => 'fa-comment-dollar',
             'tone' => '',
-            'title' => 'Quote ' . $row['quote_prefix'] . $row['quote_number'] . ' is waiting for your answer',
-            'line' => trim($row['quote_scope'] . ' · ' . billingMoney($row['quote_amount'], $row['quote_currency_code']), ' ·') . ' · good until ' . date('M j', strtotime($row['quote_expire'])),
+            'title' => t('Quote {number} is waiting for your answer', ['{number}' => $row['quote_prefix'] . $row['quote_number']]),
+            'line' => trim($row['quote_scope'] . ' · ' . billingMoney($row['quote_amount'], $row['quote_currency_code']), ' ·') . ' · ' . t('good until {date}', ['{date}' => date('M j', strtotime($row['quote_expire']))]),
         ];
     }
 
@@ -218,11 +218,13 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
                     <span class="itflow-portal-stat-value d-block"><?= numfmt_format_currency($currency_format, $balance, $client_currency) ?></span>
                     <span class="itflow-portal-stat-label">
                         <?php if ($overdue > 0) { ?>
-                            <?= numfmt_format_currency($currency_format, $overdue, $client_currency) ?> past due
+                            <?= t('{amount} past due', ['{amount}' => numfmt_format_currency($currency_format, $overdue, $client_currency)]) ?>
+
                         <?php } elseif ($balance > 0 && $next_due) { ?>
-                            Due <?= date('M j', strtotime($next_due)) ?>
+                            <?= t('Due {date}', ['{date}' => date('M j', strtotime($next_due))]) ?>
                         <?php } else { ?>
-                            Nothing owed
+                            <?= t('Nothing owed') ?>
+
                         <?php } ?>
                     </span>
                 </span>
@@ -235,7 +237,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
                 <span class="itflow-portal-stat-icon"><i class="fas fa-calendar-alt"></i></span>
                 <span>
                     <span class="itflow-portal-stat-value d-block"><?= count($renewals) ?></span>
-                    <span class="itflow-portal-stat-label"><?= count($renewals) === 1 ? t('Renewal') : t('Renewals') ?> coming up</span>
+                    <span class="itflow-portal-stat-label"><?= count($renewals) === 1 ? t('Renewal coming up') : t('Renewals coming up') ?></span>
                 </span>
             </a>
         </div>
