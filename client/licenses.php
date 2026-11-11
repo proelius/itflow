@@ -101,7 +101,7 @@ function licensesUrl(array $changes) {
                     <?php if ($renewal) { ?>
                         <span class="itflow-portal-ticket-side">
                             <?= portalStateBadge($renewal) ?>
-                            <small><?= escapeHtml(date('M j, Y', strtotime($row['software_expire']))) ?></small>
+                            <small><?= escapeHtml(i18n_date('M j, Y', strtotime($row['software_expire']))) ?></small>
                         </span>
                     <?php } ?>
                 </li>

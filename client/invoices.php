@@ -130,8 +130,8 @@ function invoicesUrl(array $changes) {
                         <span class="itflow-portal-ticket-main">
                             <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml($row['invoice_prefix'] . $row['invoice_number']) ?><?php if (trim((string) $row['invoice_scope']) !== '') { ?><span class="fw-normal text-body-secondary"> · <?= escapeHtml($row['invoice_scope']) ?></span><?php } ?></span>
                             <span class="itflow-portal-ticket-meta">
-                                <span><?= t('Dated {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($row['invoice_date'])))]) ?></span>
-                                <?php if ($open) { ?><span><?= t('Due {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($row['invoice_due'])))]) ?></span><?php } ?>
+                                <span><?= t('Dated {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($row['invoice_date'])))]) ?></span>
+                                <?php if ($open) { ?><span><?= t('Due {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($row['invoice_due'])))]) ?></span><?php } ?>
                                 <?php if ($open && $state['paid'] > 0) { ?><span><?= t('{paid} of {total} paid', ['{paid}' => escapeHtml(billingMoney($state['paid'], $row['invoice_currency_code'])), '{total}' => escapeHtml(billingMoney($row['invoice_amount'], $row['invoice_currency_code']))]) ?></span><?php } ?>
                             </span>
                         </span>

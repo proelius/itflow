@@ -98,11 +98,11 @@ function quotesUrl(array $changes) {
                         <span class="itflow-portal-ticket-main">
                             <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml($row['quote_prefix'] . $row['quote_number']) ?><?php if (trim((string) $row['quote_scope']) !== '') { ?><span class="fw-normal text-body-secondary"> · <?= escapeHtml($row['quote_scope']) ?></span><?php } ?></span>
                             <span class="itflow-portal-ticket-meta">
-                                <span><?= t('Dated {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($row['quote_date'])))]) ?></span>
+                                <span><?= t('Dated {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($row['quote_date'])))]) ?></span>
                                 <?php if ($state['key'] === 'waiting') { ?>
-                                    <span><?= t('Good until {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($row['quote_expire'])))]) ?></span>
+                                    <span><?= t('Good until {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($row['quote_expire'])))]) ?></span>
                                 <?php } elseif ($state['key'] === 'expired') { ?>
-                                    <span><?= t('Ran out {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($row['quote_expire'])))]) ?></span>
+                                    <span><?= t('Ran out {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($row['quote_expire'])))]) ?></span>
                                 <?php } ?>
                             </span>
                         </span>

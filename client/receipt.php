@@ -38,7 +38,7 @@ $currency = $receipt['currency'];
 <div class="itflow-portal-page-head d-print-none">
     <div>
         <h1><?= t('Receipt') ?></h1>
-        <p><?= escapeHtml(date('M j, Y', strtotime($receipt['date']))) ?> · <?= escapeHtml($method) ?></p>
+        <p><?= escapeHtml(i18n_date('M j, Y', strtotime($receipt['date']))) ?> · <?= escapeHtml($method) ?></p>
     </div>
     <button type="button" class="btn btn-outline-secondary" data-portal-print><i class="fas fa-print me-2"></i><?= t('Print') ?></button>
 </div>
@@ -61,7 +61,7 @@ $currency = $receipt['currency'];
     <div class="itflow-portal-panel-body">
         <dl class="itflow-portal-facts mb-4">
             <div><dt><?= t('Received from') ?></dt><dd><?= escapeHtml($session_client_name) ?></dd></div>
-            <div><dt><?= t('Date') ?></dt><dd><?= escapeHtml(date('F j, Y', strtotime($receipt['date']))) ?></dd></div>
+            <div><dt><?= t('Date') ?></dt><dd><?= escapeHtml(i18n_date('F j, Y', strtotime($receipt['date']))) ?></dd></div>
             <div><dt><?= t('Paid by') ?></dt><dd><?= escapeHtml($method) ?></dd></div>
             <?php if ($reference !== '') { ?>
                 <div><dt><?= t('Reference') ?></dt><dd class="font-monospace small"><?= escapeHtml($reference) ?></dd></div>

@@ -383,7 +383,7 @@ function portalInvoiceState(array $row, $paid) {
     if ($days <= 7) {
         return $state + ['label' => $days === 1 ? t('Due in {n} day', ['{n}' => $days]) : t('Due in {n} days', ['{n}' => $days]), 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-you'];
     }
-    return $state + ['label' => t('Due {date}', ['{date}' => date('M j', strtotime((string) $row['invoice_due']))]), 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-new'];
+    return $state + ['label' => t('Due {date}', ['{date}' => i18n_date('M j', strtotime((string) $row['invoice_due']))]), 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-new'];
 }
 
 /** Where a quote stands for the client - waiting for their answer, run out, accepted or declined - with a label, icon and class. */
@@ -494,9 +494,9 @@ function portalContractState(array $row, $round = null) {
         case 'draft':
             return ['key' => 'draft', 'label' => t('Being prepared'), 'icon' => 'fa-pencil-alt', 'class' => 'itflow-portal-state-hold'];
         case 'upcoming':
-            return ['key' => 'upcoming', 'label' => t('Starts {date}', ['{date}' => date('M j, Y', strtotime((string) $row['contract_start_date']))]), 'icon' => 'fa-hourglass-start', 'class' => 'itflow-portal-state-new'];
+            return ['key' => 'upcoming', 'label' => t('Starts {date}', ['{date}' => i18n_date('M j, Y', strtotime((string) $row['contract_start_date']))]), 'icon' => 'fa-hourglass-start', 'class' => 'itflow-portal-state-new'];
         case 'ending':
-            return ['key' => 'ending', 'label' => t('Ends {date}', ['{date}' => date('M j, Y', strtotime((string) $row['contract_end_date']))]), 'icon' => 'fa-hourglass-end', 'class' => 'itflow-portal-state-hold'];
+            return ['key' => 'ending', 'label' => t('Ends {date}', ['{date}' => i18n_date('M j, Y', strtotime((string) $row['contract_end_date']))]), 'icon' => 'fa-hourglass-end', 'class' => 'itflow-portal-state-hold'];
         case 'ended':
             return ['key' => 'ended', 'label' => t('Ended'), 'icon' => 'fa-flag-checkered', 'class' => 'itflow-portal-state-closed'];
         case 'cancelled':

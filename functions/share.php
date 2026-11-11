@@ -608,9 +608,9 @@ function shareCompany() {
 function shareExpiryText($expire_at) {
     $at = strtotime((string) $expire_at);
     if ($at - time() <= 86400) {
-        return date('Y-m-d', $at) === date('Y-m-d') ? t('{time} today', ['{time}' => date('g:i A', $at)]) : t('{time} tomorrow', ['{time}' => date('g:i A', $at)]);
+        return date('Y-m-d', $at) === date('Y-m-d') ? t('{time} today', ['{time}' => i18n_date('g:i A', $at)]) : t('{time} tomorrow', ['{time}' => i18n_date('g:i A', $at)]);
     }
-    return t('{date} at {time}', ['{date}' => date('M j', $at), '{time}' => date('g:i A', $at)]);
+    return t('{date} at {time}', ['{date}' => i18n_date('M j', $at), '{time}' => i18n_date('g:i A', $at)]);
 }
 
 /** Who the shared links' emails come from - the system mailbox, under the company's name when it has none. */

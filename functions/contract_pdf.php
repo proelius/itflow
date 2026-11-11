@@ -97,7 +97,7 @@ function contractPdfRender(array $row, $round = null) {
     $pdf->SetAutoPageBreak(true, 20);
     $pdf->setFontSubsetting(true);
     $pdf->setImageScale(1.5);
-    $pdf->footer_label = trim(($company['company_name'] ?? '') . ' · ' . $row['contract_name'] . ($signed ? ' · ' . t('Signed') : ($round ? '' : ' · ' . date('M j, Y'))), ' ·');
+    $pdf->footer_label = trim(($company['company_name'] ?? '') . ' · ' . $row['contract_name'] . ($signed ? ' · ' . t('Signed') : ($round ? '' : ' · ' . i18n_date('M j, Y'))), ' ·');
     $pdf->AddPage();
     $pdf->SetFont('dejavusans', '', 8.5);
     $pdf->SetTextColor(33, 37, 41);
@@ -112,7 +112,7 @@ function contractPdfRender(array $row, $round = null) {
     $pdf->writeHTML('<table cellpadding="0" cellspacing="0" width="100%"><tr>
         <td width="62%">' . $logo . '<span style="font-size:11pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span><br><span style="font-size:7.5pt; color:' . $grey . ';">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>
         <td width="38%" align="right"><span style="font-size:8pt; color:' . ($signed ? '#198754' : '#0a58ca') . '; font-weight:bold; letter-spacing:2px;">' . $status . '</span><br>
-            <span style="font-size:7.5pt; color:' . $grey . ';">' . $e($round && !empty($round['contract_signature_sent_at']) ? t('Sent {date}', ['{date}' => date('M j, Y', strtotime($round['contract_signature_sent_at']))]) : t('As of {date}', ['{date}' => date('M j, Y')])) . '</span></td>
+            <span style="font-size:7.5pt; color:' . $grey . ';">' . $e($round && !empty($round['contract_signature_sent_at']) ? t('Sent {date}', ['{date}' => i18n_date('M j, Y', strtotime($round['contract_signature_sent_at']))]) : t('As of {date}', ['{date}' => i18n_date('M j, Y')])) . '</span></td>
     </tr></table>', true, false, true, false, '');
     $pdf->Ln(2);
 
@@ -140,7 +140,7 @@ function contractPdfRender(array $row, $round = null) {
             $mark = '<span style="font-family:dejavuserif; font-style:italic; font-size:17pt;">' . $e($round["contract_signature_{$side}_name"]) . '</span>';
         }
         $who = $has
-            ? '<b>' . $e($round["contract_signature_{$side}_name"]) . '</b><br><span style="color:' . $grey . ';">' . $e(implode(' · ', array_filter([(string) $round["contract_signature_{$side}_title"], date('M j, Y', strtotime($round["contract_signature_{$side}_signed_at"]))]))) . '</span>'
+            ? '<b>' . $e($round["contract_signature_{$side}_name"]) . '</b><br><span style="color:' . $grey . ';">' . $e(implode(' · ', array_filter([(string) $round["contract_signature_{$side}_title"], i18n_date('M j, Y', strtotime($round["contract_signature_{$side}_signed_at"]))]))) . '</span>'
             : '<span style="color:' . $grey . ';">' . t('Name, title and date') . '</span><br>&nbsp;';
         $cells .= '<td width="48%" style="border-bottom:0.4px solid #adb5bd;"><span style="font-size:6.5pt; color:' . $grey . '; font-weight:bold;">' . $e(mb_strtoupper(t('Signed for {name}', ['{name}' => $for]))) . '</span><br>' . $mark . '</td>';
         $cells .= $side === 'client' ? '<td width="4%"></td>' : '';

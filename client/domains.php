@@ -76,7 +76,7 @@ function domainsState($expiry, $certificate = false) {
                         </span>
                         <span class="itflow-portal-ticket-side">
                             <?= $state ? portalStateBadge($state) : '' ?>
-                            <?php if (!empty($row['domain_expire'])) { ?><small><?= escapeHtml(date('M j, Y', strtotime($row['domain_expire']))) ?></small><?php } ?>
+                            <?php if (!empty($row['domain_expire'])) { ?><small><?= escapeHtml(i18n_date('M j, Y', strtotime($row['domain_expire']))) ?></small><?php } ?>
                         </span>
                     </li>
                 <?php } ?>
@@ -100,7 +100,7 @@ function domainsState($expiry, $certificate = false) {
                         </span>
                         <span class="itflow-portal-ticket-side">
                             <?= $state ? portalStateBadge($state) : '' ?>
-                            <?php if (!empty($row['certificate_expire'])) { ?><small><?= escapeHtml(date('M j, Y', strtotime($row['certificate_expire']))) ?></small><?php } ?>
+                            <?php if (!empty($row['certificate_expire'])) { ?><small><?= escapeHtml(i18n_date('M j, Y', strtotime($row['certificate_expire']))) ?></small><?php } ?>
                         </span>
                     </li>
                 <?php } ?>

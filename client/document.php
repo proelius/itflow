@@ -66,7 +66,7 @@ foreach ($files as $file) {
         <p>
             <?= trim((string) $document['document_description']) !== '' ? escapeHtml($document['document_description']) . ' · ' : '' ?>
             <?php if (!empty($document['folder_name'])) { ?><i class="fas fa-folder me-1"></i><?= escapeHtml($document['folder_name']) ?> · <?php } ?>
-            <?= t('Updated {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($updated)))]) ?>
+            <?= t('Updated {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($updated)))]) ?>
         </p>
     </div>
     <div class="d-flex flex-wrap gap-2 d-print-none">

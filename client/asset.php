@@ -53,7 +53,7 @@ $facts = array_filter([
     t('Operating system') => escapeHtml($asset['asset_os']),
     t('Used by') => !empty($asset['contact_name']) ? escapeHtml($asset['contact_name']) . (intval($asset['asset_contact_id']) === $session_contact_id ? t(' (you)') : '') : '',
     t('Location') => escapeHtml($asset['location_name'] ?? ''),
-    t('Purchased') => !empty($asset['asset_purchase_date']) ? escapeHtml(date('M j, Y', strtotime($asset['asset_purchase_date']))) . (portalAssetAge($asset['asset_purchase_date']) !== '' ? ' <span class="text-body-secondary">(' . escapeHtml(portalAssetAge($asset['asset_purchase_date'])) . ')</span>' : '') : '',
+    t('Purchased') => !empty($asset['asset_purchase_date']) ? escapeHtml(i18n_date('M j, Y', strtotime($asset['asset_purchase_date']))) . (portalAssetAge($asset['asset_purchase_date']) !== '' ? ' <span class="text-body-secondary">(' . escapeHtml(portalAssetAge($asset['asset_purchase_date'])) . ')</span>' : '') : '',
     t('Warranty') => $warranty ? portalStateBadge(['label' => portalWarrantyText($warranty), 'icon' => 'fa-shield-alt', 'class' => ['danger' => 'itflow-portal-state-late', 'warning' => 'itflow-portal-state-you', 'success' => 'itflow-portal-state-resolved'][$warranty['tone']]]) : '',
     t('Status') => escapeHtml($asset['asset_status']),
 ], function ($value) {

@@ -85,7 +85,7 @@ $paper = [
 <div class="itflow-portal-page-head d-print-none">
     <div>
         <h1><?= t('Invoice {number}', ['{number}' => escapeHtml($number)]) ?></h1>
-        <p><?= trim((string) $invoice['invoice_scope']) !== '' ? escapeHtml($invoice['invoice_scope']) : t('Dated {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($invoice['invoice_date'])))]) ?></p>
+        <p><?= trim((string) $invoice['invoice_scope']) !== '' ? escapeHtml($invoice['invoice_scope']) : t('Dated {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($invoice['invoice_date'])))]) ?></p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-outline-secondary" href="pdf.php?invoice=<?= $invoice_id ?>"><i class="fas fa-file-pdf me-2"></i><?= t('Download PDF') ?></a>
@@ -104,7 +104,7 @@ $paper = [
                         <span class="itflow-portal-outcome-icon is-success" aria-hidden="true"><i class="fas fa-check"></i></span>
                         <div>
                             <div class="fw-semibold"><?= t('Paid in full') ?></div>
-                            <div class="small text-body-secondary"><?= $payments ? t('On {date} - thank you.', ['{date}' => escapeHtml(date('M j, Y', strtotime($payments[0]['payment_date'])))]) : t('Thank you.') ?></div>
+                            <div class="small text-body-secondary"><?= $payments ? t('On {date} - thank you.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($payments[0]['payment_date'])))]) : t('Thank you.') ?></div>
                         </div>
                     </div>
                 <?php } elseif (!$owing) { ?>
@@ -121,7 +121,7 @@ $paper = [
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                         <?= portalStateBadge($state) ?>
                         <?php if ($state['class'] !== 'itflow-portal-state-new') { // "Due Nov 30" already says when ?>
-                            <span class="small text-body-secondary"><?= t('Due {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($invoice['invoice_due'])))]) ?></span>
+                            <span class="small text-body-secondary"><?= t('Due {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($invoice['invoice_due'])))]) ?></span>
                         <?php } ?>
                     </div>
                     <?php if ($state['paid'] > 0) { ?>
@@ -161,7 +161,7 @@ $paper = [
                             <a class="itflow-portal-todo" href="receipt.php?id=<?= intval($payment['payment_id']) ?>">
                                 <span class="itflow-portal-todo-main">
                                     <div class="itflow-money"><?= escapeHtml(billingMoney($payment['payment_amount'], $payment['payment_currency_code'])) ?></div>
-                                    <div><?= escapeHtml(portalPaymentMethodText($payment['payment_method'], $payment['payment_reference'])) ?> · <?= escapeHtml(date('M j, Y', strtotime($payment['payment_date']))) ?></div>
+                                    <div><?= escapeHtml(portalPaymentMethodText($payment['payment_method'], $payment['payment_reference'])) ?> · <?= escapeHtml(i18n_date('M j, Y', strtotime($payment['payment_date']))) ?></div>
                                 </span>
                                 <span class="small text-body-secondary"><?= t('Receipt') ?><i class="fas fa-chevron-right ms-2"></i></span>
                             </a>

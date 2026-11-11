@@ -70,7 +70,7 @@ $paper = [
             <div class="itflow-portal-panel-body">
                 <div class="itflow-billing-stat-label"><?= escapeHtml(portalQuoteGroupLabel('Each ' . recurringInvoicePeriodWord($recurring['recurring_invoice_frequency']))) ?></div>
                 <div class="itflow-portal-big-amount itflow-money"><?= escapeHtml(billingMoney($recurring['recurring_invoice_amount'], $currency)) ?></div>
-                <p class="small text-body-secondary mb-0"><?= t('The next invoice comes {date}.', ['{date}' => escapeHtml(date('M j, Y', strtotime($recurring['recurring_invoice_next_date'])))]) ?></p>
+                <p class="small text-body-secondary mb-0"><?= t('The next invoice comes {date}.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($recurring['recurring_invoice_next_date'])))]) ?></p>
             </div>
             <?php if ($cards_on) { ?>
                 <div class="itflow-portal-panel-body border-top">
@@ -108,7 +108,7 @@ $paper = [
                 <h2><i class="fas fa-file-invoice-dollar"></i><?= t('Invoices from it') ?></h2>
             </div>
             <?php if (!$made) { ?>
-                <?= emptyStateHtml(['title' => t('None yet'), 'text' => t('The first one comes {date}.', ['{date}' => escapeHtml(date('M j, Y', strtotime($recurring['recurring_invoice_next_date'])))]), 'icon' => 'fa-file-invoice-dollar', 'filtered' => false]) ?>
+                <?= emptyStateHtml(['title' => t('None yet'), 'text' => t('The first one comes {date}.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($recurring['recurring_invoice_next_date'])))]), 'icon' => 'fa-file-invoice-dollar', 'filtered' => false]) ?>
             <?php } else { ?>
                 <ul class="itflow-portal-list">
                     <?php foreach ($made as $row) {
@@ -117,7 +117,7 @@ $paper = [
                             <a class="itflow-portal-todo" href="invoice.php?id=<?= intval($row['invoice_id']) ?>">
                                 <span class="itflow-portal-todo-main">
                                     <div><?= escapeHtml($row['invoice_prefix'] . $row['invoice_number']) ?></div>
-                                    <div><?= escapeHtml(date('M j, Y', strtotime($row['invoice_date']))) ?> · <?= escapeHtml(billingMoney($row['invoice_amount'], $row['invoice_currency_code'])) ?></div>
+                                    <div><?= escapeHtml(i18n_date('M j, Y', strtotime($row['invoice_date']))) ?> · <?= escapeHtml(billingMoney($row['invoice_amount'], $row['invoice_currency_code'])) ?></div>
                                 </span>
                                 <?= portalStateBadge($state) ?>
                             </a>

@@ -31,13 +31,13 @@ $contract_paper_lines = array_filter([
 ]);
 $contract_paper_dates = [];
 if ($contract_paper_round && !empty($contract_paper_round['contract_signature_sent_at'])) {
-    $contract_paper_dates[t('Sent')] = date('M j, Y', strtotime($contract_paper_round['contract_signature_sent_at']));
+    $contract_paper_dates[t('Sent')] = i18n_date('M j, Y', strtotime($contract_paper_round['contract_signature_sent_at']));
 }
 if ($contract_paper_state && $contract_paper_state['key'] === 'signed') {
-    $contract_paper_dates[t('Signed')] = date('M j, Y', strtotime(max($contract_paper_round['contract_signature_client_signed_at'], $contract_paper_round['contract_signature_agent_signed_at'])));
+    $contract_paper_dates[t('Signed')] = i18n_date('M j, Y', strtotime(max($contract_paper_round['contract_signature_client_signed_at'], $contract_paper_round['contract_signature_agent_signed_at'])));
 }
 if (!$contract_paper_dates) {
-    $contract_paper_dates[t('As of')] = date('M j, Y');
+    $contract_paper_dates[t('As of')] = i18n_date('M j, Y');
 }
 
 ?>
