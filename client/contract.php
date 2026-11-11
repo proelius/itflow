@@ -225,7 +225,7 @@ $terms = [
 
 </div>
 
-<script src="/js/signature_pad.js"></script>
+<script src="<?= staticFileUrl('/js/signature_pad.js') ?>"></script>
 
 <?php
 require_once "includes/footer.php";
