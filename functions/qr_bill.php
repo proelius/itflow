@@ -359,3 +359,17 @@ function qrBillSvg(array $bill, $size = 220) {
         . '<polygon points="' . implode(' ', $points) . '" fill="#fff"/>'
         . '</svg>';
 }
+
+/** The QR references written in a text - 27 digits, grouped or not, check digit right - as they stand, in order, once each. */
+function qrBillReferencesIn($text) {
+    $found = [];
+    if (preg_match_all('/(?<!\d)\d(?: ?\d){26}(?!\d)/', (string) $text, $matches)) {
+        foreach ($matches[0] as $candidate) {
+            $reference = str_replace(' ', '', $candidate);
+            if (qrBillCheckDigit(substr($reference, 0, 26)) === intval($reference[26])) {
+                $found[$reference] = $reference;
+            }
+        }
+    }
+    return array_values($found);
+}
