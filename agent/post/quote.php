@@ -343,6 +343,10 @@ if (isset($_GET['accept_quote'])) {
     logAudit("Quote", "Edit", "$session_name marked quote $quote_prefix$quote_number as accepted", $client_id, $quote_id);
 
     triggerCustomAction('quote_accept', $quote_id);
+    // The CRM deal of this quote (if any) hears at once
+    if (function_exists('forkCrmQuoteChanged')) {
+        forkCrmQuoteChanged($quote_id, 'Accepted');
+    }
 
     flashAlert("Quote accepted");
 
@@ -375,6 +379,10 @@ if (isset($_GET['decline_quote'])) {
     mysqli_query($mysqli,"INSERT INTO history SET history_status = 'Cancelled', history_description = 'Quote declined by $session_name', history_quote_id = $quote_id");
 
     triggerCustomAction('quote_decline', $quote_id);
+    // The CRM deal of this quote (if any) hears at once
+    if (function_exists('forkCrmQuoteChanged')) {
+        forkCrmQuoteChanged($quote_id, 'Declined');
+    }
 
     logAudit("Quote", "Edit", "$session_name marked quote $quote_prefix$quote_number as declined", $client_id, $quote_id);
 

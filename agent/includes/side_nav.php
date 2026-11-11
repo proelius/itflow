@@ -140,6 +140,33 @@
                     <?php } ?>
                 <?php } ?>
 
+                <?php if (forkCrmLevel() >= 1) { ?>
+                    <li class="nav-header mt-3">CRM</li>
+                    <li class="nav-item">
+                        <a href="/agent/crm.php" class="nav-link <?php if (in_array(basename($_SERVER["PHP_SELF"]), ["crm.php", "crm_deal.php", "crm_stages.php"])) { echo "active"; } ?>">
+                            <i class="nav-icon fas fa-handshake"></i>
+                            <p>Deals</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/agent/crm_tasks.php" class="nav-link <?php if (basename($_SERVER["PHP_SELF"]) == "crm_tasks.php") { echo "active"; } ?>">
+                            <i class="nav-icon fas fa-tasks"></i>
+                            <p>
+                                CRM Tasks
+                                <?php if ($num_crm_tasks) { ?>
+                                    <span class="right badge text-light" data-bs-toggle="tooltip" title="Your CRM tasks due today or late"><?= $num_crm_tasks ?></span>
+                                <?php } ?>
+                            </p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/agent/crm_dashboard.php" class="nav-link <?php if (basename($_SERVER["PHP_SELF"]) == "crm_dashboard.php") { echo "active"; } ?>">
+                            <i class="nav-icon fas fa-chart-line"></i>
+                            <p>CRM Dashboard</p>
+                        </a>
+                    </li>
+                <?php } ?>
+
                 <?php if ($config_module_enable_accounting == 1 && lookupUserPermission("module_sales") >= 1) { ?>
                     <li class="nav-header mt-3">BILLING</li>
                     <li class="nav-item">

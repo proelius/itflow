@@ -1690,4 +1690,11 @@ return [
     'Please find attached the report of your prepaid hours for {quarter}.' => 'Please find attached the report of your prepaid hours for {quarter}.',
     'Prepaid hours reports' => 'Prepaid hours reports',
     'View PDF' => 'View PDF',
+    // CRM emails
+    'Welcome aboard' => 'Welcome aboard',
+    'Thank you for your trust. We are happy to start working with {company}.' => 'Thank you for your trust. We are happy to start working with {company}.',
+    'We will get in touch shortly to set everything up. Do not hesitate to ask if you have any question.' => 'We will get in touch shortly to set everything up. Do not hesitate to ask if you have any question.',
+    'Thank you for your time' => 'Thank you for your time',
+    'Thank you for the time you gave us. We understand that {company} goes another way for now.' => 'Thank you for the time you gave us. We understand that {company} goes another way for now.',
+    'If your needs change, we will gladly start again.' => 'If your needs change, we will gladly start again.',
 ];

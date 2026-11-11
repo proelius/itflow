@@ -1737,4 +1737,11 @@ return [
     'Please find attached the report of your prepaid hours for {quarter}.' => 'Veuillez trouver ci-joint le rapport de vos heures prépayées pour {quarter}.',
     'Prepaid hours reports' => 'Rapports des heures prépayées',
     'View PDF' => 'Voir le PDF',
+    // CRM emails
+    'Welcome aboard' => 'Bienvenue',
+    'Thank you for your trust. We are happy to start working with {company}.' => 'Merci de votre confiance. Nous sommes heureux de commencer à travailler avec {company}.',
+    'We will get in touch shortly to set everything up. Do not hesitate to ask if you have any question.' => 'Nous vous contacterons très prochainement pour tout mettre en place. N’hésitez pas à nous poser toutes vos questions.',
+    'Thank you for your time' => 'Merci pour votre temps',
+    'Thank you for the time you gave us. We understand that {company} goes another way for now.' => 'Merci du temps que vous nous avez accordé. Nous comprenons que {company} choisisse une autre voie pour le moment.',
+    'If your needs change, we will gladly start again.' => 'Si vos besoins évoluent, nous reprendrons volontiers contact avec vous.',
 ];
