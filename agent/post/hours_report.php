@@ -105,6 +105,6 @@ if (isset($_POST['send_hours_report'])) {
 if (isset($_GET['hours_report_pdf'])) {
 
     $report = hoursReportPostRow($_GET['hours_report_pdf']);
-    billingPdfSend(forkHoursReportPdf($report), true);
+    billingPdfSend(forkHoursReportPdf($report));
 
 }
