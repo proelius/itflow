@@ -225,6 +225,9 @@ crm_test('the ics page checks the role and the deal', strpos(file_get_contents($
 echo "\nWho may use it\n";
 $GLOBALS['session_is_admin'] = true;
 crm_test('an admin role is let in', forkCrmRoleAllowed() === true);
+$gate = file_get_contents($itflow_dir . '/functions/fork_crm.php');
+crm_test('the gate is the admin role or the Sales module, no role name', strpos($gate, "lookupUserPermission('module_sales') >= 1") !== false && stripos($gate, 'permissionRoleName') === false);
+crm_test('the agents who hear are the admins and the roles with the Sales module', strpos(file_get_contents($itflow_dir . '/functions/fork_crm_extra.php'), "m.module_name = 'module_sales'") !== false);
 
 echo "\nStages\n";
 $stages = forkCrmDefaultStages();

@@ -18,31 +18,23 @@
  */
 
 /*
- * Who may use the CRM: the Administrator and Accountant roles (an admin role, or a role named
- * Accountant), and then only as far as the Sales module lets them - level 1 reads, 2 changes,
- * 3 archives deals and sets the stages. Any other role is turned away.
+ * Who may use the CRM: the Administrator role and any role that has the Sales module (level 1 reads,
+ * 2 changes, 3 archives deals and sets the stages). A role with no Sales level is turned away.
  */
 function forkCrmRoleAllowed() {
     global $session_is_admin;
-    static $allowed = null;
-    if (!empty($session_is_admin)) {
-        return true;
-    }
-    if ($allowed === null) {
-        $allowed = strcasecmp(trim(permissionRoleName()), 'Accountant') === 0;
-    }
-    return $allowed;
+    return !empty($session_is_admin) || lookupUserPermission('module_sales') >= 1;
 }
 
-/** The agent's level in the CRM: 0 for a role that may not use it, else their Sales module level. */
+/** The agent's level in the CRM: their Sales module level, 0 when the role has none. */
 function forkCrmLevel() {
-    return forkCrmRoleAllowed() ? lookupUserPermission('module_sales') : 0;
+    return forkCrmRoleAllowed() ? intval(lookupUserPermission('module_sales')) : 0;
 }
 
 /** Turn the agent away unless they have at least $level in the CRM. */
 function forkCrmEnforce($level = 1) {
     if (!forkCrmRoleAllowed()) {
-        permissionRefuse("The CRM is for the Administrator and Accountant roles.");
+        permissionRefuse("The CRM is for the Administrator role and the roles with the Sales module.");
     }
     enforceUserPermission('module_sales', $level);
 }
@@ -1091,14 +1083,13 @@ function forkCrmClientChoices() {
     return $out;
 }
 
-/** The agents to pick as owner: [user_id => name]. */
+/** The agents to pick as owner - those who may use the CRM: [user_id => name]. */
 function forkCrmUsers() {
-    global $mysqli;
     $out = [];
-    $result = mysqli_query($mysqli, "SELECT user_id, user_name FROM users WHERE user_archived_at IS NULL AND user_status = 1 ORDER BY user_name");
-    while ($result && ($row = mysqli_fetch_assoc($result))) {
-        $out[intval($row['user_id'])] = $row['user_name'];
+    foreach (forkCrmAgents() as $user_id => $agent) {
+        $out[$user_id] = $agent['name'];
     }
+    asort($out, SORT_NATURAL | SORT_FLAG_CASE);
     return $out;
 }
 

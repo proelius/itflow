@@ -332,12 +332,14 @@ function forkCrmStaleDeals($days) {
     return $out;
 }
 
-/** The agents who may use the CRM: [user_id => ['name', 'email']] - an admin role or a role named Accountant. */
+/** The agents who may use the CRM: [user_id => ['name', 'email']] - an admin role or a role with the Sales module. */
 function forkCrmAgents() {
     global $mysqli;
     $out = [];
     $result = mysqli_query($mysqli, "SELECT u.user_id, u.user_name, u.user_email, r.role_is_admin FROM users u JOIN user_roles r ON r.role_id = u.user_role_id
-        WHERE u.user_status = 1 AND u.user_archived_at IS NULL AND (r.role_is_admin = 1 OR LOWER(TRIM(r.role_name)) = 'accountant')");
+        WHERE u.user_status = 1 AND u.user_archived_at IS NULL AND (r.role_is_admin = 1 OR EXISTS (
+            SELECT 1 FROM user_role_permissions p JOIN modules m ON m.module_id = p.module_id
+            WHERE p.user_role_id = r.role_id AND m.module_name = 'module_sales' AND p.user_role_permission_level >= 1))");
     while ($result && ($row = mysqli_fetch_assoc($result))) {
         $out[intval($row['user_id'])] = ['name' => $row['user_name'], 'email' => $row['user_email'], 'admin' => intval($row['role_is_admin']) === 1];
     }
