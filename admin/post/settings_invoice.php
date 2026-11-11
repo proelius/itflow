@@ -52,6 +52,16 @@ if (isset($_POST['edit_invoice_settings'])) {
         $after['config_invoice_paid_lead_to_client'] = empty($_POST['config_invoice_paid_lead_to_client']) ? 0 : 1;
     }
 
+    // From 3.6.3 - the QR-IBAN of the Swiss QR-bill (functions/qr_bill.php)
+    if (settingsColumnExists($mysqli, 'config_invoice_qr_iban')) {
+        $before += settingsCurrent(['config_invoice_qr_iban']);
+        $qr_iban = qrBillIban($_POST['config_invoice_qr_iban'] ?? $before['config_invoice_qr_iban']);
+        if ($qr_iban !== '' && !qrBillIsQrIban($qr_iban)) {
+            $errors['config_invoice_qr_iban'] = 'A QR-IBAN: CH or LI, 21 characters, with a bank number from 30000 to 31999 - not a regular IBAN.';
+        }
+        $after['config_invoice_qr_iban'] = $qr_iban;
+    }
+
     // Late fees - a percent of what is owed
     $late_fee = billingNumberInput(str_replace('%', '', (string) $in['config_invoice_late_fee_percent']));
     if ($late_fee === null || $late_fee < 0 || $late_fee > 100) {

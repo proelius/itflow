@@ -1643,4 +1643,12 @@ return [
     'Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the {link} or by emailing {email}.' => 'Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the {link} or by emailing {email}.',
     'Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the {link}.' => 'Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the {link}.',
     'client portal' => 'client portal',
+    'Payment part' => 'Payment part',
+    'Account / Payable to' => 'Account / Payable to',
+    'Additional information' => 'Additional information',
+    'Payable by' => 'Payable by',
+    'Payable by (name/address)' => 'Payable by (name/address)',
+    'Currency' => 'Currency',
+    'Acceptance point' => 'Acceptance point',
+    'Receipt{qr_bill}' => 'Receipt{qr_bill}',
 ];

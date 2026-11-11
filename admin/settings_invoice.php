@@ -54,6 +54,10 @@ echo settingsPageStart('invoice');
                 <?= settingsSwitch('config_invoice_show_tax_id', $config_invoice_show_tax_id, ['help' => trim((string) $company['company_tax_id']) !== ''
                     ? 'Under your address - ' . escapeHtml($company['company_tax_id']) . ', from <a href="settings_company.php#setting=company_tax_id">Company details</a>.'
                     : 'Under your address. There is none in <a href="settings_company.php#setting=company_tax_id">Company details</a> yet.']) ?>
+                <?php if (settingsColumnExists($mysqli, 'config_invoice_qr_iban')) { ?>
+                    <?= settingsInput('config_invoice_qr_iban', qrBillIbanSpaced(settingsCurrent(['config_invoice_qr_iban'])['config_invoice_qr_iban']), ['icon' => 'fa-qrcode', 'maxlength' => 34,
+                        'placeholder' => 'CH44 3199 9123 0008 8901 2', 'help' => 'Swiss QR-bill: your QR-IBAN (the bank gives you one, its bank number starts 30 or 31) adds a payment part and receipt to the foot of an invoice\'s PDF that is still owed, in CHF or EUR. The reference is made from the invoice number. Empty, no QR-bill.']) ?>
+                <?php } ?>
             <?= settingsSectionEnd() ?>
 
             <?= settingsSectionStart('late-fees', 'Late fees', 'A percent of what is still owed, added as a line of its own every 30 days late - by the nightly job, while payment reminders are on.') ?>
