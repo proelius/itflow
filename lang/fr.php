@@ -2090,4 +2090,5 @@ return [
     'Thursday' => 'jeudi',
     'Friday' => 'vendredi',
     'Saturday' => 'samedi',
+    'Y-m-d' => 'd.m.Y',
 ];

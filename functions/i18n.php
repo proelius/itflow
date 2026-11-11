@@ -405,6 +405,7 @@ function i18n_date(string $format, ?int $timestamp = null): string {
         'l, F j' => t('l, F j'),
         'g:i A' => t('g:i A'),
         'M j, Y g:i A' => t('M j, Y g:i A'),
+        'Y-m-d' => t('Y-m-d'),
     ][$format] ?? $format;
     $names = [
         'M' => [t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'), t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec')],
@@ -427,6 +428,22 @@ function i18n_date(string $format, ?int $timestamp = null): string {
         }
     }
     return $out;
+}
+
+/**
+ * A stored date (YYYY-MM-DD) shown in the current language.
+ * English, and anything that is not a plain date, comes back exactly as stored.
+ *
+ * @param mixed $value Date as stored in the database
+ * @return string
+ */
+function i18n_date_value($value): string {
+    $value = (string) $value;
+    _i18n_load();
+    if ($GLOBALS['_i18n_lang'] === 'en' || !preg_match('/^(?!0000)\d{4}-\d{2}-\d{2}$/', $value)) {
+        return $value;
+    }
+    return i18n_date('Y-m-d', strtotime($value));
 }
 
 /**
