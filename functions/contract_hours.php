@@ -326,6 +326,10 @@ function contractHoursDraw($client_id, array $ticket_ids = [], $by = 'ITFlow', $
                 <=> [$b['contract_block_expires'] === null ? 1 : 0, (string) $b['contract_block_expires'], $b['contract_block_bought'], $b['contract_block_id']];
         });
         $result['contracts'] = $contracts;
+        // The levels of the blocks bought (functions/fork_hours_alerts.php) - at every draw, drawn from or not
+        foreach (array_keys($contracts) as $contract_id) {
+            forkHoursAlertsCheck($contract_id);
+        }
         if (!$blocks) {
             return $result;
         }
@@ -411,6 +415,9 @@ function contractHoursDraw($client_id, array $ticket_ids = [], $by = 'ITFlow', $
         // Running low, or out - the owner hears once
         foreach (array_keys($touched) as $contract_id) {
             contractHoursAlertCheck($contract_id);
+        }
+        // And again, after the tickets drawn above took their hours
+        foreach (array_keys($contracts) as $contract_id) {
             forkHoursAlertsCheck($contract_id);
         }
         // The hours ran out part way through a ticket - the rest is to bill
