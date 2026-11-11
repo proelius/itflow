@@ -468,7 +468,7 @@ function billingStatementPdfRender(array $statement) {
         $late = $invoice['balance'] > 0 && $invoice['days'] > 0;
         $html .= '<tr nobr="true"><td width="14%" style="' . $td . '">' . $e(i18n_date_value($invoice['invoice_date'])) . '</td>
             <td width="30%" style="' . $td . '"><b>' . $e(billingNumber('invoice', $invoice)) . '</b>' . (trim((string) $invoice['invoice_scope']) !== '' ? '<br><span style="font-size:7pt; color:' . $grey . ';">' . $e($invoice['invoice_scope']) . '</span>' : '') . '</td>
-            <td width="14%" style="' . $td . ($late ? ' color:' . $red . ';' : '') . '">' . $e(i18n_date_value($invoice['invoice_due'])) . ($late ? '<br><span style="font-size:7pt;">' . $e(t('{n} days late', ['{n}' => intval($invoice['days'])])) . '</span>' : '') . '</td>
+            <td width="14%" style="' . $td . ($late ? ' color:' . $red . ';' : '') . '">' . $e(i18n_date_value($invoice['invoice_due'])) . ($late ? '<br><span style="font-size:7pt;">' . $e(intval($invoice['days']) === 1 ? t('{n} day late', ['{n}' => 1]) : t('{n} days late', ['{n}' => intval($invoice['days'])])) . '</span>' : '') . '</td>
             <td width="14%" align="right" style="' . $td . '">' . $money($invoice['invoice_amount']) . '</td>
             <td width="14%" align="right" style="' . $td . '">' . (floatval($invoice['paid']) > 0 ? $money($invoice['paid']) : '<span style="color:' . $grey . ';">-</span>') . '</td>
             <td width="14%" align="right" style="' . $td . '"><b>' . ($invoice['balance'] > 0 ? $money($invoice['balance']) : '<span style="color:#198754;">' . t('Paid') . '</span>') . '</b></td></tr>';

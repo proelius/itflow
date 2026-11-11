@@ -91,7 +91,7 @@ $terms = [
     t('Type') => portalContractTypeLabel($contract['contract_type']),
     t('Term') => $contract['contract_start_date'] ? t('{term} from {date}', ['{term}' => portalContractTermLabel($contract['contract_term_months']), '{date}' => i18n_date('M j, Y', strtotime($contract['contract_start_date']))]) : portalContractTermLabel($contract['contract_term_months']),
     intval($contract['contract_auto_renew']) ? t('Renews') : t('Ends') => $contract['contract_end_date'] ? i18n_date('M j, Y', intval($contract['contract_auto_renew']) ? strtotime('+1 day', strtotime($contract['contract_end_date'])) : strtotime($contract['contract_end_date'])) : '',
-    t('Notice') => intval($contract['contract_notice_days']) ? t('{n} days before it ends', ['{n}' => intval($contract['contract_notice_days'])]) : '',
+    t('Notice') => intval($contract['contract_notice_days']) ? (intval($contract['contract_notice_days']) === 1 ? t('{n} day before it ends', ['{n}' => 1]) : t('{n} days before it ends', ['{n}' => intval($contract['contract_notice_days'])])) : '',
 ];
 ?>
 
