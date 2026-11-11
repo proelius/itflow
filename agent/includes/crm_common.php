@@ -51,3 +51,20 @@ function crmOptions(array $choices, $selected) {
     }
     return $html;
 }
+
+/** The postal address fields of a prospect: street, zip, city, state, country. $required marks them so. */
+function crmAddressFields($required) {
+    global $session_company_country;
+    $req = $required ? ' required' : '';
+    $star = $required ? ' <span class="text-danger">*</span>' : '';
+    $html = '<div class="row g-2 mb-2">'
+        . '<div class="col-md-5"><label class="form-label">Street and number' . $star . '</label><input type="text" class="form-control" name="address" maxlength="200"' . $req . '></div>'
+        . '<div class="col-md-2"><label class="form-label">Postal code' . $star . '</label><input type="text" class="form-control" name="zip" maxlength="200"' . $req . '></div>'
+        . '<div class="col-md-5"><label class="form-label">City' . $star . '</label><input type="text" class="form-control" name="city" maxlength="200"' . $req . '></div>'
+        . '<div class="col-md-5"><label class="form-label">State / canton</label><input type="text" class="form-control" name="state" maxlength="200"></div>'
+        . '<div class="col-md-5"><label class="form-label">Country' . $star . '</label><select class="form-select" name="country"' . $req . '>';
+    foreach (settingsLocalizationArrays()['countries'] as $country) {
+        $html .= '<option' . ($country === ($session_company_country ?? '') ? ' selected' : '') . '>' . escapeHtml($country) . '</option>';
+    }
+    return $html . '</select></div></div>';
+}

@@ -100,6 +100,18 @@ crm_test('total: the quotes still in play, in the company currency', forkCrmQuot
 crm_test('total of none is 0', forkCrmQuotesTotal([], 'CHF') === 0.0);
 crm_test('total in another currency', forkCrmQuotesTotal($quotes, 'EUR') === 300.0);
 
+echo "\nPostal address\n";
+$countries = ['Switzerland', 'France'];
+[$a, $e] = forkCrmAddressClean(['address' => ' Rue du Lac 1 ', 'zip' => '1003', 'city' => 'Lausanne', 'country' => 'Switzerland'], $countries);
+crm_test('a full address is accepted and trimmed', !$e && $a['address'] === 'Rue du Lac 1' && $a['state'] === '');
+[$a, $e] = forkCrmAddressClean(['address' => '', 'zip' => '', 'city' => '', 'country' => 'Switzerland'], $countries);
+crm_test('street, zip and city are required', array_keys($e) === ['address', 'zip', 'city']);
+[$a, $e] = forkCrmAddressClean(['address' => 'x', 'zip' => '1', 'city' => 'y', 'country' => 'Atlantis'], $countries);
+crm_test('the country must be one ITFlow offers', array_keys($e) === ['country']);
+[$a, $e] = forkCrmAddressClean(['address' => '<b>x</b>', 'zip' => '1', 'city' => 'y', 'country' => ''], $countries);
+crm_test('no country is refused, tags are removed', array_keys($e) === ['country'] && $a['address'] === 'x');
+crm_test('the handler asks for the address', strpos(file_get_contents($itflow_dir . '/agent/post/crm.php'), 'forkCrmAddressClean(') !== false);
+
 echo "\nWho may use it\n";
 $GLOBALS['session_is_admin'] = true;
 crm_test('an admin role is let in', forkCrmRoleAllowed() === true);

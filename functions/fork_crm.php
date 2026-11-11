@@ -598,14 +598,64 @@ function forkCrmClientByName($name) {
 }
 
 /**
+ * The postal address from a form: street, zip, city, country (all four required, the country one
+ * ITFlow offers) and state (optional). Returns [address, errors] - errors is [field => text].
+ */
+function forkCrmAddressClean(array $input, array $countries) {
+    $address = [
+        'address' => forkCrmTextClean($input['address'] ?? '', 200),
+        'zip' => forkCrmTextClean($input['zip'] ?? '', 200),
+        'city' => forkCrmTextClean($input['city'] ?? '', 200),
+        'state' => forkCrmTextClean($input['state'] ?? '', 200),
+        'country' => forkCrmTextClean($input['country'] ?? '', 200),
+    ];
+    $errors = [];
+    foreach (['address' => 'the street and number', 'zip' => 'the postal code', 'city' => 'the city'] as $field => $label) {
+        if ($address[$field] === '') {
+            $errors[$field] = "Give $label.";
+        }
+    }
+    if ($address['country'] === '' || !in_array($address['country'], $countries, true)) {
+        $errors['country'] = 'Choose the country.';
+    }
+    return [$address, $errors];
+}
+
+/** Does this client have a postal address (street and city) on one of its locations? */
+function forkCrmClientHasAddress($client_id) {
+    global $mysqli;
+    $result = mysqli_query($mysqli, "SELECT location_id FROM locations WHERE location_client_id = " . intval($client_id) . " AND location_archived_at IS NULL
+        AND location_address IS NOT NULL AND location_address <> '' AND location_city IS NOT NULL AND location_city <> '' LIMIT 1");
+    return $result && mysqli_num_rows($result) > 0;
+}
+
+/** Put the postal address on the client's primary location (made if there is none). */
+function forkCrmAddressSave($client_id, array $a) {
+    global $mysqli;
+    $client_id = intval($client_id);
+    $set = "location_address = '" . escapeSql($a['address']) . "', location_city = '" . escapeSql($a['city']) . "', location_state = '" . escapeSql($a['state']) . "',
+        location_zip = '" . escapeSql($a['zip']) . "', location_country = '" . escapeSql($a['country']) . "'";
+    $row = mysqli_fetch_row(mysqli_query($mysqli, "SELECT location_id FROM locations WHERE location_client_id = $client_id AND location_archived_at IS NULL ORDER BY location_primary DESC, location_id LIMIT 1"));
+    if ($row) {
+        mysqli_query($mysqli, "UPDATE locations SET $set WHERE location_id = " . intval($row[0]));
+    } else {
+        mysqli_query($mysqli, "INSERT INTO locations SET location_name = 'Primary', $set, location_primary = 1, location_client_id = $client_id");
+    }
+}
+
+/**
  * Make a deal's prospect a lead (a "Prospect") in ITFlow's contacts, with the deal's contact person,
  * and tie the deal to it. A client or lead with the same name is not made twice: the deal is tied to
- * that one. The caller checks the agent may add clients. Returns [client_id, 'created'|'existing',
+ * that one. $address (from forkCrmAddressClean(), or null) goes on the new prospect's primary location,
+ * or on an existing one that has none. The caller checks the agent may add clients. Returns [client_id, 'created'|'existing',
  * error] - client_id 0 and an error text on failure.
  */
-function forkCrmProspectCreate(array $deal) {
+function forkCrmProspectCreate(array $deal, ?array $address = null) {
     global $mysqli, $session_company_currency;
     if (intval($deal['deal_client_id']) > 0) {
+        if ($address && !forkCrmClientHasAddress($deal['deal_client_id'])) {
+            forkCrmAddressSave($deal['deal_client_id'], $address);
+        }
         return [intval($deal['deal_client_id']), 'existing', ''];
     }
     $name = forkCrmTextClean($deal['deal_prospect'] ?? '', 200);
@@ -616,6 +666,9 @@ function forkCrmProspectCreate(array $deal) {
     if ($found) {
         $client_id = intval($found['client_id']);
         $state = 'existing';
+        if ($address && !forkCrmClientHasAddress($client_id)) {
+            forkCrmAddressSave($client_id, $address);
+        }
     } else {
         $name_sql = escapeSql($name);
         $abbreviation = escapeSql(shortenClientName($name_sql));
@@ -630,6 +683,9 @@ function forkCrmProspectCreate(array $deal) {
         if (($_SERVER['DOCUMENT_ROOT'] ?? '') !== '' && !file_exists($folder)) {
             @mkdir($folder);
             @file_put_contents("$folder/index.php", "");
+        }
+        if ($address) {
+            forkCrmAddressSave($client_id, $address);
         }
         $contact = escapeSql(forkCrmTextClean($deal['deal_contact'] ?? '', 200));
         $email = escapeSql(forkCrmTextClean($deal['deal_email'] ?? '', 200));

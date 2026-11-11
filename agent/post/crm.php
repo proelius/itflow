@@ -108,7 +108,7 @@ if (isset($_POST['move_crm_deal'])) {
     $message = "Deal moved to <strong>" . escapeHtml($stage['stage_name']) . "</strong>";
     // A deal won with a lead (a prospect in the contacts) is the moment to make it a client
     if ($stage['stage_kind'] === 'won' && intval($deal['deal_client_id']) > 0 && intval($deal['client_lead']) === 1 && lookupUserPermission('module_client') >= 2) {
-        $message .= ' - <a href="' . escapeHtml(clientOnboardingUrl($deal['deal_client_id'], 'company')) . '">make ' . escapeHtml($deal['client_name']) . ' a client</a>';
+        $message .= ' - <a href="crm_deal.php?deal_id=' . intval($deal['deal_id']) . '#convert">make ' . escapeHtml($deal['client_name']) . ' a client</a> (its postal address is needed)';
     }
     flashAlert($message);
     redirect();
@@ -271,7 +271,22 @@ if (isset($_POST['make_crm_prospect'])) {
     $deal = crmPostDeal($_POST['deal_id'] ?? 0, 2);
     enforceUserPermission('module_client', 2);
 
-    [$client_id, $state, $error] = forkCrmProspectCreate($deal);
+    // The postal address is required to make a prospect, and to make a lead a client
+    $onboard = !empty($_POST['onboard']) && clientOnboardingReady();
+    $target = intval($deal['deal_client_id']) ?: intval((forkCrmClientByName($deal['deal_prospect'] ?? '')['client_id'] ?? 0));
+    if ($target) {
+        enforceClientAccess($target);
+    }
+    $needs_address = !$target || (!forkCrmClientHasAddress($target) && $onboard);
+    $address = null;
+    if ($needs_address) {
+        [$address, $errors] = forkCrmAddressClean($_POST, settingsLocalizationArrays()['countries']);
+        if ($errors) {
+            flashAlert("The postal address is required: " . escapeHtml(implode(' ', $errors)), 'error');
+            redirect();
+        }
+    }
+    [$client_id, $state, $error] = forkCrmProspectCreate($deal, $address);
     if ($error !== '') {
         flashAlert($error, 'error');
         redirect();

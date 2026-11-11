@@ -35,6 +35,8 @@ $is_lead = $has_client && intval($deal['client_lead']) === 1;
 $can_client = lookupUserPermission('module_client') >= 2;
 $prospect_name = trim((string) $deal['deal_prospect']);
 $same_name = !$has_client && $prospect_name !== '' ? forkCrmClientByName($prospect_name) : null;
+$same_has_address = $same_name ? forkCrmClientHasAddress($same_name['client_id']) : false;
+$has_address = $is_lead ? forkCrmClientHasAddress($deal['deal_client_id']) : false;
 $today = date('Y-m-d');
 $closed = $deal['stage_kind'] !== 'open';
 $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-danger'][$deal['stage_kind']];
@@ -83,30 +85,46 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
     </div>
 
     <?php if ($can_edit && !$has_client) { ?>
-        <div class="card-body border-bottom">
+        <div class="card-body border-bottom" id="convert">
             <?php if ($prospect_name === '') { ?>
                 <span class="text-secondary"><i class="fas fa-user-plus me-2"></i>To make this prospect a client, type its name in <em>Prospect</em> below and save.</span>
-            <?php } elseif ($same_name) { ?>
-                <span class="me-3"><i class="fas fa-info-circle me-2"></i>ITFlow already has <strong><?= escapeHtml($same_name['client_name']) ?></strong> as a <?= intval($same_name['client_lead']) ? 'prospect' : 'client' ?>.</span>
-            <?php } else { ?>
-                <span class="me-3"><i class="fas fa-user-plus me-2"></i><strong><?= escapeHtml($prospect_name) ?></strong> is not in ITFlow's contacts yet.</span>
-            <?php } ?>
-            <?php if ($prospect_name !== '' && $can_client) { ?>
-                <form action="post.php" method="post" class="d-inline">
+            <?php } elseif ($can_client) { ?>
+                <form action="post.php" method="post">
                     <?= crmCsrf() ?>
                     <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                    <input type="hidden" name="onboard" value="">
+                    <?php if ($same_name) { ?>
+                        <p class="mb-2"><i class="fas fa-info-circle me-2"></i>ITFlow already has <strong><?= escapeHtml($same_name['client_name']) ?></strong> as a <?= intval($same_name['client_lead']) ? 'prospect' : 'client' ?>.
+                            <?php if (!$same_has_address) { ?>Its postal address is missing - it is required to make it a client.<?php } ?></p>
+                        <?php if (!$same_has_address && intval($same_name['client_lead'])) { ?>
+                            <?= crmAddressFields(false) ?>
+                        <?php } ?>
+                    <?php } else { ?>
+                        <p class="mb-2"><i class="fas fa-user-plus me-2"></i><strong><?= escapeHtml($prospect_name) ?></strong> is not in ITFlow's contacts yet. Its postal address is required.</p>
+                        <?= crmAddressFields(true) ?>
+                    <?php } ?>
                     <button type="submit" name="make_crm_prospect" value="1" class="btn btn-sm btn-primary"><i class="fas fa-user-plus me-2"></i><?= $same_name ? 'Tie the deal to it' : 'Add as a prospect' ?></button>
                     <?php if (!$same_name || intval($same_name['client_lead'])) { ?>
                         <button type="submit" name="make_crm_prospect" value="1" class="btn btn-sm btn-success" onclick="this.form.onboard.value=1"><i class="fas fa-user-check me-2"></i>Make it a client</button>
-                        <input type="hidden" name="onboard" value="">
                     <?php } ?>
                 </form>
             <?php } ?>
         </div>
     <?php } elseif ($is_lead && $can_client) { ?>
-        <div class="card-body border-bottom">
-            <span class="me-3"><i class="fas fa-user-clock me-2"></i><strong><?= escapeHtml($deal['client_name']) ?></strong> is still a prospect in ITFlow.</span>
-            <a class="btn btn-sm btn-success" href="<?= escapeHtml(clientOnboardingUrl($deal['deal_client_id'], 'company')) ?>"><i class="fas fa-user-check me-2"></i>Make it a client</a>
+        <div class="card-body border-bottom" id="convert">
+            <?php if ($has_address) { ?>
+                <span class="me-3"><i class="fas fa-user-clock me-2"></i><strong><?= escapeHtml($deal['client_name']) ?></strong> is still a prospect in ITFlow.</span>
+                <a class="btn btn-sm btn-success" href="<?= escapeHtml(clientOnboardingUrl($deal['deal_client_id'], 'company')) ?>"><i class="fas fa-user-check me-2"></i>Make it a client</a>
+            <?php } else { ?>
+                <form action="post.php" method="post">
+                    <?= crmCsrf() ?>
+                    <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                    <input type="hidden" name="onboard" value="1">
+                    <p class="mb-2"><i class="fas fa-user-clock me-2"></i><strong><?= escapeHtml($deal['client_name']) ?></strong> is still a prospect in ITFlow. Its postal address is required to make it a client.</p>
+                    <?= crmAddressFields(true) ?>
+                    <button type="submit" name="make_crm_prospect" value="1" class="btn btn-sm btn-success"><i class="fas fa-user-check me-2"></i>Save the address and make it a client</button>
+                </form>
+            <?php } ?>
         </div>
     <?php } ?>
 
