@@ -2383,7 +2383,7 @@ function billingOnlinePayments() {
 function billingPdf($type, array $row, $variant = 'document') {
     require_once __DIR__ . '/../libs/TCPDF/tcpdf.php';
     require_once __DIR__ . '/billing_pdf.php';
-    return billingPdfRender($type, $row, $variant);
+    return i18n_with(client_language(), fn() => billingPdfRender($type, $row, $variant));
 }
 
 /** Hand a billingPdf() to the browser - opened in a tab, or saved with $download. */

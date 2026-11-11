@@ -707,7 +707,7 @@ function billingStatementPeriod(array $statement) {
 function billingStatementPdf(array $statement) {
     require_once __DIR__ . '/../libs/TCPDF/tcpdf.php';
     require_once __DIR__ . '/billing_pdf.php';
-    return billingStatementPdfRender($statement);
+    return i18n_with(client_language(), fn() => billingStatementPdfRender($statement));
 }
 
 /** A statement email - [subject, email]. $opts: note. */
