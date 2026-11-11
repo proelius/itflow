@@ -470,16 +470,16 @@ function billingStatementPdfRender(array $statement) {
     $th = 'font-size:6.5pt; color:' . $grey . '; font-weight:bold; border-bottom:0.6px solid #adb5bd;';
     $td = 'border-bottom:0.3px solid #dee2e6;';
     $html = '<table cellpadding="4" cellspacing="0" width="100%"><thead><tr>
-        <td width="12%" style="' . $th . '">' . $e(mb_strtoupper(t('Date'))) . '</td><td width="25%" style="' . $th . '">' . $e(mb_strtoupper(t('Invoice'))) . '</td><td width="12%" style="' . $th . '">' . $e(mb_strtoupper(t('Due'))) . '</td>
-        <td width="17%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Total'))) . '</td><td width="17%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Paid'))) . '</td><td width="17%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Balance'))) . '</td></tr></thead>';
+        <td width="12%" style="' . $th . '">' . $e(mb_strtoupper(t('Date'))) . '</td><td width="30%" style="' . $th . '">' . $e(mb_strtoupper(t('Invoice'))) . '</td><td width="12%" style="' . $th . '">' . $e(mb_strtoupper(t('Due'))) . '</td>
+        <td width="15%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Total'))) . '</td><td width="15%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Paid'))) . '</td><td width="16%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Balance'))) . '</td></tr></thead>';
     foreach ($statement['invoices'] as $invoice) {
         $late = $invoice['balance'] > 0 && $invoice['days'] > 0;
         $html .= '<tr nobr="true"><td width="12%" style="' . $td . '">' . $e(i18n_date_value($invoice['invoice_date'])) . '</td>
-            <td width="25%" style="' . $td . '"><b>' . $e(billingNumber('invoice', $invoice)) . '</b>' . (trim((string) $invoice['invoice_scope']) !== '' ? '<br><span style="font-size:7pt; color:' . $grey . ';">' . $e($invoice['invoice_scope']) . '</span>' : '') . '</td>
+            <td width="30%" style="' . $td . '"><b>' . $e(billingNumber('invoice', $invoice)) . '</b>' . (trim((string) $invoice['invoice_scope']) !== '' ? '<br><span style="font-size:7pt; color:' . $grey . ';">' . $e($invoice['invoice_scope']) . '</span>' : '') . '</td>
             <td width="12%" style="' . $td . ($late ? ' color:' . $red . ';' : '') . '">' . $e(i18n_date_value($invoice['invoice_due'])) . ($late ? '<br><span style="font-size:7pt;">' . $e(intval($invoice['days']) === 1 ? t('{n} day late', ['{n}' => 1]) : t('{n} days late', ['{n}' => intval($invoice['days'])])) . '</span>' : '') . '</td>
-            <td width="17%" align="right" style="' . $td . '">' . $money($invoice['invoice_amount']) . '</td>
-            <td width="17%" align="right" style="' . $td . '">' . (floatval($invoice['paid']) > 0 ? $money($invoice['paid']) : '<span style="color:' . $grey . ';">-</span>') . '</td>
-            <td width="17%" align="right" style="' . $td . '"><b>' . ($invoice['balance'] > 0 ? $money($invoice['balance']) : '<span style="color:#198754;">' . t('Paid') . '</span>') . '</b></td></tr>';
+            <td width="15%" align="right" style="' . $td . '">' . $money($invoice['invoice_amount']) . '</td>
+            <td width="15%" align="right" style="' . $td . '">' . (floatval($invoice['paid']) > 0 ? $money($invoice['paid']) : '<span style="color:' . $grey . ';">-</span>') . '</td>
+            <td width="16%" align="right" style="' . $td . '"><b>' . ($invoice['balance'] > 0 ? $money($invoice['balance']) : '<span style="color:#198754;">' . t('Paid') . '</span>') . '</b></td></tr>';
     }
     if (!$statement['invoices']) {
         $html .= '<tr><td colspan="6" align="center" style="color:' . $grey . ';">' . t('Nothing owed in this period.') . '</td></tr>';
