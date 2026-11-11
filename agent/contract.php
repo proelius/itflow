@@ -223,8 +223,7 @@ if (!$contract || ($client_url && intval($contract['contract_client_id']) !== in
                             <?php } ?>
                         <?php } else { ?>
                             <ul class="itflow-contract-trail mb-3">
-                                <?php foreach (contractSignatureTrail($latest) as [$when, $what, $detail]) {
-                                    $icon = strpos($what, 'Sent') === 0 ? 'fa-paper-plane' : (strpos($what, 'Opened') === 0 ? 'fa-envelope-open' : (strpos($what, 'Withdrawn') === 0 ? 'fa-undo' : 'fa-signature')); ?>
+                                <?php foreach (contractSignatureTrail($latest) as [$when, $what, $detail, $icon]) { ?>
                                     <li><i class="fas fa-fw <?= $icon ?>"></i><span><?= escapeHtml($what) ?><span class="d-block small text-body-secondary"><?= escapeHtml(implode(' · ', array_filter([$when, $detail]))) ?></span></span></li>
                                 <?php } ?>
                             </ul>

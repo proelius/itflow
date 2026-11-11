@@ -32,7 +32,7 @@ class ContractPdf extends TCPDF {
         $this->SetFont('dejavusans', '', 7);
         $this->SetTextColor(108, 117, 125);
         $this->Cell($width * 0.75, 4, $this->footer_label, 0, 0, 'L');
-        $this->Cell($width * 0.25, 4, 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(), 0, 0, 'R');
+        $this->Cell($width * 0.25, 4, t('Page {page} of {pages}', ['{page}' => $this->getAliasNumPage(), '{pages}' => $this->getAliasNbPages()]), 0, 0, 'R');
     }
 
     public function Error($msg) {
@@ -97,7 +97,7 @@ function contractPdfRender(array $row, $round = null) {
     $pdf->SetAutoPageBreak(true, 20);
     $pdf->setFontSubsetting(true);
     $pdf->setImageScale(1.5);
-    $pdf->footer_label = trim(($company['company_name'] ?? '') . ' · ' . $row['contract_name'] . ($signed ? ' · Signed' : ($round ? '' : ' · ' . date('M j, Y'))), ' ·');
+    $pdf->footer_label = trim(($company['company_name'] ?? '') . ' · ' . $row['contract_name'] . ($signed ? ' · ' . t('Signed') : ($round ? '' : ' · ' . date('M j, Y'))), ' ·');
     $pdf->AddPage();
     $pdf->SetFont('dejavusans', '', 8.5);
     $pdf->SetTextColor(33, 37, 41);
@@ -108,11 +108,11 @@ function contractPdfRender(array $row, $round = null) {
         implode('  ·  ', array_filter([$company['company_email'] ?? '', $company['phone_display'] ?? '', $company['company_website'] ?? ''])),
     ]);
     $logo = !empty($company['logo_path']) ? '<img src="' . $e($company['logo_path']) . '" height="38"><br>' : '';
-    $status = $signed ? 'SIGNED' : ($round && !empty($round['contract_signature_client_signed_at']) ? 'SIGNED BY CLIENT' : 'CONTRACT');
+    $status = mb_strtoupper($signed ? t('Signed') : ($round && !empty($round['contract_signature_client_signed_at']) ? t('Signed by client') : t('Contract')));
     $pdf->writeHTML('<table cellpadding="0" cellspacing="0" width="100%"><tr>
         <td width="62%">' . $logo . '<span style="font-size:11pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span><br><span style="font-size:7.5pt; color:' . $grey . ';">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>
         <td width="38%" align="right"><span style="font-size:8pt; color:' . ($signed ? '#198754' : '#0a58ca') . '; font-weight:bold; letter-spacing:2px;">' . $status . '</span><br>
-            <span style="font-size:7.5pt; color:' . $grey . ';">' . $e($round && !empty($round['contract_signature_sent_at']) ? 'Sent ' . date('M j, Y', strtotime($round['contract_signature_sent_at'])) : 'As of ' . date('M j, Y')) . '</span></td>
+            <span style="font-size:7.5pt; color:' . $grey . ';">' . $e($round && !empty($round['contract_signature_sent_at']) ? t('Sent {date}', ['{date}' => date('M j, Y', strtotime($round['contract_signature_sent_at']))]) : t('As of {date}', ['{date}' => date('M j, Y')])) . '</span></td>
     </tr></table>', true, false, true, false, '');
     $pdf->Ln(2);
 
@@ -141,8 +141,8 @@ function contractPdfRender(array $row, $round = null) {
         }
         $who = $has
             ? '<b>' . $e($round["contract_signature_{$side}_name"]) . '</b><br><span style="color:' . $grey . ';">' . $e(implode(' · ', array_filter([(string) $round["contract_signature_{$side}_title"], date('M j, Y', strtotime($round["contract_signature_{$side}_signed_at"]))]))) . '</span>'
-            : '<span style="color:' . $grey . ';">Name, title and date</span><br>&nbsp;';
-        $cells .= '<td width="48%" style="border-bottom:0.4px solid #adb5bd;"><span style="font-size:6.5pt; color:' . $grey . '; font-weight:bold;">SIGNED FOR ' . $e(strtoupper($for)) . '</span><br>' . $mark . '</td>';
+            : '<span style="color:' . $grey . ';">' . t('Name, title and date') . '</span><br>&nbsp;';
+        $cells .= '<td width="48%" style="border-bottom:0.4px solid #adb5bd;"><span style="font-size:6.5pt; color:' . $grey . '; font-weight:bold;">' . $e(mb_strtoupper(t('Signed for {name}', ['{name}' => $for]))) . '</span><br>' . $mark . '</td>';
         $cells .= $side === 'client' ? '<td width="4%"></td>' : '';
         $whos[] = $who;
     }
@@ -155,8 +155,8 @@ function contractPdfRender(array $row, $round = null) {
         foreach (contractSignatureTrail($round) as [$when, $what, $detail]) {
             $rows .= '<tr><td width="27%" style="color:' . $grey . ';">' . $e($when) . '</td><td width="73%">' . $e($what) . ($detail !== '' ? '<br><span style="color:' . $grey . ';">' . $e($detail) . '</span>' : '') . '</td></tr>';
         }
-        $html = '<table cellpadding="2.5" cellspacing="0" width="100%" nobr="true"><tr><td colspan="2"><span style="font-size:9pt; font-weight:bold;">How it was signed</span></td></tr>' . $rows
-            . '<tr><td width="27%" style="color:' . $grey . ';">Document fingerprint</td><td width="73%"><span style="font-family:dejavusansmono; font-size:7pt;">SHA-256 ' . $e($round['contract_signature_document_hash']) . '</span></td></tr></table>';
+        $html = '<table cellpadding="2.5" cellspacing="0" width="100%" nobr="true"><tr><td colspan="2"><span style="font-size:9pt; font-weight:bold;">' . t('How it was signed') . '</span></td></tr>' . $rows
+            . '<tr><td width="27%" style="color:' . $grey . ';">' . t('Document fingerprint') . '</td><td width="73%"><span style="font-family:dejavusansmono; font-size:7pt;">SHA-256 ' . $e($round['contract_signature_document_hash']) . '</span></td></tr></table>';
         $pdf->Ln(6);
         $pdf->SetFont('dejavusans', '', 7.5);
         $pdf->writeHTML($html, true, false, true, false, '');

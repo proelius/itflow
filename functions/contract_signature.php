@@ -790,9 +790,23 @@ function contractSignatureBlockHtml(array $row, $round = null, $image_url = null
     return $html . '</div>';
 }
 
+/** The reason a round was withdrawn - stored in English - in the current language. */
+function contractWithdrawnReasonText($reason) {
+    if ($reason === 'Replaced by a new request') {
+        return t('Replaced by a new request');
+    }
+    if ($reason === 'The contract was changed after it was sent') {
+        return t('The contract was changed after it was sent');
+    }
+    if (strncmp($reason, 'Withdrawn by ', 13) === 0) {
+        return t('Withdrawn by {name}', ['{name}' => substr($reason, 13)]);
+    }
+    return $reason;
+}
+
 /*
  * What happened to a round, in order - for its page and the PDF's last
- * section: [when, what, detail] - raw text; the detail (from where, and how)
+ * section: [when, what, detail, icon] - raw text; the detail (from where, and how)
  * may be ''.
  */
 function contractSignatureTrail(array $round) {
@@ -803,26 +817,26 @@ function contractSignatureTrail(array $round) {
     };
     if (!empty($round['contract_signature_sent_at'])) {
         $by = mysqli_fetch_row(mysqli_query($mysqli, "SELECT user_name FROM users WHERE user_id = " . intval($round['contract_signature_sent_by'])))[0] ?? '';
-        $trail[] = [$at($round['contract_signature_sent_at']), 'Sent to ' . $round['contract_signature_sent_to_name'] . ($by !== '' ? " by $by" : ''), (string) $round['contract_signature_sent_to_email']];
+        $trail[] = [$at($round['contract_signature_sent_at']), ($by !== '' ? t('Sent to {name} by {by}', ['{name}' => $round['contract_signature_sent_to_name'], '{by}' => $by]) : t('Sent to {name}', ['{name}' => $round['contract_signature_sent_to_name']])), (string) $round['contract_signature_sent_to_email'], 'fa-paper-plane'];
     }
     if (!empty($round['contract_signature_viewed_at'])) {
-        $trail[] = [$at($round['contract_signature_viewed_at']), 'Opened by the client', ''];
+        $trail[] = [$at($round['contract_signature_viewed_at']), t('Opened by the client'), '', 'fa-envelope-open'];
     }
     if (!empty($round['contract_signature_client_signed_at'])) {
-        $how = ['link' => 'From the link in the email', 'portal' => 'In the client portal', 'recorded' => 'Recorded before signing came to ITFlow'][$round['contract_signature_client_via']] ?? '';
+        $how = ['link' => t('From the link in the email'), 'portal' => t('In the client portal'), 'recorded' => t('Recorded before signing came to ITFlow')][$round['contract_signature_client_via']] ?? '';
         $device = trim(strip_tags(getOS((string) $round['contract_signature_client_user_agent'])) . ', ' . strip_tags(getWebBrowser((string) $round['contract_signature_client_user_agent'])), ' ,-');
-        $trail[] = [$at($round['contract_signature_client_signed_at']), 'Signed for ' . $round['client_name'] . ' by ' . $round['contract_signature_client_name']
-            . (!empty($round['contract_signature_client_title']) ? ', ' . $round['contract_signature_client_title'] : ''),
-            implode(' · ', array_filter([$how, !empty($round['contract_signature_client_ip']) ? 'IP address ' . $round['contract_signature_client_ip'] : '', $device,
-                $round['contract_signature_client_via'] === 'recorded' ? '' : (!empty($round['contract_signature_client_image']) ? 'Signature drawn' : 'Signature typed')]))];
+        $trail[] = [$at($round['contract_signature_client_signed_at']), t('Signed for {client} by {name}', ['{client}' => $round['client_name'], '{name}' => $round['contract_signature_client_name']
+            . (!empty($round['contract_signature_client_title']) ? ', ' . $round['contract_signature_client_title'] : '')]),
+            implode(' · ', array_filter([$how, !empty($round['contract_signature_client_ip']) ? t('IP address {ip}', ['{ip}' => $round['contract_signature_client_ip']]) : '', $device,
+                $round['contract_signature_client_via'] === 'recorded' ? '' : (!empty($round['contract_signature_client_image']) ? t('Signature drawn') : t('Signature typed'))])), 'fa-signature'];
     }
     if (!empty($round['contract_signature_agent_signed_at'])) {
-        $trail[] = [$at($round['contract_signature_agent_signed_at']), 'Countersigned for ' . (billingCompany()['company_name'] ?? '') . ' by ' . $round['contract_signature_agent_name']
-            . (!empty($round['contract_signature_agent_title']) ? ', ' . $round['contract_signature_agent_title'] : ''),
-            !empty($round['contract_signature_agent_ip']) ? 'IP address ' . $round['contract_signature_agent_ip'] : ''];
+        $trail[] = [$at($round['contract_signature_agent_signed_at']), t('Countersigned for {company} by {name}', ['{company}' => billingCompany()['company_name'] ?? '', '{name}' => $round['contract_signature_agent_name']
+            . (!empty($round['contract_signature_agent_title']) ? ', ' . $round['contract_signature_agent_title'] : '')]),
+            !empty($round['contract_signature_agent_ip']) ? t('IP address {ip}', ['{ip}' => $round['contract_signature_agent_ip']]) : '', 'fa-signature'];
     }
     if (!empty($round['contract_signature_withdrawn_at']) && empty($round['contract_signature_agent_signed_at'])) {
-        $trail[] = [$at($round['contract_signature_withdrawn_at']), 'Withdrawn', (string) $round['contract_signature_withdrawn_reason']];
+        $trail[] = [$at($round['contract_signature_withdrawn_at']), t('Withdrawn'), contractWithdrawnReasonText((string) $round['contract_signature_withdrawn_reason']), 'fa-undo'];
     }
     return $trail;
 }
@@ -857,5 +871,5 @@ function contractSignatureOutdated(array $row, array $round) {
 function contractPdf(array $row, $round = null) {
     require_once __DIR__ . '/../libs/TCPDF/tcpdf.php';
     require_once __DIR__ . '/contract_pdf.php';
-    return contractPdfRender($row, $round);
+    return i18n_with(client_language(), fn() => contractPdfRender($row, $round));
 }
