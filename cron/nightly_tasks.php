@@ -232,6 +232,14 @@ if (array_sum($contracts_done)) {
     logApp("Cron", "info", "Contracts: {$contracts_done['renewed']} renewed, {$contracts_done['ended']} ended, {$contracts_done['reminded']} owner(s) reminded, {$contracts_done['drawn']} ticket(s) drawn from prepaid hours, {$contracts_done['paused']} recurring invoice(s) paused");
 }
 
+// CRM - the follow-up tasks that fall due today tell the agent who has them (functions/fork_crm.php)
+if (function_exists('forkCrmNightly')) {
+    $crm_told = forkCrmNightly();
+    if ($crm_told) {
+        logApp("Cron", "info", "CRM: $crm_told follow-up task(s) due - agent(s) told");
+    }
+}
+
 // CLIENT PORTAL - links to join that nobody used
 $portal_invites_cleared = portalInvitesNightly();
 if ($portal_invites_cleared) {

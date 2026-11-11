@@ -99,13 +99,19 @@ if (isset($_POST['move_crm_deal'])) {
     $deal = crmPostDeal($_POST['deal_id'] ?? 0, 2);
 
     $stage = forkCrmStage($_POST['stage_id'] ?? 0);
+    $changed = $stage && intval($stage['stage_id']) !== intval($deal['deal_stage_id']);
     $error = forkCrmDealMove($deal, $_POST['stage_id'] ?? 0, $_POST['lost_reason'] ?? '');
     if ($error !== '') {
         flashAlert($error, 'error');
         redirect();
     }
+    // A stage with a follow-up delay (Quote sent: 14 days) makes the task to follow the client up
+    $follow_up = $changed ? forkCrmFollowUpCreate($deal, $stage, $session_user_id) : null;
     logAudit("CRM", "Edit", "$session_name moved the deal " . escapeSql($deal['deal_title']) . " to " . escapeSql($stage['stage_name']), intval($deal['deal_client_id']), intval($deal['deal_id']));
     $message = "Deal moved to <strong>" . escapeHtml($stage['stage_name']) . "</strong>";
+    if ($follow_up) {
+        $message .= " - follow-up task set for <strong>" . escapeHtml($follow_up) . "</strong>";
+    }
     // A deal won with a lead (a prospect in the contacts) is the moment to make it a client
     if ($stage['stage_kind'] === 'won' && intval($deal['deal_client_id']) > 0 && intval($deal['client_lead']) === 1 && lookupUserPermission('module_client') >= 2) {
         $message .= ' - <a href="crm_deal.php?deal_id=' . intval($deal['deal_id']) . '#convert">make ' . escapeHtml($deal['client_name']) . ' a client</a> (its postal address is needed)';
@@ -171,7 +177,7 @@ if (isset($_POST['add_crm_stage'])) {
     validateCSRFToken();
     forkCrmEnforce(3);
 
-    $stage_id = forkCrmStageAdd($_POST['name'] ?? '', $_POST['kind'] ?? '', $_POST['probability'] ?? 0);
+    $stage_id = forkCrmStageAdd($_POST['name'] ?? '', $_POST['kind'] ?? '', $_POST['probability'] ?? 0, $_POST['followup_days'] ?? 0);
     if (!$stage_id) {
         flashAlert("A stage needs a name.", 'error');
         redirect();
@@ -187,7 +193,7 @@ if (isset($_POST['edit_crm_stage'])) {
     validateCSRFToken();
     forkCrmEnforce(3);
 
-    $error = forkCrmStageSave($_POST['stage_id'] ?? 0, $_POST['name'] ?? '', $_POST['kind'] ?? '', $_POST['probability'] ?? 0);
+    $error = forkCrmStageSave($_POST['stage_id'] ?? 0, $_POST['name'] ?? '', $_POST['kind'] ?? '', $_POST['probability'] ?? 0, $_POST['followup_days'] ?? 0);
     if ($error !== '') {
         flashAlert($error, 'error');
         redirect();

@@ -22,11 +22,11 @@ $counts = forkCrmStageCounts();
     <div class="card-header py-2"><h3 class="card-title mt-2"><i class="fas fa-fw fa-sliders-h me-2"></i>Pipeline stages</h3></div>
     <div class="card-body text-secondary border-bottom">
         A deal moved to an <strong>open</strong> stage takes its probability; to a <strong>won</strong> stage, 100 %; to a <strong>lost</strong> stage, 0 %.
-        There is always at least one stage of each kind. A stage with deals in it cannot be deleted.
+        When a deal enters an open stage that has a <strong>follow-up delay</strong>, a task is made for its owner that many days later; on the day, the owner is told in ITFlow and by email (0 = no follow-up). There is always at least one stage of each kind. A stage with deals in it cannot be deleted.
     </div>
     <div class="table-responsive">
         <table class="table mb-0 align-middle">
-            <thead class="text-dark"><tr><th>Order</th><th>Name</th><th>Kind</th><th>Probability %</th><th>Deals</th><th></th></tr></thead>
+            <thead class="text-dark"><tr><th>Order</th><th>Name</th><th>Kind</th><th>Probability %</th><th>Follow up after (days)</th><th>Deals</th><th></th></tr></thead>
             <tbody>
             <?php $position = 0; foreach ($stages as $stage) { $position++; $form = 'stage-' . intval($stage['stage_id']); ?>
                 <tr>
@@ -41,6 +41,7 @@ $counts = forkCrmStageCounts();
                     <td><input type="text" form="<?= $form ?>" class="form-control" name="name" maxlength="100" value="<?= escapeHtml($stage['stage_name']) ?>" required></td>
                     <td><select form="<?= $form ?>" class="form-select" name="kind"><?= crmOptions(forkCrmKinds(), $stage['stage_kind']) ?></select></td>
                     <td style="width: 140px"><input type="number" form="<?= $form ?>" class="form-control" name="probability" min="0" max="100" value="<?= intval($stage['stage_probability']) ?>"></td>
+                    <td style="width: 150px"><input type="number" form="<?= $form ?>" class="form-control" name="followup_days" min="0" max="365" value="<?= intval($stage['stage_followup_days']) ?>" title="0 = no follow-up task"></td>
                     <td><?= intval($counts[intval($stage['stage_id'])] ?? 0) ?></td>
                     <td class="text-nowrap">
                         <button type="submit" form="<?= $form ?>" name="edit_crm_stage" value="1" class="btn btn-sm btn-primary"><i class="fas fa-check me-1"></i>Save</button>
@@ -57,8 +58,9 @@ $counts = forkCrmStageCounts();
             <?= crmCsrf() ?>
             <div class="col-md-4"><input type="text" class="form-control" name="name" maxlength="100" placeholder="Name" required></div>
             <div class="col-md-3"><select class="form-select" name="kind"><?= crmOptions(forkCrmKinds(), 'open') ?></select></div>
-            <div class="col-md-2"><input type="number" class="form-control" name="probability" min="0" max="100" value="50"></div>
-            <div class="col-md-3"><button type="submit" name="add_crm_stage" value="1" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add</button></div>
+            <div class="col-md-2"><input type="number" class="form-control" name="probability" min="0" max="100" value="50" title="Probability %"></div>
+            <div class="col-md-2"><input type="number" class="form-control" name="followup_days" min="0" max="365" value="0" title="Follow up after (days), 0 = none"></div>
+            <div class="col-md-1"><button type="submit" name="add_crm_stage" value="1" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add</button></div>
         </form>
     </div>
 </div>

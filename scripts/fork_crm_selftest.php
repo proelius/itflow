@@ -112,6 +112,22 @@ crm_test('the country must be one ITFlow offers', array_keys($e) === ['country']
 crm_test('no country is refused, tags are removed', array_keys($e) === ['country'] && $a['address'] === 'x');
 crm_test('the handler asks for the address', strpos(file_get_contents($itflow_dir . '/agent/post/crm.php'), 'forkCrmAddressClean(') !== false);
 
+echo "\nFollow-ups\n";
+$defaults = [];
+foreach (forkCrmDefaultStages() as $st) {
+    $defaults[$st[0]] = $st[3];
+}
+crm_test('Quote sent follows up after 14 days, no other stage does', $defaults['Quote sent'] === 14 && array_sum($defaults) === 14);
+crm_test('only open stages follow up', array_sum(array_map(function ($st) { return $st[1] !== 'open' ? $st[3] : 0; }, forkCrmDefaultStages())) === 0);
+crm_test('days clamped', forkCrmFollowUpDaysClean(-5) === 0 && forkCrmFollowUpDaysClean('14') === 14 && forkCrmFollowUpDaysClean(9999) === 365);
+crm_test('due two weeks later', forkCrmFollowUpDate('2026-11-11', 14) === '2026-11-25');
+crm_test('across a year end', forkCrmFollowUpDate('2026-12-25', 14) === '2027-01-08');
+crm_test('across a leap day', forkCrmFollowUpDate('2028-02-20', 14) === '2028-03-05');
+$handler_code = file_get_contents($itflow_dir . '/agent/post/crm.php');
+crm_test('moving a deal makes the follow-up task', strpos($handler_code, 'forkCrmFollowUpCreate(') !== false);
+crm_test('the nightly job tells the agents', strpos(file_get_contents($itflow_dir . '/cron/nightly_tasks.php'), 'forkCrmNightly()') !== false);
+crm_test('the stages page sets the delay', strpos(file_get_contents($itflow_dir . '/agent/crm_stages.php'), 'followup_days') !== false);
+
 echo "\nWho may use it\n";
 $GLOBALS['session_is_admin'] = true;
 crm_test('an admin role is let in', forkCrmRoleAllowed() === true);

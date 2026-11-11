@@ -52,16 +52,26 @@ function forkCrmKinds() {
     return ['open' => 'Open', 'won' => 'Won', 'lost' => 'Lost'];
 }
 
-/** The stages a pipeline starts with: [name, kind, probability]. */
+/** The stages a pipeline starts with: [name, kind, probability, follow-up days]. */
 function forkCrmDefaultStages() {
     return [
-        ['Prospect', 'open', 10],
-        ['Contact established', 'open', 25],
-        ['Quote sent', 'open', 50],
-        ['Negotiation', 'open', 75],
-        ['Won', 'won', 100],
-        ['Lost', 'lost', 0],
+        ['Prospect', 'open', 10, 0],
+        ['Contact established', 'open', 25, 0],
+        ['Quote sent', 'open', 50, 14],
+        ['Negotiation', 'open', 75, 0],
+        ['Won', 'won', 100, 0],
+        ['Lost', 'lost', 0, 0],
     ];
+}
+
+/** Days to follow up after a deal enters a stage, from input: 0 (none) to 365. */
+function forkCrmFollowUpDaysClean($days) {
+    return max(0, min(365, intval($days)));
+}
+
+/** The date a follow-up is due: $days calendar days after $today (Y-m-d). */
+function forkCrmFollowUpDate($today, $days) {
+    return date('Y-m-d', strtotime($today . ' +' . forkCrmFollowUpDaysClean($days) . ' days'));
 }
 
 /** The kinds of activity. */
@@ -241,6 +251,7 @@ function forkCrmEnsure() {
         `stage_name` varchar(100) NOT NULL,
         `stage_kind` varchar(10) NOT NULL DEFAULT 'open',
         `stage_probability` tinyint(3) unsigned NOT NULL DEFAULT 0,
+        `stage_followup_days` smallint(5) unsigned NOT NULL DEFAULT 0,
         `stage_order` int(11) NOT NULL DEFAULT 0,
         PRIMARY KEY (`stage_id`)
     $tail");
@@ -286,16 +297,26 @@ function forkCrmEnsure() {
         `activity_user_id` int(11) NOT NULL DEFAULT 0,
         `activity_created_at` datetime NOT NULL DEFAULT current_timestamp(),
         `activity_created_by` int(11) NOT NULL DEFAULT 0,
+        `activity_auto` tinyint(1) NOT NULL DEFAULT 0,
+        `activity_notified_at` datetime DEFAULT NULL,
         PRIMARY KEY (`activity_id`),
         KEY `activity_deal_id` (`activity_deal_id`),
         KEY `activity_open` (`activity_user_id`, `activity_done_at`, `activity_due`)
     $tail");
+    // Tables made before the follow-ups: add the columns, and give the stage that is called Quote sent its 14 days
+    if (mysqli_num_rows(mysqli_query($mysqli, "SHOW COLUMNS FROM fork_crm_stages LIKE 'stage_followup_days'")) === 0) {
+        mysqli_query($mysqli, "ALTER TABLE fork_crm_stages ADD `stage_followup_days` smallint(5) unsigned NOT NULL DEFAULT 0 AFTER `stage_probability`");
+        mysqli_query($mysqli, "UPDATE fork_crm_stages SET stage_followup_days = 14 WHERE stage_name = 'Quote sent' AND stage_kind = 'open'");
+    }
+    if (mysqli_num_rows(mysqli_query($mysqli, "SHOW COLUMNS FROM fork_crm_activities LIKE 'activity_auto'")) === 0) {
+        mysqli_query($mysqli, "ALTER TABLE fork_crm_activities ADD `activity_auto` tinyint(1) NOT NULL DEFAULT 0, ADD `activity_notified_at` datetime DEFAULT NULL");
+    }
     $row = mysqli_fetch_row(mysqli_query($mysqli, "SELECT COUNT(*) FROM fork_crm_stages"));
     if ($row && intval($row[0]) === 0) {
         $order = 1;
-        foreach (forkCrmDefaultStages() as [$name, $kind, $probability]) {
+        foreach (forkCrmDefaultStages() as [$name, $kind, $probability, $followup]) {
             $name = escapeSql($name);
-            mysqli_query($mysqli, "INSERT INTO fork_crm_stages SET stage_name = '$name', stage_kind = '$kind', stage_probability = $probability, stage_order = $order");
+            mysqli_query($mysqli, "INSERT INTO fork_crm_stages SET stage_name = '$name', stage_kind = '$kind', stage_probability = $probability, stage_followup_days = $followup, stage_order = $order");
             $order++;
         }
     }
@@ -343,7 +364,7 @@ function forkCrmStageCounts() {
 }
 
 /** Add a stage at the end. Returns its id. */
-function forkCrmStageAdd($name, $kind, $probability) {
+function forkCrmStageAdd($name, $kind, $probability, $followup_days = 0) {
     global $mysqli;
     forkCrmEnsure();
     $name = escapeSql(forkCrmTextClean($name, 100));
@@ -352,9 +373,10 @@ function forkCrmStageAdd($name, $kind, $probability) {
     }
     $kind = forkCrmKindClean($kind);
     $probability = $kind === 'won' ? 100 : ($kind === 'lost' ? 0 : forkCrmProbabilityClean($probability));
+    $followup = $kind === 'open' ? forkCrmFollowUpDaysClean($followup_days) : 0;
     $row = mysqli_fetch_row(mysqli_query($mysqli, "SELECT COALESCE(MAX(stage_order), 0) + 1 FROM fork_crm_stages"));
     $order = intval($row[0]);
-    mysqli_query($mysqli, "INSERT INTO fork_crm_stages SET stage_name = '$name', stage_kind = '$kind', stage_probability = $probability, stage_order = $order");
+    mysqli_query($mysqli, "INSERT INTO fork_crm_stages SET stage_name = '$name', stage_kind = '$kind', stage_probability = $probability, stage_followup_days = $followup, stage_order = $order");
     return intval(mysqli_insert_id($mysqli));
 }
 
@@ -362,7 +384,7 @@ function forkCrmStageAdd($name, $kind, $probability) {
  * Change a stage. Its kind may change only when every kind is still there afterwards - there must
  * always be an open, a won and a lost stage. Returns an error text, or '' when done.
  */
-function forkCrmStageSave($stage_id, $name, $kind, $probability) {
+function forkCrmStageSave($stage_id, $name, $kind, $probability, $followup_days = 0) {
     global $mysqli;
     $stage = forkCrmStage($stage_id);
     if (!$stage) {
@@ -387,7 +409,8 @@ function forkCrmStageSave($stage_id, $name, $kind, $probability) {
     $probability = $kind === 'won' ? 100 : ($kind === 'lost' ? 0 : forkCrmProbabilityClean($probability));
     $name_sql = escapeSql($clean_name);
     $id = intval($stage_id);
-    mysqli_query($mysqli, "UPDATE fork_crm_stages SET stage_name = '$name_sql', stage_kind = '$kind', stage_probability = $probability WHERE stage_id = $id");
+    $followup = $kind === 'open' ? forkCrmFollowUpDaysClean($followup_days) : 0;
+    mysqli_query($mysqli, "UPDATE fork_crm_stages SET stage_name = '$name_sql', stage_kind = '$kind', stage_probability = $probability, stage_followup_days = $followup WHERE stage_id = $id");
     return '';
 }
 
@@ -582,6 +605,94 @@ function forkCrmDealMove(array $deal, $stage_id, $lost_reason = '') {
 function forkCrmDealArchive($deal_id) {
     global $mysqli;
     mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_archived_at = NOW() WHERE deal_id = " . intval($deal_id));
+}
+
+/* ---------- follow-ups ---------- */
+
+/**
+ * A deal that has just entered an open stage with a follow-up delay gets a task to follow the client
+ * up that many days later, for its owner (or $user_id, who moved it, when it has none). Not made when
+ * the deal already has an open follow-up task. Returns the due date, or null when none was made.
+ */
+function forkCrmFollowUpCreate(array $deal, array $stage, $user_id) {
+    global $mysqli;
+    $days = forkCrmFollowUpDaysClean($stage['stage_followup_days'] ?? 0);
+    if ($days === 0 || $stage['stage_kind'] !== 'open') {
+        return null;
+    }
+    $deal_id = intval($deal['deal_id']);
+    $open = mysqli_fetch_row(mysqli_query($mysqli, "SELECT activity_id FROM fork_crm_activities WHERE activity_deal_id = $deal_id AND activity_auto = 1 AND activity_done_at IS NULL LIMIT 1"));
+    if ($open) {
+        return null;
+    }
+    $due = forkCrmFollowUpDate(date('Y-m-d'), $days);
+    $assignee = intval($deal['deal_owner_id']) ?: intval($user_id);
+    $who = forkCrmDealWho($deal);
+    $text = escapeSql("Follow up with " . ($who !== '' ? $who : 'the client') . " - stage " . $stage['stage_name'] . " for $days days: ask whether they have read it and what they decide.");
+    mysqli_query($mysqli, "INSERT INTO fork_crm_activities SET activity_deal_id = $deal_id, activity_type = 'task', activity_text = '$text', activity_due = '$due',
+        activity_user_id = $assignee, activity_created_by = " . intval($user_id) . ", activity_auto = 1");
+    return $due;
+}
+
+/**
+ * Each night: the follow-up tasks that fall due today (or were late) tell the agent who has them - in
+ * ITFlow and by email - once. A task of a deal that was won, lost or archived in the meantime is left
+ * alone. With no agent to tell (gone), the admins are told. Returns how many were told.
+ */
+function forkCrmNightly() {
+    global $mysqli, $config_base_url;
+    $exists = mysqli_query($mysqli, "SHOW TABLES LIKE 'fork_crm_activities'");
+    if (!$exists || mysqli_num_rows($exists) === 0) {
+        return 0;
+    }
+    forkCrmEnsure();
+    $told = 0;
+    $result = mysqli_query($mysqli, "SELECT a.activity_id, a.activity_user_id, a.activity_due, a.activity_text, d.deal_id, d.deal_title, d.deal_client_id, d.deal_prospect, c.client_name
+        FROM fork_crm_activities a
+        JOIN fork_crm_deals d ON d.deal_id = a.activity_deal_id
+        JOIN fork_crm_stages s ON s.stage_id = d.deal_stage_id
+        LEFT JOIN clients c ON c.client_id = d.deal_client_id
+        WHERE a.activity_auto = 1 AND a.activity_done_at IS NULL AND a.activity_notified_at IS NULL AND a.activity_due <= CURDATE()
+        AND d.deal_archived_at IS NULL AND s.stage_kind = 'open'");
+    $tasks = [];
+    while ($result && ($row = mysqli_fetch_assoc($result))) {
+        $tasks[] = $row;
+    }
+    foreach ($tasks as $task) {
+        $users = [];
+        $found = mysqli_query($mysqli, "SELECT user_id, user_name, user_email FROM users WHERE user_id = " . intval($task['activity_user_id']) . " AND user_status = 1 AND user_archived_at IS NULL");
+        while ($found && ($user = mysqli_fetch_assoc($found))) {
+            $users[] = $user;
+        }
+        if (!$users) {
+            $found = mysqli_query($mysqli, "SELECT u.user_id, u.user_name, u.user_email FROM users u JOIN user_roles r ON r.role_id = u.user_role_id
+                WHERE r.role_is_admin = 1 AND u.user_status = 1 AND u.user_archived_at IS NULL");
+            while ($found && ($user = mysqli_fetch_assoc($found))) {
+                $users[] = $user;
+            }
+        }
+        $who = (string) ($task['client_name'] ?: $task['deal_prospect']);
+        $path = '/agent/crm_deal.php?deal_id=' . intval($task['deal_id']);
+        $message = escapeSql(substr("Time to follow up with " . ($who !== '' ? $who : 'the client') . " - deal " . $task['deal_title'], 0, 900));
+        $recipients = [];
+        foreach ($users as $user) {
+            mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'CRM', notification = '$message', notification_action = '$path',
+                notification_client_id = " . intval($task['deal_client_id']) . ", notification_user_id = " . intval($user['user_id']) . ", notification_entity_id = " . intval($task['deal_id']));
+            $recipients[] = ['email' => $user['user_email'], 'name' => $user['user_name'], 'footnote' => 'You get this as a CRM follow-up task is yours in ITFlow.'];
+        }
+        if ($recipients) {
+            emailQueue($recipients, "Follow up: " . $task['deal_title'] . ($who !== '' ? " - $who" : ''), [
+                'kind' => 'CRM', 'tone' => 'warning',
+                'title' => 'Time to follow up' . ($who !== '' ? " with $who" : ''),
+                'intro' => ["The quote went out a while ago. " . $task['activity_text']],
+                'summary' => array_filter(['Deal' => (string) $task['deal_title'], 'For' => $who, 'Due' => (string) $task['activity_due']]),
+                'button' => ['label' => 'Open the deal', 'url' => "https://$config_base_url$path"],
+            ]);
+        }
+        mysqli_query($mysqli, "UPDATE fork_crm_activities SET activity_notified_at = NOW() WHERE activity_id = " . intval($task['activity_id']));
+        $told++;
+    }
+    return $told;
 }
 
 /* ---------- prospect to client ---------- */
