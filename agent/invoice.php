@@ -85,6 +85,7 @@ $owed = in_array($state['state'], ['open', 'overdue'], true) && $status !== 'Dra
 $reminder_rules = billingReminderRules();
 $reminders_sent = $owed ? mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT(*) AS sent, MAX(history_created_at) AS last FROM history
     WHERE history_invoice_id = $invoice_id AND (history_description LIKE 'Reminder emailed%' OR history_description LIKE 'Cron Emailed Overdue Invoice%')")) : null;
+$reminder_list = $owed ? billingReminderHistory($invoice_id) : [];
 $client_reminders = intval(getFieldById('clients', $client_id, 'client_reminders') ?? 1);
 $reminder_next = $owed && $client_reminders ? billingReminderNext($invoice, $reminder_rules, billingReminderAutopay($invoice)) : null;
 $csrf = $_SESSION['csrf_token'];
@@ -314,6 +315,13 @@ $paper = [
                         <dt>Reminders</dt>
                         <dd>
                             <?= intval($reminders_sent['sent']) ? intval($reminders_sent['sent']) . ' sent, the last ' . escapeHtml(billingEmailDate($reminders_sent['last'])) : 'None sent yet' ?>
+                            <?php if ($reminder_list) { ?>
+                                <ol class="small text-body-secondary ps-3 mb-1">
+                                    <?php foreach ($reminder_list as $reminder_row) { ?>
+                                        <li><?= escapeHtml(billingEmailDate($reminder_row['date'])) ?> - <?= $reminder_row['by'] !== null ? 'by ' . escapeHtml($reminder_row['by']) : 'automatic' ?><?= $reminder_row['when'] !== '' ? ', ' . escapeHtml($reminder_row['when']) : '' ?></li>
+                                    <?php } ?>
+                                </ol>
+                            <?php } ?>
                             <div class="small text-body-secondary">
                                 <?php if (!$reminder_rules['enabled']) { ?>
                                     Off - set in Invoice Settings
@@ -321,6 +329,9 @@ $paper = [
                                     Off for <?= escapeHtml($invoice['client_name']) ?>
                                 <?php } elseif ($reminder_next) { ?>
                                     Next <?= escapeHtml(billingEmailDate($reminder_next['date'])) ?> - <?= escapeHtml(billingReminderWhen($reminder_next['days'])) ?>
+                                    <?php $next_number = lateFeeReminderNumber($reminder_next['days'], $reminder_rules); $after_total = count(lateFeeReminderDays($reminder_rules)); if ($next_number > 0) { ?>
+                                        (reminder <?= $next_number ?><?= intval($reminder_rules['repeat'] ?? 0) === 0 && $after_total ? ' of ' . $after_total : '' ?>)
+                                    <?php } ?>
                                 <?php } else { ?>
                                     No more on the schedule
                                 <?php } ?>
