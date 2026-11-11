@@ -1661,4 +1661,5 @@ return [
     'Fourth reminder fee' => 'Fourth reminder fee',
     'Fifth reminder fee' => 'Fifth reminder fee',
     'Later reminder fees' => 'Later reminder fees',
+    '{hours} to use once the invoice is paid' => '{hours} to use once the invoice is paid',
 ];

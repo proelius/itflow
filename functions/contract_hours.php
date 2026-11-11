@@ -68,9 +68,11 @@ function contractBlocks($contract_id, $today = null) {
     if (!contractHoursReady()) {
         return $blocks;
     }
+    forkHoursEnsure();
     $sql = mysqli_query($mysqli, "SELECT contract_blocks.*, COALESCE(SUM(contract_block_use_hours), 0) AS used, COUNT(NULLIF(contract_block_use_hours, 0)) AS uses,
-            invoice_prefix, invoice_number, invoice_status
+            invoice_prefix, invoice_number, invoice_status, MAX(fork_block_state) AS fork_state, MAX(fork_block_step) AS fork_step
         FROM contract_blocks
+        LEFT JOIN fork_hours_blocks ON fork_block_id = contract_block_id
         LEFT JOIN contract_block_uses ON contract_block_use_block_id = contract_block_id
         LEFT JOIN invoices ON contract_block_invoice_id = invoice_id AND contract_block_invoice_id > 0
         WHERE contract_block_contract_id = " . intval($contract_id) . "
@@ -80,6 +82,9 @@ function contractBlocks($contract_id, $today = null) {
         $row['used'] = round(floatval($row['used']), 2);
         $row['left'] = max(0.0, round(floatval($row['contract_block_hours']) - $row['used'], 2));
         $row['expired'] = !empty($row['contract_block_expires']) && $row['contract_block_expires'] < $today;
+        // Bought on an invoice not paid yet - nothing is drawn from it (forkHoursActivate())
+        $row['pending'] = ($row['fork_state'] ?? '') === 'pending';
+        $row['fork_step'] = $row['fork_step'] === null ? null : intval($row['fork_step']);
         $blocks[intval($row['contract_block_id'])] = $row;
     }
     return $blocks;
@@ -92,8 +97,12 @@ function contractBlocks($contract_id, $today = null) {
  * contractBlocks().
  */
 function contractHoursSummary(array $blocks) {
-    $s = ['bought' => 0.0, 'used' => 0.0, 'left' => 0.0, 'lapsed' => 0.0, 'next_expiry' => '', 'next_expiry_hours' => 0.0, 'blocks' => count($blocks)];
+    $s = ['bought' => 0.0, 'used' => 0.0, 'left' => 0.0, 'lapsed' => 0.0, 'pending' => 0.0, 'next_expiry' => '', 'next_expiry_hours' => 0.0, 'blocks' => count($blocks)];
     foreach ($blocks as $block) {
+        if (!empty($block['pending'])) {
+            $s['pending'] += floatval($block['contract_block_hours']);
+            continue;
+        }
         if ($block['expired']) {
             $s['lapsed'] += $block['left'];
             continue;
@@ -106,7 +115,7 @@ function contractHoursSummary(array $blocks) {
             $s['next_expiry_hours'] = $block['left'];
         }
     }
-    foreach (['bought', 'used', 'left', 'lapsed', 'next_expiry_hours'] as $key) {
+    foreach (['bought', 'used', 'left', 'lapsed', 'pending', 'next_expiry_hours'] as $key) {
         $s[$key] = round($s[$key], 2);
     }
     return $s;
@@ -120,11 +129,13 @@ function contractHoursLeftFor(array $contract_ids, $today = null) {
     if (!$ids || !contractHoursReady()) {
         return $left;
     }
+    forkHoursEnsure();
     $today = escapeSql($today ?? date('Y-m-d'));
     $sql = mysqli_query($mysqli, "SELECT contract_block_contract_id, SUM(GREATEST(contract_block_hours - used, 0)) AS hours_left, SUM(contract_block_hours) AS bought
         FROM (SELECT contract_block_contract_id, contract_block_hours,
                 COALESCE((SELECT SUM(contract_block_use_hours) FROM contract_block_uses WHERE contract_block_use_block_id = contract_block_id), 0) AS used
-            FROM contract_blocks WHERE contract_block_contract_id IN (" . implode(',', $ids) . ") AND (contract_block_expires IS NULL OR contract_block_expires >= '$today')) AS blocks
+            FROM contract_blocks WHERE contract_block_contract_id IN (" . implode(',', $ids) . ") AND (contract_block_expires IS NULL OR contract_block_expires >= '$today')
+                AND NOT EXISTS (SELECT 1 FROM fork_hours_blocks WHERE fork_block_id = contract_block_id AND fork_block_state = 'pending')) AS blocks
         GROUP BY contract_block_contract_id");
     while ($row = mysqli_fetch_assoc($sql)) {
         $left[intval($row['contract_block_contract_id'])] = ['left' => round(floatval($row['hours_left']), 2), 'bought' => round(floatval($row['bought']), 2)];
@@ -196,6 +207,7 @@ function contractHoursEnsureMonthly(array $row, $today = null) {
     mysqli_query($mysqli, "INSERT IGNORE INTO contract_blocks SET contract_block_contract_id = " . intval($row['contract_id']) . ", contract_block_hours = " . sprintf('%.2f', $hours) . ",
         contract_block_bought = '$from', contract_block_expires = '$to', contract_block_month = '$month', contract_block_note = '" . escapeSql($note) . "'");
     if (mysqli_affected_rows($mysqli) === 1) {
+        forkHoursBlockMade(mysqli_insert_id($mysqli), intval($row['contract_id']), false);
         contractHoursAlertReset(intval($row['contract_id']));
         return true;
     }
@@ -304,7 +316,7 @@ function contractHoursDraw($client_id, array $ticket_ids = [], $by = 'ITFlow', $
         $blocks = [];
         foreach ($contracts as $contract) {
             foreach ($contract['blocks'] as $id => $block) {
-                if ($block['left'] > 0) {
+                if ($block['left'] > 0 && empty($block['pending'])) {
                     $blocks[$id] = $block + ['contract_name' => $contract['contract_name']];
                 }
             }
@@ -333,12 +345,26 @@ function contractHoursDraw($client_id, array $ticket_ids = [], $by = 'ITFlow', $
             return [contractHoursDoneOn($a), $a['ticket_id']] <=> [contractHoursDoneOn($b), $b['ticket_id']];
         });
         $touched = [];
+        $ticket_steps = forkHoursTicketSteps(array_keys($tickets));
+        $rules = billingTimeRules();
         foreach ($tickets as $ticket_id => $ticket) {
-            $need = round(floatval($ticket['hours']), 2);
+            $done = contractHoursDoneOn($ticket);
+            // Counted by the rule of the first block that covers it (forkHoursStepHours()), and it keeps that rule
+            $step = $ticket_steps[$ticket_id] ?? null;
+            $step_new = false;
+            if ($step === null) {
+                foreach ($blocks as $block) {
+                    if ($block['left'] > 0 && $done >= $block['contract_block_bought'] && (empty($block['contract_block_expires']) || $done <= $block['contract_block_expires'])) {
+                        $step = $block['fork_step'];
+                        $step_new = $step !== null;
+                        break;
+                    }
+                }
+            }
+            $need = max(0.0, round(forkHoursStepHours($ticket['seconds'], $step, $rules) - $ticket['prepaid'], 2));
             if ($need <= 0) {
                 continue;
             }
-            $done = contractHoursDoneOn($ticket);
             $taken = [];
             foreach ($blocks as $id => $block) {
                 if ($need <= 0) {
@@ -358,6 +384,9 @@ function contractHoursDraw($client_id, array $ticket_ids = [], $by = 'ITFlow', $
             if (!$taken) {
                 // No hours that cover the day it was done - it is billed as usual
                 continue;
+            }
+            if ($step_new) {
+                forkHoursTicketStepSet($ticket_id, $step);
             }
             $drawn = round(array_sum(array_column($taken, 2)), 2);
             $reference = $ticket['ticket_prefix'] . $ticket['ticket_number'];
@@ -408,6 +437,7 @@ function contractHoursDoneOn(array $ticket) {
 function contractHoursRecheck($client_id) {
     global $mysqli;
     $rules = billingTimeRules();
+    $steps = forkHoursTicketSteps();
     $back = 0;
     $sql = mysqli_query($mysqli, "SELECT ticket_id, SUM(contract_block_use_hours) AS drawn,
             COALESCE((SELECT SUM(TIME_TO_SEC(ticket_reply_time_worked)) FROM ticket_replies WHERE ticket_reply_ticket_id = ticket_id AND ticket_reply_archived_at IS NULL), 0) AS seconds
@@ -417,7 +447,7 @@ function contractHoursRecheck($client_id) {
         GROUP BY ticket_id
         HAVING MAX(contract_block_use_full) = 1");
     while ($row = mysqli_fetch_assoc($sql)) {
-        if (billingTimeHours(intval($row['seconds']), $rules) > round(floatval($row['drawn']), 2)) {
+        if (forkHoursStepHours(intval($row['seconds']), $steps[intval($row['ticket_id'])] ?? null, $rules) > round(floatval($row['drawn']), 2)) {
             mysqli_query($mysqli, "UPDATE contract_block_uses SET contract_block_use_full = 0 WHERE contract_block_use_ticket_id = " . intval($row['ticket_id']));
             $back++;
         }
@@ -440,6 +470,7 @@ function contractHoursPutBack($ticket_id, $by, $user_id = 0) {
     }
     $hours = round(array_sum(array_column($uses, 'contract_block_use_hours')), 2);
     mysqli_query($mysqli, "DELETE FROM contract_block_uses WHERE contract_block_use_ticket_id = $ticket_id");
+    forkHoursTicketStepClear($ticket_id);
     // A use of no hours keeps it out of the nightly draw
     mysqli_query($mysqli, "INSERT INTO contract_block_uses SET contract_block_use_block_id = " . intval($uses[0]['contract_block_use_block_id']) . ", contract_block_use_ticket_id = $ticket_id,
         contract_block_use_hours = 0, contract_block_use_created_by = " . intval($user_id));
@@ -578,6 +609,8 @@ function contractHoursAdd(array $row, array $f, $user_id, $by) {
         contract_block_expires = " . ($f['expires'] !== '' ? "'" . escapeSql($f['expires']) . "'" : 'NULL') . ", contract_block_invoice_id = $invoice_id,
         contract_block_note = " . ($f['note'] !== '' ? "'" . escapeSql($f['note']) . "'" : 'NULL') . ", contract_block_created_by = " . intval($user_id));
     $block_id = intval(mysqli_insert_id($mysqli));
+    // On an invoice, the hours wait for it to be paid
+    forkHoursBlockMade($block_id, $contract_id, $invoice_id > 0);
     contractHoursAlertReset($contract_id);
     return [$block_id, $invoice_id, $number];
 }
