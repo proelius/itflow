@@ -132,11 +132,6 @@ if (isset($_POST['edit_client'])) {
 
     logAudit("Client", "Edit", "$session_name edited client $name", $client_id, $client_id);
 
-    // How time is counted on prepaid hours bought from now on (functions/fork_hours.php)
-    if (!empty($_POST['hours_step_field']) && contractHoursReady() && forkClientStepSave($client_id, $_POST['hours_step'] ?? 0)) {
-        logAudit("Client", "Edit", "$session_name set how time is counted on prepaid hours for $name to " . forkHoursSteps()[forkClientStep($client_id)], $client_id, $client_id);
-    }
-
     // Another contract, started from a template picked on the Billing tab (functions/contract.php)
     [$contract_id, $contract_name, $contract_error] = contractFromClientForm($client_id, $_POST);
     if ($contract_error !== '') {

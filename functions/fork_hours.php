@@ -7,16 +7,16 @@
  *    full, then is good to draw from (forkHoursActivate(), called by
  *    invoicePaidFollowUp()). A block made without an invoice, or one that
  *    existed before, is good at once.
- *  - How time is counted is set for each client - to the minute (the default),
+ *  - How time is counted is set for each contract - to the minute (the default),
  *    or in slices of 5 or 15 minutes, to the nearest slice - and is
- *    copied into each block when it is made, so changing the client's setting
+ *    copied into each block when it is made, so changing the contract's setting
  *    later does not change hours already bought. A ticket is counted by the
  *    rule of the first block that covers it, and keeps it. A block with no rule
  *    (made before this) leaves the ticket to the general billing time rules.
  *    Hours are kept to two decimals, as ITFlow keeps them: counted to the
  *    minute, a ticket is rounded to the nearest 0.01 h (36 seconds).
  *
- * The tables are ours - fork_hours_blocks, fork_hours_tickets, fork_client_hours -
+ * The tables are ours - fork_hours_blocks, fork_hours_tickets, fork_contract_hours -
  * made when first needed (forkHoursEnsure()), outside ITFlow's numbered
  * database updates. forkHoursStepHours() takes plain values and no database.
  */
@@ -73,38 +73,38 @@ function forkHoursEnsure() {
         `fork_ticket_step` tinyint(3) unsigned NOT NULL DEFAULT 0,
         PRIMARY KEY (`fork_ticket_id`)
     $tail");
-    mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_client_hours` (
-        `fork_client_id` int(11) NOT NULL,
-        `fork_client_step` tinyint(3) unsigned NOT NULL DEFAULT 0,
-        PRIMARY KEY (`fork_client_id`)
+    mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_contract_hours` (
+        `fork_contract_id` int(11) NOT NULL,
+        `fork_contract_step` tinyint(3) unsigned NOT NULL DEFAULT 0,
+        PRIMARY KEY (`fork_contract_id`)
     $tail");
 }
 
-/** How a client's time is counted - a step, 0 (to the minute) until set. */
-function forkClientStep($client_id) {
+/** How a contract's time is counted - a step, 0 (to the minute) until set. */
+function forkContractStep($contract_id) {
     global $mysqli;
     forkHoursEnsure();
-    $row = mysqli_fetch_row(mysqli_query($mysqli, "SELECT fork_client_step FROM fork_client_hours WHERE fork_client_id = " . intval($client_id)));
+    $row = mysqli_fetch_row(mysqli_query($mysqli, "SELECT fork_contract_step FROM fork_contract_hours WHERE fork_contract_id = " . intval($contract_id)));
     return $row ? forkHoursStepClean($row[0]) : 0;
 }
 
-/** Set how a client's time is counted. Whether it changed. */
-function forkClientStepSave($client_id, $step) {
+/** Set how a contract's time is counted. Whether it changed. */
+function forkContractStepSave($contract_id, $step) {
     global $mysqli;
     forkHoursEnsure();
     $step = forkHoursStepClean($step);
-    $was = forkClientStep($client_id);
-    mysqli_query($mysqli, "INSERT INTO fork_client_hours (fork_client_id, fork_client_step) VALUES (" . intval($client_id) . ", $step)
-        ON DUPLICATE KEY UPDATE fork_client_step = VALUES(fork_client_step)");
+    $was = forkContractStep($contract_id);
+    mysqli_query($mysqli, "INSERT INTO fork_contract_hours (fork_contract_id, fork_contract_step) VALUES (" . intval($contract_id) . ", $step)
+        ON DUPLICATE KEY UPDATE fork_contract_step = VALUES(fork_contract_step)");
     return $was !== $step;
 }
 
-/** A block just made - waiting for its invoice ($pending) or good at once - with the client's way of counting time as it is now. */
-function forkHoursBlockMade($block_id, $client_id, $pending) {
+/** A block just made - waiting for its invoice ($pending) or good at once - with the contract's way of counting time as it is now. */
+function forkHoursBlockMade($block_id, $contract_id, $pending) {
     global $mysqli;
     forkHoursEnsure();
     mysqli_query($mysqli, "INSERT IGNORE INTO fork_hours_blocks (fork_block_id, fork_block_state, fork_block_step, fork_block_activated_at)
-        VALUES (" . intval($block_id) . ", '" . ($pending ? 'pending' : 'active') . "', " . forkClientStep($client_id) . ", " . ($pending ? 'NULL' : 'NOW()') . ")");
+        VALUES (" . intval($block_id) . ", '" . ($pending ? 'pending' : 'active') . "', " . forkContractStep($contract_id) . ", " . ($pending ? 'NULL' : 'NOW()') . ")");
 }
 
 /**

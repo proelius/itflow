@@ -68,7 +68,7 @@ hours_test('same as billingTimeHours()', forkHoursStepHours(2000, null, $rules) 
 
 echo "\nNothing in ITFlow's own tables\n";
 $db = (string) file_get_contents($itflow_dir . '/db.sql');
-foreach (['fork_hours_blocks', 'fork_hours_tickets', 'fork_client_hours'] as $table) {
+foreach (['fork_hours_blocks', 'fork_hours_tickets', 'fork_contract_hours'] as $table) {
     hours_test("$table is not in db.sql", strpos($db, "`$table`") === false);
 }
 $latest = '0';

@@ -25,6 +25,7 @@ $c_slas = contractSlaChoices($c ? array_map(function ($part) use ($c) { return i
 $c_value = function ($key, $default = '') use ($c) {
     return $c !== null && array_key_exists("contract_$key", $c) && $c["contract_$key"] !== null ? $c["contract_$key"] : $default;
 };
+$c_hours_step = $c ? forkContractStep($c['contract_id'] ?? 0) : 0;
 $c_start = $c_new ? date('Y-m-d') : (string) $c_value('start_date');
 $c_term = intval($c_value('term_months', 12));
 $c_end = $c_new ? contractTermEnd($c_start, $c_term) : (string) $c_value('end_date');
@@ -278,6 +279,18 @@ $tab = 'contractTab' . bin2hex(random_bytes(3));
                             <input type="text" inputmode="decimal" class="form-control" name="hours_alert" placeholder="Don't tell" value="<?= escapeHtml($c_hours($c_value('hours_alert', 0))) ?>" data-contract-field="hours_alert">
                             <span class="input-group-text">hours left</span>
                         </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Counting time on the hours</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fa fa-fw fa-stopwatch"></i></span>
+                            <select class="form-select" name="hours_step" data-contract-field="hours_step">
+                                <?php foreach (forkHoursSteps() as $step => $label) { ?>
+                                    <option value="<?= $step ?>"<?= $c_hours_step === $step ? ' selected' : '' ?>><?= escapeHtml($label) ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                        <small class="text-secondary">Applies to hours added from now on - each block keeps the way of counting it was made with.</small>
                     </div>
                 </div>
                 <small class="text-secondary d-block mb-3">Tickets' time is drawn from the hours included each month - for that month only - and from any hours bought on the contract, before it is billed.</small>

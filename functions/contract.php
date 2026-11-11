@@ -417,6 +417,8 @@ function contractFromInput(array $in, $kind = 'contract') {
         // Prepaid hours (functions/contract_hours.php) - included each month, and how few left is low
         'monthly_hours' => $hours('monthly_hours'),
         'hours_alert' => $hours('hours_alert'),
+        // How time is counted on them (functions/fork_hours.php) - null when the form has no such field
+        'hours_step' => isset($in['hours_step']) ? forkHoursStepClean($in['hours_step']) : null,
     ];
     foreach (CONTRACT_SLA_PRIORITIES as $priority => $part) {
         $f['sla'][$part] = intval($in["sla_$part"] ?? 0);
@@ -671,7 +673,11 @@ function contractFromClientForm($client_id, array $post) {
 function contractCreate(array $f) {
     global $mysqli, $session_user_id;
     mysqli_query($mysqli, "INSERT INTO contracts SET " . contractSetSql($f) . ", contract_status = '" . escapeSql($f['status']) . "', contract_created_by = " . intval($session_user_id ?? 0));
-    return intval(mysqli_insert_id($mysqli));
+    $contract_id = intval(mysqli_insert_id($mysqli));
+    if ($contract_id && ($f['hours_step'] ?? null) !== null) {
+        forkContractStepSave($contract_id, $f['hours_step']);
+    }
+    return $contract_id;
 }
 
 /*
@@ -687,6 +693,12 @@ function contractUpdate(array $row, array $f) {
     $reset .= $hours && round(floatval($row['contract_hours_alert']), 2) !== round($f['hours_alert'], 2) ? ', contract_hours_alerted_at = NULL' : '';
     mysqli_query($mysqli, "UPDATE contracts SET " . contractSetSql($f) . "$reset WHERE contract_id = $id");
     $changes = [];
+    if ($hours && ($f['hours_step'] ?? null) !== null) {
+        $step_was = forkContractStep($id);
+        if (forkContractStepSave($id, $f['hours_step'])) {
+            $changes[] = 'time counted ' . strtolower(forkHoursSteps()[$step_was]) . ' changed to ' . strtolower(forkHoursSteps()[$f['hours_step']]);
+        }
+    }
     $was = [
         'name' => (string) $row['contract_name'], 'type' => contractTypeLabel($row['contract_type']), 'start' => (string) $row['contract_start_date'], 'end' => (string) $row['contract_end_date'],
         'term' => contractTermLabel($row['contract_term_months']), 'notice' => intval($row['contract_notice_days']) . ' days notice',

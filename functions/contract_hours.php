@@ -207,7 +207,7 @@ function contractHoursEnsureMonthly(array $row, $today = null) {
     mysqli_query($mysqli, "INSERT IGNORE INTO contract_blocks SET contract_block_contract_id = " . intval($row['contract_id']) . ", contract_block_hours = " . sprintf('%.2f', $hours) . ",
         contract_block_bought = '$from', contract_block_expires = '$to', contract_block_month = '$month', contract_block_note = '" . escapeSql($note) . "'");
     if (mysqli_affected_rows($mysqli) === 1) {
-        forkHoursBlockMade(mysqli_insert_id($mysqli), intval($row['contract_client_id']), false);
+        forkHoursBlockMade(mysqli_insert_id($mysqli), intval($row['contract_id']), false);
         contractHoursAlertReset(intval($row['contract_id']));
         return true;
     }
@@ -610,7 +610,7 @@ function contractHoursAdd(array $row, array $f, $user_id, $by) {
         contract_block_note = " . ($f['note'] !== '' ? "'" . escapeSql($f['note']) . "'" : 'NULL') . ", contract_block_created_by = " . intval($user_id));
     $block_id = intval(mysqli_insert_id($mysqli));
     // On an invoice, the hours wait for it to be paid
-    forkHoursBlockMade($block_id, intval($row['contract_client_id']), $invoice_id > 0);
+    forkHoursBlockMade($block_id, $contract_id, $invoice_id > 0);
     contractHoursAlertReset($contract_id);
     return [$block_id, $invoice_id, $number];
 }

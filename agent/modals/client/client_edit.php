@@ -174,19 +174,6 @@ ob_start();
                     require __DIR__ . '/client_card_fee_field.php';
                     ?>
 
-                    <?php if (contractHoursReady()) { $hours_step = forkClientStep($client_id); ?>
-                        <div class="mb-3">
-                            <label class="form-label" for="clientHoursStep<?= $client_id ?>">Counting time on prepaid hours</label>
-                            <input type="hidden" name="hours_step_field" value="1">
-                            <select class="form-select" name="hours_step" id="clientHoursStep<?= $client_id ?>">
-                                <?php foreach (forkHoursSteps() as $step => $label) { ?>
-                                    <option value="<?= $step ?>"<?= $hours_step === $step ? ' selected' : '' ?>><?= escapeHtml($label) ?></option>
-                                <?php } ?>
-                            </select>
-                            <small class="text-secondary">Applied to hours bought from now on - each block keeps the way of counting it was made with.</small>
-                        </div>
-                    <?php } ?>
-
 
                 </div>
 
