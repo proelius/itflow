@@ -143,6 +143,30 @@ function billingReminderAutopay(array $invoice) {
     return $recurring_id > 0 && mysqli_num_rows(mysqli_query($mysqli, "SELECT 1 FROM recurring_payments WHERE recurring_payment_recurring_invoice_id = $recurring_id LIMIT 1")) > 0;
 }
 
+/**
+ * The payment reminders an invoice has had, oldest first, from its history - [date, who, how late
+ * when it went]. "Reminder emailed to ..." is the nightly job, "Reminder emailed by NAME to ..." an
+ * agent; the old "Cron Emailed Overdue Invoice" lines count as automatic ones.
+ */
+function billingReminderHistory($invoice_id) {
+    global $mysqli;
+    $invoice_id = intval($invoice_id);
+    $rows = [];
+    $sql = mysqli_query($mysqli, "SELECT history_description, history_created_at FROM history
+        WHERE history_invoice_id = $invoice_id AND (history_description LIKE 'Reminder emailed%' OR history_description LIKE 'Cron Emailed Overdue Invoice%')
+        ORDER BY history_created_at ASC, history_id ASC");
+    while ($row = mysqli_fetch_assoc($sql)) {
+        $description = (string) $row['history_description'];
+        $by = null;
+        if (preg_match('/^Reminder emailed by (.+?) to /', $description, $m)) {
+            $by = $m[1];
+        }
+        $when = preg_match('/ - (due in \d+ days?|due today|\d+ days? late)/', $description, $m) ? $m[1] : '';
+        $rows[] = ['date' => $row['history_created_at'], 'by' => $by, 'when' => $when];
+    }
+    return $rows;
+}
+
 /** How late an invoice is, in words - "due in 3 days", "due today", "7 days late". */
 function billingReminderWhen($days) {
     $days = intval($days);
