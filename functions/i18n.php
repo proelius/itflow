@@ -406,6 +406,7 @@ function i18n_date(string $format, ?int $timestamp = null): string {
         'g:i A' => t('g:i A'),
         'M j, Y g:i A' => t('M j, Y g:i A'),
         'Y-m-d' => t('Y-m-d'),
+        'M d, Y' => t('M d, Y'),
     ][$format] ?? $format;
     $names = [
         'M' => [t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'), t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec')],

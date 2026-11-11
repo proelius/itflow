@@ -2099,4 +2099,5 @@ return [
     'Guest Approve Ticket Task' => 'Approbation d’une tâche de ticket',
     'Guest Calendar Feed' => 'Calendrier',
     'Share' => 'Partage',
+    'M d, Y' => 'j M Y',
 ];

@@ -144,7 +144,7 @@ function portalDateTime($datetime) {
         return escapeHtml($datetime);
     }
 
-    $time = date($config_time_format, $timestamp);
+    $time = i18n_date($config_time_format, $timestamp);
     $day = date('Y-m-d', $timestamp);
 
     if ($day === date('Y-m-d')) {
@@ -155,7 +155,7 @@ function portalDateTime($datetime) {
         return escapeHtml(t('Yesterday at {time}', ['{time}' => $time]));
     }
 
-    return escapeHtml(t('{date} at {time}', ['{date}' => date($config_date_format, $timestamp), '{time}' => $time]));
+    return escapeHtml(t('{date} at {time}', ['{date}' => i18n_date($config_date_format, $timestamp), '{time}' => $time]));
 }
 
 /*

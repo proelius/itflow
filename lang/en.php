@@ -2084,4 +2084,5 @@ return [
     'Guest Approve Ticket Task' => 'Guest Approve Ticket Task',
     'Guest Calendar Feed' => 'Guest Calendar Feed',
     'Share' => 'Share',
+    'M d, Y' => 'M d, Y',
 ];
