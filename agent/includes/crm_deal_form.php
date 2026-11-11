@@ -12,13 +12,17 @@ $v = function ($key, $default = '') use ($d) {
 };
 ?>
 <div class="row">
-    <div class="col-md-6 mb-3">
+    <div class="col-md-5 mb-3">
         <label class="form-label">Title <span class="text-danger">*</span></label>
         <input type="text" class="form-control" name="title" maxlength="200" value="<?= $v('deal_title') ?>" placeholder="e.g. Managed IT services, 2027" required>
     </div>
-    <div class="col-md-3 mb-3">
+    <div class="col-md-2 mb-3">
         <label class="form-label">Amount (<?= escapeHtml($session_company_currency) ?>)</label>
         <input type="text" class="form-control" name="amount" inputmode="decimal" value="<?= isset($d['deal_amount']) ? escapeHtml(number_format((float) $d['deal_amount'], 2, '.', '')) : '' ?>" placeholder="0.00">
+    </div>
+    <div class="col-md-2 mb-3">
+        <label class="form-label">A month</label>
+        <input type="text" class="form-control" name="monthly" inputmode="decimal" value="<?= !empty($d['deal_monthly']) ? escapeHtml(number_format((float) $d['deal_monthly'], 2, '.', '')) : '' ?>" placeholder="recurring">
     </div>
     <div class="col-md-3 mb-3">
         <label class="form-label">Probability (%)</label>

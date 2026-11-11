@@ -11,6 +11,7 @@ require_once "includes/crm_common.php";
 
 forkCrmEnforce(1);
 
+forkCrmSyncQuotes();
 $deal = forkCrmDeal($_GET['deal_id'] ?? 0);
 if (!$deal) {
     flashAlert("That deal is gone.", 'error');
@@ -30,6 +31,22 @@ $quotes = forkCrmDealQuotes($deal['deal_id']);
 $linked_ids = array_map('intval', array_column($quotes, 'quote_id'));
 $quote_choices = array_diff_key(forkCrmClientQuotes($deal['deal_client_id']), array_flip($linked_ids));
 $quotes_total = forkCrmQuotesTotal($quotes, $session_company_currency);
+$quotes_monthly = forkCrmQuotesTotal($quotes, $session_company_currency, 'quote_monthly_amount');
+$contacts = forkCrmDealContacts($deal['deal_id']);
+$linked_contact_ids = array_map('intval', array_column($contacts, 'contact_id'));
+$contact_choices = array_diff_key(forkCrmClientContacts($deal['deal_client_id']), array_flip($linked_contact_ids));
+$history = forkCrmHistory($deal['deal_id']);
+$stage_times = forkCrmDealStageTimes($deal);
+$all_stages = forkCrmStages();
+$email_targets = [];
+if ((string) $deal['deal_email'] !== '') {
+    $email_targets['deal'] = trim((string) $deal['deal_contact'] . ' <' . $deal['deal_email'] . '>');
+}
+foreach ($contacts as $contact) {
+    if ((string) $contact['contact_email'] !== '') {
+        $email_targets[(string) $contact['contact_id']] = trim($contact['contact_name'] . ' <' . $contact['contact_email'] . '>');
+    }
+}
 $has_client = intval($deal['deal_client_id']) > 0;
 $is_lead = $has_client && intval($deal['client_lead']) === 1;
 $can_client = lookupUserPermission('module_client') >= 2;
@@ -59,22 +76,23 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
     <div class="card-body border-bottom">
         <div class="row">
             <div class="col-md-3 col-6 mb-2"><div class="text-secondary small">For</div><div class="fw-semibold"><?= escapeHtml(forkCrmDealWho($deal)) ?: '-' ?></div></div>
-            <div class="col-md-3 col-6 mb-2"><div class="text-secondary small">Amount</div><div class="fw-semibold"><?= escapeHtml(billingMoney($deal['deal_amount'])) ?></div></div>
+            <div class="col-md-3 col-6 mb-2"><div class="text-secondary small">Amount</div><div class="fw-semibold"><?= escapeHtml(billingMoney($deal['deal_amount'])) ?><?= floatval($deal['deal_monthly']) > 0 ? ' <span class="text-secondary small">+ ' . escapeHtml(billingMoney($deal['deal_monthly'])) . ' a month</span>' : '' ?></div></div>
             <div class="col-md-3 col-6 mb-2"><div class="text-secondary small">Probability / forecast</div><div class="fw-semibold"><?= intval($deal['deal_probability']) ?> % &middot; <?= escapeHtml(billingMoney(forkCrmWeighted($deal['deal_amount'], $deal['deal_probability']))) ?></div></div>
             <div class="col-md-3 col-6 mb-2"><div class="text-secondary small"><?= $closed ? 'Closed' : 'Expected close' ?></div><div class="fw-semibold"><?= $closed ? escapeHtml(substr((string) $deal['deal_closed_at'], 0, 10)) : crmDueBadge($deal['deal_expected_close']) ?></div></div>
         </div>
-        <?php if ($deal['stage_kind'] === 'lost' && (string) $deal['deal_lost_reason'] !== '') { ?>
-            <div class="alert alert-danger py-2 mb-0 mt-2"><strong>Lost:</strong> <?= escapeHtml($deal['deal_lost_reason']) ?></div>
+        <?php if ($deal['stage_kind'] === 'lost' && ((string) $deal['deal_lost_reason'] !== '' || (string) $deal['deal_lost_category'] !== '')) { ?>
+            <div class="alert alert-danger py-2 mb-0 mt-2"><strong>Lost:</strong> <?= escapeHtml(trim((forkCrmLostCategories()[$deal['deal_lost_category']] ?? '') . ((string) $deal['deal_lost_reason'] !== '' ? ' - ' . $deal['deal_lost_reason'] : ''), ' -')) ?></div>
         <?php } ?>
         <?php if ($can_edit) { ?>
             <form action="post.php" method="post" class="row g-2 align-items-center mt-2 crm-move">
                 <?= crmCsrf() ?>
                 <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
                 <input type="hidden" name="lost_reason" value="">
+                <input type="hidden" name="lost_category" value="">
                 <input type="hidden" name="move_crm_deal" value="1">
                 <div class="col-auto"><label class="col-form-label">Move to</label></div>
                 <div class="col-auto">
-                    <select class="form-select" name="stage_id" data-current="<?= intval($deal['deal_stage_id']) ?>">
+                    <select class="form-select crm-stage-select" name="stage_id" data-current="<?= intval($deal['deal_stage_id']) ?>">
                         <?php foreach ($stages as $option) { ?>
                             <option value="<?= intval($option['stage_id']) ?>" data-kind="<?= escapeHtml($option['stage_kind']) ?>"<?= intval($option['stage_id']) === intval($deal['deal_stage_id']) ? ' selected' : '' ?>><?= escapeHtml($option['stage_name']) ?></option>
                         <?php } ?>
@@ -132,7 +150,7 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h5 class="mb-0">Quotes</h5>
             <?php if ($quotes) { ?>
-                <span class="text-secondary">In play: <strong><?= escapeHtml(billingMoney($quotes_total)) ?></strong></span>
+                <span class="text-secondary">In play: <strong><?= escapeHtml(billingMoney($quotes_total)) ?></strong><?= $quotes_monthly > 0 ? ' + <strong>' . escapeHtml(billingMoney($quotes_monthly)) . '</strong> a month' : '' ?></span>
             <?php } ?>
         </div>
         <?php if (!$has_client) { ?>
@@ -172,18 +190,86 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
                     <?php } else { ?>
                         <span class="text-secondary small align-self-center">No other quote for this client.</span>
                     <?php } ?>
+                    <form action="post.php" method="post">
+                        <?= crmCsrf() ?>
+                        <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                        <button type="submit" name="create_crm_quote" value="1" class="btn btn-sm btn-success"><i class="fas fa-plus me-2"></i>New quote for this deal</button>
+                    </form>
                     <a class="btn btn-sm btn-secondary" href="quotes.php?client_id=<?= intval($deal['deal_client_id']) ?>"><i class="fas fa-comment-dollar me-2"></i>Client's quotes</a>
                     <?php if ($quotes) { ?>
                         <form action="post.php" method="post">
                             <?= crmCsrf() ?>
                             <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
-                            <button type="submit" name="amount_from_crm_quotes" value="1" class="btn btn-sm btn-secondary"><i class="fas fa-equals me-2"></i>Set the deal's amount to <?= escapeHtml(billingMoney($quotes_total)) ?></button>
+                            <button type="submit" name="amount_from_crm_quotes" value="1" class="btn btn-sm btn-secondary"><i class="fas fa-equals me-2"></i>Set the deal's amount to <?= escapeHtml(billingMoney($quotes_total)) ?><?= $quotes_monthly > 0 ? ' + ' . escapeHtml(billingMoney($quotes_monthly)) . '/mo' : '' ?></button>
                         </form>
                     <?php } ?>
                 </div>
             <?php } ?>
         <?php } ?>
     </div>
+
+    <div class="card-body border-bottom">
+        <h5 class="mb-2">Contacts on this deal</h5>
+        <?php if (!$has_client) { ?>
+            <p class="text-secondary mb-0">Contacts are the client's: tie the deal to a client or prospect first.</p>
+        <?php } else { ?>
+            <?php if (!$contacts) { ?><p class="text-secondary mb-2">No contact put on the deal yet.</p><?php } ?>
+            <?php foreach ($contacts as $contact) { ?>
+                <div class="d-flex justify-content-between align-items-center border-bottom py-1">
+                    <div>
+                        <a href="contact.php?client_id=<?= intval($deal['deal_client_id']) ?>&amp;contact_id=<?= intval($contact['contact_id']) ?>"><?= escapeHtml($contact['contact_name']) ?></a>
+                        <?= (string) $contact['contact_title'] !== '' ? '<span class="text-secondary">&middot; ' . escapeHtml($contact['contact_title']) . '</span>' : '' ?>
+                        <?php if ($contact['dc_role'] !== '') { ?><span class="badge bg-info text-dark ms-1"><?= escapeHtml(forkCrmContactRoles()[$contact['dc_role']] ?? '') ?></span><?php } ?>
+                        <div class="small text-secondary">
+                            <?= (string) $contact['contact_email'] !== '' ? '<a href="mailto:' . escapeHtml($contact['contact_email']) . '">' . escapeHtml($contact['contact_email']) . '</a>' : '' ?>
+                            <?= (string) $contact['contact_phone'] !== '' ? ' &middot; ' . escapeHtml($contact['contact_phone']) : '' ?>
+                            <?= (string) $contact['contact_mobile'] !== '' ? ' &middot; ' . escapeHtml($contact['contact_mobile']) : '' ?>
+                        </div>
+                    </div>
+                    <?php if ($can_edit) { ?>
+                        <form action="post.php" method="post" class="ms-2">
+                            <?= crmCsrf() ?>
+                            <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                            <input type="hidden" name="contact_id" value="<?= intval($contact['contact_id']) ?>">
+                            <button type="submit" name="unlink_crm_contact" value="1" class="btn btn-sm btn-outline-danger" title="Take it off the deal"><i class="fas fa-unlink"></i></button>
+                        </form>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+            <?php if ($can_edit && $contact_choices) { ?>
+                <form action="post.php" method="post" class="d-flex flex-wrap gap-2 mt-2">
+                    <?= crmCsrf() ?>
+                    <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                    <select class="form-select form-select-sm w-auto" name="contact_id"><?= crmOptions($contact_choices, 0) ?></select>
+                    <select class="form-select form-select-sm w-auto" name="role"><?= crmOptions(forkCrmContactRoles(), '') ?></select>
+                    <button type="submit" name="link_crm_contact" value="1" class="btn btn-sm btn-primary"><i class="fas fa-user-plus me-2"></i>Put on the deal</button>
+                </form>
+            <?php } ?>
+        <?php } ?>
+    </div>
+
+    <?php if ($can_edit) { ?>
+        <div class="card-body border-bottom">
+            <a data-bs-toggle="collapse" href="#crmEmail" class="fw-semibold text-decoration-none"><i class="fas fa-envelope me-2"></i>Send an email from this deal</a>
+            <div class="collapse mt-2" id="crmEmail">
+                <?php if (!$email_targets) { ?>
+                    <p class="text-secondary mb-0">Give the deal an email address, or put a contact with an email on it.</p>
+                <?php } else { ?>
+                    <form action="post.php" method="post">
+                        <?= crmCsrf() ?>
+                        <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-5"><select class="form-select" name="to"><?= crmOptions($email_targets, '') ?></select></div>
+                            <div class="col-md-7"><input type="text" class="form-control" name="subject" maxlength="200" placeholder="Subject" required></div>
+                        </div>
+                        <textarea class="form-control mb-2" name="body" rows="5" maxlength="5000" placeholder="Your message - a blank line makes a new paragraph" required></textarea>
+                        <button type="submit" name="send_crm_email" value="1" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane me-2"></i>Send</button>
+                        <span class="text-secondary small ms-2">It goes from ITFlow's mailbox, tells them to reply to you, and is kept in the activities.</span>
+                    </form>
+                <?php } ?>
+            </div>
+        </div>
+    <?php } ?>
 
     <div class="row g-0">
         <div class="col-lg-6 border-end">
@@ -280,22 +366,26 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
     </div>
 </div>
 
-<script>
-document.querySelectorAll('form.crm-move select').forEach(function (select) {
-    select.addEventListener('change', function () {
-        var form = select.form;
-        var kind = select.options[select.selectedIndex].getAttribute('data-kind');
-        if (kind === 'lost') {
-            var reason = window.prompt('Why was this deal lost? (optional)');
-            if (reason === null) {
-                select.value = select.getAttribute('data-current');
-                return;
-            }
-            form.elements['lost_reason'].value = reason;
-        }
-        form.submit();
-    });
-});
-</script>
+<div class="card card-dark">
+    <div class="card-header py-2"><h3 class="card-title mt-2"><i class="fas fa-fw fa-history me-2"></i>History</h3></div>
+    <div class="card-body">
+        <div class="mb-3">
+            <span class="text-secondary small d-block mb-1">Time in each stage</span>
+            <?php foreach ($stage_times as $stage_id => $seconds) { ?>
+                <span class="badge bg-secondary me-1"><?= escapeHtml($all_stages[$stage_id]['stage_name'] ?? '?') ?>: <?= escapeHtml(forkCrmDurationWords($seconds)) ?></span>
+            <?php } ?>
+        </div>
+        <?php foreach ($history as $line) { ?>
+            <div class="border-bottom py-1">
+                <span class="text-secondary small"><?= escapeHtml(substr($line['history_at'], 0, 16)) ?></span>
+                &middot; <?= escapeHtml($line['history_text']) ?>
+                <span class="text-secondary small">- <?= (string) $line['user_name'] !== '' ? escapeHtml($line['user_name']) : 'automatic' ?></span>
+            </div>
+        <?php } ?>
+        <?php if (!$history) { ?><span class="text-secondary">Nothing recorded yet.</span><?php } ?>
+    </div>
+</div>
+
+<?php require "includes/crm_move.php"; ?>
 
 <?php require_once "../includes/footer.php";

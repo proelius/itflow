@@ -12,6 +12,8 @@ require_once "includes/crm_common.php";
 forkCrmEnforce(1);
 
 $can_edit = forkCrmLevel() >= 2;
+// Quotes sent, accepted or declined move their deals before the pipeline is drawn
+forkCrmSyncQuotes();
 $year = intval($_GET['year'] ?? date('Y'));
 $year = $year >= 2000 && $year <= 2100 ? $year : intval(date('Y'));
 $owner = intval($_GET['owner'] ?? 0);
@@ -35,7 +37,7 @@ $default_client = intval($_GET['client_id'] ?? 0);
 
 <div class="row mb-3">
     <div class="col-md-3 col-6"><div class="card card-dark mb-2"><div class="card-body py-2"><div class="text-secondary small">Open deals</div><div class="h5 mb-0"><?= intval($summary['open_count']) ?> &middot; <?= escapeHtml(billingMoney($summary['open_amount'])) ?></div></div></div></div>
-    <div class="col-md-3 col-6"><div class="card card-dark mb-2"><div class="card-body py-2"><div class="text-secondary small">Forecast (weighted)</div><div class="h5 mb-0"><?= escapeHtml(billingMoney($summary['weighted'])) ?></div></div></div></div>
+    <div class="col-md-3 col-6"><div class="card card-dark mb-2"><div class="card-body py-2"><div class="text-secondary small">Forecast (weighted)</div><div class="h5 mb-0"><?= escapeHtml(billingMoney($summary['weighted'])) ?></div><?php if ($summary['open_monthly'] > 0) { ?><div class="small text-secondary">+ <?= escapeHtml(billingMoney($summary['open_monthly'])) ?> a month open</div><?php } ?></div></div></div>
     <div class="col-md-3 col-6"><div class="card card-dark mb-2"><div class="card-body py-2"><div class="text-secondary small">Won in <?= $year ?></div><div class="h5 mb-0"><?= intval($summary['won_count']) ?> &middot; <?= escapeHtml(billingMoney($summary['won_amount'])) ?></div></div></div></div>
     <div class="col-md-3 col-6"><div class="card card-dark mb-2"><div class="card-body py-2"><div class="text-secondary small">Win rate in <?= $year ?></div><div class="h5 mb-0"><?= crmPercent($summary['win_rate']) ?></div></div></div></div>
 </div>
@@ -45,6 +47,7 @@ $default_client = intval($_GET['client_id'] ?? 0);
         <h3 class="card-title mt-2"><i class="fas fa-fw fa-handshake me-2"></i>Pipeline</h3>
         <?php if ($can_edit) { ?>
             <div class="card-tools">
+                <a class="btn btn-secondary" href="crm_export.php?year=<?= $year ?>&amp;owner=<?= $owner ?>&amp;q=<?= urlencode($search) ?>"><i class="fas fa-file-csv me-2"></i>Export</a>
                 <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#newDeal"><i class="fas fa-plus me-2"></i>New deal</button>
             </div>
         <?php } ?>
@@ -85,32 +88,33 @@ $default_client = intval($_GET['client_id'] ?? 0);
                 $total = $stage['stage_kind'] === 'won' ? $stage_sum['won_amount'] : ($stage['stage_kind'] === 'lost' ? $stage_sum['lost_amount'] : $stage_sum['open_amount']);
                 $head = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-danger'][$stage['stage_kind']];
                 ?>
-                <div style="width: 270px">
+                <div style="width: 270px" class="crm-col" data-stage-id="<?= intval($stage['stage_id']) ?>">
                     <div class="rounded-top px-2 py-1 text-white <?= $head ?>">
                         <div class="fw-semibold"><?= escapeHtml($stage['stage_name']) ?> <span class="badge bg-light text-dark"><?= count($list) ?></span></div>
                         <div class="small"><?= escapeHtml(billingMoney($total)) ?></div>
                     </div>
                     <div class="border border-top-0 rounded-bottom p-2" style="min-height: 80px">
                         <?php foreach ($list as $card) { ?>
-                            <div class="card mb-2">
+                            <div class="card mb-2 crm-card"<?= $can_edit ? ' draggable="true"' : '' ?> data-deal-id="<?= intval($card['deal_id']) ?>">
                                 <div class="card-body p-2">
                                     <a class="fw-semibold" href="crm_deal.php?deal_id=<?= intval($card['deal_id']) ?>"><?= escapeHtml($card['deal_title']) ?></a>
                                     <div class="small text-secondary"><?= escapeHtml(forkCrmDealWho($card)) ?></div>
                                     <div class="d-flex justify-content-between mt-1">
-                                        <span><?= escapeHtml(billingMoney($card['deal_amount'])) ?></span>
+                                        <span><?= escapeHtml(billingMoney($card['deal_amount'])) ?><?= floatval($card['deal_monthly']) > 0 ? ' <span class="small text-secondary">+ ' . escapeHtml(billingMoney($card['deal_monthly'])) . '/mo</span>' : '' ?></span>
                                         <span class="text-secondary"><?= intval($card['deal_probability']) ?> %</span>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-1">
                                         <?= $card['stage_kind'] === 'open' ? crmDueBadge($card['deal_expected_close']) : '<span class="small text-secondary">' . escapeHtml(substr((string) $card['deal_closed_at'], 0, 10)) . '</span>' ?>
-                                        <span class="small text-secondary"><?= escapeHtml((string) $card['owner_name']) ?></span>
+                                        <span class="small text-secondary"><?= $card['stage_kind'] === 'open' && !empty($card['deal_stage_at']) ? escapeHtml(forkCrmDurationWords(time() - strtotime($card['deal_stage_at']))) . ' here &middot; ' : '' ?><?= escapeHtml((string) $card['owner_name']) ?></span>
                                     </div>
                                     <?php if ($can_edit) { ?>
                                         <form action="post.php" method="post" class="mt-2 crm-move">
                                             <?= crmCsrf() ?>
                                             <input type="hidden" name="deal_id" value="<?= intval($card['deal_id']) ?>">
                                             <input type="hidden" name="lost_reason" value="">
+                                            <input type="hidden" name="lost_category" value="">
                                             <input type="hidden" name="move_crm_deal" value="1">
-                                            <select class="form-select form-select-sm" name="stage_id" data-current="<?= intval($card['deal_stage_id']) ?>" aria-label="Move to a stage">
+                                            <select class="form-select form-select-sm crm-stage-select" name="stage_id" data-current="<?= intval($card['deal_stage_id']) ?>" aria-label="Move to a stage">
                                                 <?php foreach ($stages as $option) { ?>
                                                     <option value="<?= intval($option['stage_id']) ?>" data-kind="<?= escapeHtml($option['stage_kind']) ?>"<?= intval($option['stage_id']) === intval($card['deal_stage_id']) ? ' selected' : '' ?>><?= escapeHtml($option['stage_name']) ?></option>
                                                 <?php } ?>
@@ -127,22 +131,36 @@ $default_client = intval($_GET['client_id'] ?? 0);
     </div>
 </div>
 
+<?php require "includes/crm_move.php"; ?>
 <script>
-document.querySelectorAll('form.crm-move select').forEach(function (select) {
-    select.addEventListener('change', function () {
-        var form = select.form;
-        var kind = select.options[select.selectedIndex].getAttribute('data-kind');
-        if (kind === 'lost') {
-            var reason = window.prompt('Why was this deal lost? (optional)');
-            if (reason === null) {
-                select.value = select.getAttribute('data-current');
-                return;
-            }
-            form.elements['lost_reason'].value = reason;
-        }
-        form.submit();
+// Drag a card to another column: the same as choosing the stage in its list
+(function () {
+    var dragged = null;
+    document.querySelectorAll('.crm-card[draggable="true"]').forEach(function (card) {
+        card.addEventListener('dragstart', function (event) {
+            dragged = card;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', card.getAttribute('data-deal-id'));
+            card.style.opacity = '0.5';
+        });
+        card.addEventListener('dragend', function () { card.style.opacity = ''; });
     });
-});
+    document.querySelectorAll('.crm-col').forEach(function (col) {
+        col.addEventListener('dragover', function (event) { if (dragged) { event.preventDefault(); col.style.outline = '2px dashed #0d6efd'; } });
+        col.addEventListener('dragleave', function () { col.style.outline = ''; });
+        col.addEventListener('drop', function (event) {
+            event.preventDefault();
+            col.style.outline = '';
+            if (!dragged) { return; }
+            var select = dragged.querySelector('select.crm-stage-select');
+            if (select) {
+                select.value = col.getAttribute('data-stage-id');
+                window.crmSubmitMove(select.form, select);
+            }
+            dragged = null;
+        });
+    });
+})();
 </script>
 
 <?php require_once "../includes/footer.php";

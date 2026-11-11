@@ -15,6 +15,7 @@ if (PHP_SAPI !== 'cli') {
 
 $itflow_dir = __DIR__ . '/..';
 require_once $itflow_dir . '/functions/fork_crm.php';
+require_once $itflow_dir . '/functions/fork_crm_extra.php';
 
 $passed = 0;
 $failed = 0;
@@ -127,6 +128,72 @@ $handler_code = file_get_contents($itflow_dir . '/agent/post/crm.php');
 crm_test('moving a deal makes the follow-up task', strpos($handler_code, 'forkCrmFollowUpCreate(') !== false);
 crm_test('the nightly job tells the agents', strpos(file_get_contents($itflow_dir . '/cron/nightly_tasks.php'), 'forkCrmNightly()') !== false);
 crm_test('the stages page sets the delay', strpos(file_get_contents($itflow_dir . '/agent/crm_stages.php'), 'followup_days') !== false);
+
+echo "\nQuotes that move a deal\n";
+$st = [
+    1 => ['stage_id' => 1, 'stage_order' => 1, 'stage_kind' => 'open', 'stage_quote_trigger' => ''],
+    2 => ['stage_id' => 2, 'stage_order' => 2, 'stage_kind' => 'open', 'stage_quote_trigger' => 'sent'],
+    3 => ['stage_id' => 3, 'stage_order' => 3, 'stage_kind' => 'open', 'stage_quote_trigger' => ''],
+    4 => ['stage_id' => 4, 'stage_order' => 4, 'stage_kind' => 'won', 'stage_quote_trigger' => 'accepted'],
+    5 => ['stage_id' => 5, 'stage_order' => 5, 'stage_kind' => 'lost', 'stage_quote_trigger' => 'declined'],
+];
+crm_test('a quote sent brings the deal forward', forkCrmQuoteTarget(['n' => 1, 'sent' => 1], $st, 1)['stage_id'] === 2);
+crm_test('a quote sent never takes a deal back', forkCrmQuoteTarget(['n' => 1, 'sent' => 1], $st, 3) === null);
+crm_test('an accepted quote wins the deal, from anywhere', forkCrmQuoteTarget(['n' => 2, 'accepted' => 1, 'sent' => 1], $st, 1)['stage_id'] === 4);
+crm_test('all quotes declined loses it, with the reason', ($t = forkCrmQuoteTarget(['n' => 2, 'declined' => 2], $st, 2)) && $t['stage_id'] === 5 && $t['category'] === 'quote');
+crm_test('one declined of two does not lose it', forkCrmQuoteTarget(['n' => 2, 'declined' => 1], $st, 2) === null);
+crm_test('a declined one and an accepted one: won', forkCrmQuoteTarget(['n' => 2, 'declined' => 1, 'accepted' => 1], $st, 2)['stage_id'] === 4);
+crm_test('a deal already won stays', forkCrmQuoteTarget(['n' => 1, 'declined' => 1], $st, 4) === null);
+crm_test('drafts alone change nothing', forkCrmQuoteTarget(['n' => 1], $st, 1) === null);
+crm_test('no stage set for the trigger: nothing', forkCrmQuoteTarget(['n' => 1, 'accepted' => 1], [1 => $st[1]], 1) === null);
+crm_test('a trigger fits its kind only', forkCrmTriggerClean('sent', 'open') === 'sent' && forkCrmTriggerClean('sent', 'won') === '' && forkCrmTriggerClean('accepted', 'won') === 'accepted' && forkCrmTriggerClean('x', 'open') === '');
+
+echo "\nTime in each stage\n";
+$t0 = 1000000;
+$times = forkCrmStageTimes([['from' => 1, 'to' => 2, 'at' => $t0 + 86400], ['from' => 2, 'to' => 3, 'at' => $t0 + 86400 * 4]], $t0, 3, $t0 + 86400 * 6);
+crm_test('a day, three days, two days', $times === [1 => 86400, 2 => 259200, 3 => 172800]);
+crm_test('never moved: all in the current stage', forkCrmStageTimes([], $t0, 2, $t0 + 500) === [2 => 500]);
+$back = forkCrmStageTimes([['from' => 1, 'to' => 2, 'at' => $t0 + 100], ['from' => 2, 'to' => 1, 'at' => $t0 + 300]], $t0, 1, $t0 + 400);
+crm_test('back to a stage: its time adds up', $back === [1 => 200, 2 => 200]);
+crm_test('durations in words', forkCrmDurationWords(90000) === '1 d 1 h' && forkCrmDurationWords(7200) === '2 h' && forkCrmDurationWords(60) === 'under an hour' && forkCrmDurationWords(172800) === '2 d');
+
+echo "\nDormant deals\n";
+crm_test('stale after the days', forkCrmIsStale(0, 15 * 86400, 14) && !forkCrmIsStale(0, 14 * 86400, 14));
+crm_test('stale days clamped', forkCrmStaleDaysClean(0) === 1 && forkCrmStaleDaysClean(9999) === 365 && forkCrmStaleDaysClean('14') === 14);
+
+echo "\nFunnel, cycle, months, CSV\n";
+$f = forkCrmFunnel([2 => 1, 3 => 2, 4 => 3], [10 => 1, 11 => 2, 12 => 3, 13 => PHP_INT_MAX, 14 => 0]);
+crm_test('funnel counts who got that far', $f[2]['reached'] === 4 && $f[3]['reached'] === 3 && $f[4]['reached'] === 2);
+crm_test('funnel rates', $f[3]['of_previous'] === 75.0 && $f[4]['of_first'] === 50.0 && $f[2]['of_previous'] === null);
+crm_test('an empty funnel has no rate', forkCrmFunnel([2 => 1], [])[2]['of_first'] === null);
+$won = [
+    ['stage_kind' => 'won', 'deal_created_at' => '2026-01-01 00:00:00', 'deal_closed_at' => '2026-01-11 00:00:00', 'deal_amount' => '1000'],
+    ['stage_kind' => 'won', 'deal_created_at' => '2026-02-01 00:00:00', 'deal_closed_at' => '2026-02-21 00:00:00', 'deal_amount' => '500.5'],
+    ['stage_kind' => 'won', 'deal_created_at' => '2026-02-02 00:00:00', 'deal_closed_at' => '2026-03-02 00:00:00', 'deal_amount' => '250'],
+    ['stage_kind' => 'open', 'deal_created_at' => '2026-01-01 00:00:00', 'deal_closed_at' => null, 'deal_amount' => '9'],
+];
+crm_test('average sales cycle', forkCrmAverageCycle($won) === 19.3);
+crm_test('no won deal: no cycle', forkCrmAverageCycle([$won[3]]) === null);
+$m = forkCrmWonByMonth($won);
+crm_test('won by month, in order', array_keys($m) === ['2026-01', '2026-02', '2026-03'] && $m['2026-02']['amount'] === 500.5);
+crm_test('CSV: plain text as it is', forkCrmCsvCell('Hello') === 'Hello');
+crm_test('CSV: a separator or quote is quoted', forkCrmCsvCell('a;b') === '"a;b"' && forkCrmCsvCell('say "hi"') === '"say ""hi"""');
+crm_test('CSV: a line break is quoted', forkCrmCsvCell("a\nb") === "\"a\nb\"");
+crm_test('CSV: a formula is made harmless', forkCrmCsvCell('=1+1') === "'=1+1" && forkCrmCsvCell('@x') === "'@x" && forkCrmCsvCell('-5') === "'-5");
+
+echo "\nMonthly amounts\n";
+$ms = forkCrmSummarize([['deal_amount' => '100', 'deal_monthly' => '10', 'deal_probability' => 50, 'stage_kind' => 'open'], ['deal_amount' => '200', 'deal_monthly' => '20', 'deal_probability' => 100, 'stage_kind' => 'won'], ['deal_amount' => '5', 'deal_probability' => 0, 'stage_kind' => 'lost']]);
+crm_test('recurring open and won', $ms['open_monthly'] === 10.0 && $ms['won_monthly'] === 20.0);
+$mq = [['quote_amount' => '1000', 'quote_monthly_amount' => '50', 'quote_currency_code' => 'CHF', 'quote_status' => 'Sent'], ['quote_amount' => '1', 'quote_monthly_amount' => '9', 'quote_currency_code' => 'CHF', 'quote_status' => 'Declined']];
+crm_test('the monthly total of the quotes in play', forkCrmQuotesTotal($mq, 'CHF', 'quote_monthly_amount') === 50.0);
+crm_test('default stages carry the quote triggers', array_column(forkCrmDefaultStages(), 4) === ['', '', 'sent', '', 'accepted', 'declined']);
+crm_test('lost reasons and contact roles', isset(forkCrmLostCategories()['price']) && forkCrmLostCategoryClean('x') === '' && forkCrmContactRoles()[''] === '-');
+$page_code = file_get_contents($itflow_dir . '/agent/crm_deal.php');
+foreach (['create_crm_quote', 'link_crm_contact', 'send_crm_email', 'amount_from_crm_quotes'] as $action) {
+    crm_test("the deal page and the handler have $action", strpos($page_code, $action) !== false && strpos(file_get_contents($itflow_dir . '/agent/post/crm.php'), "isset(\$_POST['$action'])") !== false);
+}
+crm_test('the nightly job syncs quotes, tells dormant deals and sends the digest', strpos(file_get_contents($itflow_dir . '/functions/fork_crm.php'), 'forkCrmSyncQuotes();') !== false && strpos(file_get_contents($itflow_dir . '/functions/fork_crm.php'), 'forkCrmStaleNightly();') !== false && strpos(file_get_contents($itflow_dir . '/functions/fork_crm.php'), 'forkCrmDigest();') !== false);
+crm_test('an email goes only to the deal or its contacts', strpos(file_get_contents($itflow_dir . '/agent/post/crm.php'), "forkCrmDealContacts(") !== false);
 
 echo "\nWho may use it\n";
 $GLOBALS['session_is_admin'] = true;

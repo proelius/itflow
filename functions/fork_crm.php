@@ -52,16 +52,52 @@ function forkCrmKinds() {
     return ['open' => 'Open', 'won' => 'Won', 'lost' => 'Lost'];
 }
 
-/** The stages a pipeline starts with: [name, kind, probability, follow-up days]. */
+/** The stages a pipeline starts with: [name, kind, probability, follow-up days, quote trigger]. */
 function forkCrmDefaultStages() {
     return [
-        ['Prospect', 'open', 10, 0],
-        ['Contact established', 'open', 25, 0],
-        ['Quote sent', 'open', 50, 14],
-        ['Negotiation', 'open', 75, 0],
-        ['Won', 'won', 100, 0],
-        ['Lost', 'lost', 0, 0],
+        ['Prospect', 'open', 10, 0, ''],
+        ['Contact established', 'open', 25, 0, ''],
+        ['Quote sent', 'open', 50, 14, 'sent'],
+        ['Negotiation', 'open', 75, 0, ''],
+        ['Won', 'won', 100, 0, 'accepted'],
+        ['Lost', 'lost', 0, 0, 'declined'],
     ];
+}
+
+/**
+ * What a quote does to a deal, set on a stage: 'sent' (a quote of the deal went out: the deal
+ * comes to this stage, if it is further on than the one it is in), 'accepted' (a quote was accepted:
+ * the deal is won) and 'declined' (every quote was declined: the deal is lost). Each goes with a kind
+ * of stage.
+ */
+function forkCrmQuoteTriggers() {
+    return ['' => 'None', 'sent' => 'A quote is sent', 'accepted' => 'A quote is accepted', 'declined' => 'All quotes are declined'];
+}
+
+/** The kind of stage each quote trigger belongs on. */
+function forkCrmTriggerKind($trigger) {
+    return ['sent' => 'open', 'accepted' => 'won', 'declined' => 'lost'][(string) $trigger] ?? null;
+}
+
+/** A quote trigger from input that fits the stage's kind, else ''. */
+function forkCrmTriggerClean($trigger, $kind) {
+    $trigger = (string) $trigger;
+    return isset(forkCrmQuoteTriggers()[$trigger]) && $trigger !== '' && forkCrmTriggerKind($trigger) === $kind ? $trigger : '';
+}
+
+/** The reasons a deal is lost, to pick from. */
+function forkCrmLostCategories() {
+    return ['price' => 'Price', 'competitor' => 'Went to a competitor', 'budget' => 'No budget', 'timing' => 'Bad timing', 'noresponse' => 'No response', 'nodecision' => 'No decision made', 'quote' => 'Quote declined', 'other' => 'Other'];
+}
+
+/** The roles a contact plays on a deal. */
+function forkCrmContactRoles() {
+    return ['' => '-', 'decision' => 'Decision maker', 'technical' => 'Technical', 'finance' => 'Finance', 'user' => 'User'];
+}
+
+/** A lost reason from input - one of forkCrmLostCategories(), else ''. */
+function forkCrmLostCategoryClean($value) {
+    return isset(forkCrmLostCategories()[(string) $value]) ? (string) $value : '';
 }
 
 /** Days to follow up after a deal enters a stage, from input: 0 (none) to 365. */
@@ -167,23 +203,26 @@ function forkCrmDueState($date, $today) {
  * stage_kind. The win rate is won / (won + lost), in percent, null when none is closed.
  */
 function forkCrmSummarize(array $deals) {
-    $s = ['open_count' => 0, 'open_amount' => 0.0, 'weighted' => 0.0, 'won_count' => 0, 'won_amount' => 0.0, 'lost_count' => 0, 'lost_amount' => 0.0, 'win_rate' => null, 'average_won' => null];
+    $s = ['open_count' => 0, 'open_amount' => 0.0, 'weighted' => 0.0, 'won_count' => 0, 'won_amount' => 0.0, 'lost_count' => 0, 'lost_amount' => 0.0, 'win_rate' => null, 'average_won' => null, 'open_monthly' => 0.0, 'won_monthly' => 0.0];
     foreach ($deals as $deal) {
         $amount = floatval($deal['deal_amount']);
         $kind = (string) $deal['stage_kind'];
+        $monthly = floatval($deal['deal_monthly'] ?? 0);
         if ($kind === 'won') {
             $s['won_count']++;
             $s['won_amount'] += $amount;
+            $s['won_monthly'] += $monthly;
         } elseif ($kind === 'lost') {
             $s['lost_count']++;
             $s['lost_amount'] += $amount;
         } else {
             $s['open_count']++;
             $s['open_amount'] += $amount;
+            $s['open_monthly'] += $monthly;
             $s['weighted'] += forkCrmWeighted($amount, $deal['deal_probability']);
         }
     }
-    foreach (['open_amount', 'weighted', 'won_amount', 'lost_amount'] as $key) {
+    foreach (['open_amount', 'weighted', 'won_amount', 'lost_amount', 'open_monthly', 'won_monthly'] as $key) {
         $s[$key] = round($s[$key], 2);
     }
     $closed = $s['won_count'] + $s['lost_count'];
@@ -237,6 +276,17 @@ function forkCrmGroupSummary(array $deals, $column) {
     return $out;
 }
 
+/** Add a column to one of our tables when it is not there yet. Returns true when it was added. */
+function forkCrmColumnEnsure($table, $column, $definition) {
+    global $mysqli;
+    $found = mysqli_query($mysqli, "SHOW COLUMNS FROM `$table` LIKE '$column'");
+    if ($found && mysqli_num_rows($found) > 0) {
+        return false;
+    }
+    mysqli_query($mysqli, "ALTER TABLE `$table` ADD `$column` $definition");
+    return true;
+}
+
 /** The tables, made if they are not there yet, and the default stages put in an empty pipeline. */
 function forkCrmEnsure() {
     global $mysqli;
@@ -252,6 +302,7 @@ function forkCrmEnsure() {
         `stage_kind` varchar(10) NOT NULL DEFAULT 'open',
         `stage_probability` tinyint(3) unsigned NOT NULL DEFAULT 0,
         `stage_followup_days` smallint(5) unsigned NOT NULL DEFAULT 0,
+        `stage_quote_trigger` varchar(10) NOT NULL DEFAULT '',
         `stage_order` int(11) NOT NULL DEFAULT 0,
         PRIMARY KEY (`stage_id`)
     $tail");
@@ -266,11 +317,15 @@ function forkCrmEnsure() {
         `deal_stage_id` int(11) NOT NULL,
         `deal_amount` decimal(15,2) NOT NULL DEFAULT 0.00,
         `deal_probability` tinyint(3) unsigned NOT NULL DEFAULT 0,
+        `deal_monthly` decimal(15,2) NOT NULL DEFAULT 0.00,
         `deal_expected_close` date DEFAULT NULL,
         `deal_source` varchar(20) NOT NULL DEFAULT '',
         `deal_owner_id` int(11) NOT NULL DEFAULT 0,
         `deal_note` text DEFAULT NULL,
         `deal_lost_reason` varchar(255) DEFAULT NULL,
+        `deal_lost_category` varchar(20) NOT NULL DEFAULT '',
+        `deal_stage_at` datetime DEFAULT NULL,
+        `deal_stale_notified_at` datetime DEFAULT NULL,
         `deal_created_at` datetime NOT NULL DEFAULT current_timestamp(),
         `deal_updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp(),
         `deal_closed_at` datetime DEFAULT NULL,
@@ -279,6 +334,30 @@ function forkCrmEnsure() {
         PRIMARY KEY (`deal_id`),
         KEY `deal_stage_id` (`deal_stage_id`, `deal_archived_at`),
         KEY `deal_client_id` (`deal_client_id`)
+    $tail");
+    mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_crm_history` (
+        `history_id` int(11) NOT NULL AUTO_INCREMENT,
+        `history_deal_id` int(11) NOT NULL,
+        `history_kind` varchar(20) NOT NULL DEFAULT 'note',
+        `history_text` varchar(500) NOT NULL,
+        `history_from_stage` int(11) NOT NULL DEFAULT 0,
+        `history_to_stage` int(11) NOT NULL DEFAULT 0,
+        `history_user_id` int(11) NOT NULL DEFAULT 0,
+        `history_at` datetime NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`history_id`),
+        KEY `history_deal_id` (`history_deal_id`, `history_at`)
+    $tail");
+    mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_crm_deal_contacts` (
+        `dc_deal_id` int(11) NOT NULL,
+        `dc_contact_id` int(11) NOT NULL,
+        `dc_role` varchar(20) NOT NULL DEFAULT '',
+        PRIMARY KEY (`dc_deal_id`, `dc_contact_id`),
+        KEY `dc_contact_id` (`dc_contact_id`)
+    $tail");
+    mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_crm_settings` (
+        `setting_key` varchar(40) NOT NULL,
+        `setting_value` varchar(255) NOT NULL DEFAULT '',
+        PRIMARY KEY (`setting_key`)
     $tail");
     mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_crm_deal_quotes` (
         `dq_deal_id` int(11) NOT NULL,
@@ -308,15 +387,26 @@ function forkCrmEnsure() {
         mysqli_query($mysqli, "ALTER TABLE fork_crm_stages ADD `stage_followup_days` smallint(5) unsigned NOT NULL DEFAULT 0 AFTER `stage_probability`");
         mysqli_query($mysqli, "UPDATE fork_crm_stages SET stage_followup_days = 14 WHERE stage_name = 'Quote sent' AND stage_kind = 'open'");
     }
+    // Tables made before the quote triggers, the monthly amount and the lost reasons
+    if (forkCrmColumnEnsure('fork_crm_stages', 'stage_quote_trigger', "varchar(10) NOT NULL DEFAULT ''")) {
+        mysqli_query($mysqli, "UPDATE fork_crm_stages SET stage_quote_trigger = 'sent' WHERE stage_name = 'Quote sent' AND stage_kind = 'open'");
+        foreach (['won' => 'accepted', 'lost' => 'declined'] as $kind => $trigger) {
+            mysqli_query($mysqli, "UPDATE fork_crm_stages SET stage_quote_trigger = '$trigger' WHERE stage_kind = '$kind' ORDER BY stage_order LIMIT 1");
+        }
+    }
+    forkCrmColumnEnsure('fork_crm_deals', 'deal_monthly', "decimal(15,2) NOT NULL DEFAULT 0.00");
+    forkCrmColumnEnsure('fork_crm_deals', 'deal_lost_category', "varchar(20) NOT NULL DEFAULT ''");
+    forkCrmColumnEnsure('fork_crm_deals', 'deal_stage_at', "datetime DEFAULT NULL");
+    forkCrmColumnEnsure('fork_crm_deals', 'deal_stale_notified_at', "datetime DEFAULT NULL");
     if (mysqli_num_rows(mysqli_query($mysqli, "SHOW COLUMNS FROM fork_crm_activities LIKE 'activity_auto'")) === 0) {
         mysqli_query($mysqli, "ALTER TABLE fork_crm_activities ADD `activity_auto` tinyint(1) NOT NULL DEFAULT 0, ADD `activity_notified_at` datetime DEFAULT NULL");
     }
     $row = mysqli_fetch_row(mysqli_query($mysqli, "SELECT COUNT(*) FROM fork_crm_stages"));
     if ($row && intval($row[0]) === 0) {
         $order = 1;
-        foreach (forkCrmDefaultStages() as [$name, $kind, $probability, $followup]) {
+        foreach (forkCrmDefaultStages() as [$name, $kind, $probability, $followup, $trigger]) {
             $name = escapeSql($name);
-            mysqli_query($mysqli, "INSERT INTO fork_crm_stages SET stage_name = '$name', stage_kind = '$kind', stage_probability = $probability, stage_followup_days = $followup, stage_order = $order");
+            mysqli_query($mysqli, "INSERT INTO fork_crm_stages SET stage_name = '$name', stage_kind = '$kind', stage_probability = $probability, stage_followup_days = $followup, stage_quote_trigger = '$trigger', stage_order = $order");
             $order++;
         }
     }
@@ -364,7 +454,7 @@ function forkCrmStageCounts() {
 }
 
 /** Add a stage at the end. Returns its id. */
-function forkCrmStageAdd($name, $kind, $probability, $followup_days = 0) {
+function forkCrmStageAdd($name, $kind, $probability, $followup_days = 0, $trigger = '') {
     global $mysqli;
     forkCrmEnsure();
     $name = escapeSql(forkCrmTextClean($name, 100));
@@ -376,7 +466,7 @@ function forkCrmStageAdd($name, $kind, $probability, $followup_days = 0) {
     $followup = $kind === 'open' ? forkCrmFollowUpDaysClean($followup_days) : 0;
     $row = mysqli_fetch_row(mysqli_query($mysqli, "SELECT COALESCE(MAX(stage_order), 0) + 1 FROM fork_crm_stages"));
     $order = intval($row[0]);
-    mysqli_query($mysqli, "INSERT INTO fork_crm_stages SET stage_name = '$name', stage_kind = '$kind', stage_probability = $probability, stage_followup_days = $followup, stage_order = $order");
+    mysqli_query($mysqli, "INSERT INTO fork_crm_stages SET stage_name = '$name', stage_kind = '$kind', stage_probability = $probability, stage_followup_days = $followup, stage_quote_trigger = '" . forkCrmTriggerClean($trigger, $kind) . "', stage_order = $order");
     return intval(mysqli_insert_id($mysqli));
 }
 
@@ -384,7 +474,7 @@ function forkCrmStageAdd($name, $kind, $probability, $followup_days = 0) {
  * Change a stage. Its kind may change only when every kind is still there afterwards - there must
  * always be an open, a won and a lost stage. Returns an error text, or '' when done.
  */
-function forkCrmStageSave($stage_id, $name, $kind, $probability, $followup_days = 0) {
+function forkCrmStageSave($stage_id, $name, $kind, $probability, $followup_days = 0, $trigger = '') {
     global $mysqli;
     $stage = forkCrmStage($stage_id);
     if (!$stage) {
@@ -410,7 +500,7 @@ function forkCrmStageSave($stage_id, $name, $kind, $probability, $followup_days 
     $name_sql = escapeSql($clean_name);
     $id = intval($stage_id);
     $followup = $kind === 'open' ? forkCrmFollowUpDaysClean($followup_days) : 0;
-    mysqli_query($mysqli, "UPDATE fork_crm_stages SET stage_name = '$name_sql', stage_kind = '$kind', stage_probability = $probability, stage_followup_days = $followup WHERE stage_id = $id");
+    mysqli_query($mysqli, "UPDATE fork_crm_stages SET stage_name = '$name_sql', stage_kind = '$kind', stage_probability = $probability, stage_followup_days = $followup, stage_quote_trigger = '" . forkCrmTriggerClean($trigger, $kind) . "' WHERE stage_id = $id");
     return '';
 }
 
@@ -470,7 +560,7 @@ function forkCrmDealSelect() {
 function forkCrmDeals(array $filter = []) {
     global $mysqli;
     forkCrmEnsure();
-    $where = "WHERE d.deal_archived_at IS NULL" . clientScopeSql('d.deal_client_id');
+    $where = "WHERE d.deal_archived_at IS NULL" . clientScopeSql('d.deal_client_id') . forkCrmOwnScopeSql('d');
     if (!empty($filter['owner'])) {
         $where .= " AND d.deal_owner_id = " . intval($filter['owner']);
     }
@@ -502,7 +592,7 @@ function forkCrmDeals(array $filter = []) {
 function forkCrmDeal($deal_id) {
     global $mysqli;
     forkCrmEnsure();
-    $result = mysqli_query($mysqli, forkCrmDealSelect() . " WHERE d.deal_id = " . intval($deal_id) . " AND d.deal_archived_at IS NULL");
+    $result = mysqli_query($mysqli, forkCrmDealSelect() . " WHERE d.deal_id = " . intval($deal_id) . " AND d.deal_archived_at IS NULL" . forkCrmOwnScopeSql('d'));
     return $result ? (mysqli_fetch_assoc($result) ?: null) : null;
 }
 
@@ -516,7 +606,7 @@ function forkCrmDealWho(array $deal) {
 
 /**
  * Make a deal ($deal_id 0) or change one. $data: title, client_id, prospect, contact, email, phone,
- * amount, probability, expected_close, source, owner_id, note. The stage is not changed
+ * amount, monthly (recurring, per month), probability, expected_close, source, owner_id, note. The stage is not changed
  * here - see forkCrmDealMove(); the quotes are linked with forkCrmDealQuoteAdd(). Returns the deal id, 0 on failure.
  */
 function forkCrmDealSave($deal_id, array $data, $stage_id = 0, $user_id = 0) {
@@ -537,6 +627,7 @@ function forkCrmDealSave($deal_id, array $data, $stage_id = 0, $user_id = 0) {
     $close = forkCrmDateClean($data['expected_close'] ?? '');
     $close_sql = $close === null ? 'NULL' : "'$close'";
     $amount = forkCrmAmountClean($data['amount'] ?? 0);
+    $monthly = forkCrmAmountClean($data['monthly'] ?? 0);
     $probability = forkCrmProbabilityClean($data['probability'] ?? 0);
     $deal_id = intval($deal_id);
     $stage = null;
@@ -557,27 +648,34 @@ function forkCrmDealSave($deal_id, array $data, $stage_id = 0, $user_id = 0) {
     $phone = escapeSql(forkCrmTextClean($data['phone'] ?? '', 100));
     $note = escapeSql(forkCrmTextClean($data['note'] ?? '', 5000));
     $set = "deal_title = '$title_sql', deal_client_id = $client_id, deal_prospect = '$prospect', deal_contact = '$contact',
-        deal_email = '$email', deal_phone = '$phone', deal_amount = $amount, deal_probability = $probability,
+        deal_email = '$email', deal_phone = '$phone', deal_amount = $amount, deal_monthly = $monthly, deal_probability = $probability,
         deal_expected_close = $close_sql, deal_source = '$source', deal_owner_id = $owner_id, deal_note = '$note'";
     if ($deal_id > 0) {
         mysqli_query($mysqli, "UPDATE fork_crm_deals SET $set WHERE deal_id = $deal_id AND deal_archived_at IS NULL");
         // Quotes are the client's: when the deal changes client, the quotes of the old one come off
         mysqli_query($mysqli, "DELETE FROM fork_crm_deal_quotes WHERE dq_deal_id = $deal_id AND dq_quote_id NOT IN
             (SELECT quote_id FROM quotes WHERE quote_client_id = $client_id)");
+        mysqli_query($mysqli, "DELETE FROM fork_crm_deal_contacts WHERE dc_deal_id = $deal_id AND dc_contact_id NOT IN
+            (SELECT contact_id FROM contacts WHERE contact_client_id = $client_id)");
         return $deal_id;
     }
     $stage_id = intval($stage['stage_id']);
     $closed = $stage['stage_kind'] === 'open' ? 'NULL' : 'NOW()';
-    mysqli_query($mysqli, "INSERT INTO fork_crm_deals SET $set, deal_stage_id = $stage_id, deal_closed_at = $closed, deal_created_by = " . intval($user_id));
-    return intval(mysqli_insert_id($mysqli));
+    mysqli_query($mysqli, "INSERT INTO fork_crm_deals SET $set, deal_stage_id = $stage_id, deal_stage_at = NOW(), deal_closed_at = $closed, deal_created_by = " . intval($user_id));
+    $new_id = intval(mysqli_insert_id($mysqli));
+    if ($new_id > 0) {
+        forkCrmHistoryAdd($new_id, 'created', 'Deal made in ' . $stage['stage_name'], $user_id, 0, $stage_id);
+    }
+    return $new_id;
 }
 
 /**
  * Move a deal to a stage. Won: probability 100, closed now. Lost: probability 0, closed now, the
- * reason kept. Open: reopened, probability from the stage unless the deal already has one it
- * was given by hand and the stage it left was open too. Returns an error text, or ''.
+ * reason (one of forkCrmLostCategories() and/or a few words) kept. Open: reopened, probability from
+ * the stage. The move goes in the deal's history, for $user_id (0 = done by the system).
+ * Returns an error text, or ''.
  */
-function forkCrmDealMove(array $deal, $stage_id, $lost_reason = '') {
+function forkCrmDealMove(array $deal, $stage_id, $lost_reason = '', $user_id = 0, $lost_category = '') {
     global $mysqli;
     $stage = forkCrmStage($stage_id);
     if (!$stage) {
@@ -585,19 +683,23 @@ function forkCrmDealMove(array $deal, $stage_id, $lost_reason = '') {
     }
     $id = intval($deal['deal_id']);
     $stage_id = intval($stage['stage_id']);
-    if ($stage_id === intval($deal['deal_stage_id'])) {
+    $from_id = intval($deal['deal_stage_id']);
+    if ($stage_id === $from_id) {
         return '';
     }
-    $was_open = $deal['stage_kind'] === 'open';
+    $stamp = "deal_stage_at = NOW()";
     if ($stage['stage_kind'] === 'won') {
-        mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_stage_id = $stage_id, deal_probability = 100, deal_closed_at = NOW(), deal_lost_reason = NULL WHERE deal_id = $id");
+        mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_stage_id = $stage_id, deal_probability = 100, deal_closed_at = NOW(), deal_lost_reason = NULL, deal_lost_category = '', $stamp WHERE deal_id = $id");
     } elseif ($stage['stage_kind'] === 'lost') {
         $reason = escapeSql(forkCrmTextClean($lost_reason, 255));
-        mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_stage_id = $stage_id, deal_probability = 0, deal_closed_at = NOW(), deal_lost_reason = " . ($reason === '' ? 'NULL' : "'$reason'") . " WHERE deal_id = $id");
+        $category = forkCrmLostCategoryClean($lost_category);
+        mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_stage_id = $stage_id, deal_probability = 0, deal_closed_at = NOW(), deal_lost_category = '$category', deal_lost_reason = " . ($reason === '' ? 'NULL' : "'$reason'") . ", $stamp WHERE deal_id = $id");
     } else {
         $probability = intval($stage['stage_probability']);
-        mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_stage_id = $stage_id, deal_probability = $probability, deal_closed_at = NULL, deal_lost_reason = NULL WHERE deal_id = $id");
+        mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_stage_id = $stage_id, deal_probability = $probability, deal_closed_at = NULL, deal_lost_reason = NULL, deal_lost_category = '', $stamp WHERE deal_id = $id");
     }
+    $from = forkCrmStage($from_id);
+    forkCrmHistoryAdd($id, 'stage', 'Moved from ' . ($from ? $from['stage_name'] : '?') . ' to ' . $stage['stage_name'] . ($stage['stage_kind'] === 'lost' && $lost_category !== '' && forkCrmLostCategoryClean($lost_category) !== '' ? ' - ' . forkCrmLostCategories()[$lost_category] : ''), $user_id, $from_id, $stage_id);
     return '';
 }
 
@@ -646,6 +748,8 @@ function forkCrmNightly() {
         return 0;
     }
     forkCrmEnsure();
+    // Quotes sent, accepted or declined since yesterday move their deals first; the follow-up tasks they make fall due later
+    forkCrmSyncQuotes();
     $told = 0;
     $result = mysqli_query($mysqli, "SELECT a.activity_id, a.activity_user_id, a.activity_due, a.activity_text, d.deal_id, d.deal_title, d.deal_client_id, d.deal_prospect, c.client_name
         FROM fork_crm_activities a
@@ -692,6 +796,9 @@ function forkCrmNightly() {
         mysqli_query($mysqli, "UPDATE fork_crm_activities SET activity_notified_at = NOW() WHERE activity_id = " . intval($task['activity_id']));
         $told++;
     }
+    // Deals nobody touched for a while, and Monday's digest
+    forkCrmStaleNightly();
+    forkCrmDigest();
     return $told;
 }
 
@@ -804,6 +911,10 @@ function forkCrmProspectCreate(array $deal, ?array $address = null) {
         if ($contact !== '' || $email !== '' || $phone !== '') {
             mysqli_query($mysqli, "INSERT INTO contacts SET contact_name = '" . ($contact !== '' ? $contact : $name_sql) . "', contact_email = '$email', contact_phone = '$phone',
                 contact_primary = 1, contact_important = 1, contact_client_id = $client_id");
+            $contact_id = intval(mysqli_insert_id($mysqli));
+            if ($contact_id > 0) {
+                mysqli_query($mysqli, "REPLACE INTO fork_crm_deal_contacts SET dc_deal_id = " . intval($deal['deal_id']) . ", dc_contact_id = $contact_id, dc_role = ''");
+            }
         }
         $state = 'created';
     }
@@ -818,7 +929,7 @@ function forkCrmDealQuotes($deal_id) {
     global $mysqli;
     forkCrmEnsure();
     $out = [];
-    $result = mysqli_query($mysqli, "SELECT q.quote_id, q.quote_prefix, q.quote_number, q.quote_scope, q.quote_status, q.quote_amount, q.quote_currency_code, q.quote_date
+    $result = mysqli_query($mysqli, "SELECT q.quote_id, q.quote_prefix, q.quote_number, q.quote_scope, q.quote_status, q.quote_amount, q.quote_monthly_amount, q.quote_currency_code, q.quote_date
         FROM fork_crm_deal_quotes dq JOIN quotes q ON q.quote_id = dq.dq_quote_id
         WHERE dq.dq_deal_id = " . intval($deal_id) . " ORDER BY dq.dq_added_at, q.quote_id");
     while ($result && ($row = mysqli_fetch_assoc($result))) {
@@ -831,13 +942,13 @@ function forkCrmDealQuotes($deal_id) {
  * What the quotes come to: those in $currency, leaving out the ones turned down, expired or
  * cancelled. Plain values, no database.
  */
-function forkCrmQuotesTotal(array $quotes, $currency) {
+function forkCrmQuotesTotal(array $quotes, $currency, $field = 'quote_amount') {
     $total = 0.0;
     foreach ($quotes as $quote) {
         if ((string) $quote['quote_currency_code'] !== (string) $currency || in_array(strtolower((string) $quote['quote_status']), ['declined', 'expired', 'cancelled'], true)) {
             continue;
         }
-        $total += floatval($quote['quote_amount']);
+        $total += floatval($quote[$field] ?? 0);
     }
     return round($total, 2);
 }
@@ -863,10 +974,10 @@ function forkCrmDealQuoteRemove($deal_id, $quote_id) {
     mysqli_query($mysqli, "DELETE FROM fork_crm_deal_quotes WHERE dq_deal_id = " . intval($deal_id) . " AND dq_quote_id = " . intval($quote_id));
 }
 
-/** Set a deal's amount (and nothing else). */
-function forkCrmDealAmountSet($deal_id, $amount) {
+/** Set a deal's amount and its monthly amount (and nothing else). */
+function forkCrmDealAmountSet($deal_id, $amount, $monthly = null) {
     global $mysqli;
-    mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_amount = " . forkCrmAmountClean($amount) . " WHERE deal_id = " . intval($deal_id));
+    mysqli_query($mysqli, "UPDATE fork_crm_deals SET deal_amount = " . forkCrmAmountClean($amount) . ($monthly === null ? '' : ", deal_monthly = " . forkCrmAmountClean($monthly)) . " WHERE deal_id = " . intval($deal_id));
 }
 
 /** The quotes of a client to pick from: [quote_id => text]. */
@@ -979,7 +1090,7 @@ function forkCrmActivityDelete($activity_id) {
 function forkCrmTasks($user_id = 0) {
     global $mysqli;
     forkCrmEnsure();
-    $where = "WHERE a.activity_due IS NOT NULL AND a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND s.stage_kind = 'open'" . clientScopeSql('d.deal_client_id');
+    $where = "WHERE a.activity_due IS NOT NULL AND a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND s.stage_kind = 'open'" . clientScopeSql('d.deal_client_id') . forkCrmOwnScopeSql('d');
     if (intval($user_id) > 0) {
         $where .= " AND (a.activity_user_id = " . intval($user_id) . " OR a.activity_user_id = 0)";
     }
@@ -1008,6 +1119,6 @@ function forkCrmTasksDueCount($user_id) {
         JOIN fork_crm_deals d ON d.deal_id = a.activity_deal_id
         JOIN fork_crm_stages s ON s.stage_id = d.deal_stage_id
         WHERE a.activity_due IS NOT NULL AND a.activity_due <= CURDATE() AND a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND s.stage_kind = 'open'
-        AND (a.activity_user_id = " . intval($user_id) . " OR a.activity_user_id = 0)" . clientScopeSql('d.deal_client_id')));
+        AND (a.activity_user_id = " . intval($user_id) . " OR a.activity_user_id = 0)" . clientScopeSql('d.deal_client_id') . forkCrmOwnScopeSql('d')));
     return $row ? intval($row[0]) : 0;
 }

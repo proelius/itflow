@@ -87,6 +87,7 @@ require_once __DIR__ . '/functions/fork_hours.php';
 require_once __DIR__ . '/functions/fork_hours_alerts.php';
 require_once __DIR__ . '/functions/fork_hours_report.php';
 require_once __DIR__ . '/functions/fork_crm.php';
+require_once __DIR__ . '/functions/fork_crm_extra.php';
 require_once __DIR__ . '/functions/contract_billing.php';
 require_once __DIR__ . '/functions/products.php';
 require_once __DIR__ . '/functions/billing_email.php';
