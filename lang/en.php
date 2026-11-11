@@ -2086,4 +2086,5 @@ return [
     'Share' => 'Share',
     'M d, Y' => 'M d, Y',
     '{first} {second}' => '{first} {second}',
+    'D j M, g:i A' => 'D j M, g:i A',
 ];

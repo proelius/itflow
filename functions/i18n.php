@@ -351,33 +351,7 @@ function i18n_ticket_priority_label(string $name): string {
  * @return string Formatted date/time in current language
  */
 function i18n_format_sla_due(int $timestamp): string {
-    _i18n_load();
-    $current_lang = $GLOBALS['_i18n_lang'];
-    
-    if ($current_lang === 'en') {
-        // English: exact format 'D j M, g:i A'
-        return date('D j M, g:i A', $timestamp);
-    }
-    
-    // Try IntlDateFormatter if available
-    if (class_exists('IntlDateFormatter')) {
-        $locale = $current_lang === 'fr' ? 'fr_CH' : $current_lang;
-        $formatter = new IntlDateFormatter(
-            $locale,
-            IntlDateFormatter::NONE,
-            IntlDateFormatter::NONE,
-            date_default_timezone_get(),
-            IntlDateFormatter::GREGORIAN,
-            'EEE d MMM, HH:mm'
-        );
-        $formatted = $formatter->format($timestamp);
-        if ($formatted !== false) {
-            return $formatted;
-        }
-    }
-    
-    // Fallback to English format
-    return date('D j M, g:i A', $timestamp);
+    return i18n_date('D j M, g:i A', $timestamp);
 }
 
 /**
@@ -407,6 +381,7 @@ function i18n_date(string $format, ?int $timestamp = null): string {
         'M j, Y g:i A' => t('M j, Y g:i A'),
         'Y-m-d' => t('Y-m-d'),
         'M d, Y' => t('M d, Y'),
+        'D j M, g:i A' => t('D j M, g:i A'),
     ][$format] ?? $format;
     $names = [
         'M' => [t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'), t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec')],
