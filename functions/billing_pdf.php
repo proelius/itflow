@@ -38,6 +38,14 @@ class BillingPdf extends TCPDF {
     }
 }
 
+/**
+ * A money amount for a PDF with every space made non-breaking, so "1 503.40 CHF"
+ * is never split across two lines (TCPDF breaks at normal and narrow spaces only).
+ */
+function billingPdfMoneyText($text) {
+    return preg_replace('/[ \x{202F}\x{2009}]/u', "\u{00A0}", (string) $text);
+}
+
 /** The footers and the tax ID setting - a page has them loaded, the nightly run reads them here. */
 function billingPdfConfig() {
     global $mysqli, $config_invoice_footer, $config_quote_footer, $config_invoice_show_tax_id;
@@ -72,7 +80,7 @@ function billingPdfRender($type, array $row, $variant = 'document') {
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     };
     $money = function ($amount) use ($currency, $e) {
-        return $e(billingMoney($amount, $currency));
+        return $e(billingPdfMoneyText(billingMoney($amount, $currency)));
     };
 
     $status = $type === 'recurring' ? '' : (string) $row["{$c}_status"];
@@ -385,7 +393,7 @@ function billingStatementPdfRender(array $statement) {
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     };
     $money = function ($amount) use ($currency, $e) {
-        return $e(billingMoney($amount, $currency));
+        return $e(billingPdfMoneyText(billingMoney($amount, $currency)));
     };
     $grey = '#6c757d';
     $red = '#c42b37';
