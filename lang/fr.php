@@ -1698,4 +1698,6 @@ return [
     'Currency' => 'Monnaie',
     'Acceptance point' => 'Point de dépôt',
     'Receipt{qr_bill}' => 'Récépissé{qr_bill}',
+    'Pay by QR-bill' => 'Payer avec la QR-facture',
+    'Scan it with your banking app, or enter the IBAN and the reference below.' => 'Scannez-le avec votre application bancaire, ou saisissez l’IBAN et la référence ci-dessous.',
 ];

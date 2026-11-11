@@ -317,3 +317,45 @@ function qrBillDraw($pdf, array $bill) {
         qrBillCorners($pdf, 118, $y + 6, 65, 25);
     }
 }
+
+/**
+ * The QR code of a bill as an inline SVG (no style attributes - the portal pages allow none),
+ * with the Swiss cross over its middle, 7 mm of the 46 the QR is drawn at on the slip, and a white margin of four modules around it (the quiet zone, on a dark page too).
+ */
+function qrBillSvg(array $bill, $size = 220) {
+    require_once __DIR__ . '/../libs/TCPDF/tcpdf_barcodes_2d.php';
+    $barcode = (new TCPDF2DBarcode(qrBillPayload($bill), 'QRCODE,M'))->getBarcodeArray();
+    if (!$barcode || empty($barcode['bcode'])) {
+        return '';
+    }
+    $n = intval($barcode['num_rows']);
+    $path = '';
+    foreach ($barcode['bcode'] as $y => $row) {
+        foreach ($row as $x => $dark) {
+            if ($dark) {
+                $path .= 'M' . $x . ' ' . $y . 'h1v1h-1z';
+            }
+        }
+    }
+    // The cross: 7/46 of the width, in module units, from the same shapes as on the slip
+    $u = ($n * 7 / 46) / 19.8;
+    $x0 = ($n - $n * 7 / 46) / 2;
+    $point = function ($value) use ($u, $x0) {
+        return round($x0 + $value * $u, 3);
+    };
+    $cross = [8.3, 4, 11.3, 4, 11.3, 8.3, 15.6, 8.3, 15.6, 11.3, 11.3, 11.3, 11.3, 15.6, 8.3, 15.6, 8.3, 11.3, 4, 11.3, 4, 8.3, 8.3, 8.3];
+    $points = [];
+    for ($i = 0; $i < count($cross); $i += 2) {
+        $points[] = $point($cross[$i]) . ',' . $point($cross[$i + 1]);
+    }
+    $side = round($n * 7 / 46, 3);
+    $inner = round(18.4 * $u, 3);
+    $offset = round($x0 + 0.7 * $u, 3);
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 ' . ($n + 8) . ' ' . ($n + 8) . '" width="' . intval($size) . '" height="' . intval($size) . '" shape-rendering="crispEdges" role="img">'
+        . '<rect x="-4" y="-4" width="' . ($n + 8) . '" height="' . ($n + 8) . '" fill="#fff"/>'
+        . '<path d="' . $path . '" fill="#000"/>'
+        . '<rect x="' . round($x0, 3) . '" y="' . round($x0, 3) . '" width="' . $side . '" height="' . $side . '" fill="#fff"/>'
+        . '<rect x="' . $offset . '" y="' . $offset . '" width="' . $inner . '" height="' . $inner . '" fill="#000"/>'
+        . '<polygon points="' . implode(' ', $points) . '" fill="#fff"/>'
+        . '</svg>';
+}
