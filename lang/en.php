@@ -2078,4 +2078,10 @@ return [
     'Y-m-d' => 'Y-m-d',
     '{n} day before it ends' => '{n} day before it ends',
     'It renews itself for another {term} unless notice is given at least {n} day before it ends.' => 'It renews itself for another {term} unless notice is given at least {n} day before it ends.',
+    'Guest View Quote' => 'Guest View Quote',
+    'Guest View Invoice' => 'Guest View Invoice',
+    'Guest View Contract' => 'Guest View Contract',
+    'Guest Approve Ticket Task' => 'Guest Approve Ticket Task',
+    'Guest Calendar Feed' => 'Guest Calendar Feed',
+    'Share' => 'Share',
 ];

@@ -40,7 +40,7 @@
 </div> <!-- /.app-wrapper -->
 
 <!-- Set the browser window title to the clients name -->
-<script>document.title = <?= json_encode("$tab_title - $page_title") ?>;</script>
+<script>document.title = <?= json_encode("$tab_title - " . ($guest_page_titles[$page_title] ?? $page_title)) ?>;</script>
 
 <!-- REQUIRED SCRIPTS -->
 

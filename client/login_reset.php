@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_reset_email_
 
 ?>
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light" data-lte-color-mode="off">
+<html lang="<?= escapeHtml(i18n_current_language()) ?>" data-bs-theme="light" data-lte-color-mode="off">
 <head>
     <meta charset="utf-8">
     <title><?= escapeHtml($company_name) ?> | <?= $link_user ? t('Set your password') : t('Reset your password') ?></title>

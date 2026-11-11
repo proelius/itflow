@@ -89,7 +89,7 @@ $state = $link['state'];
 $title = $state === 'pending' ? ($signup ? t('Finish signing up') : t('Join {client}', ['{client}' => $invite['client_name']])) : $notes[$state][0];
 ?>
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light" data-lte-color-mode="off">
+<html lang="<?= escapeHtml(i18n_current_language()) ?>" data-bs-theme="light" data-lte-color-mode="off">
 <head>
     <meta charset="utf-8">
     <title><?= escapeHtml($company_name) ?> | <?= escapeHtml($title) ?></title>

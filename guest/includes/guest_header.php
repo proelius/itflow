@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-lte-print="plain">
+<html lang="<?= escapeHtml(i18n_current_language()) ?>" data-lte-print="plain">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
