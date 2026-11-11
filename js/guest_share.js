@@ -15,6 +15,17 @@
         return;
     }
 
+    // The words the page says - in the language PHP chose (guest/share.php), English if it gave none
+    let words = {};
+    try {
+        words = JSON.parse(page.dataset.words || '{}');
+    } catch (e) {
+        words = {};
+    }
+    function word(name, english) {
+        return words[name] || english;
+    }
+
     const query = new URLSearchParams(window.location.search);
     const id = page.dataset.id;
     const key = window.location.hash.replace(/^#/, '') || query.get('key') || '';
@@ -59,15 +70,15 @@
             body: JSON.stringify(body)
         }).then(function (res) {
             return res.json().catch(function () {
-                return { error: 'Something went wrong - try again in a moment.' };
+                return { error: word('generic', 'Something went wrong - try again in a moment.') };
             });
         }, function () {
-            return { error: 'Could not reach the server - check your connection and try again.' };
+            return { error: word('offline', 'Could not reach the server - check your connection and try again.') };
         });
     }
 
     function gone(reason) {
-        $('[data-share-gone-reason]').textContent = reason || 'It may have expired, been used up or been turned off.';
+        $('[data-share-gone-reason]').textContent = reason || word('gone', 'It may have expired, been used up or been turned off.');
         stopOtp();
         show('gone');
     }
@@ -95,7 +106,7 @@
         if (on) {
             button.dataset.label = button.innerHTML;
             button.disabled = true;
-            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>One moment...';
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>' + word('busy', 'One moment...');
         } else if (button.dataset.label) {
             button.disabled = false;
             button.innerHTML = button.dataset.label;
@@ -111,7 +122,7 @@
         const write = typeof itflowCopyText === 'function'
             ? itflowCopyText(text, button)
             : navigator.clipboard.writeText(text);
-        write.then(function () { done('Copied!'); }, function () { done('Copy it by hand'); });
+        write.then(function () { done(word('copied', 'Copied!')); }, function () { done(word('copy_by_hand', 'Copy it by hand')); });
     }
 
     // What the link is, and what it needs - nothing secret yet, and nothing used up
@@ -151,7 +162,7 @@
         $('[data-share-title]', ready).textContent = data.title;
         $('[data-share-intro]', ready).textContent = data.intro;
         $('[data-share-limits]', ready).textContent = data.limits;
-        $('[data-share-reveal-label]', ready).textContent = data.type === 'Export' ? 'Download the PDF' : (data.type === 'File' ? 'Download' : (data.type === 'Document' ? 'Open the document' : 'Reveal'));
+        $('[data-share-reveal-label]', ready).textContent = data.type === 'Export' ? word('download_pdf', 'Download the PDF') : (data.type === 'File' ? word('download', 'Download') : (data.type === 'Document' ? word('open_document', 'Open the document') : word('reveal', 'Reveal')));
         $('[data-share-reveal]', ready).querySelector('i').className = 'fas me-2 ' + (downloads.indexOf(data.type) !== -1 ? 'fa-download' : 'fa-eye');
         $('[data-share-reveal-hint]', ready).textContent = data.hint || '';
         note(ready, data.note);
@@ -295,7 +306,7 @@
                     if (data.state === 'gone') {
                         gone(data.reason);
                     } else {
-                        error('ready', data.error || 'The file could not be downloaded.');
+                        error('ready', data.error || word('no_download', 'The file could not be downloaded.'));
                     }
                 });
             }
@@ -316,7 +327,7 @@
             });
         }, function () {
             busy(button, false);
-            error('ready', 'Could not reach the server - check your connection and try again.');
+            error('ready', word('offline', 'Could not reach the server - check your connection and try again.'));
         });
     }
 
@@ -383,7 +394,7 @@
         e.preventDefault();
         const form = e.currentTarget;
         if (!form.username.value.trim() && !form.password.value) {
-            error('request', 'Fill in the username, the password, or both.');
+            error('request', word('need_login', 'Fill in the username, the password, or both.'));
             return;
         }
         const button = form.querySelector('button[type=submit]');
@@ -408,7 +419,7 @@
     });
 
     if (!id || !key) {
-        gone('The link is not complete - copy the whole of it from the email, including everything after the #.');
+        gone(word('incomplete', 'The link is not complete - copy the whole of it from the email, including everything after the #.'));
         return;
     }
     post('open').then(open);
