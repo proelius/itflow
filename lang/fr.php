@@ -2101,4 +2101,5 @@ return [
     'Share' => 'Partage',
     'M d, Y' => 'j M Y',
     '{first} {second}' => '{first} et {second}',
+    'D j M, g:i A' => 'D j M, H:i',
 ];
