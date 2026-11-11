@@ -367,6 +367,15 @@
                             </li>
                         <?php } ?>
 
+                        <?php if (lookupUserPermission('module_financial') >= 1 && contractHoursReady()) { ?>
+                            <li class="nav-item">
+                                <a href="/agent/hours_reports.php?client_id=<?= $client_id ?>" class="nav-link <?php if (in_array(basename($_SERVER["PHP_SELF"]), ["hours_reports.php", "hours_report.php"])) { echo "active"; } ?>">
+                                    <i class="nav-icon fas fa-file-alt"></i>
+                                    <p>Hours Reports</p>
+                                </a>
+                            </li>
+                        <?php } ?>
+
                         <li class="nav-item">
                             <a href="/agent/recurring_invoices.php?client_id=<?= $client_id ?>" class="nav-link <?php if (basename($_SERVER["PHP_SELF"]) == "recurring_invoices.php" || basename($_SERVER["PHP_SELF"]) == "recurring_invoice.php") { echo "active"; } ?>">
                                 <i class="nav-icon fas fa-redo-alt"></i>
