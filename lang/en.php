@@ -2076,4 +2076,6 @@ return [
     'Friday' => 'Friday',
     'Saturday' => 'Saturday',
     'Y-m-d' => 'Y-m-d',
+    '{n} day before it ends' => '{n} day before it ends',
+    'It renews itself for another {term} unless notice is given at least {n} day before it ends.' => 'It renews itself for another {term} unless notice is given at least {n} day before it ends.',
 ];
