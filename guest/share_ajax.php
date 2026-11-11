@@ -26,6 +26,7 @@ require_once "../functions.php";
 require_once "../includes/load_global_settings.php";
 require_once "../includes/session_init.php";
 require_once "../libs/totp/totp.php";
+i18n_set_language(client_language());
 
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
@@ -38,7 +39,7 @@ $session_user_id = 0;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    exit(json_encode(['error' => 'Not like that.']));
+    exit(json_encode(['error' => t('Not like that.')]));
 }
 
 $input = json_decode((string) file_get_contents('php://input'), true);
@@ -55,19 +56,24 @@ function shareGuestGone($reason) {
     exit(json_encode(['state' => 'gone', 'reason' => $reason]));
 }
 
+/** "Oct 17 at 9:00 AM" - a moment, for the person holding the link. */
+function shareGuestWhen($time) {
+    return t('{date} at {time}', ['{date}' => date('M j', strtotime((string) $time)), '{time}' => date('g:i A', strtotime((string) $time))]);
+}
+
 /** Why a link in this state no longer works, in words for the person holding it. */
 function shareGuestReason($row, $state) {
     $reasons = [
-        'expired' => 'It expired ' . date('M j \a\t g:i A', strtotime((string) $row['item_expire_at'])) . '.',
-        'used' => intval($row['item_view_limit']) === 1 ? 'It could be opened once, and it has been.' : 'It has been opened as many times as it allowed.',
-        'revoked' => 'It was turned off.',
-        'locked' => 'It was locked after too many wrong tries.',
-        'destroyed' => 'It was destroyed once it had been opened.',
-        'received' => 'It has already been used to send what was asked for.',
-        'saved' => 'It has already been used to send what was asked for.',
-        'discarded' => 'It was turned off.',
+        'expired' => t('It expired {when}.', ['{when}' => shareGuestWhen($row['item_expire_at'])]),
+        'used' => intval($row['item_view_limit']) === 1 ? t('It could be opened once, and it has been.') : t('It has been opened as many times as it allowed.'),
+        'revoked' => t('It was turned off.'),
+        'locked' => t('It was locked after too many wrong tries.'),
+        'destroyed' => t('It was destroyed once it had been opened.'),
+        'received' => t('It has already been used to send what was asked for.'),
+        'saved' => t('It has already been used to send what was asked for.'),
+        'discarded' => t('It was turned off.'),
     ];
-    return $reasons[$state] ?? 'It may have expired, been used up or been turned off.';
+    return $reasons[$state] ?? t('It may have expired, been used up or been turned off.');
 }
 
 /** "j***@example.com" - enough to know which address, not enough to harvest it. */
@@ -80,17 +86,17 @@ function shareGuestMaskEmail($email) {
 function shareGuestLimits($row) {
     $limit = intval($row['item_view_limit']);
     $left = $limit - intval($row['item_views']);
-    $text = 'Works until ' . date('M j \a\t g:i A', strtotime((string) $row['item_expire_at'])) . '. ';
+    $text = t('Works until {when}.', ['{when}' => shareGuestWhen($row['item_expire_at'])]) . ' ';
     if ($row['item_type'] === 'Request') {
-        return $text . 'It can be used once.';
+        return $text . t('It can be used once.');
     }
     if (!$limit) {
-        return $text . 'It can be opened any number of times until then.';
+        return $text . t('It can be opened any number of times until then.');
     }
     if ($limit === 1) {
-        return $text . 'It opens once.';
+        return $text . t('It opens once.');
     }
-    return $text . "It can be opened $left more " . ($left === 1 ? 'time' : 'times') . '.';
+    return $text . ($left === 1 ? t('It can be opened {n} more time.', ['{n}' => $left]) : t('It can be opened {n} more times.', ['{n}' => $left]));
 }
 
 /** What the person sees after it opens - whether it will open again. */
@@ -100,12 +106,12 @@ function shareGuestAfter($row, $again) {
     $left = $limit - intval($row['item_views']);
     $grace = SHARE_GRACE_MINUTES;
     if ($limit && $left <= 0) {
-        return "That was the last time this link opens - copy what you need now. On this device you can come back to it for $grace minutes.";
+        return t('That was the last time this link opens - copy what you need now. On this device you can come back to it for {n} minutes.', ['{n}' => $grace]);
     }
     if ($limit) {
-        return "It can be opened $left more " . ($left === 1 ? 'time' : 'times') . ' before ' . date('M j \a\t g:i A', strtotime((string) $row['item_expire_at'])) . '.';
+        return $left === 1 ? t('It can be opened {n} more time before {when}.', ['{n}' => $left, '{when}' => shareGuestWhen($row['item_expire_at'])]) : t('It can be opened {n} more times before {when}.', ['{n}' => $left, '{when}' => shareGuestWhen($row['item_expire_at'])]);
     }
-    return 'It keeps working until ' . date('M j \a\t g:i A', strtotime((string) $row['item_expire_at'])) . '.';
+    return t('It keeps working until {when}.', ['{when}' => shareGuestWhen($row['item_expire_at'])]);
 }
 
 /** Log it against the link, with this request's address - and tell whoever made it, when there is something to tell. */
@@ -133,16 +139,23 @@ function shareGuestOpen($row) {
     $company = shareCompany();
     $verified = shareVerified($row);
     $type = $row['item_type'];
-    $from = trim((string) $row['creator_name']) !== '' ? $row['creator_name'] . ' at ' . $company['name'] : $company['name'];
-    $what = ['Credential' => 'login details', 'Note' => 'a secure note', 'Document' => 'a document', 'File' => 'a file', 'Export' => 'your IT documentation'][$type] ?? 'something';
+    $from = trim((string) $row['creator_name']) !== '' ? t('{name} at {company}', ['{name}' => $row['creator_name'], '{company}' => $company['name']]) : $company['name'];
+    $sent = match ($type) {
+        'Credential' => t('{from} sent you login details.', ['{from}' => $from]),
+        'Note' => t('{from} sent you a secure note.', ['{from}' => $from]),
+        'Document' => t('{from} sent you a document.', ['{from}' => $from]),
+        'File' => t('{from} sent you a file.', ['{from}' => $from]),
+        'Export' => t('{from} sent you your IT documentation.', ['{from}' => $from]),
+        default => t('{from} sent you something.', ['{from}' => $from]),
+    };
 
     $response = [
         'state' => 'ready',
         'type' => $type,
         'protect' => shareProtection($row),
         'verified' => $verified,
-        'title' => $verified ? shareName($row) : 'Something from ' . $company['name'],
-        'intro' => $type === 'Request' ? "$from is asking you to send a login." : "$from sent you $what.",
+        'title' => $verified ? shareName($row) : t('Something from {company}', ['{company}' => $company['name']]),
+        'intro' => $type === 'Request' ? t('{from} is asking you to send a login.', ['{from}' => $from]) : $sent,
     ];
     if ($response['protect'] === 'code') {
         $response['masked_email'] = shareGuestMaskEmail($row['item_recipient']);
@@ -153,22 +166,22 @@ function shareGuestOpen($row) {
 
     $again = shareOpenedHere($row);
     $response['note'] = (string) $row['item_note'];
-    $response['limits'] = $again ? 'You opened this a moment ago on this device - opening it again does not use it up.' : shareGuestLimits($row);
+    $response['limits'] = $again ? t('You opened this a moment ago on this device - opening it again does not use it up.') : shareGuestLimits($row);
     if ($type === 'Request') {
-        $response['title'] = 'Send us: ' . shareName($row);
-        $response['intro'] = "$from is asking you for this login. Fill in what you have - it is encrypted and goes straight to them, never by email.";
+        $response['title'] = t('Send us: {name}', ['{name}' => shareName($row)]);
+        $response['intro'] = t('{from} is asking you for this login. Fill in what you have - it is encrypted and goes straight to them, never by email.', ['{from}' => $from]);
     } elseif (!$again && intval($row['item_view_limit']) === 1 && in_array($type, ['Credential', 'Note'], true)) {
-        $response['hint'] = 'It can only be shown once - have somewhere safe ready to put it, like your password manager.';
+        $response['hint'] = t('It can only be shown once - have somewhere safe ready to put it, like your password manager.');
     }
     if ($type === 'File') {
         global $mysqli;
         $file = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT file_name, file_size, file_ext FROM files WHERE file_id = " . intval($row['item_related_id']) . " AND file_client_id = " . intval($row['item_client_id']) . " LIMIT 1"));
         if (!$file) {
-            shareGuestGone('The file it shared has been removed.');
+            shareGuestGone(t('The file it shared has been removed.'));
         }
         $response['file_name'] = $file['file_name'];
         $response['title'] = $file['file_name'];
-        $response['intro'] = "$from sent you a file - " . formatBytes(intval($file['file_size'])) . '.';
+        $response['intro'] = t('{from} sent you a file - {size}.', ['{from}' => $from, '{size}' => formatBytes(intval($file['file_size']))]);
     }
     if ($type === 'Export') {
         // The PDF made with the link, kept encrypted until it stops working
@@ -176,13 +189,13 @@ function shareGuestOpen($row) {
         $size = shareExportSize($row['item_id']);
         $meta = shareUnseal($row['item_payload'], shareContentKey($secret));
         if (!$size || !$meta) {
-            shareGuestGone('The documentation it shared is no longer there - ask for a new link.');
+            shareGuestGone(t('The documentation it shared is no longer there - ask for a new link.'));
         }
         $response['file_name'] = shareName($row);
-        $response['title'] = 'IT documentation for ' . $row['client_name'];
-        $response['intro'] = "$from sent you your IT documentation, as a PDF - " . formatBytes($size) . ', made ' . date('M j, Y', strtotime((string) $row['item_created_at'])) . '.';
+        $response['title'] = t('IT documentation for {client}', ['{client}' => $row['client_name']]);
+        $response['intro'] = t('{from} sent you your IT documentation, as a PDF - {size}, made {date}.', ['{from}' => $from, '{size}' => formatBytes($size), '{date}' => date('M j, Y', strtotime((string) $row['item_created_at']))]);
         if (!empty($meta['locked'])) {
-            $response['hint'] = 'It has passwords in it, so the PDF asks for a password of its own when you open it - ' . (trim((string) $row['creator_name']) !== '' ? $row['creator_name'] : $company['name']) . ' will give it to you another way.';
+            $response['hint'] = t('It has passwords in it, so the PDF asks for a password of its own when you open it - {who} will give it to you another way.', ['{who}' => trim((string) $row['creator_name']) !== '' ? $row['creator_name'] : $company['name']]);
         }
     }
     return $response;
@@ -192,7 +205,7 @@ function shareGuestOpen($row) {
 shareSweep();
 $row = shareFind($item_id, $secret);
 if (!$row) {
-    shareGuestGone('The link is not right - check you have all of it, including everything after the #.');
+    shareGuestGone(t('The link is not right - check you have all of it, including everything after the #.'));
 }
 $state = shareState($row);
 $again = shareOpenedHere($row);
@@ -229,7 +242,7 @@ if ($action === 'passphrase') {
         shareGuestGone(shareGuestReason($row, 'locked'));
     }
     $left = SHARE_ATTEMPTS - $attempts;
-    exit(json_encode(['error' => "That passphrase is not right. $left more " . ($left === 1 ? 'try' : 'tries') . ' before the link locks.']));
+    exit(json_encode(['error' => $left === 1 ? t('That passphrase is not right. {n} more try before the link locks.', ['{n}' => $left]) : t('That passphrase is not right. {n} more tries before the link locks.', ['{n}' => $left])]));
 }
 
 if ($action === 'send_code') {
@@ -237,10 +250,10 @@ if ($action === 'send_code') {
         exit(json_encode(shareGuestOpen($row)));
     }
     if ($row['item_code_sent_at'] && strtotime($row['item_code_sent_at']) > time() - SHARE_CODE_RESEND_SECONDS) {
-        exit(json_encode(['error' => 'A code was just sent - give it a minute to arrive before asking for another.']));
+        exit(json_encode(['error' => t('A code was just sent - give it a minute to arrive before asking for another.')]));
     }
     if (!shareMailReady()) {
-        exit(json_encode(['error' => 'The code could not be sent - ask ' . shareCompany()['name'] . ' for a passphrase instead.']));
+        exit(json_encode(['error' => t('The code could not be sent - ask {company} for a passphrase instead.', ['{company}' => shareCompany()['name']])]));
     }
     $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
     mysqli_query($mysqli, "UPDATE shared_items SET item_code = '" . escapeSql(password_hash($code, PASSWORD_DEFAULT)) . "', item_code_sent_at = NOW() WHERE item_id = " . intval($row['item_id']));
@@ -255,7 +268,7 @@ if ($action === 'code') {
     }
     $code = preg_replace('/\D/', '', (string) ($input['code'] ?? ''));
     if (empty($row['item_code']) || !$row['item_code_sent_at'] || strtotime($row['item_code_sent_at']) < time() - SHARE_CODE_MINUTES * 60) {
-        exit(json_encode(['error' => 'That code has run out - send another.']));
+        exit(json_encode(['error' => t('That code has run out - send another.')]));
     }
     if (!shareTakeAttempt($row['item_id'])) {
         shareGuestGone(shareGuestReason($row, 'locked'));
@@ -274,7 +287,7 @@ if ($action === 'code') {
         shareGuestGone(shareGuestReason($row, 'locked'));
     }
     $left = SHARE_ATTEMPTS - $attempts;
-    exit(json_encode(['error' => "That code is not right. $left more " . ($left === 1 ? 'try' : 'tries') . ' before the link locks.']));
+    exit(json_encode(['error' => $left === 1 ? t('That code is not right. {n} more try before the link locks.', ['{n}' => $left]) : t('That code is not right. {n} more tries before the link locks.', ['{n}' => $left])]));
 }
 
 // Everything below needs the passphrase or code passed, when the link has one
@@ -285,7 +298,7 @@ if (!shareVerified($row)) {
 if ($action === 'reveal') {
     $type = $row['item_type'];
     if (!in_array($type, ['Credential', 'Note', 'Document'], true)) {
-        exit(json_encode(['error' => 'Nothing to show here.']));
+        exit(json_encode(['error' => t('Nothing to show here.')]));
     }
 
     // Read what it shows before using a view, so a link whose record has gone is not used up
@@ -307,7 +320,7 @@ if ($action === 'reveal') {
         $username = $legacy($row['item_encrypted_username']);
         $password = $legacy($row['item_encrypted_credential']);
         if (!$credential || $password === false || $username === false) {
-            shareGuestGone('The login it shared is no longer there - ask for a new link.');
+            shareGuestGone(t('The login it shared is no longer there - ask for a new link.'));
         }
         $content += ['name' => $credential['credential_name'], 'uri' => $credential['credential_uri'], 'username' => $username, 'password' => $password, 'has_otp' => (string) credentialOtpSeed($credential['credential_otp_secret']) !== ''];
     } elseif ($type === 'Note') {
@@ -319,7 +332,7 @@ if ($action === 'reveal') {
     } else {
         $document = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT document_name, document_content FROM documents WHERE document_id = " . intval($row['item_related_id']) . " AND document_client_id = " . intval($row['item_client_id']) . " LIMIT 1"));
         if (!$document) {
-            shareGuestGone('The document it shared has been removed.');
+            shareGuestGone(t('The document it shared has been removed.'));
         }
         $content += ['name' => $document['document_name'], 'html' => documentHtmlPurify($document['document_content'])];
     }
@@ -356,7 +369,7 @@ if ($action === 'totp') {
 
 if ($action === 'destroy') {
     if (!$again) {
-        exit(json_encode(['error' => 'Open it first.']));
+        exit(json_encode(['error' => t('Open it first.')]));
     }
     if (shareEnd($row['item_id'], 'Destroyed')) {
         shareGuestRecord($row, 'Destroy', 'Destroyed by the person who opened it');
@@ -379,14 +392,14 @@ if ($action === 'submit') {
     $limits = ['uri' => 500, 'username' => 350, 'password' => 350, 'otp' => 200, 'note' => 2000];
     foreach ($limits as $field => $max) {
         if (mb_strlen($fields[$field]) > $max) {
-            exit(json_encode(['error' => 'Something you typed is too long - keep each field shorter.']));
+            exit(json_encode(['error' => t('Something you typed is too long - keep each field shorter.')]));
         }
     }
     if ($fields['username'] === '' && $fields['password'] === '') {
-        exit(json_encode(['error' => 'Fill in the username, the password, or both.']));
+        exit(json_encode(['error' => t('Fill in the username, the password, or both.')]));
     }
     if ($fields['otp'] !== '' && credentialOtpSeed($fields['otp']) === false) {
-        exit(json_encode(['error' => 'That 2FA secret does not look right - it is the key shown under "can\'t scan the code", or leave it empty.']));
+        exit(json_encode(['error' => t('That 2FA secret does not look right - it is the key shown under "can\'t scan the code", or leave it empty.')]));
     }
     if (!shareClaim($row['item_id'])) {
         shareGuestGone(shareGuestReason($row, 'used'));
@@ -398,4 +411,4 @@ if ($action === 'submit') {
     exit(json_encode(['state' => 'sent']));
 }
 
-exit(json_encode(['error' => 'Not something this link does.']));
+exit(json_encode(['error' => t('Not something this link does.')]));
