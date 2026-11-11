@@ -166,6 +166,19 @@ function forkHoursReports($client_id) {
     return $rows;
 }
 
+/** A client's reports that were sent to it, newest quarter first - what the client portal shows. */
+function forkHoursReportsSent($client_id) {
+    global $mysqli;
+    forkHoursReportEnsure();
+    $rows = [];
+    $sql = mysqli_query($mysqli, "SELECT report_id, report_start, report_end, report_sent_at FROM fork_hours_reports
+        WHERE report_client_id = " . intval($client_id) . " AND report_status = 'sent' ORDER BY report_start DESC");
+    while ($row = mysqli_fetch_assoc($sql)) {
+        $rows[] = $row;
+    }
+    return $rows;
+}
+
 /** The numbers for a client and quarter, from the blocks and what was drawn from them. */
 function forkHoursReportBuild($client_id, $start, $end) {
     global $mysqli;

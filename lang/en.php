@@ -1688,4 +1688,5 @@ return [
     'No ticket drew hours this quarter.' => 'No ticket drew hours this quarter.',
     'Prepaid hours report - {quarter}' => 'Prepaid hours report - {quarter}',
     'Please find attached the report of your prepaid hours for {quarter}.' => 'Please find attached the report of your prepaid hours for {quarter}.',
+    'Prepaid hours reports' => 'Prepaid hours reports',
 ];

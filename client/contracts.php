@@ -127,4 +127,30 @@ function contractsUrl(array $changes) {
 </section>
 
 <?php
+// The prepaid hours reports sent to the client (functions/fork_hours_report.php), by the quarter
+$hours_reports = contractHoursReady() ? forkHoursReportsSent($session_client_id) : [];
+if ($hours_reports) { ?>
+    <section class="itflow-portal-panel mt-4" data-portal-hours-reports>
+        <div class="itflow-portal-panel-head">
+            <h2><i class="fas fa-hourglass-half"></i><?= t('Prepaid hours reports') ?></h2>
+        </div>
+        <ul class="itflow-portal-list">
+            <?php foreach ($hours_reports as $report) { ?>
+                <li>
+                    <a class="itflow-portal-ticket" href="pdf.php?hours_report=<?= intval($report['report_id']) ?>">
+                        <span class="itflow-portal-ticket-main">
+                            <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml(forkHoursReportTitle($report['report_start'])) ?></span>
+                            <span class="itflow-portal-ticket-meta">
+                                <span><?= t('{from} to {to}', ['{from}' => escapeHtml(i18n_date_value($report['report_start'])), '{to}' => escapeHtml(i18n_date_value($report['report_end']))]) ?></span>
+                                <span><?= t('Sent {date}', ['{date}' => escapeHtml(i18n_date_value(substr($report['report_sent_at'], 0, 10)))]) ?></span>
+                            </span>
+                        </span>
+                        <span class="itflow-portal-ticket-side"><i class="fas fa-fw fa-file-pdf"></i> <?= t('Download PDF') ?></span>
+                    </a>
+                </li>
+            <?php } ?>
+        </ul>
+    </section>
+<?php }
+
 require_once "includes/footer.php";
