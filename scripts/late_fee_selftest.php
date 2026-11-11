@@ -14,6 +14,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $itflow_dir = __DIR__ . '/..';
+require_once $itflow_dir . '/functions/i18n.php';
 require_once $itflow_dir . '/functions/billing_email.php';
 require_once $itflow_dir . '/functions/late_fee_fixed.php';
 
@@ -111,6 +112,24 @@ fee_test('the plan adds the fees up and says collection follows the last reminde
 fee_test('the plan of a repeating schedule says each reminder has a fee', strpos(lateFeePlanText($repeat, 2, 20, 'CHF'), 'Then a reminder every 30 days, each with another CHF 20.00 fee') !== false);
 fee_test('with no reminder after the due date the plan says no fee is added', strpos(lateFeePlanText(fee_rules([-3], 0), 2, 20, 'CHF'), 'no fee is added') !== false);
 fee_test('an amount is written with two decimals', lateFeeAmountText(20, 'CHF') === 'CHF 20.00' && lateFeeAmountText(7.5, '') === '7.50');
+
+// The names of the fees, and what a reminder email shows
+fee_test('the fees are named for their reminder, in English', [lateFeeLabel(1), lateFeeLabel(2), lateFeeLabel(3), lateFeeLabel(4), lateFeeLabel(5), lateFeeLabel(6)] === ['First reminder fee', 'Second reminder fee', 'Third reminder fee', 'Fourth reminder fee', 'Fifth reminder fee', 'Reminder fee']);
+$french = i18n_with('fr', function () {
+    return [lateFeeLabel(2), lateFeeLabel(3), t('Later reminder fees')];
+});
+fee_test('and in French', $french === ['Frais de deuxième rappel', 'Frais de troisième rappel', 'Frais des rappels suivants']);
+$history = [
+    'Reminder emailed to Contact Test (contact.test@example.com) - 31 days late',
+    'Cron applied a reminder fee of CHF 30.00 (reminder 2)',
+    'Cron did not apply a reminder fee - the fee is set in CHF and this invoice is in EUR',
+    'Cron applied a reminder fee of CHF 30.50 (reminder 3)',
+    'Cron applied a reminder fee of 30.00 (reminder 2)',
+    'Cron applied a late fee of CHF 12.00',
+];
+fee_test('the fees of an invoice are read from its history, each reminder once, in order', lateFeeParseHistory($history) === [2 => 30.0, 3 => 30.5]);
+fee_test('an invoice with no reminder fee has none', lateFeeParseHistory(['Cron applied a late fee of CHF 12.00', 'Reminder emailed to X - 1 day late']) === []);
+fee_test('what the job writes is what is read back', lateFeeParseHistory(['Cron applied a reminder fee of ' . lateFeeAmountText(30, 'CHF') . ' (reminder 4)']) === [4 => 30.0]);
 
 echo "\n=== Summary ===\nTests passed: $passed\nTests failed: $failed\n";
 if ($failed > 0) {

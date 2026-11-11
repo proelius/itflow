@@ -124,6 +124,68 @@ function lateFeePlanText(array $rules, $from, $amount, $currency) {
     return $text;
 }
 
+/** What a reminder's fee is called, in the language being used - "Second reminder fee". A literal t() for each, so each is a key of the language files. */
+function lateFeeLabel($number) {
+    return match (intval($number)) {
+        1 => t('First reminder fee'),
+        2 => t('Second reminder fee'),
+        3 => t('Third reminder fee'),
+        4 => t('Fourth reminder fee'),
+        5 => t('Fifth reminder fee'),
+        default => t('Reminder fee'),
+    };
+}
+
+/**
+ * The fees a nightly job wrote to an invoice's history - "Cron applied a reminder fee of CHF 30.00
+ * (reminder 2)" - as [reminder number => amount], from those history lines. Each reminder once.
+ */
+function lateFeeParseHistory(array $descriptions) {
+    $fees = [];
+    foreach ($descriptions as $description) {
+        if (preg_match('/^Cron applied a reminder fee of (?:[A-Za-z]{3} )?([0-9]+(?:\.[0-9]+)?) \(reminder ([0-9]+)\)$/', (string) $description, $m)) {
+            $fees[intval($m[2])] = floatval($m[1]);
+        }
+    }
+    ksort($fees);
+    return $fees;
+}
+
+/**
+ * Rows for a reminder email's summary - one for each reminder fee the invoice carries, named for its
+ * reminder ("Second reminder fee" - CHF 30.00), so the client sees in the email that they were added.
+ * Fees of reminders after the fifth are added up in one row. Called while the email is written in the
+ * client's language. [label => amount as text], empty for an invoice with none.
+ */
+function lateFeeEmailRows(array $invoice) {
+    global $mysqli;
+    $invoice_id = intval($invoice['invoice_id'] ?? 0);
+    if (!$invoice_id) {
+        return [];
+    }
+    $descriptions = [];
+    $sql = mysqli_query($mysqli, "SELECT history_description FROM history
+        WHERE history_invoice_id = $invoice_id AND history_description LIKE 'Cron applied a reminder fee of%'
+        ORDER BY history_id");
+    while ($row = mysqli_fetch_row($sql)) {
+        $descriptions[] = $row[0];
+    }
+    $currency = (string) ($invoice['invoice_currency_code'] ?? '');
+    $rows = [];
+    $later = 0.0;
+    foreach (lateFeeParseHistory($descriptions) as $number => $amount) {
+        if ($number <= 5) {
+            $rows[lateFeeLabel($number)] = billingMoney($amount, $currency);
+        } else {
+            $later += $amount;
+        }
+    }
+    if ($later > 0) {
+        $rows[t('Later reminder fees')] = billingMoney($later, $currency);
+    }
+    return $rows;
+}
+
 /** Has something been written to an invoice's history today that starts like this? */
 function lateFeeHistoryToday($invoice_id, $description_prefix) {
     global $mysqli;
@@ -167,7 +229,7 @@ function lateFeeFixedApply(array $invoice, array $row, $days, array $rules) {
         } else {
             // The line is written in the client's language, as the reminder is
             [$name, $description] = i18n_with(client_language($client_id), function () use ($number) {
-                return [t('Reminder fee'), t('Fee for reminder {number}, applied on {date}', ['{number}' => $number, '{date}' => i18n_date('M j, Y')])];
+                return [lateFeeLabel($number), t('Fee for reminder {number}, applied on {date}', ['{number}' => $number, '{date}' => i18n_date('M j, Y')])];
             });
             billingItemSave('invoice', $invoice_id, ['name' => $name, 'description' => $description, 'qty' => 1, 'price' => $settings['fixed'], 'tax_id' => 0]);
             $amount_text = lateFeeAmountText($settings['fixed'], $currency);

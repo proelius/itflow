@@ -1655,4 +1655,10 @@ return [
     'Scan it with your banking app, or enter the IBAN and the reference below.' => 'Scan it with your banking app, or enter the IBAN and the reference below.',
     'Reminder fee' => 'Reminder fee',
     'Fee for reminder {number}, applied on {date}' => 'Fee for reminder {number}, applied on {date}',
+    'First reminder fee' => 'First reminder fee',
+    'Second reminder fee' => 'Second reminder fee',
+    'Third reminder fee' => 'Third reminder fee',
+    'Fourth reminder fee' => 'Fourth reminder fee',
+    'Fifth reminder fee' => 'Fifth reminder fee',
+    'Later reminder fees' => 'Later reminder fees',
 ];
