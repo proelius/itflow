@@ -351,33 +351,75 @@ function i18n_ticket_priority_label(string $name): string {
  * @return string Formatted date/time in current language
  */
 function i18n_format_sla_due(int $timestamp): string {
+    return i18n_date('D j M, g:i A', $timestamp);
+}
+
+/**
+ * Format a date or time in the current language.
+ *
+ * English keeps PHP's date() exactly. Other languages translate the format itself
+ * with t() (so 'M j, Y' can become 'j M Y'; only the formats listed below) and the month and day names, which
+ * date() only knows in English. Any other format, such as 'Y-m-d', is left as it is.
+ *
+ * @param string $format English date() format
+ * @param int|null $timestamp Unix timestamp, now when omitted
+ * @return string
+ */
+function i18n_date(string $format, ?int $timestamp = null): string {
+    $timestamp = $timestamp ?? time();
     _i18n_load();
-    $current_lang = $GLOBALS['_i18n_lang'];
-    
-    if ($current_lang === 'en') {
-        // English: exact format 'D j M, g:i A'
-        return date('D j M, g:i A', $timestamp);
+    if ($GLOBALS['_i18n_lang'] === 'en') {
+        return date($format, $timestamp);
     }
-    
-    // Try IntlDateFormatter if available
-    if (class_exists('IntlDateFormatter')) {
-        $locale = $current_lang === 'fr' ? 'fr_CH' : $current_lang;
-        $formatter = new IntlDateFormatter(
-            $locale,
-            IntlDateFormatter::NONE,
-            IntlDateFormatter::NONE,
-            date_default_timezone_get(),
-            IntlDateFormatter::GREGORIAN,
-            'EEE d MMM, HH:mm'
-        );
-        $formatted = $formatter->format($timestamp);
-        if ($formatted !== false) {
-            return $formatted;
+    // Literal t() calls, so each format is a visible key; any other format stays as it is
+    $format = [
+        'M j, Y' => t('M j, Y'),
+        'M j' => t('M j'),
+        'F j, Y' => t('F j, Y'),
+        'l, F j' => t('l, F j'),
+        'g:i A' => t('g:i A'),
+        'M j, Y g:i A' => t('M j, Y g:i A'),
+        'Y-m-d' => t('Y-m-d'),
+        'M d, Y' => t('M d, Y'),
+        'D j M, g:i A' => t('D j M, g:i A'),
+    ][$format] ?? $format;
+    $names = [
+        'M' => [t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'), t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec')],
+        'F' => [t('January'), t('February'), t('March'), t('April'), t('May'), t('June'), t('July'), t('August'), t('September'), t('October'), t('November'), t('December')],
+        'D' => [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')],
+        'l' => [t('Sunday'), t('Monday'), t('Tuesday'), t('Wednesday'), t('Thursday'), t('Friday'), t('Saturday')],
+    ];
+    $out = '';
+    $length = strlen($format);
+    for ($i = 0; $i < $length; $i++) {
+        $char = $format[$i];
+        if ($char === '\\' && $i + 1 < $length) {
+            $out .= $format[++$i];
+        } elseif ($char === 'M' || $char === 'F') {
+            $out .= $names[$char][(int) date('n', $timestamp) - 1];
+        } elseif ($char === 'D' || $char === 'l') {
+            $out .= $names[$char][(int) date('w', $timestamp)];
+        } else {
+            $out .= date($char, $timestamp);
         }
     }
-    
-    // Fallback to English format
-    return date('D j M, g:i A', $timestamp);
+    return $out;
+}
+
+/**
+ * A stored date (YYYY-MM-DD) shown in the current language.
+ * English, and anything that is not a plain date, comes back exactly as stored.
+ *
+ * @param mixed $value Date as stored in the database
+ * @return string
+ */
+function i18n_date_value($value): string {
+    $value = (string) $value;
+    _i18n_load();
+    if ($GLOBALS['_i18n_lang'] === 'en' || !preg_match('/^(?!0000)\d{4}-\d{2}-\d{2}$/', $value)) {
+        return $value;
+    }
+    return i18n_date('Y-m-d', strtotime($value));
 }
 
 /**
@@ -426,6 +468,99 @@ function i18n_recurring_frequency_label(string $name): string {
         'monthly' => t('Monthly'),
         'yearly' => t('Yearly'),
         default => $name,
+    };
+}
+
+/**
+ * Get portal label text in current language (for PORTAL_TICKET_EMAILS, PORTAL_COMPANY_TICKET_EMAILS, and device labels)
+ * @param string $text English label text
+ * @return string Translated label or original if not found
+ */
+function i18n_portal_label(string $text): string {
+    return match ($text) {
+        'Every email' => t('Every email'),
+        'When a ticket is raised for you, every reply and update, when it is fixed and when it is closed' => t('When a ticket is raised for you, every reply and update, when it is fixed and when it is closed'),
+        'Replies and fixes only' => t('Replies and fixes only'),
+        'Our replies and when it is fixed - not the emails saying a ticket was raised or closed' => t('Our replies and when it is fixed - not the emails saying a ticket was raised or closed'),
+        'Only the tickets I am on' => t('Only the tickets I am on'),
+        'Nothing about tickets other people raise' => t('Nothing about tickets other people raise'),
+        'New tickets' => t('New tickets'),
+        'An email when anyone raises one - in the portal, by email or by calling us' => t('An email when anyone raises one - in the portal, by email or by calling us'),
+        'New tickets and every update' => t('New tickets and every update'),
+        'As if you were copied in on all of them' => t('As if you were copied in on all of them'),
+        'Unknown device' => t('Unknown device'),
+        'With a password' => t('With a password'),
+        'With their Microsoft 365 account' => t('With their Microsoft 365 account'),
+        'No portal access' => t('No portal access'),
+        'Portal access off' => t('Portal access off'),
+        'Signs in with a password' => t('Signs in with a password'),
+        'Signs in with Microsoft' => t('Signs in with Microsoft'),
+        'Client Portal' => t('Client Portal'),
+        'Your IT' => t('Your IT'),
+        'Your account' => t('Your account'),
+        'Activity' => t('Activity'),
+        'Light mode' => t('Light mode'),
+        'Dark mode' => t('Dark mode'),
+        'Exit view' => t('Exit view'),
+        'Sign out' => t('Sign out'),
+        'Home' => t('Home'),
+        'Tickets' => t('Tickets'),
+        'New' => t('New'),
+        'Billing' => t('Billing'),
+        'Menu' => t('Menu'),
+        'Invoices' => t('Invoices'),
+        'Pay invoices' => t('Pay invoices'),
+        'Quotes' => t('Quotes'),
+        'Recurring invoices' => t('Recurring invoices'),
+        'Contracts' => t('Contracts'),
+        'Payments' => t('Payments'),
+        'Statement' => t('Statement'),
+        'Cards & autopay' => t('Cards & autopay'),
+        'Devices' => t('Devices'),
+        'Licenses' => t('Licenses'),
+        'Domains & certificates' => t('Domains & certificates'),
+        'Documents' => t('Documents'),
+        'Contacts' => t('Contacts'),
+        'Close' => t('Close'),
+        'Company' => t('Company'),
+        'Roles' => t('Roles'),
+        'Email' => t('Email'),
+        'Mobile' => t('Mobile'),
+        'Department' => t('Department'),
+        'Location' => t('Location'),
+        'Primary contact' => t('Primary contact'),
+        'Technical' => t('Technical'),
+        'Waiting on you' => t('Waiting on you'),
+        'On hold' => t('On hold'),
+        'Received' => t('Received'),
+        'In progress' => t('In progress'),
+        'Open' => t('Open'),
+        'Resolved' => t('Resolved'),
+        'Closed' => t('Closed'),
+        'All' => t('All'),
+        'Paid' => t('Paid'),
+        'Cancelled' => t('Cancelled'),
+        'No charge' => t('No charge'),
+        'Draft' => t('Draft'),
+        'Accepted' => t('Accepted'),
+        'Declined' => t('Declined'),
+        'Expired' => t('Expired'),
+        'Due today' => t('Due today'),
+        'A password is at least 8 characters.' => t('A password is at least 8 characters.'),
+        'To pay' => t('To pay'),
+        'Waiting for you' => t('Waiting for you'),
+        'Monthly' => t('Monthly'),
+        'Quarterly' => t('Quarterly'),
+        'Yearly' => t('Yearly'),
+        'month' => t('month'),
+        'quarter' => t('quarter'),
+        'year' => t('year'),
+        'Current' => t('Current'),
+        '1-30 days' => t('1-30 days'),
+        '31-60 days' => t('31-60 days'),
+        '61-90 days' => t('61-90 days'),
+        'Over 90 days' => t('Over 90 days'),
+        default => $text,
     };
 }
 

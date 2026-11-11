@@ -16,6 +16,9 @@ function verifyContactTicketAccess($requested_ticket_id, $expected_ticket_state)
     if ($expected_ticket_state == "Closed") {
         // Closed tickets
         $ticket_state_snippet = "ticket_status = 5";
+    } elseif ($expected_ticket_state == "Any") {
+        // Open or closed - reading, such as an attachment
+        $ticket_state_snippet = "1 = 1";
     } else {
         // Open (working/hold) tickets
         $ticket_state_snippet = "ticket_status != 5";
@@ -43,7 +46,12 @@ function verifyContactTicketAccess($requested_ticket_id, $expected_ticket_state)
  * Capabilities are named by area so the rule for one can change without touching callers.
  */
 function contactCan($capability) {
-    global $session_contact_primary, $session_contact_is_billing_contact, $session_contact_is_technical_contact;
+    global $session_contact_primary, $session_contact_is_billing_contact, $session_contact_is_technical_contact, $portal_view_as;
+
+    // An agent viewing as the contact sees billing only when their own role may (portalViewAsAccess())
+    if ($portal_view_as && $capability === 'accounting' && empty($portal_view_as['billing'])) {
+        return false;
+    }
 
     // Primary contacts can do everything in the portal
     if ($session_contact_primary == 1) {
@@ -55,8 +63,11 @@ function contactCan($capability) {
             return (bool) $session_contact_is_billing_contact;
 
         case 'itdoc':        // assets, certificates, domains, documents, files
-        case 'contacts':     // view / manage contacts
+        case 'contacts':     // see the company's contacts
             return (bool) $session_contact_is_technical_contact;
+
+        case 'contacts_manage': // add and change contacts and their portal access - the primary contact's alone
+            return false;
 
         default:             // unknown capability -> deny (fail closed)
             return false;
@@ -64,12 +75,20 @@ function contactCan($capability) {
 }
 
 /*
- * Enforce a capability at the top of a page or handler - bounce the contact out if they lack it.
+ * Enforce a capability at the top of a page or handler - a contact without it
+ * is sent home with a note, rather than signed out for following a link.
  */
 function enforceContactCan($capability) {
     if (!contactCan($capability)) {
-        redirect("post.php?logout");
+        flashAlert("That part of the portal isn't open to you", 'error');
+        redirect("/client/index.php");
     }
+}
+
+/** Whether an agent is looking at the portal as this contact (View as contact) - nothing is changed or recorded then. */
+function portalViewingAs() {
+    global $portal_view_as;
+    return !empty($portal_view_as);
 }
 
 /*
@@ -82,9 +101,9 @@ function enforceContactCan($capability) {
  * work. Gating them on a password they do not have would just lock them out.
  */
 function portalReauthenticate($current_password) {
-    global $mysqli, $session_user_id;
+    global $mysqli, $session_user_id, $session_auth_method;
 
-    if (($_SESSION['login_method'] ?? 'local') !== 'local') {
+    if ($session_auth_method !== 'local') {
         return true;
     }
 
@@ -125,7 +144,7 @@ function portalDateTime($datetime) {
         return escapeHtml($datetime);
     }
 
-    $time = date($config_time_format, $timestamp);
+    $time = i18n_date($config_time_format, $timestamp);
     $day = date('Y-m-d', $timestamp);
 
     if ($day === date('Y-m-d')) {
@@ -136,21 +155,736 @@ function portalDateTime($datetime) {
         return escapeHtml(t('Yesterday at {time}', ['{time}' => $time]));
     }
 
-    return escapeHtml(t('{date} at {time}', ['{date}' => date($config_date_format, $timestamp), '{time}' => $time]));
+    return escapeHtml(t('{date} at {time}', ['{date}' => i18n_date($config_date_format, $timestamp), '{time}' => $time]));
 }
 
 /*
- * The empty state for the portal's list pages.
+ * The empty state for the portal's list pages - the same one the agent lists
+ * use (emptyStateHtml()), so an empty list reads as empty rather than broken.
  *
- * Every list page here renders a header row and then a while loop, so a client
- * with no assets, no quotes or no documents used to get a table with nothing
- * under it - indistinguishable from a page that failed to load. This says so
- * instead.
- *
- * Default is neutral, for a list that simply has nothing in it yet. Pass
- * 'success' where empty is genuinely good news (nothing owed, nothing unpaid).
+ * Pass 'success' where empty is genuinely good news (nothing owed, nothing
+ * unpaid) and it shows a tick.
  */
 function portalEmptyState($message, $icon = 'fa-inbox', $type = 'secondary') {
-    return '<div class="alert alert-' . $type . '"><i class="fa fa-fw ' . $icon . ' me-2"></i>' . $message . '</div>';
+    return emptyStateHtml([
+        'title' => rtrim((string) $message, '.'),
+        'icon' => $type === 'success' ? 'fa-check' : $icon,
+        'filtered' => false,
+    ]);
 }
 
+/*
+ * The portal's sections, in menu order, as this contact may see them - the top
+ * bar, the phone menu and the tab bar all draw from this. Each has a label, an
+ * icon, the pages that light it up, and an href or children.
+ */
+function portalNav() {
+    global $mysqli, $config_module_enable_accounting, $config_module_enable_itdoc;
+
+    $nav = [
+        'home' => ['label' => 'Home', 'icon' => 'fa-home', 'href' => '/client/index.php', 'pages' => ['index.php']],
+        'tickets' => ['label' => 'Tickets', 'icon' => 'fa-life-ring', 'href' => '/client/tickets.php', 'pages' => ['tickets.php', 'ticket.php', 'ticket_add.php', 'ticket_view_all.php']],
+    ];
+
+    if (contactCan('accounting') && $config_module_enable_accounting == 1) {
+        $cards = billingStripeProvider() !== null;
+        $children = [
+            ['label' => 'Invoices', 'icon' => 'fa-file-invoice-dollar', 'href' => '/client/invoices.php', 'pages' => ['invoices.php', 'invoice.php']],
+        ];
+        if ($cards) {
+            $children[] = ['label' => 'Pay invoices', 'icon' => 'fa-hand-holding-usd', 'href' => '/client/unpaid_invoices.php', 'pages' => ['unpaid_invoices.php', 'pay.php']];
+        }
+        $children[] = ['label' => 'Quotes', 'icon' => 'fa-comment-dollar', 'href' => '/client/quotes.php', 'pages' => ['quotes.php', 'quote.php']];
+        $children[] = ['label' => 'Recurring invoices', 'icon' => 'fa-redo-alt', 'href' => '/client/recurring_invoices.php', 'pages' => ['recurring_invoices.php', 'recurring_invoice.php']];
+        if (contractsReady() && intval(mysqli_fetch_row(mysqli_query($mysqli, "SELECT COUNT(*) FROM contracts WHERE " . portalContractScopeSql()))[0] ?? 0)) {
+            $children[] = ['label' => 'Contracts', 'icon' => 'fa-file-contract', 'href' => '/client/contracts.php', 'pages' => ['contracts.php', 'contract.php']];
+        }
+        $children[] = ['label' => 'Payments', 'icon' => 'fa-receipt', 'href' => '/client/payments.php', 'pages' => ['payments.php', 'receipt.php']];
+        $children[] = ['label' => 'Statement', 'icon' => 'fa-file-alt', 'href' => '/client/statement.php', 'pages' => ['statement.php']];
+        if ($cards) {
+            $children[] = ['label' => 'Cards & autopay', 'icon' => 'fa-credit-card', 'href' => '/client/saved_payment_methods.php', 'pages' => ['saved_payment_methods.php']];
+        }
+        $nav['billing'] = ['label' => 'Billing', 'icon' => 'fa-file-invoice-dollar', 'children' => $children, 'pages' => array_merge(...array_column($children, 'pages'))];
+    }
+
+    if ($config_module_enable_itdoc && contactCan('itdoc')) {
+        $children = [
+            ['label' => 'Devices', 'icon' => 'fa-desktop', 'href' => '/client/assets.php', 'pages' => ['assets.php', 'asset.php']],
+            ['label' => 'Licenses', 'icon' => 'fa-cube', 'href' => '/client/licenses.php', 'pages' => ['licenses.php']],
+            ['label' => 'Domains & certificates', 'icon' => 'fa-globe', 'href' => '/client/domains.php', 'pages' => ['domains.php', 'certificates.php']],
+            ['label' => 'Documents', 'icon' => 'fa-folder-open', 'href' => '/client/documents.php', 'pages' => ['documents.php', 'document.php', 'document_add.php', 'file.php']],
+        ];
+        if (contactCan('contacts')) {
+            $children[] = ['label' => 'Contacts', 'icon' => 'fa-address-book', 'href' => '/client/contacts.php', 'pages' => ['contacts.php', 'contact.php', 'contact_add.php', 'contact_edit.php']];
+        }
+        $nav['it'] = ['label' => 'Your IT', 'icon' => 'fa-laptop', 'children' => $children, 'pages' => array_merge(...array_column($children, 'pages'))];
+    }
+
+    // The links an admin set to show in the portal (Admin > Custom Links)
+    foreach (customLinksFor(3) as $row) {
+        $nav['link-' . intval($row['custom_link_id'])] = [
+            'label' => (string) $row['custom_link_name'],
+            'icon_class' => 'fas fa-fw fa-' . $row['icon'],
+            'href' => $row['href'],
+            'new_tab' => intval($row['custom_link_new_tab']) === 1,
+            'title' => trim((string) $row['custom_link_description']),
+            'pages' => [basename((string) parse_url($row['href'], PHP_URL_PATH))],
+        ];
+    }
+
+    return $nav;
+}
+
+/** A round avatar - the photo when there is one, else initials on a tone picked from the name. */
+function portalAvatarHtml($name, $photo_url = '', $size = '') {
+    $class = 'itflow-portal-avatar' . ($size !== '' ? " itflow-portal-avatar-$size" : '');
+    if ($photo_url !== '') {
+        return '<img class="' . $class . '" src="' . escapeHtml($photo_url) . '" alt="">';
+    }
+    $initials = personInitials((string) $name) ?: '?';
+    $tone = 1 + (abs(crc32((string) $name)) % 6);
+    return '<span class="' . $class . ' itflow-portal-avatar-tone-' . $tone . '" aria-hidden="true">' . escapeHtml($initials) . '</span>';
+}
+
+/*
+ * ---------- tickets ----------
+ *
+ * A ticket as the client sees it. The statuses agents work with (New, Open,
+ * On Hold and any of their own) mean little to a client, so the portal says
+ * where it stands for them: received, being worked on, waiting on them, on
+ * hold, resolved for them to confirm, or closed.
+ */
+
+/** Whether this contact sees every ticket of their company, not only their own - primary and technical contacts. */
+function portalSeesAllTickets() {
+    global $session_contact_primary, $session_contact_is_technical_contact;
+    return $session_contact_primary == 1 || $session_contact_is_technical_contact;
+}
+
+/** SQL: the tickets this contact may open - their company's, and only their own unless they see them all. */
+function portalTicketScopeSql($mine_only = false) {
+    global $session_client_id, $session_contact_id;
+    $sql = "tickets.ticket_client_id = " . intval($session_client_id);
+    if ($mine_only || !portalSeesAllTickets()) {
+        $sql .= " AND tickets.ticket_contact_id = " . intval($session_contact_id);
+    }
+    return $sql;
+}
+
+/**
+ * Where a ticket stands for the client - key, label, icon and the badge class.
+ * From a row with ticket_status, ticket_resolved_at, ticket_closed_at,
+ * ticket_last_spoke (ticketLastSpokeSql()) and ticket_status_pauses_sla.
+ */
+function portalTicketState($row) {
+    if (!empty($row['ticket_closed_at'])) {
+        return ['key' => 'closed', 'label' => 'Closed', 'icon' => 'fa-check-circle', 'class' => 'itflow-portal-state-closed'];
+    }
+    if (!empty($row['ticket_resolved_at'])) {
+        return ['key' => 'resolved', 'label' => 'Resolved', 'icon' => 'fa-check', 'class' => 'itflow-portal-state-resolved'];
+    }
+    if (($row['ticket_last_spoke'] ?? null) === 'Public') {
+        return ['key' => 'you', 'label' => 'Waiting on you', 'icon' => 'fa-reply', 'class' => 'itflow-portal-state-you'];
+    }
+    if (intval($row['ticket_status_pauses_sla'] ?? 0) === 1) {
+        return ['key' => 'hold', 'label' => $row['ticket_status_name'] ?: 'On hold', 'icon' => 'fa-pause', 'class' => 'itflow-portal-state-hold'];
+    }
+    if (intval($row['ticket_status'] ?? 0) === 1 && empty($row['ticket_last_spoke'])) {
+        return ['key' => 'new', 'label' => 'Received', 'icon' => 'fa-inbox', 'class' => 'itflow-portal-state-new'];
+    }
+    return ['key' => 'progress', 'label' => 'In progress', 'icon' => 'fa-tools', 'class' => 'itflow-portal-state-progress'];
+}
+
+/** The state as a badge. */
+function portalTicketStateHtml($row) {
+    $state = portalTicketState($row);
+    return '<span class="itflow-portal-state ' . $state['class'] . '"><i class="fas fa-fw ' . $state['icon'] . '"></i>' . escapeHtml(i18n_portal_label($state['label'])) . '</span>';
+}
+
+/** The ticket list's tabs - each with its label, icon and SQL. Needs tickets joined to ticket_statuses. */
+function portalTicketTabs() {
+    $spoke = ticketLastSpokeSql();
+    return [
+        'open' => ['label' => 'Open', 'icon' => 'fa-folder-open', 'where' => TICKET_OPEN_SQL],
+        'you' => ['label' => 'Waiting on you', 'icon' => 'fa-reply', 'where' => TICKET_OPEN_SQL . " AND $spoke = 'Public'"],
+        'resolved' => ['label' => 'Resolved', 'icon' => 'fa-check', 'where' => 'tickets.ticket_resolved_at IS NOT NULL AND tickets.ticket_closed_at IS NULL'],
+        'closed' => ['label' => 'Closed', 'icon' => 'fa-check-circle', 'where' => 'tickets.ticket_closed_at IS NOT NULL'],
+        'all' => ['label' => 'All', 'icon' => 'fa-list', 'where' => '1 = 1'],
+    ];
+}
+
+/** The columns a ticket list or page needs for portalTicketState(), with the ticket's own. */
+function portalTicketColumnsSql() {
+    return "tickets.ticket_id, tickets.ticket_prefix, tickets.ticket_number, tickets.ticket_subject, tickets.ticket_status, tickets.ticket_priority,
+        tickets.ticket_created_at, tickets.ticket_updated_at, tickets.ticket_resolved_at, tickets.ticket_closed_at, tickets.ticket_contact_id,
+        ticket_statuses.ticket_status_name, ticket_statuses.ticket_status_pauses_sla, " . ticketLastSpokeSql() . " AS ticket_last_spoke";
+}
+
+/** Whether what the editor sent says nothing - only tags, spaces and non-breaking spaces, and no picture. */
+function portalHtmlIsEmpty($html) {
+    $html = (string) $html;
+    if (stripos($html, '<img') !== false) {
+        return false;
+    }
+    return preg_replace('/[\s\x{00A0}]+/u', '', html_entity_decode(strip_tags($html), ENT_QUOTES, 'UTF-8')) === '';
+}
+
+/** The reply lines the portal writes itself when a contact resolves, reopens or closes - shown as a line in the conversation, not a message. */
+function portalTicketEventText($html) {
+    $text = trim(html_entity_decode(strip_tags((string) $html), ENT_QUOTES, 'UTF-8'));
+    return preg_match('/^Ticket (resolved|reopened|closed) by .{1,200}\.$/', $text) ? $text : '';
+}
+
+/*
+ * ---------- billing ----------
+ *
+ * Invoices, quotes, recurring invoices, payments and the statement, for
+ * primary and billing contacts. Every query is keyed to the session's client;
+ * paying by card is functions/billing_pay.php.
+ */
+
+/** Billing pages and handlers: a primary or billing contact, with the accounting module on - anyone else is sent away. */
+function portalBillingGate() {
+    global $config_module_enable_accounting;
+    enforceContactCan('accounting');
+    if ($config_module_enable_accounting != 1) {
+        redirect('/client/index.php');
+    }
+}
+
+/** A badge from a state - label, icon and class (portalInvoiceState(), portalQuoteState()). */
+function portalStateBadge(array $state) {
+    return '<span class="itflow-portal-state ' . $state['class'] . '"><i class="fas fa-fw ' . $state['icon'] . '"></i>' . escapeHtml(i18n_portal_label($state['label'])) . '</span>';
+}
+
+/**
+ * Where an invoice stands for the client: invoiceState() (state, balance,
+ * paid, days) with a label, icon and class - paid, cancelled, overdue, or
+ * when it is due.
+ */
+function portalInvoiceState(array $row, $paid) {
+    $state = invoiceState($row, $paid);
+    $days = $state['days'];
+    switch ($state['state']) {
+        case 'paid':
+            return $state + ['label' => 'Paid', 'icon' => 'fa-check', 'class' => 'itflow-portal-state-resolved'];
+        case 'cancelled':
+            return $state + ['label' => 'Cancelled', 'icon' => 'fa-ban', 'class' => 'itflow-portal-state-closed'];
+        case 'nonbillable':
+            return $state + ['label' => 'No charge', 'icon' => 'fa-minus-circle', 'class' => 'itflow-portal-state-closed'];
+        case 'draft':
+            return $state + ['label' => 'Draft', 'icon' => 'fa-pencil-alt', 'class' => 'itflow-portal-state-closed'];
+        case 'overdue':
+            return $state + ['label' => -$days === 1 ? t('{n} day overdue', ['{n}' => -$days]) : t('{n} days overdue', ['{n}' => -$days]), 'icon' => 'fa-exclamation-circle', 'class' => 'itflow-portal-state-late'];
+    }
+    if ($days === 0) {
+        return $state + ['label' => 'Due today', 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-you'];
+    }
+    if ($days <= 7) {
+        return $state + ['label' => $days === 1 ? t('Due in {n} day', ['{n}' => $days]) : t('Due in {n} days', ['{n}' => $days]), 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-you'];
+    }
+    return $state + ['label' => t('Due {date}', ['{date}' => i18n_date('M j', strtotime((string) $row['invoice_due']))]), 'icon' => 'fa-clock', 'class' => 'itflow-portal-state-new'];
+}
+
+/** Where a quote stands for the client - waiting for their answer, run out, accepted or declined - with a label, icon and class. */
+function portalQuoteState(array $row) {
+    $status = (string) $row['quote_status'];
+    if (in_array($status, ['Accepted', 'Invoiced'], true)) {
+        return ['key' => 'accepted', 'label' => 'Accepted', 'icon' => 'fa-thumbs-up', 'class' => 'itflow-portal-state-resolved'];
+    }
+    if ($status === 'Declined') {
+        return ['key' => 'declined', 'label' => 'Declined', 'icon' => 'fa-thumbs-down', 'class' => 'itflow-portal-state-closed'];
+    }
+    if (quoteExpired($row)) {
+        return ['key' => 'expired', 'label' => 'Expired', 'icon' => 'fa-hourglass-end', 'class' => 'itflow-portal-state-hold'];
+    }
+    return ['key' => 'waiting', 'label' => 'Waiting for you', 'icon' => 'fa-reply', 'class' => 'itflow-portal-state-you'];
+}
+
+/** SQL: quotes waiting for the client's answer - sent or viewed, and not run out. */
+function portalQuoteWaitingSql() {
+    return "quote_status IN ('Sent', 'Viewed') AND quote_expire >= CURDATE()";
+}
+
+/**
+ * The contact opened an invoice or quote in the portal - marked viewed, in
+ * its history and told to the agents (billingGuestViewed()), once each time
+ * they sign in rather than on every look.
+ */
+function portalBillingViewed($type, array $row) {
+    if (portalViewingAs()) {
+        return;
+    }
+    global $contact;
+    $key = $type . ':' . intval($row[billingType($type)['col'] . '_id']);
+    if (!empty($_SESSION['portal_viewed'][$key])) {
+        return;
+    }
+    $_SESSION['portal_viewed'][$key] = 1;
+    billingGuestViewed($type, $row, (string) ($contact['contact_name'] ?? ''));
+}
+
+/** The ask-us link for a document - a new ticket with its subject filled in. */
+function portalAskUrl($subject) {
+    return 'ticket_add.php?' . http_build_query(['subject' => $subject]);
+}
+
+/*
+ * ---------- Contracts ----------
+ *
+ * The client's agreements with us, for primary and billing contacts: the
+ * ones waiting for their signature, the ones in force and the rest - never a
+ * draft that hasn't been sent to sign. Signed here as from the emailed link
+ * (functions/contract_signature.php), as the contact signed in.
+ */
+
+/** Contract pages and handlers: billing's gate, and the contracts update run. */
+function portalContractsGate() {
+    portalBillingGate();
+    if (!contractsReady()) {
+        redirect('/client/index.php');
+    }
+}
+
+/** SQL: a contract sent to sign and not withdrawn - out for signature (while a draft or active), or signed (3.4.3 on). */
+function portalContractSentSql($client_signed = null) {
+    if (!contractSignaturesReady()) {
+        return '0';
+    }
+    return "EXISTS (SELECT 1 FROM contract_signatures WHERE contract_signature_contract_id = contract_id AND contract_signature_url_key <> ''
+        AND contract_signature_sent_at IS NOT NULL AND contract_signature_withdrawn_at IS NULL"
+        . ($client_signed === false ? " AND contract_signature_client_signed_at IS NULL AND contract_status IN ('Draft', 'Active')" : '') . ")";
+}
+
+/** SQL: the session client's contracts the portal shows - not drafts, unless sent to sign. */
+function portalContractScopeSql() {
+    global $session_client_id;
+    return "contract_client_id = " . intval($session_client_id) . " AND contract_archived_at IS NULL AND (contract_status <> 'Draft' OR " . portalContractSentSql() . ")";
+}
+
+/** SQL: contracts waiting for the client's signature. */
+function portalContractWaitingSql() {
+    return portalContractSentSql(false);
+}
+
+/*
+ * The round of signing a contract shows in the portal - the latest when it
+ * is out for signature or waiting for us, else the latest signed by both -
+ * or null, for the contract as it is today.
+ */
+function portalContractRound($contract_id) {
+    $rounds = contractSignatureRounds($contract_id);
+    if ($rounds && contractSignaturePending($rounds[0]) && !empty($rounds[0]['contract_signature_url_key'])) {
+        return $rounds[0];
+    }
+    return contractSignatureSigned($rounds);
+}
+
+/** Where a contract stands for the client - with a label, icon and class. $round from portalContractRound(). */
+function portalContractState(array $row, $round = null) {
+    $signing = contractSignatureState($round);
+    if ($signing && in_array($signing['key'], ['sent', 'viewed'], true)) {
+        return ['key' => 'waiting', 'label' => t('Waiting for your signature'), 'icon' => 'fa-file-signature', 'class' => 'itflow-portal-state-you'];
+    }
+    if ($signing && $signing['key'] === 'countersign') {
+        return ['key' => 'countersign', 'label' => t('Signed - with us to countersign'), 'icon' => 'fa-pen-nib', 'class' => 'itflow-portal-state-progress'];
+    }
+    $state = contractState($row);
+    switch ($state['key']) {
+        case 'draft':
+            return ['key' => 'draft', 'label' => t('Being prepared'), 'icon' => 'fa-pencil-alt', 'class' => 'itflow-portal-state-hold'];
+        case 'upcoming':
+            return ['key' => 'upcoming', 'label' => t('Starts {date}', ['{date}' => i18n_date('M j, Y', strtotime((string) $row['contract_start_date']))]), 'icon' => 'fa-hourglass-start', 'class' => 'itflow-portal-state-new'];
+        case 'ending':
+            return ['key' => 'ending', 'label' => t('Ends {date}', ['{date}' => i18n_date('M j, Y', strtotime((string) $row['contract_end_date']))]), 'icon' => 'fa-hourglass-end', 'class' => 'itflow-portal-state-hold'];
+        case 'ended':
+            return ['key' => 'ended', 'label' => t('Ended'), 'icon' => 'fa-flag-checkered', 'class' => 'itflow-portal-state-closed'];
+        case 'cancelled':
+            return ['key' => 'cancelled', 'label' => t('Cancelled'), 'icon' => 'fa-ban', 'class' => 'itflow-portal-state-closed'];
+    }
+    return ['key' => 'active', 'label' => t('In force'), 'icon' => 'fa-check-circle', 'class' => 'itflow-portal-state-resolved'];
+}
+
+/**
+ * When a domain or certificate expires, as words in the portal's language - the 'text' of domainExpiry() or
+ * certificateExpiry() ("Expires in 5 days", "Auto-renews tomorrow", "Renews itself, expires in 3 months").
+ */
+function portalExpiryText(array $expiry, $certificate = false) {
+    $days = $expiry['days'];
+    $auto = !empty($expiry['auto']);
+    $short_lived = !empty($expiry['short_lived']);
+    if ($expiry['state'] === 'soon') {
+        if ($certificate) {
+            if ($short_lived) {
+                return $days === 0 ? t('Expires today - it should have renewed by now') : ($days === 1 ? t('Expires tomorrow - it should have renewed by now') : t('Expires in {n} days - it should have renewed by now', ['{n}' => $days]));
+            }
+            return $days === 0 ? t('Expires today') : ($days === 1 ? t('Expires tomorrow') : t('Expires in {n} days', ['{n}' => $days]));
+        }
+        if ($auto) {
+            return $days === 0 ? t('Auto-renews today') : ($days === 1 ? t('Auto-renews tomorrow') : t('Auto-renews in {n} days', ['{n}' => $days]));
+        }
+        return $days === 0 ? t('Expires today') : ($days === 1 ? t('Expires tomorrow') : t('Expires in {n} days', ['{n}' => $days]));
+    }
+    $when = timeAgo($expiry['date']);
+    if ($certificate) {
+        return $short_lived ? t('Renews itself, expires {when}', ['{when}' => $when]) : t('Expires {when}', ['{when}' => $when]);
+    }
+    return $auto ? t('Auto-renews {when}', ['{when}' => $when]) : t('Expires {when}', ['{when}' => $when]);
+}
+
+/** A contract's type in the portal's language - contractTypeLabel(), with the label as a literal t(). */
+function portalContractTypeLabel($type) {
+    return match ((string) $type) {
+        'managed' => t('Fully managed'),
+        'comanaged' => t('Co-managed'),
+        'block' => t('Block hours'),
+        'time_materials' => t('Time and materials'),
+        'break_fix' => t('Break/fix'),
+        'project' => t('Project'),
+        'other' => t('Other'),
+        '' => t('Contract'),
+        default => (string) $type,
+    };
+}
+
+/** A contract's term in words in the portal's language - contractTermLabel(): "1 year", "18 months". */
+function portalContractTermLabel($months) {
+    $months = intval($months);
+    if ($months === 1) {
+        return t('Monthly');
+    }
+    if ($months === 12) {
+        return t('1 year');
+    }
+    if ($months > 0 && $months % 12 === 0) {
+        return t('{n} years', ['{n}' => $months / 12]);
+    }
+    return t('{n} months', ['{n}' => $months]);
+}
+
+/** Hours in words in the portal's language - contractHoursWords(): "12.5 hours", "1 hour". */
+function portalHoursWords($hours) {
+    $hours = round(floatval($hours), 2);
+    $n = rtrim(rtrim(number_format($hours, 2, '.', ''), '0'), '.');
+    return $hours == 1 ? t('{n} hour', ['{n}' => $n]) : t('{n} hours', ['{n}' => $n]);
+}
+
+/** How a payment was made, in the portal's language - billingPaymentMethodText(): "Card" for a Stripe payment, the method as it was typed, or "Payment". */
+function portalPaymentMethodText($method, $reference = '') {
+    $method = trim((string) $method);
+    if (strcasecmp($method, 'Stripe') === 0 || stripos((string) $reference, 'Stripe - pi_') === 0) {
+        return t('Card');
+    }
+    return $method !== '' ? $method : t('Payment');
+}
+
+/** Seats in use against seats bought, with the words in the portal's language - softwareSeats() with its 'text' and 'title' translated. */
+function portalSeats($used, $total) {
+    $seats = softwareSeats($used, $total);
+    $used = $seats['used'];
+    if ($seats['state'] === 'unlimited') {
+        $seats['text'] = $used === 1 ? t('1 in use') : t('{n} in use', ['{n}' => $used]);
+        $seats['title'] = $used === 1 ? t('1 in use, no seat limit') : t('{n} in use, no seat limit', ['{n}' => $used]);
+        return $seats;
+    }
+    $seats['text'] = match ($seats['state']) {
+        'over' => t('{n} over', ['{n}' => $seats['over']]),
+        'full' => t('All in use'),
+        'unused' => t('None in use'),
+        default => t('{n} free', ['{n}' => $seats['free']]),
+    };
+    $seats['title'] = $seats['over']
+        ? t('{used} of {total} seats in use - {over} over', ['{used}' => $used, '{total}' => $seats['total'], '{over}' => $seats['over']])
+        : t('{used} of {total} seats in use', ['{used}' => $used, '{total}' => $seats['total']]);
+    return $seats;
+}
+
+/*
+ * ---------- Your IT ----------
+ *
+ * Devices, licenses, domains and certificates, documents and contacts, for
+ * primary and technical contacts - and any contact's own devices. Every query
+ * is keyed to the session's client.
+ */
+
+/** Your IT pages: a primary or technical contact, with the IT documentation module on - anyone else is sent away. */
+function portalItGate() {
+    global $config_module_enable_itdoc;
+    enforceContactCan('itdoc');
+    if (!$config_module_enable_itdoc) {
+        redirect('/client/index.php');
+    }
+}
+
+/** SQL: the devices this contact may open - all of their company's for a primary or technical contact, else the ones they use. */
+function portalAssetScopeSql() {
+    global $session_client_id, $session_contact_id, $config_module_enable_itdoc;
+    $sql = "asset_client_id = " . intval($session_client_id) . " AND asset_archived_at IS NULL";
+    if (!($config_module_enable_itdoc && contactCan('itdoc'))) {
+        $sql .= " AND asset_contact_id = " . intval($session_contact_id);
+    }
+    return $sql;
+}
+
+/** The tabs on Devices - each kind with its label, icon and SQL on asset_type; Other is whatever the rest don't take. */
+function portalAssetGroups() {
+    // By the type's group (ASSET_TYPES, functions/asset_type.php)
+    $kinds = [
+        'computers' => ['Computers', 'fa-desktop', assetTypesInGroup('workstation')],
+        'servers' => ['Servers', 'fa-server', assetTypesInGroup('server', 'virtual')],
+        'network' => ['Network', 'fa-network-wired', assetTypesInGroup('network')],
+        'power' => ['Power', 'fa-car-battery', assetTypesInGroup('power')],
+        'phones' => ['Phones & tablets', 'fa-mobile-alt', assetTypesInGroup('mobile')],
+    ];
+    $groups = ['all' => ['label' => 'All', 'icon' => 'fa-list', 'where' => '1 = 1']];
+    $taken = [];
+    foreach ($kinds as $key => [$label, $icon, $types]) {
+        $in = "'" . implode("', '", array_map('escapeSql', $types)) . "'";
+        $groups[$key] = ['label' => $label, 'icon' => $icon, 'where' => "asset_type IN ($in)"];
+        $taken[] = $in;
+    }
+    $groups['other'] = ['label' => 'Other', 'icon' => 'fa-print', 'where' => "asset_type NOT IN (" . implode(', ', $taken) . ")"];
+    return $groups;
+}
+
+/** A grey square tile with an icon - devices, licenses, domains and documents in the portal's lists. */
+function portalTile($icon, $size = '') {
+    return '<span class="itflow-portal-tile' . ($size !== '' ? " itflow-portal-tile-$size" : '') . '" aria-hidden="true"><i class="' . escapeHtml(strpos($icon, ' ') === false ? "fas fa-fw $icon" : $icon) . '"></i></span>';
+}
+
+/** A renewal, warranty or expiry from softwareRenewal() and its kin, as a portal state - for portalStateBadge(). Null without a date. */
+function portalRenewalState($renewal, $active_label = '') {
+    if (!$renewal) {
+        return null;
+    }
+    if ($renewal['state'] === 'expired') {
+        return ['label' => t('Expired'), 'icon' => 'fa-calendar-times', 'class' => 'itflow-portal-state-late'];
+    }
+    if ($renewal['state'] === 'soon') {
+        return ['label' => portalRenewalText($renewal), 'icon' => 'fa-hourglass-half', 'class' => 'itflow-portal-state-you'];
+    }
+    return ['label' => $active_label !== '' ? ($active_label === 'Active' ? t('Active') : $active_label) : portalRenewalText($renewal), 'icon' => 'fa-calendar-check', 'class' => 'itflow-portal-state-resolved'];
+}
+
+/** The words of a renewal from softwareRenewal() - "Renews in 5 days", "Expired yesterday" - in the portal's language. */
+function portalRenewalText(array $renewal) {
+    $days = $renewal['days'];
+    if ($renewal['state'] === 'expired') {
+        $ago = -$days;
+        return $ago === 1 ? t('Expired yesterday') : ($ago < 60 ? t('Expired {n} days ago', ['{n}' => $ago]) : t('Expired {when}', ['{when}' => timeAgo($renewal['date'])]));
+    }
+    if ($renewal['state'] === 'soon') {
+        return $days === 0 ? t('Renews today') : ($days === 1 ? t('Renews tomorrow') : t('Renews in {n} days', ['{n}' => $days]));
+    }
+    return t('Renews {when}', ['{when}' => timeAgo($renewal['date'])]);
+}
+
+/** "Warranty expired" / "Warranty 5 days left" for a warranty from assetWarranty() that is not covered. */
+function portalWarrantyShort(array $warranty) {
+    if ($warranty['days'] < 0) {
+        return t('Warranty expired');
+    }
+    if ($warranty['days'] === 0) {
+        return t('Warranty today');
+    }
+    return $warranty['days'] === 1 ? t('Warranty 1 day left') : t('Warranty {n} days left', ['{n}' => $warranty['days']]);
+}
+
+/** The warranty from assetWarranty() in words - "Expires in 3 days", "Until 2027-05-01" - in the portal's language. */
+function portalWarrantyText(array $warranty) {
+    if ($warranty['days'] < 0) {
+        return t('Expired {when}', ['{when}' => timeAgo($warranty['date'])]);
+    }
+    if ($warranty['tone'] === 'warning') {
+        return $warranty['days'] === 0 ? t('Expires today') : ($warranty['days'] === 1 ? t('Expires in 1 day') : t('Expires in {n} days', ['{n}' => $warranty['days']]));
+    }
+    return t('Until {date}', ['{date}' => $warranty['date']]);
+}
+
+/** "3 yrs 2 mos" since a date, or '' without one - assetAge() in the portal's language. */
+function portalAssetAge($date) {
+    if (assetAge($date) === '') {
+        return '';
+    }
+    $from = DateTime::createFromFormat('!Y-m-d', substr(trim((string) $date), 0, 10));
+    $diff = $from->diff(new DateTime('today'));
+    $parts = [];
+    if ($diff->y) {
+        $parts[] = $diff->y === 1 ? t('{n} yr', ['{n}' => $diff->y]) : t('{n} yrs', ['{n}' => $diff->y]);
+    }
+    if ($diff->m) {
+        $parts[] = $diff->m === 1 ? t('{n} mo', ['{n}' => $diff->m]) : t('{n} mos', ['{n}' => $diff->m]);
+    }
+    if (!$parts) {
+        return $diff->d <= 1 ? t('new') : t('{n} days', ['{n}' => $diff->d]);
+    }
+    return implode(' ', $parts);
+}
+
+/** A contact's roles in words - Primary contact, Billing, Technical - or [] for none. */
+function portalContactRoles(array $row) {
+    if (intval($row['contact_primary'] ?? 0)) {
+        return [t('Primary contact')];
+    }
+    $roles = [];
+    if (intval($row['contact_billing'] ?? 0)) {
+        $roles[] = t('Billing');
+    }
+    if (intval($row['contact_technical'] ?? 0)) {
+        $roles[] = t('Technical');
+    }
+    return $roles;
+}
+
+/**
+ * Give a contact of this client portal access and email them how to sign in -
+ * a link to set their password, or for Microsoft a link to the sign-in page.
+ * Makes their portal user when they have none, turns it back on when it was
+ * off, and sends the invite again when it is on. $by is the primary contact
+ * doing it. ['ok' => bool, 'error' => why not, 'emailed' => bool].
+ */
+function portalContactInvite($contact_id, $method, $by) {
+    global $mysqli, $session_client_id;
+    $contact_id = intval($contact_id);
+    $client_id = intval($session_client_id);
+    $contact = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT contact_id, contact_name, contact_email, contact_user_id, client_name, user_id, user_auth_method
+        FROM contacts JOIN clients ON client_id = contact_client_id LEFT JOIN users ON user_id = contact_user_id
+        WHERE contact_id = $contact_id AND contact_client_id = $client_id AND contact_archived_at IS NULL LIMIT 1"));
+    if (!$contact) {
+        return ['ok' => false, 'error' => "That person isn't here", 'emailed' => false];
+    }
+    if (!isset(portalSignInMethods()[$method])) {
+        $method = 'local';
+    }
+    $name = (string) $contact['contact_name'];
+    $email = trim((string) $contact['contact_email']);
+    if (userCheckIdentity(['name' => $name, 'email' => $email], intval($contact['user_id']), $error) === null) {
+        return ['ok' => false, 'error' => strip_tags($error), 'emailed' => false];
+    }
+    $name_sql = escapeSql($name);
+    $email_sql = escapeSql($email);
+    $method_sql = escapeSql($method);
+    $user_id = intval($contact['user_id']);
+    if ($user_id) {
+        mysqli_query($mysqli, "UPDATE users SET user_name = '$name_sql', user_email = '$email_sql', user_auth_method = '$method_sql', user_status = 1, user_archived_at = NULL WHERE user_id = $user_id AND user_type = 2");
+    } else {
+        $hash = escapeSql(password_hash(randomString(), PASSWORD_DEFAULT));
+        mysqli_query($mysqli, "INSERT INTO users SET user_name = '$name_sql', user_email = '$email_sql', user_password = '$hash', user_auth_method = '$method_sql', user_type = 2");
+        $user_id = intval(mysqli_insert_id($mysqli));
+        mysqli_query($mysqli, "UPDATE contacts SET contact_user_id = $user_id WHERE contact_id = $contact_id AND contact_client_id = $client_id");
+    }
+
+    // The email - a link to set their password, or for Microsoft the sign-in page (functions/portal.php)
+    $emailed = portalMailInvite($user_id, $by);
+    if (!$emailed && $method !== 'local') {
+        portalPasswordLinkClear($user_id);
+    }
+    return ['ok' => true, 'error' => '', 'emailed' => $emailed];
+}
+
+/** Turn a contact's portal access off - they are signed out on their next click (check_login.php) and their reset link stops working. */
+function portalContactAccessOff($contact_id) {
+    global $mysqli, $session_client_id;
+    $contact_id = intval($contact_id);
+    $client_id = intval($session_client_id);
+    $user_id = intval(mysqli_fetch_row(mysqli_query($mysqli, "SELECT contact_user_id FROM contacts WHERE contact_id = $contact_id AND contact_client_id = $client_id"))[0] ?? 0);
+    if ($user_id) {
+        mysqli_query($mysqli, "UPDATE users SET user_auth_method = '', user_password_reset_token = NULL, user_password_reset_token_expire = NULL WHERE user_id = $user_id AND user_type = 2");
+    }
+    return $user_id > 0;
+}
+
+/**
+ * The text of a message made by a helper that agents use too (functions/user.php,
+ * portal_invite.php, billing.php, contract_signature.php, ticket_template.php),
+ * translated for the portal. The helpers keep their English; each branch is a
+ * whole sentence, and anything else comes back unchanged.
+ */
+function portalMessage($text) {
+    $text = (string) $text;
+    $translated = match ($text) {
+        'That person isn\'t here' => t('That person isn\'t here'),
+        'that\'s you' => t('that\'s you'),
+        'already signs in' => t('already signs in'),
+        'an agent signs in with it' => t('an agent signs in with it'),
+        'it signs in to another client portal account' => t('it signs in to another client portal account'),
+        'a primary contact - ask us' => t('a primary contact - ask us'),
+        'the email could not be sent' => t('the email could not be sent'),
+        'This quote is no longer awaiting a response' => t('This quote is no longer awaiting a response'),
+        'Write your full name.' => t('Write your full name.'),
+        'Tick the box to say you agree to sign it.' => t('Tick the box to say you agree to sign it.'),
+        'Put in your name.' => t('Put in your name.'),
+        'The two passwords are not the same - type it again in both.' => t('The two passwords are not the same - type it again in both.'),
+        'This address already has a client portal account - sign in with it, or choose Forgot password on the sign-in page.' => t('This address already has a client portal account - sign in with it, or choose Forgot password on the sign-in page.'),
+        'This address signs in to another account here, so it can\'t be used for the client portal too - ask us about it.' => t('This address signs in to another account here, so it can\'t be used for the client portal too - ask us about it.'),
+        'This address can\'t sign up - ask your company\'s primary contact or us to give you access.' => t('This address can\'t sign up - ask your company\'s primary contact or us to give you access.'),
+        'That link has been used already.' => t('That link has been used already.'),
+        'Draw your signature in the box, or type it.' => t('Draw your signature in the box, or type it.'),
+        'That signature is too big - clear it and draw it again.' => t('That signature is too big - clear it and draw it again.'),
+        'That signature could not be read - clear it and draw it again.' => t('That signature could not be read - clear it and draw it again.'),
+        default => null,
+    };
+    if ($translated !== null) {
+        return $translated;
+    }
+
+    // Messages with a name, an email or a date in them (already escaped by the helper)
+    $period = substr($text, -1) === '.' ? '.' : '';
+    $bare = $period === '.' ? substr($text, 0, -1) : $text;
+    if (preg_match('/^(.*) is not an email address$/s', $bare, $m)) {
+        return t('{email} is not an email address', ['{email}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^(.*) already signs in to another agent account - each account needs its own email$/s', $bare, $m)) {
+        return t('{email} already signs in to another agent account - each account needs its own email', ['{email}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^(.*) already signs in to a client portal account - each account needs its own email$/s', $bare, $m)) {
+        return t('{email} already signs in to a client portal account - each account needs its own email', ['{email}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^This quote ran out on (.*) - ask for an updated one$/s', $bare, $m)) {
+        return t('This quote ran out on {date} - ask for an updated one', ['{date}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^(.*) needs a date$/s', $bare, $m)) {
+        return t('{name} needs a date', ['{name}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^Signing up has been turned off for (.*) - ask your company\'s primary contact or us to invite you$/s', $bare, $m)) {
+        return t('Signing up has been turned off for {client} - ask your company\'s primary contact or us to invite you.', ['{client}' => $m[1]]);
+    }
+    if (preg_match('/^Pick one of the choices for (.*)$/s', $bare, $m)) {
+        return t('Pick one of the choices for {name}', ['{name}' => $m[1]]) . $period;
+    }
+    if (preg_match('/^Fill in (.*) - it is needed for this template$/s', $bare, $m)) {
+        return t('Fill in {name} - it is needed for this template', ['{name}' => $m[1]]) . $period;
+    }
+    return $text;
+}
+
+/** A quote's amounts in words - "$100 up front and $50 a month" - quoteAmountText() in the portal's language. */
+function portalQuoteAmountText(array $groups, $currency) {
+    $parts = [];
+    foreach ($groups as $frequency => $group) {
+        $amount = billingMoney($group['total'], $currency);
+        if ($frequency === '') {
+            if ($group['items'] || count($groups) === 1) {
+                $parts[] = count($groups) > 1 ? t('{amount} up front', ['{amount}' => $amount]) : $amount;
+            }
+        } else {
+            $parts[] = match (recurringInvoicePeriodWord($frequency)) {
+                'quarter' => t('{amount} a quarter', ['{amount}' => $amount]),
+                'year' => t('{amount} a year', ['{amount}' => $amount]),
+                default => t('{amount} a month', ['{amount}' => $amount]),
+            };
+        }
+    }
+    return count($parts) > 1 ? t('{list} and {last}', ['{list}' => implode(', ', array_slice($parts, 0, -1)), '{last}' => end($parts)]) : (string) reset($parts);
+}
+
+/** The heading of a group of a quote's lines - One-time, Each month... - in the portal's language. */
+function portalQuoteGroupLabel($label) {
+    return match ((string) $label) {
+        'One-time' => t('One-time'),
+        'Each month' => t('Each month'),
+        'Each quarter' => t('Each quarter'),
+        'Each year' => t('Each year'),
+        default => (string) $label,
+    };
+}

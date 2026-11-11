@@ -3,6 +3,7 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/functions.php';
 i18n_set_language(client_language());
+require_once __DIR__ . '/guest_functions.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/load_global_settings.php';
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/session_init.php';
@@ -11,7 +12,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/session_init.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/inc_set_timezone.php';
 
 $ip = escapeSql(getIP());
-$user_agent = escapeSql($_SERVER['HTTP_USER_AGENT']);
+$user_agent = escapeSql($_SERVER['HTTP_USER_AGENT'] ?? '');
 $os = escapeSql(getOS($user_agent));
 $browser = escapeSql(getWebBrowser($user_agent));
 
@@ -27,6 +28,16 @@ $session_company_name = $row['company_name'];
 
 // Page setup
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/page_title.php';
+
+// How each guest page is named in the browser tab (the footer sets the tab title)
+$guest_page_titles = [
+    'Guest View Quote' => t('Guest View Quote'),
+    'Guest View Invoice' => t('Guest View Invoice'),
+    'Guest View Contract' => t('Guest View Contract'),
+    'Guest Approve Ticket Task' => t('Guest Approve Ticket Task'),
+    'Guest Calendar Feed' => t('Guest Calendar Feed'),
+    'Share' => t('Share'),
+];
 
 // Layout UI
 require_once $_SERVER['DOCUMENT_ROOT'] . '/guest/includes/guest_header.php';

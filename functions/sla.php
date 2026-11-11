@@ -3,11 +3,11 @@
 /*
  * ITFlow - Ticket SLA helpers
  *
- * SLAs are optional at every level. A ticket only gets SLA targets when an
- * assignment resolves for its client + priority (client-level assignments win,
- * client 0 rows are the global default, and an assignment pointing at SLA 0 is
- * an explicit "no SLA" override). Tickets with ticket_sla_id = 0 are simply
- * ignored by the SLA cron, the list highlighting and the reports.
+ * SLAs are optional. A ticket only gets SLA targets when one resolves for its
+ * client + priority: the SLA its client's contract in force sets for the
+ * priority, else the default for the priority (sla_assignments, client 0 -
+ * Admin > SLAs). A client has none of its own. Tickets with ticket_sla_id = 0
+ * are simply ignored by the SLA cron, the list highlighting and the reports.
  *
  * Deadlines are computed ONCE at write time (creation / priority change /
  * client change / manual SLA change) and stored on the ticket as
@@ -431,27 +431,34 @@ function syncTicketSlaClock($ticket_id)
 }
 
 // Resolve which SLA (if any) applies to a client + priority combination.
-// Returns an sla_id, or 0 when no SLA applies.
-function getTicketSlaId($client_id, $priority)
+// Returns an sla_id, or 0 when no SLA applies. A contract in force for the
+// client that sets an SLA for the priority comes first (contractSlaFor() in
+// functions/contract_billing.php), else the default for the priority in
+// Admin > SLAs (before the 3.5.0 update, the client's own first, as it was) -
+// $with_contract false gives what applies without a contract.
+function getTicketSlaId($client_id, $priority, $with_contract = true)
 {
     global $mysqli;
 
     $client_id = intval($client_id);
+
+    if ($with_contract && $client_id > 0 && function_exists('contractSlaFor')) {
+        $contract_sla_id = contractSlaFor($client_id, $priority);
+        if ($contract_sla_id) {
+            return $contract_sla_id;
+        }
+    }
+
     $priority = escapeSql($priority);
 
     $sla_id = null;
 
-    // Client-level assignment wins; a row pointing at SLA 0 is an explicit
-    // "no SLA for this client/priority" override of the global default
-    if ($client_id > 0) {
-        $sql = mysqli_query($mysqli, "SELECT sla_assignment_sla_id FROM sla_assignments WHERE sla_assignment_client_id = $client_id AND sla_assignment_priority = '$priority' LIMIT 1");
-        if (mysqli_num_rows($sql)) {
-            $sla_id = intval(mysqli_fetch_assoc($sql)['sla_assignment_sla_id']);
-        }
-    }
-
-    // Fall back to the global default (client 0)
-    if (is_null($sla_id)) {
+    // Before the 3.5.0 update, the client's own, as it was - one pointing at SLA 0 is "no SLA"
+    $legacy = $client_id > 0 && function_exists('billingClientLegacyTerms') ? billingClientLegacyTerms($client_id) : null;
+    if ($legacy && array_key_exists((string) $priority, $legacy['slas'])) {
+        $sla_id = $legacy['slas'][(string) $priority];
+    } else {
+        // Else the default for the priority, from Admin > SLAs (client 0) - a client has no SLAs of its own, only its contract's
         $sql = mysqli_query($mysqli, "SELECT sla_assignment_sla_id FROM sla_assignments WHERE sla_assignment_client_id = 0 AND sla_assignment_priority = '$priority' LIMIT 1");
         if (mysqli_num_rows($sql)) {
             $sla_id = intval(mysqli_fetch_assoc($sql)['sla_assignment_sla_id']);
@@ -594,7 +601,7 @@ function formatSlaMinutes($minutes)
             $text = $hours == 1 ? t('{n} hour', ['{n}' => $hours]) : t('{n} hours', ['{n}' => $hours]);
         }
         if ($remainder >= 5) {
-            $text .= ' ' . ($remainder == 1 ? t('{n} minute', ['{n}' => $remainder]) : t('{n} minutes', ['{n}' => $remainder]));
+            $text = t('{first} {second}', ['{first}' => $text, '{second}' => ($remainder == 1 ? t('{n} minute', ['{n}' => $remainder]) : t('{n} minutes', ['{n}' => $remainder]))]);
         }
 
         return $text;
@@ -609,59 +616,10 @@ function formatSlaMinutes($minutes)
         $text = $days == 1 ? t('{n} day', ['{n}' => $days]) : t('{n} days', ['{n}' => $days]);
     }
     if ($hours > 0) {
-        $text .= ' ' . ($hours == 1 ? t('{n} hour', ['{n}' => $hours]) : t('{n} hours', ['{n}' => $hours]));
+        $text = t('{first} {second}', ['{first}' => $text, '{second}' => ($hours == 1 ? t('{n} hour', ['{n}' => $hours]) : t('{n} hours', ['{n}' => $hours]))]);
     }
 
     return $text;
-}
-
-// Client-facing SLA block for a "ticket created" email. Returns '' when no SLA
-// applies to the ticket or the plan carries no response target, so callers can
-// append it unconditionally.
-//
-// Call this AFTER applyTicketSla(), which is what stamps ticket_response_due_at.
-//
-// The returned HTML deliberately contains NO single or double quotes. Most of
-// these email bodies are assembled pre-escaped and handed to addToMailQueue,
-// which interpolates the body straight into its INSERT without escaping it, so
-// a stray quote here would break the query at those call sites.
-function getTicketSlaEmailNotice($ticket_id, $company_phone = '')
-{
-    global $mysqli;
-
-    $ticket_id = intval($ticket_id);
-
-    $sql = mysqli_query($mysqli, "SELECT ticket_priority, ticket_response_due_at, sla_response_minutes
-        FROM tickets
-        LEFT JOIN slas ON ticket_sla_id = sla_id
-        WHERE ticket_id = $ticket_id LIMIT 1");
-    if (!$sql || !mysqli_num_rows($sql)) {
-        return '';
-    }
-    $row = mysqli_fetch_assoc($sql);
-
-    $response_minutes = intval($row['sla_response_minutes']);
-
-    if (empty($row['ticket_response_due_at']) || $response_minutes <= 0) {
-        return '';
-    }
-
-    // The only value in this notice that comes from the database rather than a
-    // literal - escaped so the quote-free guarantee above holds for it too
-    $priority = escapeHtml($row['ticket_priority']);
-
-    $notice = "<br><br>" . i18n_with(client_language(), fn() => t('Priority:')) . " " . i18n_with(client_language(), fn() => i18n_ticket_priority_label($priority)) . "<br>" . i18n_with(client_language(), fn() => t('Target response: within {target} (by {due})', ['{target}' => formatSlaMinutes($response_minutes), '{due}' => i18n_format_sla_due(strtotime($row['ticket_response_due_at']))]));
-
-    // Higher priorities get told to phone rather than sit on an email thread
-    if (!empty($company_phone) && ($priority == 'Urgent' || $priority == 'High')) {
-        if ($priority == 'Urgent') {
-            $notice .= "<br><br><strong>" . i18n_with(client_language(), fn() => t('This ticket is marked Urgent.')) . "</strong> " . i18n_with(client_language(), fn() => t('If the issue is stopping work right now, please call us on {phone} rather than waiting for a reply to this email.', ['{phone}' => $company_phone]));
-        } else {
-            $notice .= "<br><br><strong>" . i18n_with(client_language(), fn() => t('This ticket is marked High priority.')) . "</strong> " . i18n_with(client_language(), fn() => t('If it is business-impacting, calling us on {phone} will get you the fastest response.', ['{phone}' => $company_phone]));
-        }
-    }
-
-    return $notice;
 }
 
 // Record the ticket's first response (if not already recorded) and judge the

@@ -369,7 +369,7 @@ foreach ($en_lines as $line_num => $line) {
     // Find lines with => (translation lines)
     if (strpos($line, "=>") !== false) {
         // Extract key and value
-        if (preg_match("/'([^']*)'\s*=>\s*'([^']*)',?$/", $line, $matches)) {
+        if (preg_match("/'((?:[^'\\\\]|\\\\.)*)'\s*=>\s*'((?:[^'\\\\]|\\\\.)*)',?$/", $line, $matches)) {
             $key = $matches[1];
             $value = $matches[2];
             // For English, value should equal key
@@ -397,7 +397,7 @@ $fr_key_counts = [];
 
 // Count keys in en.php
 foreach ($en_lines as $line) {
-    if (preg_match("/'([^']*)'\s*=>/", $line, $matches)) {
+    if (preg_match("/'((?:[^'\\\\]|\\\\.)*)'\s*=>/", $line, $matches)) {
         $key = $matches[1];
         $en_key_counts[$key] = ($en_key_counts[$key] ?? 0) + 1;
     }
@@ -406,7 +406,7 @@ foreach ($en_lines as $line) {
 // Count keys in fr.php
 $fr_lines = explode("\n", $fr_raw);
 foreach ($fr_lines as $line) {
-    if (preg_match("/'([^']*)'\s*=>/", $line, $matches)) {
+    if (preg_match("/'((?:[^'\\\\]|\\\\.)*)'\s*=>/", $line, $matches)) {
         $key = $matches[1];
         $fr_key_counts[$key] = ($fr_key_counts[$key] ?? 0) + 1;
     }
@@ -441,7 +441,7 @@ $test_lines_a = [$test_line_a];
 $negative_test_a_passed = false;
 
 foreach ($test_lines_a as $line) {
-    if (preg_match("/'([^']*)'\s*=>\s*'([^']*)',?$/", $line, $matches)) {
+    if (preg_match("/'((?:[^'\\\\]|\\\\.)*)'\s*=>\s*'((?:[^'\\\\]|\\\\.)*)',?$/", $line, $matches)) {
         $key = $matches[1];
         $value = $matches[2];
         if ($key !== $value) {
@@ -467,7 +467,7 @@ $test_counts = [];
 $negative_test_b_passed = false;
 
 foreach ($test_lines_b as $line) {
-    if (preg_match("/'([^']*)'\s*=>/", $line, $matches)) {
+    if (preg_match("/'((?:[^'\\\\]|\\\\.)*)'\s*=>/", $line, $matches)) {
         $key = $matches[1];
         $test_counts[$key] = ($test_counts[$key] ?? 0) + 1;
     }
