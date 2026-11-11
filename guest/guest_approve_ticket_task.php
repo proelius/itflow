@@ -100,7 +100,7 @@ $approve_link = "guest_post.php?approve_ticket_task=$task_id&approval_id=$approv
             <h4 class="mb-3"><?= ucfirst($task_name) ?></h4>
 
             <p class="text-muted mb-4">
-                <?= t('Ticket <span class="text-bold">{number}</span>', ['{number}' => $ticket_prefix . $ticket_number]) ?> &mdash; <?= $ticket_subject ?>
+                <?= t('Ticket {number}', ['{number}' => '<span class="text-bold">' . $ticket_prefix . $ticket_number . '</span>']) ?> &mdash; <?= $ticket_subject ?>
             </p>
 
             <?php if ($approval_status == 'pending') { ?>

@@ -178,7 +178,7 @@ $paper = [
                             <p class="small text-body-secondary mb-2"><?= t('Need us to have the quote signed, or a purchase order? Send the PDF here.') ?></p>
                             <div class="itflow-portal-drop mb-3" data-portal-drop>
                                 <input type="file" name="file[]" multiple id="quoteFiles" accept=".pdf" required>
-                                <i class="fas fa-file-pdf me-2"></i><?= t('Drop PDFs here, or <label for="quoteFiles">choose files</label>') ?>
+                                <i class="fas fa-file-pdf me-2"></i><?= t('Drop PDFs here, or {link}', ['{link}' => '<label for="quoteFiles">' . t('choose files') . '</label>']) ?>
 
                                 <div class="itflow-portal-files" data-portal-files hidden></div>
                             </div>
@@ -191,8 +191,8 @@ $paper = [
 
         <p class="small text-body-secondary px-1">
             <?= !empty($company['phone_display'])
-                ? t('Questions about this quote? <a href="{url}">Ask us</a> or call {phone}.', ['{url}' => escapeHtml(portalAskUrl("Question about quote $number")), '{phone}' => escapeHtml($company['phone_display'])])
-                : t('Questions about this quote? <a href="{url}">Ask us</a>.', ['{url}' => escapeHtml(portalAskUrl("Question about quote $number"))]) ?>
+                ? t('Questions about this quote? {link} or call {phone}.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl("Question about quote $number")) . '">' . t('Ask us') . '</a>', '{phone}' => escapeHtml($company['phone_display'])])
+                : t('Questions about this quote? {link}.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl("Question about quote $number")) . '">' . t('Ask us') . '</a>']) ?>
 
         </p>
 

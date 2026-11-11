@@ -57,7 +57,7 @@ $upload = !empty($_GET['upload']);
                     <label class="form-label"><?= t('File') ?> <strong class="text-danger">*</strong></label>
                     <div class="itflow-portal-drop" data-portal-drop>
                         <input type="file" name="document_file" id="documentFile" accept=".pdf,.doc,.docx,.txt,.md,.odt,.rtf" required>
-                        <i class="fas fa-paperclip me-2"></i><?= t('Drop the file here, or <label for="documentFile">choose a file</label>') ?>
+                        <i class="fas fa-paperclip me-2"></i><?= t('Drop the file here, or {link}', ['{link}' => '<label for="documentFile">' . t('choose a file') . '</label>']) ?>
 
                         <div class="itflow-portal-files" data-portal-files hidden></div>
                     </div>

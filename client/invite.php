@@ -79,7 +79,7 @@ unset($_SESSION['portal_invite_form']);
             </div>
             <div class="itflow-portal-panel-body small text-body-secondary">
                 <p><?= t('Each person gets an email from us with a link to join. They put in their name, job title, phone and a password, and can sign in straight away.') ?></p>
-                <p><?= t('The link works for {days} days. Until they use it, they\'re listed under <a href="contacts.php">Contacts</a>, where you can send it again or cancel it.', ['{days}' => PORTAL_INVITE_LINK_DAYS]) ?></p>
+                <p><?= t('The link works for {days} days. Until they use it, they\'re listed under {link}, where you can send it again or cancel it.', ['{days}' => PORTAL_INVITE_LINK_DAYS, '{link}' => '<a href="contacts.php">' . t('Contacts') . '</a>']) ?></p>
                 <p class="mb-0"><?= t('We let you know when they join.') ?></p>
             </div>
         </section>

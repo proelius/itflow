@@ -129,8 +129,8 @@ $paper = [
 
         <p class="small text-body-secondary px-1">
             <?= !empty($company['phone_display'])
-                ? t('Something to change? <a href="{url}">Ask us</a> or call {phone}.', ['{url}' => escapeHtml(portalAskUrl("Change to $title")), '{phone}' => escapeHtml($company['phone_display'])])
-                : t('Something to change? <a href="{url}">Ask us</a>.', ['{url}' => escapeHtml(portalAskUrl("Change to $title"))]) ?>
+                ? t('Something to change? {link} or call {phone}.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl("Change to $title")) . '">' . t('Ask us') . '</a>', '{phone}' => escapeHtml($company['phone_display'])])
+                : t('Something to change? {link}.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl("Change to $title")) . '">' . t('Ask us') . '</a>']) ?>
 
         </p>
 
