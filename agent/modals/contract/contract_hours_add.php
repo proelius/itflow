@@ -88,7 +88,7 @@ if (!$contract || !contractHoursReady() || !($contract['contract_status'] === 'D
                     <?= categoryOptionsHtml('Income') ?>
                 </select>
             </div>
-            <small class="text-secondary">One line, at the client's usual tax rate for time<?= $currency !== '' ? ', in ' . escapeHtml($currency) : '' ?>. Send it from the invoice when it is ready.</small>
+            <small class="text-secondary">One line, at the client's usual tax rate for time<?= $currency !== '' ? ', in ' . escapeHtml($currency) : '' ?>. Send it from the invoice when it is ready. The hours can be drawn from once it is paid in full.</small>
         <?php } ?>
     </div>
     <div class="modal-footer">

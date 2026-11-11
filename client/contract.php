@@ -189,6 +189,7 @@ $terms = [
                     <?php } ?>
                     <ul class="list-unstyled small text-body-secondary mb-0">
                         <?php if ($monthly > 0) { ?><li><?= t('{hours} included each month', ['{hours}' => escapeHtml(portalHoursWords($monthly))]) ?></li><?php } ?>
+                        <?php if ($hours['pending'] > 0) { ?><li><?= t('{hours} to use once the invoice is paid', ['{hours}' => escapeHtml(contractHoursText($hours['pending']))]) ?></li><?php } ?>
                         <?php if ($hours['next_expiry'] !== '') { ?><li><?= t('{hours} to use by {date}', ['{hours}' => escapeHtml(contractHoursText($hours['next_expiry_hours'])), '{date}' => escapeHtml(i18n_date('M j, Y', strtotime($hours['next_expiry'])))]) ?></li><?php } ?>
                         <li><?= t('Time on your tickets comes out of them; time beyond them is invoiced.') ?></li>
                     </ul>

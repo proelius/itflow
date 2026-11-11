@@ -352,7 +352,7 @@ if (isset($_POST['add_contract_hours'])) {
         . ($f['price'] !== null ? " for " . escapeSql(billingMoney($f['price'], $session_company_currency)) : '')
         . ($f['expires'] !== '' ? ", good until " . escapeSql($f['expires']) : '') . ($invoice_id ? ", on invoice " . escapeSql($number) : ''), $client_id, intval($row['contract_id']));
     flashAlert("<strong>" . escapeHtml($hours) . "</strong> added to <strong>" . escapeHtml($row['contract_name']) . "</strong>"
-        . ($invoice_id ? " - draft invoice <strong>" . escapeHtml($number) . "</strong> made for them" : ''));
+        . ($invoice_id ? " - draft invoice <strong>" . escapeHtml($number) . "</strong> made for them, the hours can be used once it is paid" : ''));
 
     redirect();
 

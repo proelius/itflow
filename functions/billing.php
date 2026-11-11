@@ -1054,6 +1054,8 @@ function billingUnbilledTickets($client_id = 0, array $ticket_ids = [], $include
     $where = billingUnbilledSql($include_open && $ids) . ($client_id ? " AND ticket_client_id = $client_id" : '') . ($ids ? ' AND ticket_id IN (' . implode(',', $ids) . ')' : '')
         . ' ' . clientScopeSql('ticket_client_id');
     $rules = billingTimeRules();
+    // A ticket prepaid hours covered is counted the way those hours count time (functions/fork_hours.php)
+    $fork_steps = contractHoursReady() ? forkHoursTicketSteps() : [];
     $rows = [];
     $sql = mysqli_query($mysqli, "SELECT ticket_id, ticket_prefix, ticket_number, ticket_subject, ticket_status, ticket_onsite, ticket_created_at, ticket_resolved_at, ticket_closed_at,
             ticket_client_id, ticket_assigned_to, client_name, client_abbreviation, user_name, user_avatar,
@@ -1068,7 +1070,7 @@ function billingUnbilledTickets($client_id = 0, array $ticket_ids = [], $include
     while ($row = mysqli_fetch_assoc($sql)) {
         $row['seconds'] = intval($row['seconds']);
         $row['waiting'] = max(0, intval($row['waiting']));
-        $row['worked'] = billingTimeHours($row['seconds'], $rules);
+        $row['worked'] = forkHoursStepHours($row['seconds'], $fork_steps[intval($row['ticket_id'])] ?? null, $rules);
         $row['prepaid'] = round(floatval($row['prepaid']), 2);
         $row['hours'] = max(0.0, round($row['worked'] - $row['prepaid'], 2));
         $rate = function_exists('contractTicketRate') ? contractTicketRate($row)
@@ -2603,6 +2605,13 @@ function invoicePaidFollowUp($invoice_id) {
     $client_id = intval($invoice['invoice_client_id']);
     $number = billingNumber('invoice', $invoice);
     $amount = billingMoney($invoice['invoice_amount'], $invoice['invoice_currency_code']);
+
+    // Prepaid hours bought on it are good to draw from (functions/fork_hours.php)
+    if (contractHoursReady()) {
+        foreach (forkHoursActivate($invoice_id) as $hours) {
+            appNotify("Contract", escapeSql("$number was paid - " . contractHoursText($hours) . " of prepaid hours are available"), "/agent/client_overview.php?client_id=$client_id", $client_id);
+        }
+    }
 
     // A lead that pays is a client
     if ($client_id && settingsColumnExists($mysqli, 'config_invoice_paid_lead_to_client')

@@ -1708,4 +1708,5 @@ return [
     'Fourth reminder fee' => 'Frais de quatrième rappel',
     'Fifth reminder fee' => 'Frais de cinquième rappel',
     'Later reminder fees' => 'Frais des rappels suivants',
+    '{hours} to use once the invoice is paid' => '{hours} à utiliser une fois la facture payée',
 ];

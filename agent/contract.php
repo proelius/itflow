@@ -515,6 +515,8 @@ if (!$contract || ($client_url && intval($contract['contract_client_id']) !== in
                                                 <span class="fw-semibold"><?= escapeHtml(contractHoursText($block['contract_block_hours'])) ?></span>
                                                 <span class="small text-body-secondary ms-1"><?= escapeHtml($what) ?></span>
                                                 <?php if ($block['expired']) { ?><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis fw-normal ms-1">Ran out</span><?php } ?>
+                                                <?php if ($block['pending']) { ?><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis fw-normal ms-1">Waits for payment</span><?php } ?>
+                                                <?php if ($block['fork_step'] !== null) { ?><span class="d-block small text-body-secondary"><?= escapeHtml(forkHoursSteps()[$block['fork_step']] ?? '') ?></span><?php } ?>
                                             </td>
                                             <td class="small text-nowrap d-none d-md-table-cell">
                                                 <?= escapeHtml(date('M j, Y', strtotime($block['contract_block_bought']))) ?> &ndash; <?= $block['contract_block_expires'] ? escapeHtml(date('M j, Y', strtotime($block['contract_block_expires']))) : 'no end' ?>
