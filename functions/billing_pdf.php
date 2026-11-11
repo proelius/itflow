@@ -452,7 +452,7 @@ function billingStatementPdfRender(array $statement) {
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
         <td width="60%">' . $label(t('Statement for')) . '<br><span style="font-size:10pt; font-weight:bold;">' . $e($bill_to['client_name'] ?? $client['client_name']) . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $to_lines))) . '</span></td>
         <td width="40%" align="right">' . $label(t('Total due')) . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($statement['total']) . '</span>'
-        . ($statement['overdue'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $red . ';">' . $e(t('{amount} of it overdue', ['{amount}' => billingMoney($statement['overdue'], $currency)])) . '</span>' : '') . '</td>
+        . ($statement['overdue'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $red . ';">' . $e(t('{amount} of it overdue', ['{amount}' => billingPdfMoneyText(billingMoney($statement['overdue'], $currency))])) . '</span>' : '') . '</td>
     </tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Ln(2);
