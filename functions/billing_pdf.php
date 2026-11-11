@@ -372,13 +372,11 @@ function billingPdfRender($type, array $row, $variant = 'document') {
             $pdf->MultiCell($width, 4, $footer, 0, 'C', false, 1);
         }
 
-        // The Swiss QR-bill, on the foot of the last page - its own page when there is no room left
+        // The Swiss QR-bill, on the foot of a page of its own - always after the invoice, never under its lines
         $qr_bill = $type === 'invoice' && $format === 'A4' && $state && in_array($status, invoiceOpenStatuses(), true)
             ? qrBillFor($row, $company, $bill_to, $currency, $state['balance'], $number) : null;
         if ($qr_bill) {
-            if ($pdf->GetY() > $pdf->getPageHeight() - QR_BILL_HEIGHT - 20) {
-                $pdf->AddPage();
-            }
+            $pdf->AddPage();
             $pdf->slip_pages[] = $pdf->getPage();
             $pdf->SetAutoPageBreak(false);
             qrBillDraw($pdf, $qr_bill);
