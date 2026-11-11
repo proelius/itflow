@@ -761,7 +761,7 @@ return [
     'Good afternoon' => 'Bon après-midi',
     'Good evening' => 'Bonsoir',
     ' of yours' => ' à vous',
-    'Waiting on you' => 'En attente de vous',
+    'Waiting on you' => 'En attente de votre réponse',
     'Nothing owed' => 'Rien dû',
     'Renewal' => 'Renouvellement',
     'Needs you' => 'Besoin de vous',
