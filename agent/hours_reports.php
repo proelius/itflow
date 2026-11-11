@@ -57,7 +57,7 @@ $reports = $ready ? forkHoursReports($client_id) : [];
                         <td><?= $report['report_sent_at'] ? escapeHtml($report['report_sent_at']) : '-' ?></td>
                         <td class="text-center text-nowrap">
                             <a class="btn btn-sm btn-secondary" href="hours_report.php?client_id=<?= $client_id ?>&report_id=<?= intval($report['report_id']) ?>"><i class="fas fa-eye"></i></a>
-                            <a class="btn btn-sm btn-secondary" href="post.php?hours_report_pdf=<?= intval($report['report_id']) ?>" target="_blank" title="PDF"><i class="fas fa-file-pdf"></i></a>
+                            <a class="btn btn-sm btn-secondary" href="post.php?hours_report_pdf=<?= intval($report['report_id']) ?>&amp;csrf_token=<?= $_SESSION['csrf_token'] ?>" target="_blank" title="PDF"><i class="fas fa-file-pdf"></i></a>
                         </td>
                     </tr>
                 <?php } ?>
