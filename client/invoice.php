@@ -144,7 +144,7 @@ $paper = [
                     <?php } elseif ($cards) { ?>
                         <p class="small text-body-secondary mb-0">This invoice is too large to pay by card here - please pay it another way, or <a href="<?= escapeHtml(portalAskUrl("Paying invoice $number")) ?>">ask us</a>.</p>
                     <?php } else { ?>
-                        <p class="small text-body-secondary mb-0"><?= t('To pay, use the payment details on the invoice, or <a href="{url}">ask us</a> how.', ['{url}' => escapeHtml(portalAskUrl("Paying invoice $number"))]) ?></p>
+                        <p class="small text-body-secondary mb-0"><?= t('To pay, use the payment details on the invoice, or {link} how.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl("Paying invoice $number")) . '">' . t('ask us') . '</a>']) ?></p>
                     <?php } ?>
                 <?php } ?>
             </div>
@@ -186,8 +186,8 @@ $paper = [
 
         <p class="small text-body-secondary px-1">
             <?= !empty($company['phone_display'])
-                ? t('Questions about this invoice? <a href="{url}">Ask us</a> or call {phone}.', ['{url}' => escapeHtml(portalAskUrl("Question about invoice $number")), '{phone}' => escapeHtml($company['phone_display'])])
-                : t('Questions about this invoice? <a href="{url}">Ask us</a>.', ['{url}' => escapeHtml(portalAskUrl("Question about invoice $number"))]) ?>
+                ? t('Questions about this invoice? {link} or call {phone}.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl("Question about invoice $number")) . '">' . t('Ask us') . '</a>', '{phone}' => escapeHtml($company['phone_display'])])
+                : t('Questions about this invoice? {link}.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl("Question about invoice $number")) . '">' . t('Ask us') . '</a>']) ?>
 
         </p>
 

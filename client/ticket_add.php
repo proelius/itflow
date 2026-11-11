@@ -158,7 +158,7 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
                     <label class="form-label"><?= t('Files') ?></label>
                     <div class="itflow-portal-drop" data-portal-drop>
                         <input type="file" name="file[]" multiple id="ticketFiles" accept=".jpg, .jpeg, .gif, .png, .webp, .pdf, .txt, .md, .doc, .docx, .odt, .csv, .xls, .xlsx, .ods, .pptx, .odp, .zip, .tar, .gz, .xml, .msg, .json, .wav, .mp3, .ogg, .mov, .mp4, .av1, .ovpn">
-                        <i class="fas fa-paperclip me-2"></i><?= t('Drop files here, or <label for="ticketFiles">choose files</label>') ?>
+                        <i class="fas fa-paperclip me-2"></i><?= t('Drop files here, or {link}', ['{link}' => '<label for="ticketFiles">' . t('choose files') . '</label>']) ?>
 
                         <div class="itflow-portal-files" data-portal-files hidden></div>
                     </div>
@@ -247,7 +247,7 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
                 <label class="form-label"><?= t('Screenshots or files') ?></label>
                 <div class="itflow-portal-drop" data-portal-drop>
                     <input type="file" name="file[]" multiple id="ticketFiles" accept=".jpg, .jpeg, .gif, .png, .webp, .pdf, .txt, .md, .doc, .docx, .odt, .csv, .xls, .xlsx, .ods, .pptx, .odp, .zip, .tar, .gz, .xml, .msg, .json, .wav, .mp3, .ogg, .mov, .mp4, .av1, .ovpn">
-                    <i class="fas fa-paperclip me-2"></i><?= t('Drop files here, or <label for="ticketFiles">choose files</label>') ?>
+                    <i class="fas fa-paperclip me-2"></i><?= t('Drop files here, or {link}', ['{link}' => '<label for="ticketFiles">' . t('choose files') . '</label>']) ?>
 
                     <div class="itflow-portal-files" data-portal-files hidden></div>
                 </div>

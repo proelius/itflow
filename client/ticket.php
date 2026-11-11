@@ -222,7 +222,7 @@ $agent_name = (string) ($ticket['user_name'] ?? '');
                     </div>
                     <div class="itflow-portal-drop mb-3" data-portal-drop>
                         <input type="file" name="file[]" multiple id="replyFiles" accept=".jpg, .jpeg, .gif, .png, .webp, .pdf, .txt, .md, .doc, .docx, .odt, .csv, .xls, .xlsx, .ods, .pptx, .odp, .zip, .tar, .gz, .xml, .msg, .json, .wav, .mp3, .ogg, .mov, .mp4, .av1, .ovpn">
-                        <i class="fas fa-paperclip me-2"></i><?= t('Drop files here, or <label for="replyFiles">choose files</label> - screenshots, documents, error logs') ?>
+                        <i class="fas fa-paperclip me-2"></i><?= t('Drop files here, or {link} - screenshots, documents, error logs', ['{link}' => '<label for="replyFiles">' . t('choose files') . '</label>']) ?>
 
                         <div class="itflow-portal-files" data-portal-files hidden></div>
                     </div>

@@ -216,8 +216,8 @@ $terms = [
 
         <p class="small text-body-secondary px-1">
             <?= !empty($company['phone_display'])
-                ? t('Questions about this contract? <a href="{url}">Ask us</a> or call {phone}.', ['{url}' => escapeHtml(portalAskUrl('Question about contract: ' . $contract['contract_name'])), '{phone}' => escapeHtml($company['phone_display'])])
-                : t('Questions about this contract? <a href="{url}">Ask us</a>.', ['{url}' => escapeHtml(portalAskUrl('Question about contract: ' . $contract['contract_name']))]) ?>
+                ? t('Questions about this contract? {link} or call {phone}.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl('Question about contract: ' . $contract['contract_name'])) . '">' . t('Ask us') . '</a>', '{phone}' => escapeHtml($company['phone_display'])])
+                : t('Questions about this contract? {link}.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl('Question about contract: ' . $contract['contract_name'])) . '">' . t('Ask us') . '</a>']) ?>
 
         </p>
 

@@ -133,9 +133,9 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
                             <?php } ?>
                         </dl>
                         <?php if ($manage && !$self) { ?>
-                            <p class="small text-body-secondary mt-3 mb-0"><?= t('This is the company\'s primary contact - <a href="{url}">ask us</a> to change who that is.', ['{url}' => escapeHtml(portalAskUrl('Change the primary contact'))]) ?></p>
+                            <p class="small text-body-secondary mt-3 mb-0"><?= t('This is the company\'s primary contact - {link} to change who that is.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl('Change the primary contact')) . '">' . t('ask us') . '</a>']) ?></p>
                         <?php } elseif ($self) { ?>
-                            <p class="small text-body-secondary mt-3 mb-0"><?= t('Change your own phone numbers and sign-in in <a href="profile.php">Your account</a>.') ?></p>
+                            <p class="small text-body-secondary mt-3 mb-0"><?= t('Change your own phone numbers and sign-in in {link}.', ['{link}' => '<a href="profile.php">' . t('Your account') . '</a>']) ?></p>
                         <?php } ?>
                     </div>
                 </section>

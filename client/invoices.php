@@ -78,8 +78,8 @@ function invoicesUrl(array $changes) {
         <p>
             <?php if ($owed > 0) { ?>
                 <?= $late > 0
-                    ? t('You owe <strong class="text-body">{owed}</strong> - <span class="text-danger-emphasis">{late} of it past due</span>', ['{owed}' => escapeHtml(billingMoney($owed, $currency)), '{late}' => escapeHtml(billingMoney($late, $currency))])
-                    : t('You owe <strong class="text-body">{owed}</strong>', ['{owed}' => escapeHtml(billingMoney($owed, $currency))]) ?>
+                    ? t('You owe {owed} - {late}', ['{owed}' => '<strong class="text-body">' . escapeHtml(billingMoney($owed, $currency)) . '</strong>', '{late}' => '<span class="text-danger-emphasis">' . t('{amount} of it past due', ['{amount}' => escapeHtml(billingMoney($late, $currency))]) . '</span>'])
+                    : t('You owe {owed}', ['{owed}' => '<strong class="text-body">' . escapeHtml(billingMoney($owed, $currency)) . '</strong>']) ?>
             <?php } else { ?>
                 <?= t('Nothing is owed - thank you') ?>
 

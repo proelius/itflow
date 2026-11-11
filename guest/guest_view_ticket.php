@@ -346,9 +346,9 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
                 <?php
                 $help_email = $support_email !== '' ? '<a href="mailto:' . escapeHtml($support_email) . '">' . escapeHtml($support_email) . '</a>' : '';
                 if ($portal_url && $help_email) {
-                    echo t('Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the <a href="/client/ticket_add.php">client portal</a> or by emailing {email}.', ['{email}' => $help_email]);
+                    echo t('Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the {link} or by emailing {email}.', ['{link}' => '<a href="/client/ticket_add.php">' . t('client portal') . '</a>', '{email}' => $help_email]);
                 } elseif ($portal_url) {
-                    echo t('Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the <a href="/client/ticket_add.php">client portal</a>.');
+                    echo t('Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one in the {link}.', ['{link}' => '<a href="/client/ticket_add.php">' . t('client portal') . '</a>']);
                 } else {
                     echo t('Need more help with this? Replies to a closed ticket don\'t reach us - raise a new one by emailing {email}.', ['{email}' => $help_email]);
                 }

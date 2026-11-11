@@ -164,7 +164,7 @@ $title = $state === 'pending' ? ($signup ? t('Finish signing up') : t('Join {cli
                         </div>
                     </div>
 
-                    <label class="form-label small mb-1" for="joinPassword"><?= t('Choose a password <span class="text-body-secondary">- at least {n} characters</span>', ['{n}' => USER_PASSWORD_MIN]) ?></label>
+                    <label class="form-label small mb-1" for="joinPassword"><?= t('Choose a password {hint}', ['{hint}' => '<span class="text-body-secondary">' . t('- at least {n} characters', ['{n}' => USER_PASSWORD_MIN]) . '</span>']) ?></label>
                     <div class="input-group mb-3">
                         <span class="input-group-text"><i class="fas fa-fw fa-lock"></i></span>
                         <input type="password" class="form-control" id="joinPassword" name="new_password" minlength="<?= USER_PASSWORD_MIN ?>" autocomplete="new-password" required<?= $in['name'] !== '' ? ' autofocus' : '' ?>>
