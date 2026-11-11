@@ -14,6 +14,7 @@ if (PHP_SAPI !== 'cli') {
 
 $itflow_dir = __DIR__ . '/..';
 require_once $itflow_dir . '/functions/expense_import.php';
+require_once $itflow_dir . '/functions/income_import.php';
 require_once $itflow_dir . '/functions/qr_bill.php';
 require_once $itflow_dir . '/functions/bank_import_extra.php';
 
@@ -75,9 +76,11 @@ $open = [
     5 => ['invoice_id' => 5, 'client_id' => 2, 'number' => 5, 'ref' => 'INV-5', 'balance' => 108.10],
     6 => ['invoice_id' => 6, 'client_id' => 2, 'number' => 6, 'ref' => 'INV-6', 'balance' => 50.0],
 ];
-$paid = bankImportQrInvoices('Credit référence QR | QRR: ' . qrBillReferenceSpaced(qrBillReference(5)), $open);
-bank_test('a deposit with the QR reference of invoice 5 pays invoice 5 only', count($paid) === 1 && $paid[0]['invoice_id'] === 5);
-bank_test('a deposit with another reference pays none', bankImportQrInvoices('QRR: 21 00000 00000 00000 02026 08362', $open) === []);
+$paid = bankImportNamedInvoices(['description' => 'Credit référence QR | QRR: ' . qrBillReferenceSpaced(qrBillReference(5)), 'reference' => ''], $open, ['INV-']);
+bank_test('a deposit with the QR reference of invoice 5 pays invoice 5 only, by QR', $paid[0] === 'qr' && count($paid[1]) === 1 && $paid[1][0]['invoice_id'] === 5);
+$paid = bankImportNamedInvoices(['description' => 'Société Éléphant - Motif du paiement: Facture INV-6', 'reference' => ''], $open, ['INV-']);
+bank_test('"Facture INV-6" in the memo pays invoice 6, by number', $paid[0] === 'number' && count($paid[1]) === 1 && $paid[1][0]['invoice_id'] === 6);
+bank_test('a deposit with another reference and no number pays none', bankImportNamedInvoices(['description' => 'QRR: 21 00000 00000 00000 02026 08362', 'reference' => '9901808E64820987'], $open, ['INV-'])[1] === []);
 
 // A plain statement still reads as before
 $plain = "Date,Description,Amount\n2026-10-01,Coffee,4.50\n2026-10-02,Payment received,-100.00\n";

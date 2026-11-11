@@ -80,8 +80,14 @@ function bankImportColumnPatterns(array $patterns) {
     return $patterns;
 }
 
-/** The invoices a deposit pays by a QR reference in its text (qrBillReference() of the invoice's number) - open invoices, as incomeImportOpenInvoices() lists them. */
-function bankImportQrInvoices($text, array $open) {
+/**
+ * The invoices a deposit names - [how ('qr' or 'number'), invoices]. By the QR reference of an invoice
+ * (qrBillReference() of its number) in its text, else by an invoice number in it - "Facture INV-6", with
+ * the memo of the line in the text too, where a bank puts the payer's own words. $open as
+ * incomeImportOpenInvoices() lists them, $prefixes the invoice prefixes there are.
+ */
+function bankImportNamedInvoices(array $line, array $open, array $prefixes) {
+    $text = trim($line['description'] . ' ' . $line['reference']);
     $named = [];
     foreach (qrBillReferencesIn($text) as $reference) {
         foreach ($open as $invoice) {
@@ -90,5 +96,15 @@ function bankImportQrInvoices($text, array $open) {
             }
         }
     }
-    return $named;
+    if ($named) {
+        return ['qr', $named];
+    }
+    foreach (incomeImportInvoiceNumbers($text, array_merge($prefixes, ['facture', 'factures'])) as $number) {
+        foreach ($open as $invoice) {
+            if ($invoice['number'] === $number) {
+                $named[] = $invoice;
+            }
+        }
+    }
+    return ['number', $named];
 }
