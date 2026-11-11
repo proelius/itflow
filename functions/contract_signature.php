@@ -87,7 +87,7 @@ function contractMoney($amount, array $row) {
 /** Net terms in words - "Net 30", "Due on receipt". */
 function contractNetTermsText($days) {
     $days = intval($days);
-    return $days > 0 ? "Net $days" : 'Due on receipt';
+    return $days > 0 ? t('Net {n}', ['{n}' => $days]) : t('Due on receipt');
 }
 
 /*
@@ -120,15 +120,15 @@ function contractSlaRows(array $row, $date = null) {
 /** The response times as a table - for [SLA] and the document's own section - as of $date. */
 function contractSlaTableHtml(array $row, $date = null) {
     $html = '<table class="itflow-contract-doc-table itflow-contract-doc-slas" width="100%" cellpadding="5" cellspacing="0"><thead><tr>'
-        . '<th width="22%">Priority</th><th width="38%">Respond within</th><th width="40%">Resolve within</th></tr></thead><tbody>';
+        . '<th width="22%">' . t('Priority') . '</th><th width="38%">' . t('Respond within') . '</th><th width="40%">' . t('Resolve within') . '</th></tr></thead><tbody>';
     foreach (contractSlaRows($row, $date) as $priority => $item) {
         $sla = $item['sla'];
-        $html .= '<tr><td width="22%">' . escapeHtml($priority) . '</td>';
+        $html .= '<tr><td width="22%">' . escapeHtml(i18n_ticket_priority_label($priority)) . '</td>';
         if ($sla) {
             $html .= '<td width="38%">' . escapeHtml(slaMinutesText($sla['sla_response_minutes'])) . '</td>'
-                . '<td width="40%">' . (intval($sla['sla_resolution_minutes']) > 0 ? escapeHtml(slaMinutesText($sla['sla_resolution_minutes'])) : 'No set time') . '</td>';
+                . '<td width="40%">' . (intval($sla['sla_resolution_minutes']) > 0 ? escapeHtml(slaMinutesText($sla['sla_resolution_minutes'])) : t('No set time')) . '</td>';
         } else {
-            $html .= '<td width="38%">No set time</td><td width="40%">No set time</td>';
+            $html .= '<td width="38%">' . t('No set time') . '</td><td width="40%">' . t('No set time') . '</td>';
         }
         $html .= '</tr>';
     }
@@ -161,7 +161,7 @@ function contractPlaceholderValues(array $row, $as_of = null) {
     $slas = [];
     foreach (contractSlaRows($row, $as_of) as $priority => $item) {
         if ($item['sla']) {
-            $slas[] = "$priority: " . strtolower(contractSlaTargets($item['sla']));
+            $slas[] = i18n_ticket_priority_label($priority) . ': ' . mb_strtolower(contractSlaTargets($item['sla']));
         }
     }
     return [
@@ -177,9 +177,9 @@ function contractPlaceholderValues(array $row, $as_of = null) {
         'end date' => $day($end),
         'term' => $term,
         'renewal' => intval($row['contract_auto_renew'])
-            ? "It renews itself for another $term" . ($notice ? " unless notice is given at least $notice days before it ends." : '.')
-            : 'It ends on its last day unless it is renewed.',
-        'notice' => $notice ? "$notice days" : 'none',
+            ? ($notice ? t('It renews itself for another {term} unless notice is given at least {n} days before it ends.', ['{term}' => $term, '{n}' => $notice]) : t('It renews itself for another {term}.', ['{term}' => $term]))
+            : t('It ends on its last day unless it is renewed.'),
+        'notice' => $notice ? t('{n} days', ['{n}' => $notice]) : t('none'),
         'support hours' => (string) ($row['contract_support_hours'] ?? ''),
         'monthly hours' => floatval($row['contract_monthly_hours'] ?? 0) > 0 ? contractHoursWords($row['contract_monthly_hours']) : '',
         'rate' => $rate !== null && $rate !== '' ? contractMoney($rate, $row) : '',
@@ -215,6 +215,11 @@ function contractUnfilled($html) {
  * styles: includes/contract_paper.php and the PDF dress it.
  */
 function contractDocumentHtml(array $row, $as_of = null) {
+    return i18n_with(client_language(), fn() => _contractDocumentHtml($row, $as_of));
+}
+
+/** contractDocumentHtml() in the language that is current. */
+function _contractDocumentHtml(array $row, $as_of = null) {
     $company = billingCompany();
     $bill_to = billingBillTo(intval($row['contract_client_id']));
     $values = contractPlaceholderValues($row, $as_of);
@@ -228,45 +233,45 @@ function contractDocumentHtml(array $row, $as_of = null) {
     ]);
     $to_lines = array_filter([
         $values['client address'] !== '' ? formatAddress($bill_to['location_address'] ?? '', $bill_to['location_city'] ?? '', $bill_to['location_state'] ?? '', $bill_to['location_zip'] ?? '', $bill_to['location_country'] ?? '', "\n") : '',
-        $values['contact'] !== '' ? 'Attention: ' . $values['contact'] . ($values['contact title'] !== '' ? ', ' . $values['contact title'] : '') : '',
+        $values['contact'] !== '' ? t('Attention: {contact}', ['{contact}' => $values['contact'] . ($values['contact title'] !== '' ? ', ' . $values['contact title'] : '')]) : '',
         $values['contact email'],
     ]);
 
     $html = '<div class="itflow-contract-doc">';
     $html .= '<h1 class="itflow-contract-doc-title">' . $e($row['contract_name']) . '</h1>';
-    $html .= '<p class="itflow-contract-doc-between">' . $e(contractTypeLabel($row['contract_type'])) . ' agreement between <strong>' . $e($values['company']) . '</strong> and <strong>' . $e($values['client']) . '</strong>'
-        . ($values['start date'] !== '' ? ', from ' . $e($values['start date']) : '') . '.</p>';
+    $between = ['{type}' => $e(contractTypeLabel($row['contract_type'])), '{company}' => '<strong>' . $e($values['company']) . '</strong>', '{client}' => '<strong>' . $e($values['client']) . '</strong>', '{date}' => $e($values['start date'])];
+    $html .= '<p class="itflow-contract-doc-between">' . ($values['start date'] !== '' ? t('{type} agreement between {company} and {client}, from {date}.', $between) : t('{type} agreement between {company} and {client}.', $between)) . '</p>';
 
     $html .= '<table class="itflow-contract-doc-parties" width="100%" cellpadding="0" cellspacing="0"><tr>'
-        . '<td width="50%"><div class="itflow-contract-doc-label">Provider</div><strong>' . $e($values['company']) . '</strong><br><span class="itflow-contract-doc-muted">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>'
-        . '<td width="50%"><div class="itflow-contract-doc-label">Client</div><strong>' . $e($values['client']) . '</strong><br><span class="itflow-contract-doc-muted">' . nl2br($e(implode("\n", $to_lines))) . '</span></td>'
+        . '<td width="50%"><div class="itflow-contract-doc-label">' . t('Provider') . '</div><strong>' . $e($values['company']) . '</strong><br><span class="itflow-contract-doc-muted">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>'
+        . '<td width="50%"><div class="itflow-contract-doc-label">' . t('Client') . '</div><strong>' . $e($values['client']) . '</strong><br><span class="itflow-contract-doc-muted">' . nl2br($e(implode("\n", $to_lines))) . '</span></td>'
         . '</tr></table>';
 
     // The agreement in a few lines
     $term = $values['term'];
     if ($values['start date'] !== '') {
-        $term .= ', from ' . $values['start date'] . ($values['end date'] !== '' ? ' to ' . $values['end date'] : '');
+        $term = $values['end date'] !== '' ? t('{term}, from {start} to {end}', ['{term}' => $term, '{start}' => $values['start date'], '{end}' => $values['end date']]) : t('{term}, from {start}', ['{term}' => $term, '{start}' => $values['start date']]);
     }
     $rates = [];
     if ($values['rate'] !== '') {
-        $rates[] = $values['rate'] . ' an hour';
+        $rates[] = t('{rate} an hour', ['{rate}' => $values['rate']]);
     }
     if ($values['after hours rate'] !== '') {
-        $rates[] = $values['after hours rate'] . ' an hour after hours';
+        $rates[] = t('{rate} an hour after hours', ['{rate}' => $values['after hours rate']]);
     }
     $net = $values['net terms'];
     $summary = [
-        'Type' => contractTypeLabel($row['contract_type']),
-        'Term' => $term,
-        'Renewal' => $values['renewal'],
-        'Notice' => intval($row['contract_notice_days']) ? $values['notice'] . ' before it ends, in writing' : 'None needed',
-        'Support hours' => $values['support hours'],
+        t('Type') => contractTypeLabel($row['contract_type']),
+        t('Term') => $term,
+        t('Renewal') => $values['renewal'],
+        t('Notice') => intval($row['contract_notice_days']) ? t('{notice} before it ends, in writing', ['{notice}' => $values['notice']]) : t('None needed'),
+        t('Support hours') => $values['support hours'],
         // Only when there are some - documents without them come out as they always did
-        'Included hours' => $values['monthly hours'] !== '' ? $values['monthly hours'] . ' of support each month, used for that month only' : '',
-        'Rates' => implode('; ', $rates),
-        'Payment' => $net === '' ? '' : ($net === 'Due on receipt' ? 'Invoices are due on receipt' : 'Invoices are due ' . intval(preg_replace('/\D/', '', $net)) . " days after they are issued ($net)"),
+        t('Included hours') => $values['monthly hours'] !== '' ? t('{hours} of support each month, used for that month only', ['{hours}' => $values['monthly hours']]) : '',
+        t('Rates') => implode('; ', $rates),
+        t('Payment') => $net === '' ? '' : ($net === t('Due on receipt') ? t('Invoices are due on receipt') : t('Invoices are due {n} days after they are issued ({terms})', ['{n}' => intval(preg_replace('/\D/', '', $net)), '{terms}' => $net])),
     ];
-    $html .= '<h2 class="itflow-contract-doc-heading">The agreement</h2>';
+    $html .= '<h2 class="itflow-contract-doc-heading">' . t('The agreement') . '</h2>';
     $html .= '<table class="itflow-contract-doc-table itflow-contract-doc-summary" width="100%" cellpadding="5" cellspacing="0"><tbody>';
     foreach ($summary as $label => $value) {
         if ($value !== '') {
@@ -275,12 +280,12 @@ function contractDocumentHtml(array $row, $as_of = null) {
     }
     $html .= '</tbody></table>';
 
-    $html .= '<h2 class="itflow-contract-doc-heading">Response times</h2>';
+    $html .= '<h2 class="itflow-contract-doc-heading">' . t('Response times') . '</h2>';
     $html .= contractSlaTableHtml($row, $as_of);
 
     $terms = trim((string) $row['contract_details']) !== '' ? contractFillTerms(documentHtmlPurify((string) $row['contract_details']), $row, $as_of) : '';
     if (trim(strip_tags($terms, '<img><table>')) !== '') {
-        $html .= '<h2 class="itflow-contract-doc-heading">Terms</h2>';
+        $html .= '<h2 class="itflow-contract-doc-heading">' . t('Terms') . '</h2>';
         $html .= '<div class="itflow-contract-doc-terms">' . $terms . '</div>';
     }
     return $html . '</div>';
@@ -542,7 +547,7 @@ function _contractSignatureRequestEmail(array $round, $note, $lang) {
     $company = billingCompany();
     $company_name = (string) ($company['company_name'] ?? '');
     $by = mysqli_fetch_row(mysqli_query($mysqli, "SELECT user_name FROM users WHERE user_id = " . intval($round['contract_signature_sent_by'])))[0] ?? '';
-    $term = contractTermText($round['contract_term_months']);
+    $term = contractTermLabel($round['contract_term_months']);
     if (!empty($round['contract_start_date'])) {
         $term = t('{term} from {date}', ['{term}' => $term, '{date}' => date('M j, Y', strtotime($round['contract_start_date']))]);
     }
@@ -560,21 +565,6 @@ function _contractSignatureRequestEmail(array $round, $note, $lang) {
         'button' => ['label' => t('Review and sign'), 'url' => contractSignatureUrl($round)],
     ], ['from' => contractEmailFrom()]);
     return (bool) $sent;
-}
-
-/** A contract's term in words in the current language - contractTermLabel(): "1 year", "18 months". */
-function contractTermText($months) {
-    $months = intval($months);
-    if ($months === 1) {
-        return t('Monthly');
-    }
-    if ($months === 12) {
-        return t('1 year');
-    }
-    if ($months > 0 && $months % 12 === 0) {
-        return t('{n} years', ['{n}' => $months / 12]);
-    }
-    return t('{n} months', ['{n}' => $months]);
 }
 
 /** The mailbox contract emails to clients come from - the quotes one (Admin > Mail), else ITFlow's own. */
@@ -780,11 +770,11 @@ function contractSignatureBlockHtml(array $row, $round = null, $image_url = null
     foreach ($sides as $side => $info) {
         $signed = $round && !empty($round["contract_signature_{$side}_signed_at"]);
         $html .= '<div class="itflow-contract-signature' . ($signed ? ' is-signed' : '') . '" data-contract-signature="' . $side . '">';
-        $html .= '<div class="itflow-contract-doc-label">Signed for ' . escapeHtml($info['for']) . '</div>';
+        $html .= '<div class="itflow-contract-doc-label">' . t('Signed for {name}', ['{name}' => escapeHtml($info['for'])]) . '</div>';
         $html .= '<div class="itflow-contract-signature-mark">';
         if ($signed && !empty($round["contract_signature_{$side}_image"])) {
             $src = $image_url ? $image_url($side) : (string) $round["contract_signature_{$side}_image"];
-            $html .= '<img src="' . escapeHtml($src) . '" alt="Signature of ' . escapeHtml($round["contract_signature_{$side}_name"]) . '">';
+            $html .= '<img src="' . escapeHtml($src) . '" alt="' . escapeHtml(t('Signature of {name}', ['{name}' => $round["contract_signature_{$side}_name"]])) . '">';
         } elseif ($signed) {
             $html .= '<span class="itflow-contract-signature-typed">' . escapeHtml($round["contract_signature_{$side}_name"]) . '</span>';
         }
@@ -793,7 +783,7 @@ function contractSignatureBlockHtml(array $row, $round = null, $image_url = null
             $html .= '<div class="fw-semibold">' . escapeHtml($round["contract_signature_{$side}_name"]) . '</div>';
             $html .= '<div class="small text-body-secondary">' . escapeHtml(implode(' · ', array_filter([(string) $round["contract_signature_{$side}_title"], date('M j, Y', strtotime($round["contract_signature_{$side}_signed_at"]))]))) . '</div>';
         } else {
-            $html .= '<div class="small text-body-secondary">Name, title and date</div>';
+            $html .= '<div class="small text-body-secondary">' . t('Name, title and date') . '</div>';
         }
         $html .= '</div>';
     }

@@ -100,19 +100,32 @@ function contractPossessive($name) {
 
 /** A type's label - the key's, or the text itself for one ITFlow doesn't know. */
 function contractTypeLabel($type) {
-    return CONTRACT_TYPES[(string) $type]['label'] ?? ((string) $type !== '' ? (string) $type : 'Contract');
+    return match ((string) $type) {
+        'managed' => t('Fully managed'),
+        'comanaged' => t('Co-managed'),
+        'block' => t('Block hours'),
+        'time_materials' => t('Time and materials'),
+        'break_fix' => t('Break/fix'),
+        'project' => t('Project'),
+        'other' => t('Other'),
+        '' => t('Contract'),
+        default => (string) $type,
+    };
 }
 
 /** A term in words - "1 year", "18 months". */
 function contractTermLabel($months) {
     $months = intval($months);
-    if (isset(CONTRACT_TERMS[$months])) {
-        return CONTRACT_TERMS[$months];
+    if ($months === 1) {
+        return t('Monthly');
+    }
+    if ($months === 12) {
+        return t('1 year');
     }
     if ($months > 0 && $months % 12 === 0) {
-        return ($months / 12) . ' years';
+        return t('{n} years', ['{n}' => $months / 12]);
     }
-    return $months === 1 ? '1 month' : "$months months";
+    return t('{n} months', ['{n}' => $months]);
 }
 
 /** Whether $date is a real day, written 'Y-m-d' - 2026-02-30 isn't. */
@@ -344,26 +357,25 @@ function contractDefaultHints() {
 
 /** An SLA's targets in words - "Respond in 1 hr, resolve in 8 hrs". */
 function contractSlaTargets(array $sla) {
-    $text = 'Respond in ' . slaMinutesText($sla['sla_response_minutes']);
     if (intval($sla['sla_resolution_minutes'] ?? 0) > 0) {
-        $text .= ', resolve in ' . slaMinutesText($sla['sla_resolution_minutes']);
+        return t('Respond in {response}, resolve in {resolution}', ['{response}' => slaMinutesText($sla['sla_response_minutes']), '{resolution}' => slaMinutesText($sla['sla_resolution_minutes'])]);
     }
-    return $text;
+    return t('Respond in {response}', ['{response}' => slaMinutesText($sla['sla_response_minutes'])]);
 }
 
 /** Minutes in words - "45 min", "4 hrs", "2 days". */
 function slaMinutesText($minutes) {
     $minutes = intval($minutes);
     if ($minutes > 0 && $minutes % 1440 === 0 && $minutes >= 2880) {
-        return ($minutes / 1440) . ' days';
+        return t('{n} days', ['{n}' => $minutes / 1440]);
     }
     if ($minutes >= 60 && $minutes % 60 === 0) {
-        return ($minutes / 60) . ($minutes === 60 ? ' hr' : ' hrs');
+        return $minutes === 60 ? t('{n} hr', ['{n}' => 1]) : t('{n} hrs', ['{n}' => $minutes / 60]);
     }
     if ($minutes >= 60) {
-        return round($minutes / 60, 1) . ' hrs';
+        return t('{n} hrs', ['{n}' => round($minutes / 60, 1)]);
     }
-    return "$minutes min";
+    return t('{n} min', ['{n}' => $minutes]);
 }
 
 /*
