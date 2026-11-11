@@ -34,7 +34,7 @@ class BillingPdf extends TCPDF {
         $this->SetFont('dejavusans', '', 7);
         $this->SetTextColor(108, 117, 125);
         $this->Cell($width * 0.75, 4, $this->footer_label, 0, 0, 'L');
-        $this->Cell($width * 0.25, 4, 'Page ' . $this->getAliasNumPage() . ' of ' . $this->getAliasNbPages(), 0, 0, 'R');
+        $this->Cell($width * 0.25, 4, t('Page {page} of {pages}', ['{page}' => $this->getAliasNumPage(), '{pages}' => $this->getAliasNbPages()]), 0, 0, 'R');
     }
 }
 
@@ -88,16 +88,18 @@ function billingPdfRender($type, array $row, $variant = 'document') {
     $format = in_array($company['company_country'] ?? '', ['United States', 'USA', 'US', 'Canada'], true) ? 'LETTER' : 'A4';
     $pdf = new BillingPdf('P', 'mm', $format, true, 'UTF-8', false);
     $title = $packing ? 'Packing Slip' : ['invoice' => 'Invoice', 'quote' => 'Quote', 'recurring' => 'Recurring Invoice'][$type];
+    // $title is what the file is called; $title_text is what the page says
+    $title_text = $packing ? t('Packing Slip') : ['invoice' => t('Invoice'), 'quote' => t('Quote'), 'recurring' => t('Recurring Invoice')][$type];
     $pdf->SetCreator('ITFlow');
     $pdf->SetAuthor((string) ($company['company_name'] ?? ''));
-    $pdf->SetTitle("$title $number");
+    $pdf->SetTitle("$title_text $number");
     $pdf->SetMargins(16, 14, 16);
     $pdf->SetHeaderMargin(0);
     $pdf->SetFooterMargin(12);
     $pdf->SetAutoPageBreak(true, 20);
     $pdf->setFontSubsetting(true);
     $pdf->setImageScale(1.5);
-    $pdf->footer_label = trim(($company['company_name'] ?? '') . ' · ' . "$title $number", ' ·');
+    $pdf->footer_label = trim(($company['company_name'] ?? '') . ' · ' . "$title_text $number", ' ·');
     $pdf->AddPage();
     $margins = $pdf->getMargins();
     $width = $pdf->getPageWidth() - $margins['left'] - $margins['right'];
@@ -105,7 +107,7 @@ function billingPdfRender($type, array $row, $variant = 'document') {
     $grey = '#6c757d';
     $line = '#dee2e6';
     $label = function ($text) use ($grey, $e) {
-        return '<span style="font-size:6.5pt; color:' . $grey . '; font-weight:bold;">' . $e(strtoupper($text)) . '</span>';
+        return '<span style="font-size:6.5pt; color:' . $grey . '; font-weight:bold;">' . $e(mb_strtoupper($text)) . '</span>';
     };
 
     // Who it is from, and what it is
@@ -113,17 +115,17 @@ function billingPdfRender($type, array $row, $variant = 'document') {
         formatAddress($company['company_address'] ?? '', $company['company_city'] ?? '', $company['company_state'] ?? '', $company['company_zip'] ?? '', $company['company_country'] ?? '', "\n"),
         implode('  ·  ', array_filter([$company['company_email'] ?? '', $company['phone_display'] ?? ''])),
         $company['company_website'] ?? '',
-        !empty($config_invoice_show_tax_id) && !empty($company['company_tax_id']) ? 'Tax ID: ' . $company['company_tax_id'] : '',
+        !empty($config_invoice_show_tax_id) && !empty($company['company_tax_id']) ? t('Tax ID: {id}', ['{id}' => $company['company_tax_id']]) : '',
     ]), $packing ? [] : billingTaxRegistrationLines($totals));
     $logo = !empty($company['logo_path']) ? '<img src="' . $e($company['logo_path']) . '" height="42"><br>' : '';
     if ($packing) {
-        $dates = ['Invoice' => $number, 'Date' => $row['invoice_date']];
+        $dates = [t('Invoice') => $number, t('Date') => $row['invoice_date']];
     } elseif ($type === 'invoice') {
-        $dates = ['Invoice date' => $row['invoice_date'], 'Due' => $row['invoice_due']];
+        $dates = [t('Invoice date') => $row['invoice_date'], t('Due') => $row['invoice_due']];
     } elseif ($type === 'quote') {
-        $dates = ['Quote date' => $row['quote_date'], 'Valid until' => $row['quote_expire']];
+        $dates = [t('Quote date') => $row['quote_date'], t('Valid until') => $row['quote_expire']];
     } else {
-        $dates = ['Billed' => recurringInvoiceFrequencies()[$row['recurring_invoice_frequency']] ?? $row['recurring_invoice_frequency'], 'Next invoice' => $row['recurring_invoice_next_date']];
+        $dates = [t('Billed') => i18n_portal_label(recurringInvoiceFrequencies()[$row['recurring_invoice_frequency']] ?? $row['recurring_invoice_frequency']), t('Next invoice') => $row['recurring_invoice_next_date']];
     }
     $dates_html = '';
     foreach ($dates as $date_label => $value) {
@@ -132,7 +134,7 @@ function billingPdfRender($type, array $row, $variant = 'document') {
 
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
         <td width="58%">' . $logo . '<span style="font-size:12pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>
-        <td width="42%" align="right"><span style="font-size:8pt; color:#0a58ca; font-weight:bold; letter-spacing:2px;">' . $e(strtoupper($title)) . '</span><br><span style="font-size:15pt; font-weight:bold;">' . $e($number) . '</span><br>
+        <td width="42%" align="right"><span style="font-size:8pt; color:#0a58ca; font-weight:bold; letter-spacing:2px;">' . $e(mb_strtoupper($title_text)) . '</span><br><span style="font-size:15pt; font-weight:bold;">' . $e($number) . '</span><br>
             <table cellpadding="1.2" cellspacing="0" width="100%" style="font-size:8pt;">' . $dates_html . '</table></td>
     </tr></table>';
     $pdf->SetFont('dejavusans', '', 8.5);
@@ -150,25 +152,25 @@ function billingPdfRender($type, array $row, $variant = 'document') {
         formatAddress($bill_to['location_address'] ?? '', $bill_to['location_city'] ?? '', $bill_to['location_state'] ?? '', $bill_to['location_zip'] ?? '', $bill_to['location_country'] ?? '', "\n"),
         $bill_to['contact_name'] ?? '',
         implode('  ·  ', array_filter([$bill_to['contact_email'] ?? '', $bill_to['contact_phone'] ?? ''])),
-        !empty($bill_to['client_tax_id_number']) ? 'Tax ID: ' . $bill_to['client_tax_id_number'] : '',
+        !empty($bill_to['client_tax_id_number']) ? t('Tax ID: {id}', ['{id}' => $bill_to['client_tax_id_number']]) : '',
         !$packing && !empty($bill_to['tax_exempt_text']) && $totals['tax'] == 0 ? $bill_to['tax_exempt_text'] : '',
     ]);
-    $to_label = $packing ? 'Ship to' : ($type === 'quote' ? 'Prepared for' : 'Bill to');
+    $to_label = $packing ? t('Ship to') : ($type === 'quote' ? t('Prepared for') : t('Bill to'));
     if ($packing) {
         $amount_html = '';
     } elseif ($type === 'invoice') {
         $done = in_array($status, ['Paid', 'Cancelled', 'Non-Billable'], true);
-        $amount_html = $label($done ? 'Balance' : 'Amount due') . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($state['balance']) . '</span>'
-            . (!$done && $status !== 'Draft' && $state['balance'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $grey . ';">by ' . $e($row['invoice_due']) . '</span>' : '');
+        $amount_html = $label($done ? t('Balance') : t('Amount due')) . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($state['balance']) . '</span>'
+            . (!$done && $status !== 'Draft' && $state['balance'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $grey . ';">' . $e(t('by {date}', ['{date}' => $row['invoice_due']])) . '</span>' : '');
     } elseif ($type === 'quote' && $shown_groups) {
         $amount_html = '';
         foreach (array_values($shown_groups) as $i => $group) {
-            $amount_html .= ($i ? '<br>' : '') . $label($group['frequency'] === '' ? 'Up front' : $group['label']) . '<br><span style="font-size:' . ($i ? '12' : '17') . 'pt; font-weight:bold;">' . $money($group['total']) . '</span>';
+            $amount_html .= ($i ? '<br>' : '') . $label($group['frequency'] === '' ? t('Up front') : billingEmailGroupLabel($group['label'])) . '<br><span style="font-size:' . ($i ? '12' : '17') . 'pt; font-weight:bold;">' . $money($group['total']) . '</span>';
         }
     } elseif ($type === 'quote') {
-        $amount_html = $label('Quote total') . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($totals['total']) . '</span>';
+        $amount_html = $label(t('Quote total')) . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($totals['total']) . '</span>';
     } else {
-        $amount_html = $label('Each ' . recurringInvoicePeriodWord($row['recurring_invoice_frequency'])) . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($totals['total']) . '</span>';
+        $amount_html = $label(recurringInvoiceEachLabel($row['recurring_invoice_frequency'])) . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($totals['total']) . '</span>';
     }
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
         <td width="60%">' . $label($to_label) . '<br><span style="font-size:10pt; font-weight:bold;">' . $e($bill_to['client_name'] ?? $row['client_name']) . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $to_lines))) . '</span></td>
@@ -180,13 +182,13 @@ function billingPdfRender($type, array $row, $variant = 'document') {
     $stamp = null;
     if (!$packing) {
         if ($type === 'invoice' && $status === 'Paid') {
-            $stamp = ['PAID', [25, 135, 84]];
+            $stamp = [mb_strtoupper(t('Paid')), [25, 135, 84]];
         } elseif ($type === 'invoice' && $status === 'Cancelled') {
-            $stamp = ['CANCELLED', [220, 53, 69]];
+            $stamp = [mb_strtoupper(t('Cancelled')), [220, 53, 69]];
         } elseif ($type === 'quote' && in_array($status, ['Accepted', 'Invoiced'], true)) {
-            $stamp = ['ACCEPTED', [25, 135, 84]];
+            $stamp = [mb_strtoupper(t('Accepted')), [25, 135, 84]];
         } elseif ($type === 'quote' && $status === 'Declined') {
-            $stamp = ['DECLINED', [220, 53, 69]];
+            $stamp = [mb_strtoupper(t('Declined')), [220, 53, 69]];
         }
     }
     if ($stamp) {
@@ -213,7 +215,7 @@ function billingPdfRender($type, array $row, $variant = 'document') {
     if (trim((string) $row["{$c}_scope"]) !== '') {
         $pdf->Ln(1);
         $pdf->writeHTML('<table cellpadding="5" cellspacing="0" width="100%"><tr><td style="background-color:#f1f3f5;">'
-            . $label('For') . '&nbsp;&nbsp;' . $e($row["{$c}_scope"]) . '</td></tr></table>', true, false, true, false, '');
+            . $label(t('For')) . '&nbsp;&nbsp;' . $e($row["{$c}_scope"]) . '</td></tr></table>', true, false, true, false, '');
     }
     $pdf->Ln(2);
 
@@ -229,25 +231,25 @@ function billingPdfRender($type, array $row, $variant = 'document') {
             $serials[intval($serial['asset_invoice_item_id'])][] = $serial['asset_serial'];
         }
         $html = '<table cellpadding="4" cellspacing="0" width="100%"><thead><tr>
-            <td width="74%" style="' . $th . '">ITEM</td><td width="13%" align="right" style="' . $th . '">QTY</td><td width="13%" align="center" style="' . $th . '">PACKED</td></tr></thead>';
+            <td width="74%" style="' . $th . '">' . $e(mb_strtoupper(t('Item'))) . '</td><td width="13%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Qty'))) . '</td><td width="13%" align="center" style="' . $th . '">' . $e(mb_strtoupper(t('Packed'))) . '</td></tr></thead>';
         foreach ($items as $item) {
             $item_serials = $serials[intval($item['item_id'])] ?? [];
             $html .= '<tr nobr="true"><td width="74%" style="' . $td . '"><b>' . $e($item['item_name']) . '</b>'
                 . (trim((string) $item['item_description']) !== '' ? '<br><span style="font-size:7.5pt; color:' . $grey . ';">' . nl2br($e($item['item_description'])) . '</span>' : '')
-                . ($item_serials ? '<br><span style="font-size:7.5pt;">' . (count($item_serials) === 1 ? 'Serial' : 'Serials') . ': <font face="courier">' . $e(implode(', ', $item_serials)) . '</font></span>' : '') . '</td>
+                . ($item_serials ? '<br><span style="font-size:7.5pt;">' . (count($item_serials) === 1 ? t('Serial') : t('Serials')) . ': <font face="courier">' . $e(implode(', ', $item_serials)) . '</font></span>' : '') . '</td>
                 <td width="13%" align="right" style="' . $td . '">' . $e(billingQuantity($item['item_quantity'])) . '</td>
                 <td width="13%" align="center" style="' . $td . '"><span style="font-size:11pt;">☐</span></td></tr>';
         }
         $html .= '</table>';
     } else {
         $html = '<table cellpadding="4" cellspacing="0" width="100%"><thead><tr>
-            <td width="49%" style="' . $th . '">ITEM</td><td width="9%" align="right" style="' . $th . '">QTY</td>
-            <td width="14%" align="right" style="' . $th . '">PRICE</td><td width="13%" align="right" style="' . $th . '">TAX</td>
-            <td width="15%" align="right" style="' . $th . '">AMOUNT</td></tr></thead>';
+            <td width="49%" style="' . $th . '">' . $e(mb_strtoupper(t('Item'))) . '</td><td width="9%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Qty'))) . '</td>
+            <td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Price'))) . '</td><td width="13%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Tax'))) . '</td>
+            <td width="15%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Amount'))) . '</td></tr></thead>';
         $line_groups = $groups ?: ['' => ['frequency' => '', 'label' => '', 'items' => $items]];
         foreach ($line_groups as $line_group) {
             if ($groups) {
-                $html .= '<tr nobr="true"><td colspan="5" style="border-bottom:0.3px solid ' . $line . ';"><br>' . $label($line_group['label']) . '</td></tr>';
+                $html .= '<tr nobr="true"><td colspan="5" style="border-bottom:0.3px solid ' . $line . ';"><br>' . $label(billingEmailGroupLabel($line_group['label'])) . '</td></tr>';
             }
             foreach ($line_group['items'] as $item) {
                 $tax_label = floatval($item['item_tax']) != 0 || intval($item['item_tax_id'])
@@ -262,7 +264,7 @@ function billingPdfRender($type, array $row, $variant = 'document') {
             }
         }
         if (!$items) {
-            $html .= '<tr><td colspan="5" align="center" style="color:' . $grey . ';">Nothing on it yet.</td></tr>';
+            $html .= '<tr><td colspan="5" align="center" style="color:' . $grey . ';">' . t('Nothing on it yet.') . '</td></tr>';
         }
         $html .= '</table>';
     }
@@ -272,14 +274,14 @@ function billingPdfRender($type, array $row, $variant = 'document') {
     if ($packing) {
         // Who packed it, and who took it
         $sign = '<table cellpadding="5" cellspacing="0" width="100%"><tr nobr="true">
-            <td width="48%" style="border:0.4px solid #adb5bd; height:22mm;">' . $label('Packed by') . '<br><br><br><span style="font-size:7pt; color:' . $grey . ';">Name, signature and date</span></td>
+            <td width="48%" style="border:0.4px solid #adb5bd; height:22mm;">' . $label(t('Packed by')) . '<br><br><br><span style="font-size:7pt; color:' . $grey . ';">' . t('Name, signature and date') . '</span></td>
             <td width="4%"></td>
-            <td width="48%" style="border:0.4px solid #adb5bd; height:22mm;">' . $label('Received by') . '<br><br><br><span style="font-size:7pt; color:' . $grey . ';">Name, signature and date</span></td>
+            <td width="48%" style="border:0.4px solid #adb5bd; height:22mm;">' . $label(t('Received by')) . '<br><br><br><span style="font-size:7pt; color:' . $grey . ';">' . t('Name, signature and date') . '</span></td>
         </tr></table>';
         $pdf->writeHTML($sign, true, false, true, false, '');
     } else {
         // Notes, and what it all comes to
-        $rows = '<tr><td style="color:' . $grey . ';">Subtotal</td><td align="right">' . $money($totals['subtotal']) . '</td></tr>';
+        $rows = '<tr><td style="color:' . $grey . ';">' . t('Subtotal') . '</td><td align="right">' . $money($totals['subtotal']) . '</td></tr>';
         if ($shown_groups) {
             // A block for each - what is billed once, and each month, quarter or year
             // (widths set on each row - "Total each quarter" needs more than half)
@@ -290,36 +292,36 @@ function billingPdfRender($type, array $row, $variant = 'document') {
                 if ($i) {
                     $rows .= '<tr><td colspan="2" style="font-size:6pt;">&nbsp;</td></tr>';
                 }
-                $rows .= '<tr><td colspan="2">' . $label($group['label']) . '</td></tr>';
-                $rows .= '<tr><td' . $w . ' style="color:' . $grey . ';">Subtotal</td><td' . $wr . ' align="right">' . $money($group['subtotal']) . '</td></tr>';
+                $rows .= '<tr><td colspan="2">' . $label(billingEmailGroupLabel($group['label'])) . '</td></tr>';
+                $rows .= '<tr><td' . $w . ' style="color:' . $grey . ';">' . t('Subtotal') . '</td><td' . $wr . ' align="right">' . $money($group['subtotal']) . '</td></tr>';
                 if ($group['discount'] != 0) {
-                    $rows .= '<tr><td' . $w . ' style="color:' . $grey . ';">Discount</td><td' . $wr . ' align="right">-' . $money($group['discount']) . '</td></tr>';
+                    $rows .= '<tr><td' . $w . ' style="color:' . $grey . ';">' . t('Discount') . '</td><td' . $wr . ' align="right">-' . $money($group['discount']) . '</td></tr>';
                 }
                 foreach ($group['taxes'] as $tax_label => $tax_amount) {
                     $rows .= '<tr><td' . $w . ' style="color:' . $grey . ';">' . $e($tax_label) . '</td><td' . $wr . ' align="right">' . $money($tax_amount) . '</td></tr>';
                 }
-                $rows .= '<tr><td' . $w . ' style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . ($group['frequency'] === '' ? 'Total up front' : 'Total ' . $e(strtolower($group['label']))) . '</b></td><td' . $wr . ' align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($group['total']) . '</b></td></tr>';
+                $rows .= '<tr><td' . $w . ' style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $e(billingGroupTotalLabel($group['frequency'])) . '</b></td><td' . $wr . ' align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($group['total']) . '</b></td></tr>';
             }
         }
         if (!$shown_groups) {
             if ($totals['discount'] != 0) {
-                $rows .= '<tr><td style="color:' . $grey . ';">Discount</td><td align="right">-' . $money($totals['discount']) . '</td></tr>';
+                $rows .= '<tr><td style="color:' . $grey . ';">' . t('Discount') . '</td><td align="right">-' . $money($totals['discount']) . '</td></tr>';
             }
             foreach ($totals['taxes'] as $tax_label => $tax_amount) {
                 $rows .= '<tr><td style="color:' . $grey . ';">' . $e($tax_label) . '</td><td align="right">' . $money($tax_amount) . '</td></tr>';
             }
             if ($totals['credit'] > 0) {
-                $rows .= '<tr><td style="color:' . $grey . ';">Credit</td><td align="right">-' . $money($totals['credit']) . '</td></tr>';
+                $rows .= '<tr><td style="color:' . $grey . ';">' . t('Credit') . '</td><td align="right">-' . $money($totals['credit']) . '</td></tr>';
             }
-            $rows .= '<tr><td style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>Total</b></td><td align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($totals['total']) . '</b></td></tr>';
+            $rows .= '<tr><td style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . t('Total') . '</b></td><td align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($totals['total']) . '</b></td></tr>';
         }
         if ($type === 'invoice' && $state['paid'] > 0) {
-            $rows .= '<tr><td style="color:#198754;">Paid</td><td align="right" style="color:#198754;">-' . $money($state['paid']) . '</td></tr>';
-            $rows .= '<tr><td style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>Balance due</b></td><td align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($state['balance']) . '</b></td></tr>';
+            $rows .= '<tr><td style="color:#198754;">' . t('Paid') . '</td><td align="right" style="color:#198754;">-' . $money($state['paid']) . '</td></tr>';
+            $rows .= '<tr><td style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . t('Balance due') . '</b></td><td align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($state['balance']) . '</b></td></tr>';
         }
         $note = trim((string) $row["{$c}_note"]);
         $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr nobr="true">
-            <td width="54%">' . ($note !== '' ? $label('Notes') . '<br><span style="font-size:8pt;">' . nl2br($e($note)) . '</span>' : '') . '</td>
+            <td width="54%">' . ($note !== '' ? $label(t('Notes')) . '<br><span style="font-size:8pt;">' . nl2br($e($note)) . '</span>' : '') . '</td>
             <td width="6%"></td>
             <td width="40%"><table cellpadding="2.5" cellspacing="0" width="100%" style="font-size:8.5pt;">' . $rows . '</table></td>
         </tr></table>';
@@ -328,9 +330,9 @@ function billingPdfRender($type, array $row, $variant = 'document') {
         // Open it online - pay an invoice still owed, answer a quote still waiting
         $online = null;
         if ($type === 'invoice' && in_array($status, invoiceOpenStatuses(), true) && $state['balance'] > 0) {
-            $online = [billingOnlinePayments() ? 'Pay online' : 'View online', billingOnlinePayments() ? 'Scan to open this invoice and pay it by card.' : 'Scan to open this invoice online.'];
+            $online = [billingOnlinePayments() ? t('Pay online') : t('View online'), billingOnlinePayments() ? t('Scan to open this invoice and pay it by card.') : t('Scan to open this invoice online.')];
         } elseif ($type === 'quote' && in_array($status, ['Sent', 'Viewed'], true) && !quoteExpired($row)) {
-            $online = ['Answer online', 'Scan to open this quote and accept or decline it.'];
+            $online = [t('Answer online'), t('Scan to open this quote and accept or decline it.')];
         }
         if ($online) {
             $url = billingGuestUrl($type, $row);
@@ -388,21 +390,21 @@ function billingStatementPdfRender(array $statement) {
     $grey = '#6c757d';
     $red = '#c42b37';
     $label = function ($text) use ($grey, $e) {
-        return '<span style="font-size:6.5pt; color:' . $grey . '; font-weight:bold;">' . $e(strtoupper($text)) . '</span>';
+        return '<span style="font-size:6.5pt; color:' . $grey . '; font-weight:bold;">' . $e(mb_strtoupper($text)) . '</span>';
     };
 
     $format = in_array($company['company_country'] ?? '', ['United States', 'USA', 'US', 'Canada'], true) ? 'LETTER' : 'A4';
     $pdf = new BillingPdf('P', 'mm', $format, true, 'UTF-8', false);
     $pdf->SetCreator('ITFlow');
     $pdf->SetAuthor((string) ($company['company_name'] ?? ''));
-    $pdf->SetTitle('Statement ' . $client['client_name']);
+    $pdf->SetTitle(t('Statement') . ' ' . $client['client_name']);
     $pdf->SetMargins(16, 14, 16);
     $pdf->SetHeaderMargin(0);
     $pdf->SetFooterMargin(12);
     $pdf->SetAutoPageBreak(true, 20);
     $pdf->setFontSubsetting(true);
     $pdf->setImageScale(1.5);
-    $pdf->footer_label = trim(($company['company_name'] ?? '') . ' · Statement · ' . $client['client_name'], ' ·');
+    $pdf->footer_label = trim(($company['company_name'] ?? '') . ' · ' . t('Statement') . ' · ' . $client['client_name'], ' ·');
     $pdf->AddPage();
     $margins = $pdf->getMargins();
     $width = $pdf->getPageWidth() - $margins['left'] - $margins['right'];
@@ -414,14 +416,14 @@ function billingStatementPdfRender(array $statement) {
         $company['company_website'] ?? '',
     ]);
     $logo = !empty($company['logo_path']) ? '<img src="' . $e($company['logo_path']) . '" height="42"><br>' : '';
-    $dates = ['Statement date' => date('Y-m-d'), 'Period' => $statement['from'] !== '' ? $statement['from'] . ' to ' . $statement['to'] : 'Up to ' . $statement['to']];
+    $dates = [t('Statement date') => date('Y-m-d'), t('Period') => $statement['from'] !== '' ? t('{from} to {to}', ['{from}' => $statement['from'], '{to}' => $statement['to']]) : t('Up to {date}', ['{date}' => $statement['to']])];
     $dates_html = '';
     foreach ($dates as $date_label => $value) {
         $dates_html .= '<tr><td align="right" style="color:' . $grey . ';">' . $e($date_label) . '</td><td align="right" width="42mm">' . $e($value) . '</td></tr>';
     }
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
         <td width="52%">' . $logo . '<span style="font-size:12pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>
-        <td width="48%" align="right"><span style="font-size:8pt; color:#0a58ca; font-weight:bold; letter-spacing:2px;">STATEMENT</span><br><span style="font-size:15pt; font-weight:bold;">' . $e($client['client_name']) . '</span><br>
+        <td width="48%" align="right"><span style="font-size:8pt; color:#0a58ca; font-weight:bold; letter-spacing:2px;">' . $e(mb_strtoupper(t('Statement'))) . '</span><br><span style="font-size:15pt; font-weight:bold;">' . $e($client['client_name']) . '</span><br>
             <table cellpadding="1.2" cellspacing="0" width="100%" style="font-size:8pt;">' . $dates_html . '</table></td>
     </tr></table>';
     $pdf->SetFont('dejavusans', '', 8.5);
@@ -440,9 +442,9 @@ function billingStatementPdfRender(array $statement) {
         implode('  ·  ', array_filter([$bill_to['contact_email'] ?? '', $bill_to['contact_phone'] ?? ''])),
     ]);
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
-        <td width="60%">' . $label('Statement for') . '<br><span style="font-size:10pt; font-weight:bold;">' . $e($bill_to['client_name'] ?? $client['client_name']) . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $to_lines))) . '</span></td>
-        <td width="40%" align="right">' . $label('Total due') . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($statement['total']) . '</span>'
-        . ($statement['overdue'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $red . ';">' . $money($statement['overdue']) . ' of it overdue</span>' : '') . '</td>
+        <td width="60%">' . $label(t('Statement for')) . '<br><span style="font-size:10pt; font-weight:bold;">' . $e($bill_to['client_name'] ?? $client['client_name']) . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $to_lines))) . '</span></td>
+        <td width="40%" align="right">' . $label(t('Total due')) . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($statement['total']) . '</span>'
+        . ($statement['overdue'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $red . ';">' . $e(t('{amount} of it overdue', ['{amount}' => billingMoney($statement['overdue'], $currency)])) . '</span>' : '') . '</td>
     </tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Ln(2);
@@ -451,7 +453,7 @@ function billingStatementPdfRender(array $statement) {
     $cells = '';
     foreach ($statement['aging'] as $bucket => $amount) {
         $late = $bucket !== 'Current' && $amount > 0;
-        $cells .= '<td align="center" style="border:0.3px solid #dee2e6; background-color:#f8f9fa;">' . $label($bucket) . '<br><span style="font-size:9.5pt; font-weight:bold;' . ($late ? ' color:' . $red . ';' : '') . '">' . $money($amount) . '</span></td>';
+        $cells .= '<td align="center" style="border:0.3px solid #dee2e6; background-color:#f8f9fa;">' . $label(i18n_portal_label($bucket)) . '<br><span style="font-size:9.5pt; font-weight:bold;' . ($late ? ' color:' . $red . ';' : '') . '">' . $money($amount) . '</span></td>';
     }
     $pdf->writeHTML('<table cellpadding="4" cellspacing="0" width="100%"><tr>' . $cells . '</tr></table>', true, false, true, false, '');
     $pdf->Ln(3);
@@ -460,21 +462,21 @@ function billingStatementPdfRender(array $statement) {
     $th = 'font-size:6.5pt; color:' . $grey . '; font-weight:bold; border-bottom:0.6px solid #adb5bd;';
     $td = 'border-bottom:0.3px solid #dee2e6;';
     $html = '<table cellpadding="4" cellspacing="0" width="100%"><thead><tr>
-        <td width="14%" style="' . $th . '">DATE</td><td width="30%" style="' . $th . '">INVOICE</td><td width="14%" style="' . $th . '">DUE</td>
-        <td width="14%" align="right" style="' . $th . '">TOTAL</td><td width="14%" align="right" style="' . $th . '">PAID</td><td width="14%" align="right" style="' . $th . '">BALANCE</td></tr></thead>';
+        <td width="14%" style="' . $th . '">' . $e(mb_strtoupper(t('Date'))) . '</td><td width="30%" style="' . $th . '">' . $e(mb_strtoupper(t('Invoice'))) . '</td><td width="14%" style="' . $th . '">' . $e(mb_strtoupper(t('Due'))) . '</td>
+        <td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Total'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Paid'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Balance'))) . '</td></tr></thead>';
     foreach ($statement['invoices'] as $invoice) {
         $late = $invoice['balance'] > 0 && $invoice['days'] > 0;
         $html .= '<tr nobr="true"><td width="14%" style="' . $td . '">' . $e($invoice['invoice_date']) . '</td>
             <td width="30%" style="' . $td . '"><b>' . $e(billingNumber('invoice', $invoice)) . '</b>' . (trim((string) $invoice['invoice_scope']) !== '' ? '<br><span style="font-size:7pt; color:' . $grey . ';">' . $e($invoice['invoice_scope']) . '</span>' : '') . '</td>
-            <td width="14%" style="' . $td . ($late ? ' color:' . $red . ';' : '') . '">' . $e($invoice['invoice_due']) . ($late ? '<br><span style="font-size:7pt;">' . intval($invoice['days']) . ' days late</span>' : '') . '</td>
+            <td width="14%" style="' . $td . ($late ? ' color:' . $red . ';' : '') . '">' . $e($invoice['invoice_due']) . ($late ? '<br><span style="font-size:7pt;">' . $e(t('{n} days late', ['{n}' => intval($invoice['days'])])) . '</span>' : '') . '</td>
             <td width="14%" align="right" style="' . $td . '">' . $money($invoice['invoice_amount']) . '</td>
             <td width="14%" align="right" style="' . $td . '">' . (floatval($invoice['paid']) > 0 ? $money($invoice['paid']) : '<span style="color:' . $grey . ';">-</span>') . '</td>
-            <td width="14%" align="right" style="' . $td . '"><b>' . ($invoice['balance'] > 0 ? $money($invoice['balance']) : '<span style="color:#198754;">Paid</span>') . '</b></td></tr>';
+            <td width="14%" align="right" style="' . $td . '"><b>' . ($invoice['balance'] > 0 ? $money($invoice['balance']) : '<span style="color:#198754;">' . t('Paid') . '</span>') . '</b></td></tr>';
     }
     if (!$statement['invoices']) {
-        $html .= '<tr><td colspan="6" align="center" style="color:' . $grey . ';">Nothing owed in this period.</td></tr>';
+        $html .= '<tr><td colspan="6" align="center" style="color:' . $grey . ';">' . t('Nothing owed in this period.') . '</td></tr>';
     }
-    $html .= '<tr><td colspan="5" align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>Total due</b></td><td align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($statement['total']) . '</b></td></tr></table>';
+    $html .= '<tr><td colspan="5" align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . t('Total due') . '</b></td><td align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($statement['total']) . '</b></td></tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
 
     $footer = trim((string) $config_invoice_footer);
