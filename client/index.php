@@ -252,7 +252,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
                 <h2><i class="fas fa-bell"></i><?= t('Needs you') ?></h2>
             </div>
             <?php if (!$needs_you) { ?>
-                <?= emptyStateHtml(['title' => "You're all caught up", 'text' => t('Nothing is waiting on you right now.'), 'icon' => 'fa-check', 'filtered' => false]) ?>
+                <?= emptyStateHtml(['title' => t("You're all caught up"), 'text' => t('Nothing is waiting on you right now.'), 'icon' => 'fa-check', 'filtered' => false]) ?>
             <?php } else { ?>
                 <ul class="itflow-portal-list">
                     <?php foreach (array_slice($needs_you, 0, 8) as $item) { ?>
