@@ -8,7 +8,7 @@
  *    invoicePaidFollowUp()). A block made without an invoice, or one that
  *    existed before, is good at once.
  *  - How time is counted is set for each client - to the minute (the default),
- *    or in slices of 5 or 15 minutes, a slice begun counting whole - and is
+ *    or in slices of 5 or 15 minutes, to the nearest slice - and is
  *    copied into each block when it is made, so changing the client's setting
  *    later does not change hours already bought. A ticket is counted by the
  *    rule of the first block that covers it, and keeps it. A block with no rule
@@ -34,7 +34,7 @@ function forkHoursStepClean($step) {
 
 /**
  * The hours for some seconds of work: 0 steps to the minute, else slices of that
- * many minutes, a slice begun counted whole. $step null takes the general
+ * many minutes, to the nearest slice (half a slice rounds up). $step null takes the general
  * billing time rules ($rules, billingTimeRules()).
  */
 function forkHoursStepHours($seconds, $step, ?array $rules = null) {
@@ -49,7 +49,7 @@ function forkHoursStepHours($seconds, $step, ?array $rules = null) {
     if ($step === 0) {
         return round(round($seconds / 60) * 60 / 3600, 2);
     }
-    return round((int) ceil($seconds / ($step * 60)) * $step / 60, 2);
+    return round((int) round($seconds / ($step * 60)) * $step / 60, 2);
 }
 
 /** The tables, made if they are not there yet. */

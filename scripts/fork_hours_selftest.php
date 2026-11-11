@@ -43,17 +43,22 @@ hours_test('20 minutes: 0.33', forkHoursStepHours(1200, 0) === 0.33);
 hours_test('29 seconds: no minute', forkHoursStepHours(29, 0) === 0.0);
 hours_test('31 seconds: one minute', forkHoursStepHours(31, 0) === 0.02);
 
-echo "\nSlices of 5 minutes\n";
-hours_test('1 second: a slice', forkHoursStepHours(1, 5) === 0.08);
+echo "\nSlices of 5 minutes, to the nearest\n";
+hours_test('2 minutes: no slice', forkHoursStepHours(120, 5) === 0.0);
+hours_test('2.5 minutes: one slice', forkHoursStepHours(150, 5) === 0.08);
 hours_test('5 minutes: one slice', forkHoursStepHours(300, 5) === 0.08);
-hours_test('5 minutes 1 second: two slices', forkHoursStepHours(301, 5) === 0.17);
+hours_test('7 minutes: one slice', forkHoursStepHours(420, 5) === 0.08);
+hours_test('8 minutes: two slices', forkHoursStepHours(480, 5) === 0.17);
 hours_test('60 minutes: 1.0', forkHoursStepHours(3600, 5) === 1.0);
 
-echo "\nSlices of 15 minutes\n";
-hours_test('1 minute: 0.25', forkHoursStepHours(60, 15) === 0.25);
+echo "\nSlices of 15 minutes, to the nearest\n";
+hours_test('7 minutes: no slice', forkHoursStepHours(420, 15) === 0.0);
+hours_test('8 minutes: 0.25', forkHoursStepHours(480, 15) === 0.25);
 hours_test('15 minutes: 0.25', forkHoursStepHours(900, 15) === 0.25);
-hours_test('16 minutes: 0.5', forkHoursStepHours(960, 15) === 0.5);
-hours_test('50 minutes: 1.0', forkHoursStepHours(3000, 15) === 1.0);
+hours_test('16 minutes: 0.25', forkHoursStepHours(960, 15) === 0.25);
+hours_test('22 minutes: 0.25', forkHoursStepHours(1320, 15) === 0.25);
+hours_test('22 minutes 30 seconds: 0.5', forkHoursStepHours(1350, 15) === 0.5);
+hours_test('50 minutes: 0.75', forkHoursStepHours(3000, 15) === 0.75);
 hours_test('nothing worked: 0', forkHoursStepHours(0, 15) === 0.0);
 
 echo "\nNo step: the general billing time rules\n";
