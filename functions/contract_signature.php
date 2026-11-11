@@ -177,7 +177,7 @@ function contractPlaceholderValues(array $row, $as_of = null) {
         'end date' => $day($end),
         'term' => $term,
         'renewal' => intval($row['contract_auto_renew'])
-            ? ($notice ? t('It renews itself for another {term} unless notice is given at least {n} days before it ends.', ['{term}' => $term, '{n}' => $notice]) : t('It renews itself for another {term}.', ['{term}' => $term]))
+            ? ($notice ? ($notice === 1 ? t('It renews itself for another {term} unless notice is given at least {n} day before it ends.', ['{term}' => $term, '{n}' => 1]) : t('It renews itself for another {term} unless notice is given at least {n} days before it ends.', ['{term}' => $term, '{n}' => $notice])) : t('It renews itself for another {term}.', ['{term}' => $term]))
             : t('It ends on its last day unless it is renewed.'),
         'notice' => $notice ? t('{n} days', ['{n}' => $notice]) : t('none'),
         'support hours' => (string) ($row['contract_support_hours'] ?? ''),
