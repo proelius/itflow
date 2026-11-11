@@ -73,6 +73,12 @@ function forkHoursEnsure() {
         `fork_ticket_step` tinyint(3) unsigned NOT NULL DEFAULT 0,
         PRIMARY KEY (`fork_ticket_id`)
     $tail");
+    mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_hours_alerts` (
+        `fork_alert_block_id` int(11) NOT NULL,
+        `fork_alert_level` tinyint(3) unsigned NOT NULL,
+        `fork_alert_sent_at` timestamp NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`fork_alert_block_id`, `fork_alert_level`)
+    $tail");
     mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_contract_hours` (
         `fork_contract_id` int(11) NOT NULL,
         `fork_contract_step` tinyint(3) unsigned NOT NULL DEFAULT 0,

@@ -411,6 +411,7 @@ function contractHoursDraw($client_id, array $ticket_ids = [], $by = 'ITFlow', $
         // Running low, or out - the owner hears once
         foreach (array_keys($touched) as $contract_id) {
             contractHoursAlertCheck($contract_id);
+            forkHoursAlertsCheck($contract_id);
         }
         // The hours ran out part way through a ticket - the rest is to bill
         if ($result['overage']) {
@@ -477,6 +478,7 @@ function contractHoursPutBack($ticket_id, $by, $user_id = 0) {
     logTicketHistory($ticket_id, escapeSql(contractHoursText($hours) . " put back on the prepaid hours by $by - the ticket is billed as usual, in Unbilled Time"));
     foreach (array_unique(array_column($uses, 'contract_id')) as $contract_id) {
         contractHoursAlertReset(intval($contract_id));
+        forkHoursAlertsCheck(intval($contract_id));
     }
     return $hours;
 }
@@ -655,6 +657,12 @@ function contractHoursNightly($today = null) {
         WHERE " . contractHoursLiveSql($today) . " AND contract_archived_at IS NULL");
     while ($row = mysqli_fetch_row($sql)) {
         $drawn += count(contractHoursDraw(intval($row[0]))['drawn']);
+    }
+    // Hours put back, or a block's date gone by, are seen here too
+    $sql = mysqli_query($mysqli, "SELECT contract_id FROM contracts WHERE " . contractHoursLiveSql($today) . " AND contract_archived_at IS NULL
+        AND EXISTS (SELECT 1 FROM contract_blocks WHERE contract_block_contract_id = contract_id AND contract_block_month IS NULL)");
+    while ($row = mysqli_fetch_row($sql)) {
+        forkHoursAlertsCheck(intval($row[0]));
     }
     return $drawn;
 }
