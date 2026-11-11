@@ -170,6 +170,11 @@ $csrf = $_SESSION['csrf_token'];
                             <i class="fa fa-fw fa-download me-2"></i>Export
                         </a>
                     <?php } ?>
+                    <?php if ($client_url && $num_rows[0] > 0) { ?>
+                        <a class="dropdown-item text-dark" href="network_diagram.php?<?= $client_url ?>">
+                            <i class="fa fa-fw fa-project-diagram me-2"></i>Network diagram
+                        </a>
+                    <?php } ?>
                     <?php if ($can_edit && $client_url) { ?>
                         <a class="dropdown-item text-dark ajax-modal" href="#" data-modal-url="modals/network/network_import.php?<?= $client_url ?>">
                             <i class="fa fa-fw fa-upload me-2"></i>Import
