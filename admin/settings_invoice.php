@@ -16,8 +16,8 @@ require_once "includes/inc_all_admin.php";
 $company = settingsCurrent(['company_tax_id'], 'companies');
 
 $reminder_rules = billingReminderRules();
-// From 3.6.4 - the late fee as a fixed amount for each reminder (functions/late_fee_fixed.php)
-$late_fee = settingsColumnExists($mysqli, 'config_invoice_late_fee_mode') ? lateFeeSettings(true) : null;
+// The late fee as a fixed amount for each reminder (functions/late_fee_fixed.php, kept in fork_settings)
+$late_fee = lateFeeSettings(true);
 $late_fee_currency = (string) (settingsCurrent(['company_currency'], 'companies')['company_currency'] ?? '');
 $reminder_before = implode(', ', array_reverse(array_map('abs', array_filter($reminder_rules['days'], function ($day) { return $day < 0; }))));
 $reminder_after = implode(', ', array_filter($reminder_rules['days'], function ($day) { return $day > 0; }));
@@ -57,10 +57,8 @@ echo settingsPageStart('invoice');
                 <?= settingsSwitch('config_invoice_show_tax_id', $config_invoice_show_tax_id, ['help' => trim((string) $company['company_tax_id']) !== ''
                     ? 'Under your address - ' . escapeHtml($company['company_tax_id']) . ', from <a href="settings_company.php#setting=company_tax_id">Company details</a>.'
                     : 'Under your address. There is none in <a href="settings_company.php#setting=company_tax_id">Company details</a> yet.']) ?>
-                <?php if (settingsColumnExists($mysqli, 'config_invoice_qr_iban')) { ?>
-                    <?= settingsInput('config_invoice_qr_iban', qrBillIbanSpaced(settingsCurrent(['config_invoice_qr_iban'])['config_invoice_qr_iban']), ['icon' => 'fa-qrcode', 'maxlength' => 34,
+                    <?= settingsInput('config_invoice_qr_iban', qrBillIbanSpaced(forkSetting('config_invoice_qr_iban')), ['icon' => 'fa-qrcode', 'maxlength' => 34,
                         'placeholder' => 'CH44 3199 9123 0008 8901 2', 'help' => 'Swiss QR-bill: your QR-IBAN (the bank gives you one, its bank number starts 30 or 31) adds a payment part and receipt to the foot of an invoice\'s PDF that is still owed, in CHF or EUR. The reference is made from the invoice number. Empty, no QR-bill.']) ?>
-                <?php } ?>
             <?= settingsSectionEnd() ?>
 
             <?= settingsSectionStart('late-fees', 'Late fees', 'Added to an invoice as a line of its own by the nightly job, while payment reminders are on - a percent of what is still owed every 30 days late, or a fixed amount with each reminder.') ?>
@@ -69,15 +67,12 @@ echo settingsPageStart('invoice');
                 <?php } ?>
                 <?= settingsSwitch('config_invoice_late_fee_enable', $config_invoice_late_fee_enable, ['help' => 'Say so in the footer above, so a client knows before it comes.']) ?>
                 <div data-settings-depends-on="config_invoice_late_fee_enable">
-                    <?php if ($late_fee) { ?>
                         <?= settingsSelect('config_invoice_late_fee_mode', $late_fee['mode'], ['percent' => 'A percent of what is owed, every 30 days late', 'fixed' => 'A fixed amount, with each reminder'],
                             ['icon' => 'fa-coins', 'label' => 'How the late fee is worked out', 'search' => false]) ?>
-                    <?php } ?>
                     <div data-late-fee-percent>
                         <?= settingsInput('config_invoice_late_fee_percent', $decimal(floatval($config_invoice_late_fee_percent), 2) ?: '0', ['icon' => 'fa-percent', 'type' => 'number', 'min' => 0, 'max' => 100, 'step' => '0.01',
                             'label' => 'Each late fee', 'suffix' => '% of what is owed']) ?>
                     </div>
-                    <?php if ($late_fee) { ?>
                         <div data-late-fee-fixed>
                             <div class="row g-3">
                                 <div class="col-md-6"><?= settingsInput('config_invoice_late_fee_fixed', $decimal($late_fee['fixed'], 2) ?: '0', ['icon' => 'fa-coins', 'type' => 'number', 'min' => 0, 'max' => 100000, 'step' => '0.01',
@@ -103,7 +98,6 @@ echo settingsPageStart('invoice');
                             update();
                         })();
                         </script>
-                    <?php } ?>
                 </div>
             <?= settingsSectionEnd() ?>
 

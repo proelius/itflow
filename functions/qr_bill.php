@@ -7,7 +7,7 @@
  * addresses only (the combined address type was withdrawn in November 2025).
  *
  * Shown on an invoice that is still owed, in CHF or EUR, when a QR-IBAN is set
- * in the invoice settings (settings.config_invoice_qr_iban) and the company is
+ * in the invoice settings (fork_settings.config_invoice_qr_iban) and the company is
  * in Switzerland or Liechtenstein. Nothing changes for anyone else.
  *
  * The QR reference is the invoice's number, digits only, padded with zeros to
@@ -144,17 +144,11 @@ function qrBillPayload(array $bill) {
     return implode("\n", $lines);
 }
 
-/** The QR-IBAN saved in the invoice settings - '' when there is none, or before the column exists (database 3.6.3). */
+/** The QR-IBAN saved in the invoice settings (fork_settings, functions/fork_settings.php) - '' when there is none. */
 function qrBillSettingsIban() {
-    global $mysqli;
     static $iban = null;
     if ($iban === null) {
-        $iban = '';
-        $column = mysqli_query($mysqli, "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'settings' AND COLUMN_NAME = 'config_invoice_qr_iban' LIMIT 1");
-        if ($column && mysqli_num_rows($column) > 0) {
-            $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT config_invoice_qr_iban FROM settings WHERE company_id = 1")) ?: [];
-            $iban = qrBillIban($row['config_invoice_qr_iban'] ?? '');
-        }
+        $iban = qrBillIban(forkSetting('config_invoice_qr_iban'));
     }
     return $iban;
 }

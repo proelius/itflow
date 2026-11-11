@@ -22,26 +22,21 @@
  * scripts/late_fee_selftest.php can test them alone.
  */
 
-/** The late fee settings - mode ('percent' or 'fixed'), fixed (the amount), from (the first reminder with a fee), enabled. Before database 3.6.4 the percent way, as before. */
+/** The late fee settings - mode ('percent' or 'fixed'), fixed (the amount), from (the first reminder with a fee), enabled. The percent way, as ever, until saved. */
 function lateFeeSettings($fresh = false) {
     global $mysqli;
     static $settings = null;
     if ($settings !== null && !$fresh) {
         return $settings;
     }
-    $settings = ['mode' => 'percent', 'fixed' => 0.0, 'from' => 2, 'enabled' => false];
-    try {
-        $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT config_invoice_late_fee_enable, config_invoice_late_fee_mode, config_invoice_late_fee_fixed, config_invoice_late_fee_from
-            FROM settings WHERE company_id = 1"));
-    } catch (mysqli_sql_exception $e) {
-        $row = null;
-    }
-    if ($row) {
-        $settings['enabled'] = intval($row['config_invoice_late_fee_enable']) === 1;
-        $settings['mode'] = $row['config_invoice_late_fee_mode'] === 'fixed' ? 'fixed' : 'percent';
-        $settings['fixed'] = max(0, round(floatval($row['config_invoice_late_fee_fixed']), 2));
-        $settings['from'] = max(1, min(9, intval($row['config_invoice_late_fee_from'])));
-    }
+    $fork = forkSettingsGet($fresh);
+    $row = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT config_invoice_late_fee_enable FROM settings WHERE company_id = 1")) ?: [];
+    $settings = [
+        'enabled' => intval($row['config_invoice_late_fee_enable'] ?? 0) === 1,
+        'mode' => $fork['config_invoice_late_fee_mode'] === 'fixed' ? 'fixed' : 'percent',
+        'fixed' => max(0, round(floatval($fork['config_invoice_late_fee_fixed']), 2)),
+        'from' => max(1, min(9, intval($fork['config_invoice_late_fee_from']))),
+    ];
     return $settings;
 }
 

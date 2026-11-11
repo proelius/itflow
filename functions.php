@@ -86,6 +86,7 @@ require_once __DIR__ . '/functions/contract_hours.php';
 require_once __DIR__ . '/functions/contract_billing.php';
 require_once __DIR__ . '/functions/products.php';
 require_once __DIR__ . '/functions/billing_email.php';
+require_once __DIR__ . '/functions/fork_settings.php';
 require_once __DIR__ . '/functions/qr_bill.php';
 require_once __DIR__ . '/functions/bank_import_extra.php';
 require_once __DIR__ . '/functions/network_diagram.php';

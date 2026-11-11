@@ -52,15 +52,14 @@ if (isset($_POST['edit_invoice_settings'])) {
         $after['config_invoice_paid_lead_to_client'] = empty($_POST['config_invoice_paid_lead_to_client']) ? 0 : 1;
     }
 
-    // From 3.6.3 - the QR-IBAN of the Swiss QR-bill (functions/qr_bill.php)
-    if (settingsColumnExists($mysqli, 'config_invoice_qr_iban')) {
-        $before += settingsCurrent(['config_invoice_qr_iban']);
-        $qr_iban = qrBillIban($_POST['config_invoice_qr_iban'] ?? $before['config_invoice_qr_iban']);
-        if ($qr_iban !== '' && !qrBillIsQrIban($qr_iban)) {
-            $errors['config_invoice_qr_iban'] = 'A QR-IBAN: CH or LI, 21 characters, with a bank number from 30000 to 31999 - not a regular IBAN.';
-        }
-        $after['config_invoice_qr_iban'] = $qr_iban;
+    // The fork's own settings (fork_settings, functions/fork_settings.php) - the QR-IBAN of the Swiss QR-bill (functions/qr_bill.php)
+    $fork_before = forkSettingsGet(true);
+    $fork_after = $fork_before;
+    $qr_iban = qrBillIban($_POST['config_invoice_qr_iban'] ?? $fork_before['config_invoice_qr_iban']);
+    if ($qr_iban !== '' && !qrBillIsQrIban($qr_iban)) {
+        $errors['config_invoice_qr_iban'] = 'A QR-IBAN: CH or LI, 21 characters, with a bank number from 30000 to 31999 - not a regular IBAN.';
     }
+    $fork_after['config_invoice_qr_iban'] = $qr_iban;
 
     // Late fees - a percent of what is owed
     $late_fee = billingNumberInput(str_replace('%', '', (string) $in['config_invoice_late_fee_percent']));
@@ -69,19 +68,16 @@ if (isset($_POST['edit_invoice_settings'])) {
     }
     $after['config_invoice_late_fee_percent'] = $late_fee;
 
-    // From 3.6.4 - or a fixed amount with each reminder from one on (functions/late_fee_fixed.php)
-    if (settingsColumnExists($mysqli, 'config_invoice_late_fee_mode')) {
-        $before += settingsCurrent(['config_invoice_late_fee_mode', 'config_invoice_late_fee_fixed', 'config_invoice_late_fee_from']);
-        $after['config_invoice_late_fee_mode'] = ($_POST['config_invoice_late_fee_mode'] ?? $before['config_invoice_late_fee_mode']) === 'fixed' ? 'fixed' : 'percent';
-        $fixed_fee = billingNumberInput((string) ($_POST['config_invoice_late_fee_fixed'] ?? $before['config_invoice_late_fee_fixed']));
-        if ($fixed_fee === null || $fixed_fee < 0 || $fixed_fee > 100000) {
-            $errors['config_invoice_late_fee_fixed'] = 'An amount, such as 20.00.';
-        } elseif ($after['config_invoice_late_fee_mode'] === 'fixed' && !empty($after['config_invoice_late_fee_enable']) && $fixed_fee <= 0) {
-            $errors['config_invoice_late_fee_fixed'] = 'Give the amount of each fee, such as 20.00.';
-        }
-        $after['config_invoice_late_fee_fixed'] = $fixed_fee;
-        $after['config_invoice_late_fee_from'] = max(1, min(5, intval($_POST['config_invoice_late_fee_from'] ?? $before['config_invoice_late_fee_from'])));
+    // Or a fixed amount with each reminder from one on (functions/late_fee_fixed.php)
+    $fork_after['config_invoice_late_fee_mode'] = ($_POST['config_invoice_late_fee_mode'] ?? $fork_before['config_invoice_late_fee_mode']) === 'fixed' ? 'fixed' : 'percent';
+    $fixed_fee = billingNumberInput((string) ($_POST['config_invoice_late_fee_fixed'] ?? $fork_before['config_invoice_late_fee_fixed']));
+    if ($fixed_fee === null || $fixed_fee < 0 || $fixed_fee > 100000) {
+        $errors['config_invoice_late_fee_fixed'] = 'An amount, such as 20.00.';
+    } elseif ($fork_after['config_invoice_late_fee_mode'] === 'fixed' && !empty($after['config_invoice_late_fee_enable']) && $fixed_fee <= 0) {
+        $errors['config_invoice_late_fee_fixed'] = 'Give the amount of each fee, such as 20.00.';
     }
+    $fork_after['config_invoice_late_fee_fixed'] = $fixed_fee === null ? $fork_before['config_invoice_late_fee_fixed'] : sprintf('%.2F', $fixed_fee);
+    $fork_after['config_invoice_late_fee_from'] = (string) max(1, min(5, intval($_POST['config_invoice_late_fee_from'] ?? $fork_before['config_invoice_late_fee_from'])));
 
     if ($problem = settingsEmailProblem($after['config_invoice_paid_notification_email'])) {
         $errors['config_invoice_paid_notification_email'] = $problem;
@@ -144,7 +140,8 @@ if (isset($_POST['edit_invoice_settings'])) {
         settingsRefuse('invoice', $errors);
     }
 
-    settingsSave('invoice', $before, $after);
+    $fork_changed = forkSettingsSave($fork_before, $fork_after);
+    settingsSave('invoice', $before, $after, 'settings', settingsChangeLines($fork_before, $fork_changed));
 
     redirect();
 
