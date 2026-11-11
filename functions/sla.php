@@ -601,7 +601,7 @@ function formatSlaMinutes($minutes)
             $text = $hours == 1 ? t('{n} hour', ['{n}' => $hours]) : t('{n} hours', ['{n}' => $hours]);
         }
         if ($remainder >= 5) {
-            $text .= ' ' . ($remainder == 1 ? t('{n} minute', ['{n}' => $remainder]) : t('{n} minutes', ['{n}' => $remainder]));
+            $text = t('{first} {second}', ['{first}' => $text, '{second}' => ($remainder == 1 ? t('{n} minute', ['{n}' => $remainder]) : t('{n} minutes', ['{n}' => $remainder]))]);
         }
 
         return $text;
@@ -616,7 +616,7 @@ function formatSlaMinutes($minutes)
         $text = $days == 1 ? t('{n} day', ['{n}' => $days]) : t('{n} days', ['{n}' => $days]);
     }
     if ($hours > 0) {
-        $text .= ' ' . ($hours == 1 ? t('{n} hour', ['{n}' => $hours]) : t('{n} hours', ['{n}' => $hours]));
+        $text = t('{first} {second}', ['{first}' => $text, '{second}' => ($hours == 1 ? t('{n} hour', ['{n}' => $hours]) : t('{n} hours', ['{n}' => $hours]))]);
     }
 
     return $text;
