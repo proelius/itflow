@@ -33,7 +33,7 @@ $recipients = billingEmailRecipients($client_id);
             <h3 class="card-title mt-2"><i class="fas fa-fw fa-file-alt me-2"></i>Prepaid hours report - <?= escapeHtml(forkHoursReportTitle($report['report_start'])) ?></h3>
             <div class="card-tools">
                 <a class="btn btn-secondary" href="hours_reports.php?client_id=<?= $client_id ?>"><i class="fas fa-arrow-left me-2"></i>Reports</a>
-                <a class="btn btn-secondary" href="post.php?hours_report_pdf=<?= intval($report['report_id']) ?>" target="_blank"><i class="fas fa-file-pdf me-2"></i>PDF</a>
+                <a class="btn btn-secondary" href="post.php?hours_report_pdf=<?= intval($report['report_id']) ?>&amp;csrf_token=<?= $_SESSION['csrf_token'] ?>" target="_blank"><i class="fas fa-file-pdf me-2"></i>PDF</a>
             </div>
         </div>
         <div class="card-body">
