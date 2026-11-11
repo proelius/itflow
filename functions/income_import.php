@@ -372,6 +372,22 @@ function incomeImportMatch(array $lines, $account_id, $default_method = '') {
             $line['match_note'] = $note;
         };
 
+        // 0. The QR reference of an invoice in it, or an invoice number in its text and memo (functions/bank_import_extra.php)
+        [$named_by, $qr_named] = bankImportNamedInvoices($line, $open, array_values($prefixes));
+        if ($qr_named) {
+            $client_id = $qr_named[0]['client_id'];
+            $qr_named = array_values(array_filter($qr_named, function ($inv) use ($client_id) { return $inv['client_id'] === $client_id; }));
+            $line['action'] = 'payment';
+            $line['client_id'] = $client_id;
+            $line['invoice_ids'] = array_column($qr_named, 'invoice_id');
+            $owed = (int) round(array_sum(array_column($qr_named, 'balance')) * 100);
+            $line['how'] = $owed === $cents ? (count($qr_named) > 1 ? 'sum' : 'exact') : ($owed > $cents ? 'oldest' : 'over');
+            $line['matched'] = $named_by;
+            $line['match_note'] = ($named_by === 'qr' ? 'QR reference of ' : '') . implode(', ', array_column($qr_named, 'ref')) . ($named_by === 'qr' ? '' : ' in the text');
+            $lines[$i] = $line;
+            continue;
+        }
+
         // 1. An invoice number in it
         $named = [];
         foreach (incomeImportInvoiceNumbers($text, array_values($prefixes)) as $number) {

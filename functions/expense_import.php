@@ -112,6 +112,7 @@ function expenseImportRead($path, &$error = '') {
         $error = "There are no dates in that file - export the statement's transactions as CSV";
         return null;
     }
+    $first_data = bankImportFindData($rows, $first_data); // notes above the header with dates in them
     $width = max(array_map('count', array_slice($rows, $first_data, 50)));
     if ($first_data > 0) {
         $header = $rows[$first_data - 1];
@@ -127,6 +128,7 @@ function expenseImportRead($path, &$error = '') {
     foreach (array_slice($rows, $first_data) as $cells) {
         $data[] = array_pad(array_slice($cells, 0, $width), $width, '');
     }
+    $data = bankImportJoinLines($data); // a transaction over two lines
     if (count($data) > EXPENSE_IMPORT_MAX_LINES) {
         $error = 'That file has more than ' . EXPENSE_IMPORT_MAX_LINES . ' lines - export a shorter period';
         return null;
@@ -229,6 +231,7 @@ function expenseImportGuess(array $header, array $rows) {
         'credit' => '/^(credit|credits|deposit|deposits|money in|payment|payments|paid in|credit amount|inflow)$/i',
         'reference' => '/^(reference|ref|ref\.|reference number|check|check number|check #|chk|transaction id|id|confirmation)$/i',
     ];
+    $patterns = bankImportColumnPatterns($patterns); // French column names
     foreach ($header as $c => $name) {
         foreach ($patterns as $field => $pattern) {
             if ($map[$field] === null && preg_match($pattern, trim($name))) {
