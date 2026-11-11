@@ -95,7 +95,7 @@ $after = intval($after_row['item_view_limit']) && $left <= 0
     ? t('That was the last download this link allows.')
     : (intval($after_row['item_view_limit'])
         ? ($left === 1 ? t('It can be downloaded {n} more time.', ['{n}' => $left]) : t('It can be downloaded {n} more times.', ['{n}' => $left]))
-        : t('The link keeps working until {when}.', ['{when}' => t('{date} at {time}', ['{date}' => date('M j', strtotime($after_row['item_expire_at'])), '{time}' => date('g:i A', strtotime($after_row['item_expire_at']))])]));
+        : t('The link keeps working until {when}.', ['{when}' => t('{date} at {time}', ['{date}' => i18n_date('M j', strtotime($after_row['item_expire_at'])), '{time}' => i18n_date('g:i A', strtotime($after_row['item_expire_at']))])]));
 
 $name = str_replace(["\r", "\n", '"'], ['', '', "'"], (string) $file['file_name']);
 $ascii = preg_replace('/[^\x20-\x7E]/', '_', $name);

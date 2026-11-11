@@ -110,7 +110,7 @@ function documentsUrl(array $changes) {
                             </span>
                         </span>
                         <span class="itflow-portal-ticket-side">
-                            <small title="<?= escapeHtml($updated) ?>"><?= t('Updated') ?> <?= escapeHtml(date('M j, Y', strtotime($updated))) ?></small>
+                            <small title="<?= escapeHtml($updated) ?>"><?= t('Updated') ?> <?= escapeHtml(i18n_date('M j, Y', strtotime($updated))) ?></small>
                         </span>
                     </a>
                 </li>

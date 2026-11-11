@@ -89,8 +89,8 @@ $show_hours = contractHoursReady() && ($blocks || floatval($contract['contract_m
 $hours_uses = $show_hours ? contractHoursUses($contract_id, 8) : [];
 $terms = [
     t('Type') => portalContractTypeLabel($contract['contract_type']),
-    t('Term') => $contract['contract_start_date'] ? t('{term} from {date}', ['{term}' => portalContractTermLabel($contract['contract_term_months']), '{date}' => date('M j, Y', strtotime($contract['contract_start_date']))]) : portalContractTermLabel($contract['contract_term_months']),
-    intval($contract['contract_auto_renew']) ? t('Renews') : t('Ends') => $contract['contract_end_date'] ? date('M j, Y', intval($contract['contract_auto_renew']) ? strtotime('+1 day', strtotime($contract['contract_end_date'])) : strtotime($contract['contract_end_date'])) : '',
+    t('Term') => $contract['contract_start_date'] ? t('{term} from {date}', ['{term}' => portalContractTermLabel($contract['contract_term_months']), '{date}' => i18n_date('M j, Y', strtotime($contract['contract_start_date']))]) : portalContractTermLabel($contract['contract_term_months']),
+    intval($contract['contract_auto_renew']) ? t('Renews') : t('Ends') => $contract['contract_end_date'] ? i18n_date('M j, Y', intval($contract['contract_auto_renew']) ? strtotime('+1 day', strtotime($contract['contract_end_date'])) : strtotime($contract['contract_end_date'])) : '',
     t('Notice') => intval($contract['contract_notice_days']) ? t('{n} days before it ends', ['{n}' => intval($contract['contract_notice_days'])]) : '',
 ];
 ?>
@@ -136,7 +136,7 @@ $terms = [
                         <span class="itflow-portal-outcome-icon is-success" aria-hidden="true"><i class="fas fa-check"></i></span>
                         <div>
                             <div class="fw-semibold"><?= t('Signed - thank you') ?></div>
-                            <div class="small text-body-secondary"><?= t('{name} signed it {date}. We\'ll countersign it and email you a copy.', ['{name}' => escapeHtml($round['contract_signature_client_name']), '{date}' => escapeHtml(date('M j, Y', strtotime($round['contract_signature_client_signed_at'])))]) ?></div>
+                            <div class="small text-body-secondary"><?= t('{name} signed it {date}. We\'ll countersign it and email you a copy.', ['{name}' => escapeHtml($round['contract_signature_client_name']), '{date}' => escapeHtml(i18n_date('M j, Y', strtotime($round['contract_signature_client_signed_at'])))]) ?></div>
                         </div>
                     </div>
                 <?php } elseif ($signing && $signing['key'] === 'signed') { ?>
@@ -144,7 +144,7 @@ $terms = [
                         <span class="itflow-portal-outcome-icon is-success" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
                         <div>
                             <div class="fw-semibold"><?= t('Signed by both') ?></div>
-                            <div class="small text-body-secondary"><?= t('Signed by both {date}. The PDF is the signed copy.', ['{date}' => escapeHtml(date('M j, Y', strtotime(max($round['contract_signature_client_signed_at'], $round['contract_signature_agent_signed_at']))))]) ?></div>
+                            <div class="small text-body-secondary"><?= t('Signed by both {date}. The PDF is the signed copy.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime(max($round['contract_signature_client_signed_at'], $round['contract_signature_agent_signed_at']))))]) ?></div>
                         </div>
                     </div>
                 <?php } else { ?>
@@ -189,7 +189,7 @@ $terms = [
                     <?php } ?>
                     <ul class="list-unstyled small text-body-secondary mb-0">
                         <?php if ($monthly > 0) { ?><li><?= t('{hours} included each month', ['{hours}' => escapeHtml(portalHoursWords($monthly))]) ?></li><?php } ?>
-                        <?php if ($hours['next_expiry'] !== '') { ?><li><?= t('{hours} to use by {date}', ['{hours}' => escapeHtml(contractHoursText($hours['next_expiry_hours'])), '{date}' => escapeHtml(date('M j, Y', strtotime($hours['next_expiry'])))]) ?></li><?php } ?>
+                        <?php if ($hours['next_expiry'] !== '') { ?><li><?= t('{hours} to use by {date}', ['{hours}' => escapeHtml(contractHoursText($hours['next_expiry_hours'])), '{date}' => escapeHtml(i18n_date('M j, Y', strtotime($hours['next_expiry'])))]) ?></li><?php } ?>
                         <li><?= t('Time on your tickets comes out of them; time beyond them is invoiced.') ?></li>
                     </ul>
                     <?php if ($hours_uses) { ?>

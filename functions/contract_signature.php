@@ -144,7 +144,7 @@ function contractPlaceholderValues(array $row, $as_of = null) {
     $contact = intval($row['contract_contact_id']) ? mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT contact_name, contact_title, contact_email FROM contacts
         WHERE contact_id = " . intval($row['contract_contact_id']) . " AND contact_client_id = " . intval($row['contract_client_id']))) : null;
     $day = function ($date) {
-        return $date ? date('M j, Y', strtotime($date)) : '';
+        return $date ? i18n_date('M j, Y', strtotime($date)) : '';
     };
     $start = (string) ($row['contract_start_date'] ?? '');
     $end = (string) ($row['contract_end_date'] ?? '');
@@ -365,7 +365,7 @@ function contractSignatureState($round) {
         return null;
     }
     $day = function ($date) {
-        return date('M j, Y', strtotime((string) $date));
+        return i18n_date('M j, Y', strtotime((string) $date));
     };
     $client = !empty($round['contract_signature_client_signed_at']);
     $agent = !empty($round['contract_signature_agent_signed_at']);
@@ -549,7 +549,7 @@ function _contractSignatureRequestEmail(array $round, $note, $lang) {
     $by = mysqli_fetch_row(mysqli_query($mysqli, "SELECT user_name FROM users WHERE user_id = " . intval($round['contract_signature_sent_by'])))[0] ?? '';
     $term = contractTermLabel($round['contract_term_months']);
     if (!empty($round['contract_start_date'])) {
-        $term = t('{term} from {date}', ['{term}' => $term, '{date}' => date('M j, Y', strtotime($round['contract_start_date']))]);
+        $term = t('{term} from {date}', ['{term}' => $term, '{date}' => i18n_date('M j, Y', strtotime($round['contract_start_date']))]);
     }
     $sent = emailQueue([[
         'email' => (string) $round['contract_signature_sent_to_email'],
@@ -739,7 +739,7 @@ function _contractSignatureSignedEmail(array $round, $attach, $lang) {
         }
     }
     $signed_by = function ($name, $at) {
-        return !empty($at) ? t('{name} on {date}', ['{name}' => $name, '{date}' => date('M j, Y', strtotime($at))]) : trim((string) $name);
+        return !empty($at) ? t('{name} on {date}', ['{name}' => $name, '{date}' => i18n_date('M j, Y', strtotime($at))]) : trim((string) $name);
     };
     return emailQueue($recipients, t('Signed: {contract} - {company}', ['{contract}' => $round['contract_name'], '{company}' => $company_name]), [
         'lang' => $lang,
@@ -781,7 +781,7 @@ function contractSignatureBlockHtml(array $row, $round = null, $image_url = null
         $html .= '</div>';
         if ($signed) {
             $html .= '<div class="fw-semibold">' . escapeHtml($round["contract_signature_{$side}_name"]) . '</div>';
-            $html .= '<div class="small text-body-secondary">' . escapeHtml(implode(' · ', array_filter([(string) $round["contract_signature_{$side}_title"], date('M j, Y', strtotime($round["contract_signature_{$side}_signed_at"]))]))) . '</div>';
+            $html .= '<div class="small text-body-secondary">' . escapeHtml(implode(' · ', array_filter([(string) $round["contract_signature_{$side}_title"], i18n_date('M j, Y', strtotime($round["contract_signature_{$side}_signed_at"]))]))) . '</div>';
         } else {
             $html .= '<div class="small text-body-secondary">' . t('Name, title and date') . '</div>';
         }
@@ -813,7 +813,7 @@ function contractSignatureTrail(array $round) {
     global $mysqli;
     $trail = [];
     $at = function ($date) {
-        return date('M j, Y g:i A', strtotime((string) $date));
+        return i18n_date('M j, Y g:i A', strtotime((string) $date));
     };
     if (!empty($round['contract_signature_sent_at'])) {
         $by = mysqli_fetch_row(mysqli_query($mysqli, "SELECT user_name FROM users WHERE user_id = " . intval($round['contract_signature_sent_by'])))[0] ?? '';

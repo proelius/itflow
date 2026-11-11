@@ -97,9 +97,9 @@ function contractsUrl(array $changes) {
                         <span class="itflow-portal-ticket-main">
                             <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml($row['contract_name']) ?><span class="fw-normal text-body-secondary"> · <?= escapeHtml(portalContractTypeLabel($row['contract_type'])) ?></span></span>
                             <span class="itflow-portal-ticket-meta">
-                                <span><?= $row['contract_start_date'] ? t('{term} from {date}', ['{term}' => escapeHtml(portalContractTermLabel($row['contract_term_months'])), '{date}' => escapeHtml(date('M j, Y', strtotime($row['contract_start_date'])))]) : escapeHtml(portalContractTermLabel($row['contract_term_months'])) ?></span>
+                                <span><?= $row['contract_start_date'] ? t('{term} from {date}', ['{term}' => escapeHtml(portalContractTermLabel($row['contract_term_months'])), '{date}' => escapeHtml(i18n_date('M j, Y', strtotime($row['contract_start_date'])))]) : escapeHtml(portalContractTermLabel($row['contract_term_months'])) ?></span>
                                 <?php if ($row['contract_end_date'] && in_array($row['contract_status'], ['Active', 'Draft'], true)) {
-                                    $end_text = escapeHtml(date('M j, Y', intval($row['contract_auto_renew']) ? strtotime('+1 day', strtotime($row['contract_end_date'])) : strtotime($row['contract_end_date']))); ?>
+                                    $end_text = escapeHtml(i18n_date('M j, Y', intval($row['contract_auto_renew']) ? strtotime('+1 day', strtotime($row['contract_end_date'])) : strtotime($row['contract_end_date']))); ?>
                                     <span><?= intval($row['contract_auto_renew']) ? t('Renews {date}', ['{date}' => $end_text]) : t('Ends {date}', ['{date}' => $end_text]) ?></span>
                                 <?php } ?>
                                 <?php if ($hours_left) { ?>

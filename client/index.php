@@ -83,7 +83,7 @@ if ($can_billing) {
                 'icon' => 'fa-file-invoice-dollar',
                 'tone' => 'is-danger',
                 'title' => t('Invoice {number} is past due', ['{number}' => $invoice['invoice_prefix'] . $invoice['invoice_number']]),
-                'line' => t('{amount} left - due {date}', ['{amount}' => numfmt_format_currency($currency_format, $left, $client_currency), '{date}' => date('M j, Y', strtotime($invoice['invoice_due']))]),
+                'line' => t('{amount} left - due {date}', ['{amount}' => numfmt_format_currency($currency_format, $left, $client_currency), '{date}' => i18n_date('M j, Y', strtotime($invoice['invoice_due']))]),
             ];
         } elseif ($next_due === null || $invoice['invoice_due'] < $next_due) {
             $next_due = $invoice['invoice_due'];
@@ -99,7 +99,7 @@ if ($can_billing) {
             'icon' => 'fa-comment-dollar',
             'tone' => '',
             'title' => t('Quote {number} is waiting for your answer', ['{number}' => $row['quote_prefix'] . $row['quote_number']]),
-            'line' => trim($row['quote_scope'] . ' · ' . billingMoney($row['quote_amount'], $row['quote_currency_code']), ' ·') . ' · ' . t('good until {date}', ['{date}' => date('M j', strtotime($row['quote_expire']))]),
+            'line' => trim($row['quote_scope'] . ' · ' . billingMoney($row['quote_amount'], $row['quote_currency_code']), ' ·') . ' · ' . t('good until {date}', ['{date}' => i18n_date('M j', strtotime($row['quote_expire']))]),
         ];
     }
 
@@ -186,7 +186,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
             <?php if (trim((string) $announcement['announcement_body']) !== '') { ?>
                 <div class="itflow-portal-announcement-body"><?= portalAnnouncementBodyHtml($announcement['announcement_body']) ?></div>
             <?php } ?>
-            <div class="small text-body-secondary mt-1"><?= escapeHtml($tone['label']) ?> · <?= escapeHtml(date('M j, Y', strtotime($announcement['announcement_starts_at'] ?: $announcement['announcement_created_at']))) ?></div>
+            <div class="small text-body-secondary mt-1"><?= escapeHtml($tone['label']) ?> · <?= escapeHtml(i18n_date('M j, Y', strtotime($announcement['announcement_starts_at'] ?: $announcement['announcement_created_at']))) ?></div>
         </div>
     </section>
 <?php } ?>
@@ -221,7 +221,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
                             <?= t('{amount} past due', ['{amount}' => numfmt_format_currency($currency_format, $overdue, $client_currency)]) ?>
 
                         <?php } elseif ($balance > 0 && $next_due) { ?>
-                            <?= t('Due {date}', ['{date}' => date('M j', strtotime($next_due))]) ?>
+                            <?= t('Due {date}', ['{date}' => i18n_date('M j', strtotime($next_due))]) ?>
                         <?php } else { ?>
                             <?= t('Nothing owed') ?>
 
@@ -376,7 +376,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
                                     <span class="itflow-portal-todo-icon<?= $lapsed ? ' is-danger' : '' ?>"><i class="fas <?= $item['icon'] ?>"></i></span>
                                     <span class="itflow-portal-todo-main">
                                         <div><?= escapeHtml($item['name']) ?></div>
-                                        <div><?= escapeHtml($item['kind']) ?> · <?= $lapsed ? t('expired') : 'renews' ?> <?= escapeHtml(date('M j, Y', strtotime($item['date']))) ?> (<?= timeAgo($item['date']) ?>)</div>
+                                        <div><?= escapeHtml($item['kind']) ?> · <?= $lapsed ? t('expired') : 'renews' ?> <?= escapeHtml(i18n_date('M j, Y', strtotime($item['date']))) ?> (<?= timeAgo($item['date']) ?>)</div>
                                     </span>
                                     <i class="fas fa-chevron-right text-body-secondary small"></i>
                                 </a>

@@ -119,13 +119,13 @@ function billingPdfRender($type, array $row, $variant = 'document') {
     ]), $packing ? [] : billingTaxRegistrationLines($totals));
     $logo = !empty($company['logo_path']) ? '<img src="' . $e($company['logo_path']) . '" height="42"><br>' : '';
     if ($packing) {
-        $dates = [t('Invoice') => $number, t('Date') => $row['invoice_date']];
+        $dates = [t('Invoice') => $number, t('Date') => i18n_date_value($row['invoice_date'])];
     } elseif ($type === 'invoice') {
-        $dates = [t('Invoice date') => $row['invoice_date'], t('Due') => $row['invoice_due']];
+        $dates = [t('Invoice date') => i18n_date_value($row['invoice_date']), t('Due') => i18n_date_value($row['invoice_due'])];
     } elseif ($type === 'quote') {
-        $dates = [t('Quote date') => $row['quote_date'], t('Valid until') => $row['quote_expire']];
+        $dates = [t('Quote date') => i18n_date_value($row['quote_date']), t('Valid until') => i18n_date_value($row['quote_expire'])];
     } else {
-        $dates = [t('Billed') => i18n_portal_label(recurringInvoiceFrequencies()[$row['recurring_invoice_frequency']] ?? $row['recurring_invoice_frequency']), t('Next invoice') => $row['recurring_invoice_next_date']];
+        $dates = [t('Billed') => i18n_portal_label(recurringInvoiceFrequencies()[$row['recurring_invoice_frequency']] ?? $row['recurring_invoice_frequency']), t('Next invoice') => i18n_date_value($row['recurring_invoice_next_date'])];
     }
     $dates_html = '';
     foreach ($dates as $date_label => $value) {
@@ -161,7 +161,7 @@ function billingPdfRender($type, array $row, $variant = 'document') {
     } elseif ($type === 'invoice') {
         $done = in_array($status, ['Paid', 'Cancelled', 'Non-Billable'], true);
         $amount_html = $label($done ? t('Balance') : t('Amount due')) . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($state['balance']) . '</span>'
-            . (!$done && $status !== 'Draft' && $state['balance'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $grey . ';">' . $e(t('by {date}', ['{date}' => $row['invoice_due']])) . '</span>' : '');
+            . (!$done && $status !== 'Draft' && $state['balance'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $grey . ';">' . $e(t('by {date}', ['{date}' => i18n_date_value($row['invoice_due'])])) . '</span>' : '');
     } elseif ($type === 'quote' && $shown_groups) {
         $amount_html = '';
         foreach (array_values($shown_groups) as $i => $group) {
@@ -416,7 +416,7 @@ function billingStatementPdfRender(array $statement) {
         $company['company_website'] ?? '',
     ]);
     $logo = !empty($company['logo_path']) ? '<img src="' . $e($company['logo_path']) . '" height="42"><br>' : '';
-    $dates = [t('Statement date') => date('Y-m-d'), t('Period') => $statement['from'] !== '' ? t('{from} to {to}', ['{from}' => $statement['from'], '{to}' => $statement['to']]) : t('Up to {date}', ['{date}' => $statement['to']])];
+    $dates = [t('Statement date') => i18n_date_value(date('Y-m-d')), t('Period') => $statement['from'] !== '' ? t('{from} to {to}', ['{from}' => i18n_date_value($statement['from']), '{to}' => i18n_date_value($statement['to'])]) : t('Up to {date}', ['{date}' => i18n_date_value($statement['to'])])];
     $dates_html = '';
     foreach ($dates as $date_label => $value) {
         $dates_html .= '<tr><td align="right" style="color:' . $grey . ';">' . $e($date_label) . '</td><td align="right" width="42mm">' . $e($value) . '</td></tr>';
@@ -466,9 +466,9 @@ function billingStatementPdfRender(array $statement) {
         <td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Total'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Paid'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Balance'))) . '</td></tr></thead>';
     foreach ($statement['invoices'] as $invoice) {
         $late = $invoice['balance'] > 0 && $invoice['days'] > 0;
-        $html .= '<tr nobr="true"><td width="14%" style="' . $td . '">' . $e($invoice['invoice_date']) . '</td>
+        $html .= '<tr nobr="true"><td width="14%" style="' . $td . '">' . $e(i18n_date_value($invoice['invoice_date'])) . '</td>
             <td width="30%" style="' . $td . '"><b>' . $e(billingNumber('invoice', $invoice)) . '</b>' . (trim((string) $invoice['invoice_scope']) !== '' ? '<br><span style="font-size:7pt; color:' . $grey . ';">' . $e($invoice['invoice_scope']) . '</span>' : '') . '</td>
-            <td width="14%" style="' . $td . ($late ? ' color:' . $red . ';' : '') . '">' . $e($invoice['invoice_due']) . ($late ? '<br><span style="font-size:7pt;">' . $e(t('{n} days late', ['{n}' => intval($invoice['days'])])) . '</span>' : '') . '</td>
+            <td width="14%" style="' . $td . ($late ? ' color:' . $red . ';' : '') . '">' . $e(i18n_date_value($invoice['invoice_due'])) . ($late ? '<br><span style="font-size:7pt;">' . $e(t('{n} days late', ['{n}' => intval($invoice['days'])])) . '</span>' : '') . '</td>
             <td width="14%" align="right" style="' . $td . '">' . $money($invoice['invoice_amount']) . '</td>
             <td width="14%" align="right" style="' . $td . '">' . (floatval($invoice['paid']) > 0 ? $money($invoice['paid']) : '<span style="color:' . $grey . ';">-</span>') . '</td>
             <td width="14%" align="right" style="' . $td . '"><b>' . ($invoice['balance'] > 0 ? $money($invoice['balance']) : '<span style="color:#198754;">' . t('Paid') . '</span>') . '</b></td></tr>';

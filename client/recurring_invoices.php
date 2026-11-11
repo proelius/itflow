@@ -51,7 +51,7 @@ foreach ($cards_on ? billingSavedCards($session_client_id) : [] as $card) {
                             <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml(trim((string) $row['recurring_invoice_scope']) !== '' ? $row['recurring_invoice_scope'] : $row['recurring_invoice_prefix'] . $row['recurring_invoice_number']) ?></span>
                             <span class="itflow-portal-ticket-meta">
                                 <span><?= escapeHtml(i18n_portal_label(recurringInvoiceFrequencies()[$row['recurring_invoice_frequency']] ?? ucfirst((string) $row['recurring_invoice_frequency']))) ?></span>
-                                <span><?= t('Next invoice {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($row['recurring_invoice_next_date'])))]) ?></span>
+                                <span><?= t('Next invoice {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($row['recurring_invoice_next_date'])))]) ?></span>
                             </span>
                         </span>
                         <span class="itflow-portal-ticket-side">

@@ -58,7 +58,7 @@ function shareGuestGone($reason) {
 
 /** "Oct 17 at 9:00 AM" - a moment, for the person holding the link. */
 function shareGuestWhen($time) {
-    return t('{date} at {time}', ['{date}' => date('M j', strtotime((string) $time)), '{time}' => date('g:i A', strtotime((string) $time))]);
+    return t('{date} at {time}', ['{date}' => i18n_date('M j', strtotime((string) $time)), '{time}' => i18n_date('g:i A', strtotime((string) $time))]);
 }
 
 /** Why a link in this state no longer works, in words for the person holding it. */
@@ -193,7 +193,7 @@ function shareGuestOpen($row) {
         }
         $response['file_name'] = shareName($row);
         $response['title'] = t('IT documentation for {client}', ['{client}' => $row['client_name']]);
-        $response['intro'] = t('{from} sent you your IT documentation, as a PDF - {size}, made {date}.', ['{from}' => $from, '{size}' => formatBytes($size), '{date}' => date('M j, Y', strtotime((string) $row['item_created_at']))]);
+        $response['intro'] = t('{from} sent you your IT documentation, as a PDF - {size}, made {date}.', ['{from}' => $from, '{size}' => formatBytes($size), '{date}' => i18n_date('M j, Y', strtotime((string) $row['item_created_at']))]);
         if (!empty($meta['locked'])) {
             $response['hint'] = t('It has passwords in it, so the PDF asks for a password of its own when you open it - {who} will give it to you another way.', ['{who}' => trim((string) $row['creator_name']) !== '' ? $row['creator_name'] : $company['name']]);
         }

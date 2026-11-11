@@ -381,6 +381,72 @@ function i18n_format_sla_due(int $timestamp): string {
 }
 
 /**
+ * Format a date or time in the current language.
+ *
+ * English keeps PHP's date() exactly. Other languages translate the format itself
+ * with t() (so 'M j, Y' can become 'j M Y'; only the formats listed below) and the month and day names, which
+ * date() only knows in English. Any other format, such as 'Y-m-d', is left as it is.
+ *
+ * @param string $format English date() format
+ * @param int|null $timestamp Unix timestamp, now when omitted
+ * @return string
+ */
+function i18n_date(string $format, ?int $timestamp = null): string {
+    $timestamp = $timestamp ?? time();
+    _i18n_load();
+    if ($GLOBALS['_i18n_lang'] === 'en') {
+        return date($format, $timestamp);
+    }
+    // Literal t() calls, so each format is a visible key; any other format stays as it is
+    $format = [
+        'M j, Y' => t('M j, Y'),
+        'M j' => t('M j'),
+        'F j, Y' => t('F j, Y'),
+        'l, F j' => t('l, F j'),
+        'g:i A' => t('g:i A'),
+        'M j, Y g:i A' => t('M j, Y g:i A'),
+        'Y-m-d' => t('Y-m-d'),
+    ][$format] ?? $format;
+    $names = [
+        'M' => [t('Jan'), t('Feb'), t('Mar'), t('Apr'), t('May'), t('Jun'), t('Jul'), t('Aug'), t('Sep'), t('Oct'), t('Nov'), t('Dec')],
+        'F' => [t('January'), t('February'), t('March'), t('April'), t('May'), t('June'), t('July'), t('August'), t('September'), t('October'), t('November'), t('December')],
+        'D' => [t('Sun'), t('Mon'), t('Tue'), t('Wed'), t('Thu'), t('Fri'), t('Sat')],
+        'l' => [t('Sunday'), t('Monday'), t('Tuesday'), t('Wednesday'), t('Thursday'), t('Friday'), t('Saturday')],
+    ];
+    $out = '';
+    $length = strlen($format);
+    for ($i = 0; $i < $length; $i++) {
+        $char = $format[$i];
+        if ($char === '\\' && $i + 1 < $length) {
+            $out .= $format[++$i];
+        } elseif ($char === 'M' || $char === 'F') {
+            $out .= $names[$char][(int) date('n', $timestamp) - 1];
+        } elseif ($char === 'D' || $char === 'l') {
+            $out .= $names[$char][(int) date('w', $timestamp)];
+        } else {
+            $out .= date($char, $timestamp);
+        }
+    }
+    return $out;
+}
+
+/**
+ * A stored date (YYYY-MM-DD) shown in the current language.
+ * English, and anything that is not a plain date, comes back exactly as stored.
+ *
+ * @param mixed $value Date as stored in the database
+ * @return string
+ */
+function i18n_date_value($value): string {
+    $value = (string) $value;
+    _i18n_load();
+    if ($GLOBALS['_i18n_lang'] === 'en' || !preg_match('/^(?!0000)\d{4}-\d{2}-\d{2}$/', $value)) {
+        return $value;
+    }
+    return i18n_date('Y-m-d', strtotime($value));
+}
+
+/**
  * Get invoice status label in current language
  * @param string $name English status name (Draft, Sent, Viewed, Partial, Paid, Cancelled, Non-Billable)
  * @return string Translated status label or original if not found/custom

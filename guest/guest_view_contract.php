@@ -76,7 +76,7 @@ $signature_pad = [
                         <span class="itflow-asset-icon bg-success-subtle text-success-emphasis" aria-hidden="true"><i class="fas fa-check"></i></span>
                         <div>
                             <div class="fw-semibold"><?= t('Signed - thank you') ?></div>
-                            <div class="small text-body-secondary"><?= t('{name} signed it {date}. We\'ll countersign it and email you a copy signed by both of us.', ['{name}' => escapeHtml($round['contract_signature_client_name']), '{date}' => escapeHtml(date('M j, Y', strtotime($round['contract_signature_client_signed_at'])))]) ?></div>
+                            <div class="small text-body-secondary"><?= t('{name} signed it {date}. We\'ll countersign it and email you a copy signed by both of us.', ['{name}' => escapeHtml($round['contract_signature_client_name']), '{date}' => escapeHtml(i18n_date('M j, Y', strtotime($round['contract_signature_client_signed_at'])))]) ?></div>
                         </div>
                     </div>
                 <?php } elseif ($state['key'] === 'signed') { ?>
@@ -84,7 +84,7 @@ $signature_pad = [
                         <span class="itflow-asset-icon bg-success-subtle text-success-emphasis" aria-hidden="true"><i class="fas fa-file-signature"></i></span>
                         <div>
                             <div class="fw-semibold"><?= t('Signed by both') ?></div>
-                            <div class="small text-body-secondary"><?= t('Signed by both {date}. Keep the PDF for your records.', ['{date}' => escapeHtml(date('M j, Y', strtotime((string) max($round['contract_signature_client_signed_at'], $round['contract_signature_agent_signed_at']))))]) ?></div>
+                            <div class="small text-body-secondary"><?= t('Signed by both {date}. Keep the PDF for your records.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime((string) max($round['contract_signature_client_signed_at'], $round['contract_signature_agent_signed_at']))))]) ?></div>
                         </div>
                     </div>
                 <?php } else { ?>

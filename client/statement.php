@@ -29,7 +29,7 @@ $money = function ($amount) use ($currency) {
 <div class="itflow-portal-page-head">
     <div>
         <h1><?= t('Statement') ?></h1>
-        <p><?= t('{client} · as of {date}', ['{client}' => escapeHtml($session_client_name), '{date}' => escapeHtml(date('M j, Y'))]) ?></p>
+        <p><?= t('{client} · as of {date}', ['{client}' => escapeHtml($session_client_name), '{date}' => escapeHtml(i18n_date('M j, Y'))]) ?></p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <?php if ($statement['invoices']) { ?>
@@ -103,9 +103,9 @@ $money = function ($amount) use ($currency) {
                                 <a class="fw-semibold" href="invoice.php?id=<?= intval($row['invoice_id']) ?>"><?= escapeHtml($row['invoice_prefix'] . $row['invoice_number']) ?></a>
                                 <?php if (trim((string) $row['invoice_scope']) !== '') { ?><div class="small text-body-secondary text-truncate"><?= escapeHtml($row['invoice_scope']) ?></div><?php } ?>
                             </td>
-                            <td class="text-nowrap d-none d-md-table-cell"><?= escapeHtml(date('M j, Y', strtotime($row['invoice_date']))) ?></td>
+                            <td class="text-nowrap d-none d-md-table-cell"><?= escapeHtml(i18n_date('M j, Y', strtotime($row['invoice_date']))) ?></td>
                             <td class="text-nowrap<?= $late ? ' text-danger-emphasis' : '' ?>">
-                                <?= escapeHtml(date('M j, Y', strtotime($row['invoice_due']))) ?>
+                                <?= escapeHtml(i18n_date('M j, Y', strtotime($row['invoice_due']))) ?>
                                 <?php if ($late) { ?><div class="small"><?= intval($row['days']) === 1 ? t('{n} day late', ['{n}' => intval($row['days'])]) : t('{n} days late', ['{n}' => intval($row['days'])]) ?></div><?php } ?>
                             </td>
                             <td class="text-end itflow-money d-none d-md-table-cell"><?= $money($row['invoice_amount']) ?></td>

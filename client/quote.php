@@ -74,7 +74,7 @@ $paper = [
 <div class="itflow-portal-page-head d-print-none">
     <div>
         <h1><?= t('Quote {number}', ['{number}' => escapeHtml($number)]) ?></h1>
-        <p><?= trim((string) $quote['quote_scope']) !== '' ? escapeHtml($quote['quote_scope']) : t('Dated {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($quote['quote_date'])))]) ?></p>
+        <p><?= trim((string) $quote['quote_scope']) !== '' ? escapeHtml($quote['quote_scope']) : t('Dated {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($quote['quote_date'])))]) ?></p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a class="btn btn-outline-secondary" href="pdf.php?quote=<?= $quote_id ?>"><i class="fas fa-file-pdf me-2"></i><?= t('Download PDF') ?></a>
@@ -108,8 +108,8 @@ $paper = [
                 <?php if ($state['key'] === 'waiting') { ?>
                     <p class="small text-body-secondary mb-3">
                         <?= $days_left === 0
-                            ? t('Good until {date} - today is the last day.', ['{date}' => escapeHtml(date('M j, Y', strtotime($quote['quote_expire'])))])
-                            : ($days_left === 1 ? t('Good until {date} - 1 day left.', ['{date}' => escapeHtml(date('M j, Y', strtotime($quote['quote_expire'])))]) : t('Good until {date} - {n} days left.', ['{date}' => escapeHtml(date('M j, Y', strtotime($quote['quote_expire']))), '{n}' => (string) $days_left])) ?>
+                            ? t('Good until {date} - today is the last day.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($quote['quote_expire'])))])
+                            : ($days_left === 1 ? t('Good until {date} - 1 day left.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($quote['quote_expire'])))]) : t('Good until {date} - {n} days left.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($quote['quote_expire']))), '{n}' => (string) $days_left])) ?>
 
                         <?= t('Let us know whether to go ahead.') ?>
 
@@ -123,7 +123,7 @@ $paper = [
                         <span class="itflow-portal-outcome-icon is-warning" aria-hidden="true"><i class="fas fa-hourglass-end"></i></span>
                         <div>
                             <div class="fw-semibold"><?= t('This quote has run out') ?></div>
-                            <div class="small text-body-secondary"><?= t('It was good until {date} - prices may have moved since.', ['{date}' => escapeHtml(date('M j, Y', strtotime($quote['quote_expire'])))]) ?></div>
+                            <div class="small text-body-secondary"><?= t('It was good until {date} - prices may have moved since.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($quote['quote_expire'])))]) ?></div>
                         </div>
                     </div>
                     <a class="btn btn-outline-primary w-100" href="<?= escapeHtml(portalAskUrl("Updated quote for $number")) ?>"><i class="fas fa-redo-alt me-2"></i><?= t('Ask for an updated quote') ?></a>
@@ -133,7 +133,7 @@ $paper = [
                         <div>
                             <div class="fw-semibold"><?= t('Accepted - thank you') ?></div>
                             <div class="small text-body-secondary">
-                                <?php if ($answered) { ?><?= $answered_by !== '' ? t('{date} by {name}.', ['{date}' => escapeHtml(date('M j, Y', strtotime($answered['history_created_at']))), '{name}' => escapeHtml($answered_by)]) : t('{date}.', ['{date}' => escapeHtml(date('M j, Y', strtotime($answered['history_created_at'])))]) ?> <?php } ?>
+                                <?php if ($answered) { ?><?= $answered_by !== '' ? t('{date} by {name}.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($answered['history_created_at']))), '{name}' => escapeHtml($answered_by)]) : t('{date}.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($answered['history_created_at'])))]) ?> <?php } ?>
                                 <?= $status === 'Invoiced' ? t('We have invoiced it.') : t('We\'ll be in touch to get started.') ?>
                             </div>
                         </div>
@@ -147,7 +147,7 @@ $paper = [
                         <div>
                             <div class="fw-semibold"><?= t('Declined') ?></div>
                             <div class="small text-body-secondary">
-                                <?php if ($answered) { ?><?= $answered_by !== '' ? t('{date} by {name}.', ['{date}' => escapeHtml(date('M j, Y', strtotime($answered['history_created_at']))), '{name}' => escapeHtml($answered_by)]) : t('{date}.', ['{date}' => escapeHtml(date('M j, Y', strtotime($answered['history_created_at'])))]) ?> <?php } ?>
+                                <?php if ($answered) { ?><?= $answered_by !== '' ? t('{date} by {name}.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($answered['history_created_at']))), '{name}' => escapeHtml($answered_by)]) : t('{date}.', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($answered['history_created_at'])))]) ?> <?php } ?>
                                 <?= t('If something needs changing, let us know and we\'ll send a new one.') ?>
 
                             </div>
@@ -167,7 +167,7 @@ $paper = [
                     <?php if ($files) { ?>
                         <div class="itflow-portal-files mb-3">
                             <?php foreach ($files as $file) { ?>
-                                <span class="itflow-portal-file-chip" title="<?= t('Sent {date}', ['{date}' => escapeHtml($file['file_created_at'])]) ?>"><i class="fas fa-file-pdf"></i><span class="text-truncate"><?= escapeHtml($file['file_name']) ?></span><span class="text-body-secondary"><?= escapeHtml(date('M j', strtotime($file['file_created_at']))) ?></span></span>
+                                <span class="itflow-portal-file-chip" title="<?= t('Sent {date}', ['{date}' => escapeHtml($file['file_created_at'])]) ?>"><i class="fas fa-file-pdf"></i><span class="text-truncate"><?= escapeHtml($file['file_name']) ?></span><span class="text-body-secondary"><?= escapeHtml(i18n_date('M j', strtotime($file['file_created_at']))) ?></span></span>
                             <?php } ?>
                         </div>
                     <?php } ?>

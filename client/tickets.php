@@ -126,7 +126,7 @@ $empty_titles = [
                                 <?php if (!empty($row['category_name'])) { ?>
                                     <span><i class="fas fa-layer-group me-1"></i><?= escapeHtml($row['category_name']) ?></span>
                                 <?php } ?>
-                                <span><?= t('Opened {date}', ['{date}' => escapeHtml(date('M j, Y', strtotime($row['ticket_created_at'])))]) ?></span>
+                                <span><?= t('Opened {date}', ['{date}' => escapeHtml(i18n_date('M j, Y', strtotime($row['ticket_created_at'])))]) ?></span>
                             </span>
                         </span>
                         <span class="itflow-portal-ticket-side">

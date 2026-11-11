@@ -44,7 +44,7 @@ $offset = ($page - 1) * $per_page;
                 <li>
                     <a class="itflow-portal-ticket" href="receipt.php?id=<?= intval($row['payment_id']) ?>">
                         <span class="itflow-portal-ticket-main">
-                            <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml(date('M j, Y', strtotime($row['payment_date']))) ?><span class="fw-normal text-body-secondary"> · <?= escapeHtml($method) ?></span></span>
+                            <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml(i18n_date('M j, Y', strtotime($row['payment_date']))) ?><span class="fw-normal text-body-secondary"> · <?= escapeHtml($method) ?></span></span>
                             <span class="itflow-portal-ticket-meta">
                                 <span class="text-truncate"><?= $count === 1 ? t('Invoice {numbers}', ['{numbers}' => escapeHtml($row['numbers'])]) : t('{n} invoices: {numbers}', ['{n}' => $count, '{numbers}' => escapeHtml($row['numbers'])]) ?></span>
                             </span>
