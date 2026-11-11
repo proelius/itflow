@@ -1750,6 +1750,10 @@ function billingQuoteAnswer($quote_id, $accept, array $by = []) {
     appNotify("Quote $word", escapeSql("Quote $number has been " . strtolower($word) . " by {$quote['client_name']}" . ($name !== '' ? " ($name, in the client portal)" : '')),
         "/agent/quote.php?quote_id=$quote_id", intval($quote['client_id']));
     triggerCustomAction($accept ? 'quote_accept' : 'quote_decline', $quote_id);
+    // The CRM deal of this quote (if any) hears at once
+    if (function_exists('forkCrmQuoteChanged')) {
+        forkCrmQuoteChanged($quote_id, $word);
+    }
     if ($name !== '') {
         logAudit("Quote", $accept ? "Accept" : "Decline", escapeSql("$name " . strtolower($word) . " quote $number in the client portal"), intval($quote['client_id']), $quote_id);
     }

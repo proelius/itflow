@@ -389,6 +389,14 @@ function forkCrmEnsure() {
         `setting_value` varchar(255) NOT NULL DEFAULT '',
         PRIMARY KEY (`setting_key`)
     $tail");
+    mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_crm_deal_steps` (
+        `step_deal_id` int(11) NOT NULL,
+        `step_key` varchar(20) NOT NULL,
+        `step_state` varchar(10) NOT NULL DEFAULT 'done',
+        `step_user_id` int(11) NOT NULL DEFAULT 0,
+        `step_at` datetime NOT NULL DEFAULT current_timestamp(),
+        PRIMARY KEY (`step_deal_id`, `step_key`)
+    $tail");
     mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_crm_deal_quotes` (
         `dq_deal_id` int(11) NOT NULL,
         `dq_quote_id` int(11) NOT NULL,
@@ -740,6 +748,8 @@ function forkCrmDealMove(array $deal, $stage_id, $lost_reason = '', $user_id = 0
     }
     $from = forkCrmStage($from_id);
     forkCrmHistoryAdd($id, 'stage', 'Moved from ' . ($from ? $from['stage_name'] : '?') . ' to ' . $stage['stage_name'] . ($stage['stage_kind'] === 'lost' && $lost_category !== '' && forkCrmLostCategoryClean($lost_category) !== '' ? ' - ' . forkCrmLostCategories()[$lost_category] : ''), $user_id, $from_id, $stage_id);
+    // Won or lost: the follow-ups close and the next task is planned; back in an open stage: they are taken back
+    forkCrmAfterClose(['deal_lost_reason' => forkCrmTextClean($lost_reason, 255)] + $deal, $stage, $user_id);
     return '';
 }
 
@@ -795,14 +805,14 @@ function forkCrmNightly() {
     $told = 0;
     // Three kinds: a follow-up task that falls due, a meeting or call that is today, and one that was
     // yesterday or before and has no debrief yet. Each is told once (its own column keeps it).
-    $base = "SELECT a.activity_id, a.activity_user_id, a.activity_type, a.activity_due, a.activity_due_time, a.activity_text, d.deal_id, d.deal_title, d.deal_client_id, d.deal_prospect, c.client_name
+    $base = "SELECT a.activity_id, a.activity_user_id, a.activity_auto, a.activity_type, a.activity_due, a.activity_due_time, a.activity_text, d.deal_id, d.deal_title, d.deal_client_id, d.deal_prospect, c.client_name
         FROM fork_crm_activities a
         JOIN fork_crm_deals d ON d.deal_id = a.activity_deal_id
         JOIN fork_crm_stages s ON s.stage_id = d.deal_stage_id
         LEFT JOIN clients c ON c.client_id = d.deal_client_id
-        WHERE a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND s.stage_kind = 'open' AND ";
+        WHERE a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND (s.stage_kind = 'open' OR a.activity_auto = 2) AND ";
     $queries = [
-        'follow' => [$base . "a.activity_auto = 1 AND a.activity_notified_at IS NULL AND a.activity_due <= CURDATE()", 'activity_notified_at'],
+        'follow' => [$base . "a.activity_auto IN (1, 2) AND a.activity_notified_at IS NULL AND a.activity_due <= CURDATE()", 'activity_notified_at'],
         'today' => [$base . "a.activity_auto = 0 AND a.activity_type IN ('meeting', 'call') AND a.activity_notified_at IS NULL AND a.activity_due = CURDATE()", 'activity_notified_at'],
         'debrief' => [$base . "a.activity_auto = 0 AND a.activity_type IN ('meeting', 'call') AND a.activity_debrief_notified_at IS NULL AND a.activity_due < CURDATE()
             AND a.activity_due >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)", 'activity_debrief_notified_at'],
@@ -847,7 +857,7 @@ function forkCrmNightly() {
         } else {
             $text = "Time to follow up with $with - deal " . $task['deal_title'];
             $subject = "Follow up: " . $task['deal_title'] . ($who !== '' ? " - $who" : '');
-            $intro = "The quote went out a while ago. " . $task['activity_text'];
+            $intro = (intval($task['activity_auto']) === 2 ? '' : "The quote went out a while ago. ") . $task['activity_text'];
             $button = 'Open the deal';
             $tone = 'warning';
         }
@@ -1231,7 +1241,7 @@ function forkCrmActivityDelete($activity_id) {
 function forkCrmTasks($user_id = 0) {
     global $mysqli;
     forkCrmEnsure();
-    $where = "WHERE a.activity_due IS NOT NULL AND a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND s.stage_kind = 'open'" . clientScopeSql('d.deal_client_id') . forkCrmOwnScopeSql('d');
+    $where = "WHERE a.activity_due IS NOT NULL AND a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND (s.stage_kind = 'open' OR a.activity_auto = 2)" . clientScopeSql('d.deal_client_id') . forkCrmOwnScopeSql('d');
     if (intval($user_id) > 0) {
         $where .= " AND (a.activity_user_id = " . intval($user_id) . " OR a.activity_user_id = 0)";
     }
@@ -1259,7 +1269,7 @@ function forkCrmTasksDueCount($user_id) {
     $row = mysqli_fetch_row(mysqli_query($mysqli, "SELECT COUNT(*) FROM fork_crm_activities a
         JOIN fork_crm_deals d ON d.deal_id = a.activity_deal_id
         JOIN fork_crm_stages s ON s.stage_id = d.deal_stage_id
-        WHERE a.activity_due IS NOT NULL AND a.activity_due <= CURDATE() AND a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND s.stage_kind = 'open'
+        WHERE a.activity_due IS NOT NULL AND a.activity_due <= CURDATE() AND a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND (s.stage_kind = 'open' OR a.activity_auto = 2)
         AND (a.activity_user_id = " . intval($user_id) . " OR a.activity_user_id = 0)" . clientScopeSql('d.deal_client_id') . forkCrmOwnScopeSql('d')));
     return $row ? intval($row[0]) : 0;
 }

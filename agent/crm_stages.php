@@ -84,6 +84,20 @@ $counts = forkCrmStageCounts();
             <div class="col-auto"><input type="number" class="form-control" name="stale_days" min="1" max="365" value="<?= intval(forkCrmSetting('stale_days')) ?>" style="width: 100px"></div>
             <div class="col-auto"><span class="col-form-label">days with no activity and no task to do - its owner is told once</span></div>
         </div>
+        <div class="row g-2 align-items-center mb-2">
+            <div class="col-auto"><label class="col-form-label">When a deal is won, plan a check-in task after</label></div>
+            <div class="col-auto"><input type="number" class="form-control" name="won_checkin_days" min="0" max="365" value="<?= intval(forkCrmSetting('won_checkin_days')) ?>" style="width: 100px"></div>
+            <div class="col-auto"><span class="col-form-label">days (0 = none)</span></div>
+        </div>
+        <div class="row g-2 align-items-center mb-2">
+            <div class="col-auto"><label class="col-form-label">When a deal is lost, plan a recontact task after</label></div>
+            <div class="col-auto"><input type="number" class="form-control" name="lost_recontact_days" min="0" max="365" value="<?= intval(forkCrmSetting('lost_recontact_days')) ?>" style="width: 100px"></div>
+            <div class="col-auto"><span class="col-form-label">days (0 = none)</span></div>
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="won_notify_team" id="wonNotify" value="1"<?= forkCrmSetting('won_notify_team') === '1' ? ' checked' : '' ?>>
+            <label class="form-check-label" for="wonNotify">Tell the CRM agents (in ITFlow) when a deal is won</label>
+        </div>
         <button type="submit" name="save_crm_settings" value="1" class="btn btn-primary"><i class="fas fa-check me-2"></i>Save the settings</button>
     </form>
 </div>

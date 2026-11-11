@@ -16,6 +16,7 @@ if (PHP_SAPI !== 'cli') {
 $itflow_dir = __DIR__ . '/..';
 require_once $itflow_dir . '/functions/fork_crm.php';
 require_once $itflow_dir . '/functions/fork_crm_extra.php';
+require_once $itflow_dir . '/functions/fork_crm_close.php';
 
 $passed = 0;
 $failed = 0;
@@ -265,6 +266,49 @@ foreach (glob($itflow_dir . '/agent/crm*.php') as $page) {
     crm_test(basename($page) . ' does not look at the Sales level on its own', strpos($code, "'module_sales'") === false);
     crm_test(basename($page) . ' escapes nothing raw: no echo of $_GET/$_POST', !preg_match('/<\?=\s*\$_(GET|POST|REQUEST)/', $code));
 }
+
+echo "\nAfter a quote is answered and after a deal is closed\n";
+crm_test('days: 0 stays 0', forkCrmCloseDaysClean(0) === 0);
+crm_test('days: negative becomes 0', forkCrmCloseDaysClean(-5) === 0);
+crm_test('days: text becomes 0', forkCrmCloseDaysClean('abc') === 0);
+crm_test('days: 30 stays 30', forkCrmCloseDaysClean('30') === 30);
+crm_test('days: capped at 365', forkCrmCloseDaysClean(9999) === 365);
+$defaults = forkCrmSettingDefaults();
+crm_test('defaults: check-in 30 days, recontact 90 days, team told', $defaults['won_checkin_days'] === '30' && $defaults['lost_recontact_days'] === '90' && $defaults['won_notify_team'] === '1');
+$none = ['client' => false, 'accepted' => 0, 'invoiced' => 0, 'monthly' => 0, 'onboarding' => false, 'emailed' => false];
+crm_test('step client: a prospect is to do', forkCrmStepState('client', $none) === 'todo');
+crm_test('step client: a client is done', forkCrmStepState('client', ['client' => true] + $none) === 'done');
+crm_test('step invoice: no quote is not needed', forkCrmStepState('invoice', $none) === 'na');
+crm_test('step invoice: an accepted quote is to do', forkCrmStepState('invoice', ['accepted' => 1] + $none) === 'todo');
+crm_test('step invoice: an accepted and an invoiced quote is still to do', forkCrmStepState('invoice', ['accepted' => 1, 'invoiced' => 1] + $none) === 'todo');
+crm_test('step invoice: only invoiced quotes is done', forkCrmStepState('invoice', ['invoiced' => 2] + $none) === 'done');
+crm_test('step contract: no monthly amount is not needed', forkCrmStepState('contract', $none) === 'na');
+crm_test('step contract: a monthly amount is to do', forkCrmStepState('contract', ['monthly' => 120.0] + $none) === 'todo');
+crm_test('step onboarding: not started is to do, started is done', forkCrmStepState('onboarding', $none) === 'todo' && forkCrmStepState('onboarding', ['onboarding' => true] + $none) === 'done');
+crm_test('step welcome: no email is to do, an email is done', forkCrmStepState('welcome', $none) === 'todo' && forkCrmStepState('welcome', ['emailed' => true] + $none) === 'done');
+crm_test('what an agent said wins: skip is not needed', forkCrmStepState('client', $none, 'skip') === 'na');
+crm_test('what an agent said wins: done is done', forkCrmStepState('invoice', ['accepted' => 1] + $none, 'done') === 'done');
+crm_test('an unknown step is not needed', forkCrmStepState('nothing', $none) === 'na');
+crm_test('five next steps', array_keys(forkCrmStepLabels()) === ['client', 'invoice', 'contract', 'onboarding', 'welcome']);
+$close_code = file_get_contents($itflow_dir . '/functions/fork_crm_close.php');
+$crm_code = file_get_contents($itflow_dir . '/functions/fork_crm.php');
+crm_test('moving a deal runs the close hook', strpos($crm_code, 'forkCrmAfterClose(') !== false);
+crm_test('the steps table is made with the other CRM tables', strpos($crm_code, 'fork_crm_deal_steps') !== false);
+crm_test('the check-in and recontact tasks stay on the task lists', substr_count($crm_code, 'a.activity_auto = 2') >= 3);
+crm_test('the close module never invoices, archives clients or writes accounting', !preg_match('/INSERT INTO (invoices|clients|contracts|recurring)|UPDATE (invoices|clients)/', $close_code));
+$billing = file_get_contents($itflow_dir . '/functions/billing.php');
+$quote_post = file_get_contents($itflow_dir . '/agent/post/quote.php');
+crm_test('the portal answer calls the CRM hook behind function_exists', preg_match("/function_exists\('forkCrmQuoteChanged'\)\) \{\s+forkCrmQuoteChanged\(\\\$quote_id, \\\$word\);/", $billing) === 1);
+crm_test('the agent accept and decline call the CRM hook behind function_exists', preg_match_all("/function_exists\('forkCrmQuoteChanged'\)\) \{\s+forkCrmQuoteChanged\(\\\$quote_id, '(Accepted|Declined)'\);/", $quote_post) === 2);
+crm_test('the handler has the step and decline actions', strpos($handler, "isset(\$_POST['set_crm_step'])") !== false && strpos($handler, "isset(\$_POST['decline_crm_quotes'])") !== false);
+crm_test('the settings are saved by the handler and shown on the stages page', strpos($handler, "'won_checkin_days'") !== false && strpos(file_get_contents($itflow_dir . '/agent/crm_stages.php'), 'lost_recontact_days') !== false);
+$mail_keys_ok = true;
+$en = include $itflow_dir . '/lang/en.php';
+$fr = include $itflow_dir . '/lang/fr.php';
+foreach (['Welcome aboard', 'Thank you for your time', 'If your needs change, we will gladly start again.'] as $key) {
+    $mail_keys_ok = $mail_keys_ok && isset($en[$key], $fr[$key]);
+}
+crm_test('the welcome and goodbye email texts are in both language files', $mail_keys_ok);
 
 echo "\n$passed passed, $failed failed\n";
 exit($failed ? 1 : 0);

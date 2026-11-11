@@ -113,9 +113,11 @@ if (isset($_POST['move_crm_deal'])) {
     if ($follow_up) {
         $message .= " - follow-up task set for <strong>" . escapeHtml($follow_up) . "</strong>";
     }
-    // A deal won with a lead (a prospect in the contacts) is the moment to make it a client
-    if ($stage['stage_kind'] === 'won' && intval($deal['deal_client_id']) > 0 && intval($deal['client_lead']) === 1 && lookupUserPermission('module_client') >= 2) {
-        $message .= ' - <a href="crm_deal.php?deal_id=' . intval($deal['deal_id']) . '#convert">make ' . escapeHtml($deal['client_name']) . ' a client</a> (its postal address is needed)';
+    // Won: the next steps (client, invoice, onboarding, welcome) are listed on the deal; lost: the open quotes can be declined there
+    if ($changed && $stage['stage_kind'] === 'won') {
+        $message .= ' - <a href="crm_deal.php?deal_id=' . intval($deal['deal_id']) . '#next-steps">see the next steps</a>';
+    } elseif ($changed && $stage['stage_kind'] === 'lost') {
+        $message .= ' - follow-up tasks closed';
     }
     flashAlert($message);
     redirect();
@@ -473,6 +475,45 @@ if (isset($_POST['send_crm_email'])) {
 
 }
 
+if (isset($_POST['set_crm_step'])) {
+
+    validateCSRFToken();
+    $deal = crmPostDeal($_POST['deal_id'] ?? 0, 2);
+
+    $key = (string) ($_POST['step'] ?? '');
+    $state = (string) ($_POST['state'] ?? '');
+    if (!forkCrmStepSet($deal['deal_id'], $key, $state, $session_user_id)) {
+        flashAlert("That step is unknown.", 'error');
+        redirect();
+    }
+    $label = forkCrmStepLabels()[$key];
+    $said = ['done' => 'marked as done', 'skip' => 'marked as not needed', 'reset' => 'put back to what the deal shows'][$state];
+    forkCrmHistoryAdd($deal['deal_id'], 'step', "Next step \"$label\" $said", $session_user_id);
+    logAudit("CRM", "Edit", "$session_name set the next step " . escapeSql($label) . " of the deal " . escapeSql($deal['deal_title']) . " $said", intval($deal['deal_client_id']), intval($deal['deal_id']));
+    flashAlert("Step <strong>" . escapeHtml($label) . "</strong> $said");
+    redirect('crm_deal.php?deal_id=' . intval($deal['deal_id']) . '#next-steps');
+
+}
+
+if (isset($_POST['decline_crm_quotes'])) {
+
+    validateCSRFToken();
+    $deal = crmPostDeal($_POST['deal_id'] ?? 0, 2);
+    if ($deal['stage_kind'] !== 'lost') {
+        flashAlert("Only the quotes of a lost deal are declined this way.", 'error');
+        redirect();
+    }
+    if (intval($deal['deal_client_id']) > 0) {
+        enforceClientAccess(intval($deal['deal_client_id']));
+    }
+    $count = forkCrmQuotesDecline($deal, stripslashes($session_name));
+    forkCrmHistoryAdd($deal['deal_id'], 'quote', $count . ' open quote' . ($count === 1 ? '' : 's') . ' marked as declined', $session_user_id);
+    logAudit("CRM", "Edit", "$session_name declined $count open quote(s) of the lost deal " . escapeSql($deal['deal_title']), intval($deal['deal_client_id']), intval($deal['deal_id']));
+    flashAlert($count === 0 ? "No quote was waiting for an answer" : "<strong>$count</strong> quote" . ($count === 1 ? '' : 's') . " marked as declined");
+    redirect();
+
+}
+
 if (isset($_POST['save_crm_settings'])) {
 
     validateCSRFToken();
@@ -481,6 +522,9 @@ if (isset($_POST['save_crm_settings'])) {
     forkCrmSettingSet('own_only', !empty($_POST['own_only']) ? '1' : '0');
     forkCrmSettingSet('digest', !empty($_POST['digest']) ? '1' : '0');
     forkCrmSettingSet('stale_days', (string) forkCrmStaleDaysClean($_POST['stale_days'] ?? 14));
+    forkCrmSettingSet('won_checkin_days', (string) forkCrmCloseDaysClean($_POST['won_checkin_days'] ?? 30));
+    forkCrmSettingSet('lost_recontact_days', (string) forkCrmCloseDaysClean($_POST['lost_recontact_days'] ?? 90));
+    forkCrmSettingSet('won_notify_team', !empty($_POST['won_notify_team']) ? '1' : '0');
     logAudit("CRM", "Edit", "$session_name changed the CRM settings", 0, 0);
     flashAlert("CRM settings saved");
     redirect();

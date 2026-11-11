@@ -20,7 +20,7 @@
 
 /** What each CRM setting is until it is saved. */
 function forkCrmSettingDefaults() {
-    return ['own_only' => '0', 'stale_days' => '14', 'digest' => '1', 'digest_last' => ''];
+    return ['own_only' => '0', 'stale_days' => '14', 'digest' => '1', 'digest_last' => '', 'won_checkin_days' => '30', 'lost_recontact_days' => '90', 'won_notify_team' => '1'];
 }
 
 /** One CRM setting, as text. */
@@ -407,7 +407,7 @@ function forkCrmDigest($today = null) {
         $tasks = mysqli_fetch_row(mysqli_query($mysqli, "SELECT COUNT(*), SUM(a.activity_due < CURDATE()) FROM fork_crm_activities a
             JOIN fork_crm_deals d ON d.deal_id = a.activity_deal_id JOIN fork_crm_stages s ON s.stage_id = d.deal_stage_id
             WHERE a.activity_due IS NOT NULL AND a.activity_due <= DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND a.activity_done_at IS NULL AND d.deal_archived_at IS NULL
-            AND s.stage_kind = 'open' AND (a.activity_user_id = $uid OR a.activity_user_id = 0)"));
+            AND (s.stage_kind = 'open' OR a.activity_auto = 2) AND (a.activity_user_id = $uid OR a.activity_user_id = 0)"));
         $open = mysqli_fetch_row(mysqli_query($mysqli, "SELECT COUNT(*), COALESCE(SUM(d.deal_amount), 0), COALESCE(SUM(d.deal_amount * d.deal_probability / 100), 0) FROM fork_crm_deals d
             JOIN fork_crm_stages s ON s.stage_id = d.deal_stage_id WHERE d.deal_archived_at IS NULL AND s.stage_kind = 'open' AND d.deal_owner_id = $uid"));
         $stale = 0;

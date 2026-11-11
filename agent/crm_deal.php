@@ -55,6 +55,13 @@ $same_name = !$has_client && $prospect_name !== '' ? forkCrmClientByName($prospe
 $same_has_address = $same_name ? forkCrmClientHasAddress($same_name['client_id']) : false;
 $has_address = $is_lead ? forkCrmClientHasAddress($deal['deal_client_id']) : false;
 $today = date('Y-m-d');
+$mail_kind = in_array($_GET['mail'] ?? '', ['welcome', 'lost'], true) ? $_GET['mail'] : '';
+$prefill = $mail_kind !== '' ? forkCrmMailPrefill($mail_kind, $deal) : ['', ''];
+$steps = $deal['stage_kind'] === 'won' ? forkCrmDealSteps($deal) : [];
+$open_quotes = 0;
+foreach ($quotes as $quote_row) {
+    $open_quotes += in_array($quote_row['quote_status'], ['Sent', 'Viewed'], true) ? 1 : 0;
+}
 $closed = $deal['stage_kind'] !== 'open';
 $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-danger'][$deal['stage_kind']];
 
@@ -143,6 +150,60 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
                     <button type="submit" name="make_crm_prospect" value="1" class="btn btn-sm btn-success"><i class="fas fa-user-check me-2"></i>Save the address and make it a client</button>
                 </form>
             <?php } ?>
+        </div>
+    <?php } ?>
+
+    <?php if ($deal['stage_kind'] === 'won' && $steps) { ?>
+        <div class="card-body border-bottom" id="next-steps">
+            <h5 class="mb-2"><i class="fas fa-flag-checkered me-2"></i>Next steps</h5>
+            <p class="text-secondary small mb-2">The deal is won. Nothing below is done for you: each step opens the right page, and what you change there is confirmed there.</p>
+            <?php foreach ($steps as $step_key => $step) { ?>
+                <div class="d-flex align-items-center flex-wrap gap-2 py-1 border-bottom">
+                    <span class="badge <?= ['done' => 'bg-success', 'todo' => 'bg-warning text-dark', 'na' => 'bg-secondary'][$step['state']] ?>" style="min-width: 5.5em"><?= ['done' => 'Done', 'todo' => 'To do', 'na' => 'Not needed'][$step['state']] ?></span>
+                    <span class="me-auto"><?= escapeHtml($step['label']) ?></span>
+                    <?php if ($step['state'] === 'todo') { ?>
+                        <?php if ($step_key === 'client' && $can_client) { ?>
+                            <a class="btn btn-sm btn-primary" href="#convert">Make it a client</a>
+                        <?php } elseif ($step_key === 'invoice') { ?>
+                            <?php foreach ($quotes as $quote_row) { if ($quote_row['quote_status'] === 'Accepted') { ?>
+                                <a class="btn btn-sm btn-primary" href="quote.php?quote_id=<?= intval($quote_row['quote_id']) ?>">Invoice <?= escapeHtml($quote_row['quote_prefix'] . $quote_row['quote_number']) ?></a>
+                            <?php } } ?>
+                        <?php } elseif ($step_key === 'contract' && $has_client) { ?>
+                            <a class="btn btn-sm btn-primary" href="contracts.php?client_id=<?= intval($deal['deal_client_id']) ?>">Contracts</a>
+                        <?php } elseif ($step_key === 'onboarding' && $has_client && !$is_lead) { ?>
+                            <a class="btn btn-sm btn-primary" href="<?= escapeHtml(clientOnboardingUrl($deal['deal_client_id'])) ?>">Start the onboarding</a>
+                        <?php } elseif ($step_key === 'onboarding') { ?>
+                            <span class="text-secondary small">after the client exists</span>
+                        <?php } elseif ($step_key === 'welcome') { ?>
+                            <a class="btn btn-sm btn-primary" href="crm_deal.php?deal_id=<?= intval($deal['deal_id']) ?>&mail=welcome#crmEmail">Write the email</a>
+                        <?php } ?>
+                    <?php } ?>
+                    <?php if ($can_edit) { ?>
+                        <?php foreach ($step['stored'] === '' ? ($step['state'] === 'todo' ? ['done' => 'Mark done', 'skip' => 'Not needed'] : []) : ['reset' => 'Undo'] as $set_state => $set_label) { ?>
+                            <form action="post.php" method="post" class="d-inline">
+                                <?= crmCsrf() ?>
+                                <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                                <input type="hidden" name="step" value="<?= escapeHtml($step_key) ?>">
+                                <input type="hidden" name="state" value="<?= escapeHtml($set_state) ?>">
+                                <button type="submit" name="set_crm_step" value="1" class="btn btn-sm btn-outline-secondary"><?= escapeHtml($set_label) ?></button>
+                            </form>
+                        <?php } ?>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+        </div>
+    <?php } elseif ($deal['stage_kind'] === 'lost' && $can_edit) { ?>
+        <div class="card-body border-bottom" id="lost-steps">
+            <h5 class="mb-2"><i class="fas fa-door-open me-2"></i>After the loss</h5>
+            <p class="text-secondary small mb-2">The follow-up tasks are closed and the prospect stays in ITFlow, so you can come back to it (a recontact task is planned when the settings ask for one).</p>
+            <?php if ($open_quotes > 0) { ?>
+                <form action="post.php" method="post" class="d-inline" onsubmit="return confirm('Mark the quotes still waiting for an answer as declined?')">
+                    <?= crmCsrf() ?>
+                    <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
+                    <button type="submit" name="decline_crm_quotes" value="1" class="btn btn-sm btn-outline-danger me-2"><i class="fas fa-times me-2"></i>Mark the <?= $open_quotes ?> open quote<?= $open_quotes === 1 ? '' : 's' ?> as declined</button>
+                </form>
+            <?php } ?>
+            <a class="btn btn-sm btn-outline-secondary" href="crm_deal.php?deal_id=<?= intval($deal['deal_id']) ?>&mail=lost#crmEmail"><i class="fas fa-envelope me-2"></i>Write a courteous email</a>
         </div>
     <?php } ?>
 
@@ -251,7 +312,7 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
     <?php if ($can_edit) { ?>
         <div class="card-body border-bottom">
             <a data-bs-toggle="collapse" href="#crmEmail" class="fw-semibold text-decoration-none"><i class="fas fa-envelope me-2"></i>Send an email from this deal</a>
-            <div class="collapse mt-2" id="crmEmail">
+            <div class="collapse mt-2<?= $mail_kind !== '' ? ' show' : '' ?>" id="crmEmail">
                 <?php if (!$email_targets) { ?>
                     <p class="text-secondary mb-0">Give the deal an email address, or put a contact with an email on it.</p>
                 <?php } else { ?>
@@ -260,9 +321,9 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
                         <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
                         <div class="row g-2 mb-2">
                             <div class="col-md-5"><select class="form-select" name="to"><?= crmOptions($email_targets, '') ?></select></div>
-                            <div class="col-md-7"><input type="text" class="form-control" name="subject" maxlength="200" placeholder="Subject" required></div>
+                            <div class="col-md-7"><input type="text" class="form-control" name="subject" maxlength="200" placeholder="Subject" value="<?= escapeHtml($prefill[0]) ?>" required></div>
                         </div>
-                        <textarea class="form-control mb-2" name="body" rows="5" maxlength="5000" placeholder="Your message - a blank line makes a new paragraph" required></textarea>
+                        <textarea class="form-control mb-2" name="body" rows="5" maxlength="5000" placeholder="Your message - a blank line makes a new paragraph" required><?= escapeHtml($prefill[1]) ?></textarea>
                         <button type="submit" name="send_crm_email" value="1" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane me-2"></i>Send</button>
                         <span class="text-secondary small ms-2">It goes from ITFlow's mailbox, tells them to reply to you, and is kept in the activities.</span>
                     </form>
