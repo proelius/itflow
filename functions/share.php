@@ -608,9 +608,9 @@ function shareCompany() {
 function shareExpiryText($expire_at) {
     $at = strtotime((string) $expire_at);
     if ($at - time() <= 86400) {
-        return date('g:i A', $at) . (date('Y-m-d', $at) === date('Y-m-d') ? ' today' : ' tomorrow');
+        return date('Y-m-d', $at) === date('Y-m-d') ? t('{time} today', ['{time}' => date('g:i A', $at)]) : t('{time} tomorrow', ['{time}' => date('g:i A', $at)]);
     }
-    return date('M j', $at) . ' at ' . date('g:i A', $at);
+    return t('{date} at {time}', ['{date}' => date('M j', $at), '{time}' => date('g:i A', $at)]);
 }
 
 /** Who the shared links' emails come from - the system mailbox, under the company's name when it has none. */
@@ -624,41 +624,69 @@ function shareMailFrom() {
  * Never the passphrase - that goes another way. True when it was queued.
  */
 function shareEmailLink($row, $url, $protect) {
+    $lang = client_language();
+    return i18n_with($lang, fn() => _shareEmailLink($row, $url, $protect, $lang));
+}
+
+/** shareEmailLink() in the language that is current. */
+function _shareEmailLink($row, $url, $protect, $lang) {
     global $session_name;
     $company = shareCompany();
     $agent = stripslashes((string) $session_name);
-    $from = "$agent at " . $company['name'];
+    $from = t('{name} at {company}', ['{name}' => $agent, '{company}' => $company['name']]);
     $name = shareName($row);
     $expiry = shareExpiryText($row['item_expire_at']);
     $limit = intval($row['item_view_limit']);
     $intro = [];
 
     if ($row['item_type'] === 'Request') {
-        $subject = $company['name'] . ' is asking for a login - ' . $row['item_name'];
-        $email = ['kind' => 'Login request', 'title' => 'Please send us a login', 'preview' => "$from is asking you for $name"];
-        $intro[] = "$from is asking you for $name. Use the secure link below rather than email - what you type is encrypted and goes straight to us.";
-        $summary = ['For' => $name, 'Link works' => "Once, until $expiry"];
-        $button = 'Send it securely';
+        $subject = t('{company} is asking for a login - {name}', ['{company}' => $company['name'], '{name}' => $row['item_name']]);
+        $email = ['kind' => t('Login request'), 'title' => t('Please send us a login'), 'preview' => t('{from} is asking you for {name}', ['{from}' => $from, '{name}' => $name])];
+        $intro[] = t('{from} is asking you for {name}. Use the secure link below rather than email - what you type is encrypted and goes straight to us.', ['{from}' => $from, '{name}' => $name]);
+        $summary = [t('For') => $name, t('Link works') => t('Once, until {expiry}', ['{expiry}' => $expiry])];
+        $button = t('Send it securely');
     } else {
-        $what = ['Credential' => 'login details', 'Note' => 'a secure note', 'Document' => 'a document', 'File' => 'a file', 'Export' => 'your IT documentation'][$row['item_type']] ?? 'something';
-        $subject = $company['name'] . ' sent you ' . $what . ' - secure link';
-        $email = ['kind' => 'Secure link', 'title' => ['Credential' => 'Login details for you', 'Export' => 'Your IT documentation'][$row['item_type']] ?? 'Something to open securely', 'preview' => "$from sent you $what"];
-        $named = in_array($row['item_type'], ['Credential', 'Document', 'File', 'Export'], true);
-        $intro[] = "$from sent you $what" . ($named ? ": $name" : '') . '.';
-        $summary = ($named ? ['What' => $name] : []) + ['Link works' => "Until $expiry" . ($limit === 1 ? ', once' : ($limit > 1 ? ", $limit times" : ''))];
+        $type = $row['item_type'];
+        $sent = match ($type) {
+            'Credential' => t('{from} sent you login details.', ['{from}' => $from]),
+            'Note' => t('{from} sent you a secure note.', ['{from}' => $from]),
+            'Document' => t('{from} sent you a document.', ['{from}' => $from]),
+            'File' => t('{from} sent you a file.', ['{from}' => $from]),
+            'Export' => t('{from} sent you your IT documentation.', ['{from}' => $from]),
+            default => t('{from} sent you something.', ['{from}' => $from]),
+        };
+        $named = in_array($type, ['Credential', 'Document', 'File', 'Export'], true);
+        $subject = match ($type) {
+            'Credential' => t('{company} sent you login details - secure link', ['{company}' => $company['name']]),
+            'Note' => t('{company} sent you a secure note - secure link', ['{company}' => $company['name']]),
+            'Document' => t('{company} sent you a document - secure link', ['{company}' => $company['name']]),
+            'File' => t('{company} sent you a file - secure link', ['{company}' => $company['name']]),
+            'Export' => t('{company} sent you your IT documentation - secure link', ['{company}' => $company['name']]),
+            default => t('{company} sent you something - secure link', ['{company}' => $company['name']]),
+        };
+        $email = ['kind' => t('Secure link'), 'title' => ['Credential' => t('Login details for you'), 'Export' => t('Your IT documentation')][$type] ?? t('Something to open securely'), 'preview' => rtrim($sent, '.')];
+        $intro[] = !$named ? $sent : match ($type) {
+            'Credential' => t('{from} sent you login details: {name}.', ['{from}' => $from, '{name}' => $name]),
+            'Document' => t('{from} sent you a document: {name}.', ['{from}' => $from, '{name}' => $name]),
+            'File' => t('{from} sent you a file: {name}.', ['{from}' => $from, '{name}' => $name]),
+            default => t('{from} sent you your IT documentation: {name}.', ['{from}' => $from, '{name}' => $name]),
+        };
+        $works = $limit === 1 ? t('Until {expiry}, once', ['{expiry}' => $expiry]) : ($limit > 1 ? t('Until {expiry}, {n} times', ['{expiry}' => $expiry, '{n}' => $limit]) : t('Until {expiry}', ['{expiry}' => $expiry]));
+        $summary = ($named ? [t('What') => $name] : []) + [t('Link works') => $works];
         if ($limit === 1) {
-            $intro[] = 'It opens only once - copy what you need when you open it.';
+            $intro[] = t('It opens only once - copy what you need when you open it.');
         }
-        $button = 'Open it securely';
+        $button = t('Open it securely');
     }
     $callout = '';
     if ($protect === 'passphrase') {
-        $callout = "You will need a passphrase to open it - $agent will give it to you another way, such as by phone or text.";
+        $callout = t('You will need a passphrase to open it - {agent} will give it to you another way, such as by phone or text.', ['{agent}' => $agent]);
     } elseif ($protect === 'code') {
-        $intro[] = 'To open it, we will email a code to this address.';
+        $intro[] = t('To open it, we will email a code to this address.');
     }
     return (bool) emailQueue([['email' => (string) $row['item_recipient'], 'greet' => '',
-        'footnote' => 'This email is for the person it was sent to. If it reached you by mistake, delete it and let us know.']], $subject, $email + [
+        'footnote' => t('This email is for the person it was sent to. If it reached you by mistake, delete it and let us know.')]], $subject, $email + [
+        'lang' => $lang,
         'tone' => 'primary',
         'intro' => $intro,
         'note' => trim((string) $row['item_note']),
@@ -670,13 +698,20 @@ function shareEmailLink($row, $url, $protect) {
 
 /** The code that opens a link protected by one, to its recipient. True when it was queued. */
 function shareEmailCode($row, $code) {
+    $lang = client_language();
+    return i18n_with($lang, fn() => _shareEmailCode($row, $code, $lang));
+}
+
+/** shareEmailCode() in the language that is current. */
+function _shareEmailCode($row, $code, $lang) {
     $company = shareCompany();
     return (bool) emailQueue([['email' => (string) $row['item_recipient'], 'greet' => '',
-        'footnote' => 'This email is for the person it was sent to. If it reached you by mistake, delete it and let us know.']], "Your code: $code - " . $company['name'], [
-        'kind' => 'Secure link', 'tone' => 'primary', 'preview' => "Your code is $code",
-        'title' => "Your code is $code",
-        'intro' => ['Enter it on the page that asked for it, to open the secure link ' . $company['name'] . ' sent you. It works for ' . SHARE_CODE_MINUTES . ' minutes.'],
-        'callout' => 'If you did not ask for it, someone else has the link - ignore this email and let us know.',
+        'footnote' => t('This email is for the person it was sent to. If it reached you by mistake, delete it and let us know.')]], t('Your code: {code} - {company}', ['{code}' => $code, '{company}' => $company['name']]), [
+        'lang' => $lang,
+        'kind' => t('Secure link'), 'tone' => 'primary', 'preview' => t('Your code is {code}', ['{code}' => $code]),
+        'title' => t('Your code is {code}', ['{code}' => $code]),
+        'intro' => [t('Enter it on the page that asked for it, to open the secure link {company} sent you. It works for {n} minutes.', ['{company}' => $company['name'], '{n}' => SHARE_CODE_MINUTES])],
+        'callout' => t('If you did not ask for it, someone else has the link - ignore this email and let us know.'),
     ], ['from' => shareMailFrom()]);
 }
 
