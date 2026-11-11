@@ -16,6 +16,9 @@ require_once "includes/inc_all_admin.php";
 $company = settingsCurrent(['company_tax_id'], 'companies');
 
 $reminder_rules = billingReminderRules();
+// From 3.6.4 - the late fee as a fixed amount for each reminder (functions/late_fee_fixed.php)
+$late_fee = settingsColumnExists($mysqli, 'config_invoice_late_fee_mode') ? lateFeeSettings(true) : null;
+$late_fee_currency = (string) (settingsCurrent(['company_currency'], 'companies')['company_currency'] ?? '');
 $reminder_before = implode(', ', array_reverse(array_map('abs', array_filter($reminder_rules['days'], function ($day) { return $day < 0; }))));
 $reminder_after = implode(', ', array_filter($reminder_rules['days'], function ($day) { return $day > 0; }));
 $reminder_on_due = settingsChecked('reminder_on_due', in_array(0, $reminder_rules['days'], true));
@@ -60,14 +63,47 @@ echo settingsPageStart('invoice');
                 <?php } ?>
             <?= settingsSectionEnd() ?>
 
-            <?= settingsSectionStart('late-fees', 'Late fees', 'A percent of what is still owed, added as a line of its own every 30 days late - by the nightly job, while payment reminders are on.') ?>
+            <?= settingsSectionStart('late-fees', 'Late fees', 'Added to an invoice as a line of its own by the nightly job, while payment reminders are on - a percent of what is still owed every 30 days late, or a fixed amount with each reminder.') ?>
                 <?php if ($config_invoice_late_fee_enable && !$reminder_rules['enabled']) { ?>
                     <div class="alert alert-warning py-2 small" data-late-fee-no-reminders><i class="fas fa-exclamation-triangle me-2"></i>Payment reminders are off, so no late fee is added.</div>
                 <?php } ?>
                 <?= settingsSwitch('config_invoice_late_fee_enable', $config_invoice_late_fee_enable, ['help' => 'Say so in the footer above, so a client knows before it comes.']) ?>
                 <div data-settings-depends-on="config_invoice_late_fee_enable">
-                    <?= settingsInput('config_invoice_late_fee_percent', $decimal(floatval($config_invoice_late_fee_percent), 2) ?: '0', ['icon' => 'fa-percent', 'type' => 'number', 'min' => 0, 'max' => 100, 'step' => '0.01',
-                        'label' => 'Each late fee', 'suffix' => '% of what is owed']) ?>
+                    <?php if ($late_fee) { ?>
+                        <?= settingsSelect('config_invoice_late_fee_mode', $late_fee['mode'], ['percent' => 'A percent of what is owed, every 30 days late', 'fixed' => 'A fixed amount, with each reminder'],
+                            ['icon' => 'fa-coins', 'label' => 'How the late fee is worked out', 'search' => false]) ?>
+                    <?php } ?>
+                    <div data-late-fee-percent>
+                        <?= settingsInput('config_invoice_late_fee_percent', $decimal(floatval($config_invoice_late_fee_percent), 2) ?: '0', ['icon' => 'fa-percent', 'type' => 'number', 'min' => 0, 'max' => 100, 'step' => '0.01',
+                            'label' => 'Each late fee', 'suffix' => '% of what is owed']) ?>
+                    </div>
+                    <?php if ($late_fee) { ?>
+                        <div data-late-fee-fixed>
+                            <div class="row g-3">
+                                <div class="col-md-6"><?= settingsInput('config_invoice_late_fee_fixed', $decimal($late_fee['fixed'], 2) ?: '0', ['icon' => 'fa-coins', 'type' => 'number', 'min' => 0, 'max' => 100000, 'step' => '0.01',
+                                    'label' => 'Each fee', 'suffix' => $late_fee_currency !== '' ? $late_fee_currency : 'in the invoice currency',
+                                    'help' => 'Added to the invoice with each reminder from the one below on. Fees add up.']) ?></div>
+                                <div class="col-md-6"><?= settingsSelect('config_invoice_late_fee_from', $late_fee['from'], [1 => 'The 1st reminder', 2 => 'The 2nd reminder', 3 => 'The 3rd reminder', 4 => 'The 4th reminder', 5 => 'The 5th reminder'],
+                                    ['icon' => 'fa-bell', 'label' => 'First reminder with a fee', 'search' => false,
+                                    'help' => 'Reminders are counted from the first one after the due date, as set under Reminders and statements.']) ?></div>
+                            </div>
+                            <div class="itflow-settings-note mt-3"><i class="fa fa-fw fa-list-ol me-1 text-body-secondary"></i><?= escapeHtml(lateFeePlanText($reminder_rules, $late_fee['from'], $late_fee['fixed'], $late_fee_currency)) ?></div>
+                        </div>
+                        <script>
+                        (function () {
+                            // Only the fee that is chosen is shown
+                            var form = document.currentScript.closest('form');
+                            function update() {
+                                var fixed = form.querySelector('[name="config_invoice_late_fee_mode"]').value === 'fixed';
+                                form.querySelector('[data-late-fee-fixed]').classList.toggle('d-none', !fixed);
+                                form.querySelector('[data-late-fee-percent]').classList.toggle('d-none', fixed);
+                            }
+                            form.addEventListener('change', update);
+                            form.addEventListener('settings:reset', update);
+                            update();
+                        })();
+                        </script>
+                    <?php } ?>
                 </div>
             <?= settingsSectionEnd() ?>
 

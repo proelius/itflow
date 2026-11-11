@@ -498,7 +498,7 @@ if ($reminder_rules['enabled']) {
         }
 
         // Late fee - every 30 days late, as a line of its own, at most once a day
-        if ($config_invoice_late_fee_enable == 1 && $days > 0 && $days % 30 === 0 && !cronInvoiceHistoryToday($invoice_id, 'Cron applied a late fee')) {
+        if ($config_invoice_late_fee_enable == 1 && !lateFeeIsFixed() && $days > 0 && $days % 30 === 0 && !cronInvoiceHistoryToday($invoice_id, 'Cron applied a late fee')) {
             $late_fee = round($balance * $config_invoice_late_fee_percent / 100, 2);
             if ($late_fee > 0) {
                 billingItemSave('invoice', $invoice_id, ['name' => 'Late Fee', 'description' => floatval($config_invoice_late_fee_percent) . '% late fee applied on ' . date('Y-m-d'), 'qty' => 1, 'price' => $late_fee, 'tax_id' => 0]);
@@ -508,6 +508,10 @@ if ($reminder_rules['enabled']) {
                 $balance = invoiceState($invoice, invoicePaid($invoice_id))['balance'];
             }
         }
+
+        // Late fee as a fixed amount for each reminder (functions/late_fee_fixed.php) - before the reminder, so it shows the fee
+        $invoice = lateFeeFixedApply($invoice, $row, $days, $reminder_rules);
+        $balance = invoiceState($invoice, invoicePaid($invoice_id))['balance'];
 
         if (!billingReminderOnDay($days, $reminder_rules)) {
             continue;

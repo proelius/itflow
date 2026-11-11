@@ -69,6 +69,20 @@ if (isset($_POST['edit_invoice_settings'])) {
     }
     $after['config_invoice_late_fee_percent'] = $late_fee;
 
+    // From 3.6.4 - or a fixed amount with each reminder from one on (functions/late_fee_fixed.php)
+    if (settingsColumnExists($mysqli, 'config_invoice_late_fee_mode')) {
+        $before += settingsCurrent(['config_invoice_late_fee_mode', 'config_invoice_late_fee_fixed', 'config_invoice_late_fee_from']);
+        $after['config_invoice_late_fee_mode'] = ($_POST['config_invoice_late_fee_mode'] ?? $before['config_invoice_late_fee_mode']) === 'fixed' ? 'fixed' : 'percent';
+        $fixed_fee = billingNumberInput((string) ($_POST['config_invoice_late_fee_fixed'] ?? $before['config_invoice_late_fee_fixed']));
+        if ($fixed_fee === null || $fixed_fee < 0 || $fixed_fee > 100000) {
+            $errors['config_invoice_late_fee_fixed'] = 'An amount, such as 20.00.';
+        } elseif ($after['config_invoice_late_fee_mode'] === 'fixed' && !empty($after['config_invoice_late_fee_enable']) && $fixed_fee <= 0) {
+            $errors['config_invoice_late_fee_fixed'] = 'Give the amount of each fee, such as 20.00.';
+        }
+        $after['config_invoice_late_fee_fixed'] = $fixed_fee;
+        $after['config_invoice_late_fee_from'] = max(1, min(5, intval($_POST['config_invoice_late_fee_from'] ?? $before['config_invoice_late_fee_from'])));
+    }
+
     if ($problem = settingsEmailProblem($after['config_invoice_paid_notification_email'])) {
         $errors['config_invoice_paid_notification_email'] = $problem;
     }
