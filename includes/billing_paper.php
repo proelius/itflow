@@ -41,29 +41,29 @@ $paper_status = $paper_type === 'recurring' ? (intval($paper_row['recurring_invo
 $paper_money = function ($amount) use ($paper_currency) {
     return escapeHtml(billingMoney($amount, $paper_currency));
 };
-$paper_title = ['invoice' => 'Invoice', 'quote' => 'Quote', 'recurring' => 'Recurring Invoice'][$paper_type];
+$paper_title = ['invoice' => t('Invoice'), 'quote' => t('Quote'), 'recurring' => t('Recurring Invoice')][$paper_type];
 $paper_footer = $paper_type === 'quote' ? ($GLOBALS['config_quote_footer'] ?? '') : ($GLOBALS['config_invoice_footer'] ?? '');
 
 // A stamp across a document that is done with
 $paper_stamp = '';
 if ($paper_type === 'invoice' && $paper_status === 'Paid') {
-    $paper_stamp = ['Paid', 'success'];
+    $paper_stamp = [t('Paid'), 'success'];
 } elseif ($paper_type === 'invoice' && $paper_status === 'Cancelled') {
-    $paper_stamp = ['Cancelled', 'danger'];
+    $paper_stamp = [t('Cancelled'), 'danger'];
 } elseif ($paper_type === 'quote' && in_array($paper_status, ['Accepted', 'Invoiced'], true)) {
-    $paper_stamp = ['Accepted', 'success'];
+    $paper_stamp = [t('Accepted'), 'success'];
 } elseif ($paper_type === 'quote' && $paper_status === 'Declined') {
-    $paper_stamp = ['Declined', 'danger'];
+    $paper_stamp = [t('Declined'), 'danger'];
 }
 
 $paper_dates = [];
 if ($paper_type === 'invoice') {
-    $paper_dates = ['Invoice date' => $paper_row['invoice_date'], 'Due' => $paper_row['invoice_due']];
+    $paper_dates = [t('Invoice date') => $paper_row['invoice_date'], t('Due') => $paper_row['invoice_due']];
 } elseif ($paper_type === 'quote') {
-    $paper_dates = ['Quote date' => $paper_row['quote_date'], 'Valid until' => $paper_row['quote_expire']];
+    $paper_dates = [t('Quote date') => $paper_row['quote_date'], t('Valid until') => $paper_row['quote_expire']];
 } else {
-    $paper_dates = ['Billed' => recurringInvoiceFrequencies()[$paper_row['recurring_invoice_frequency']] ?? ucfirst((string) $paper_row['recurring_invoice_frequency']),
-        'Next invoice' => $paper_row['recurring_invoice_next_date']];
+    $paper_dates = [t('Billed') => i18n_portal_label(recurringInvoiceFrequencies()[$paper_row['recurring_invoice_frequency']] ?? ucfirst((string) $paper_row['recurring_invoice_frequency'])),
+        t('Next invoice') => $paper_row['recurring_invoice_next_date']];
 }
 
 // A recurring invoice's seat lines - what each counts now, and whether the line is off
@@ -82,13 +82,13 @@ $paper_company_lines = array_merge(array_filter([
     formatAddress($paper_company['company_address'] ?? '', $paper_company['company_city'] ?? '', $paper_company['company_state'] ?? '', $paper_company['company_zip'] ?? '', $paper_company['company_country'] ?? '', "\n"),
     implode(' · ', array_filter([$paper_company['company_email'] ?? '', $paper_company['phone_display'] ?? ''])),
     $paper_company['company_website'] ?? '',
-    !empty($GLOBALS['config_invoice_show_tax_id']) && !empty($paper_company['company_tax_id']) ? 'Tax ID: ' . $paper_company['company_tax_id'] : '',
+    !empty($GLOBALS['config_invoice_show_tax_id']) && !empty($paper_company['company_tax_id']) ? t('Tax ID: {id}', ['{id}' => $paper_company['company_tax_id']]) : '',
 ]), billingTaxRegistrationLines($paper_totals));
 $paper_bill_lines = array_filter([
     formatAddress($paper_bill_to['location_address'] ?? '', $paper_bill_to['location_city'] ?? '', $paper_bill_to['location_state'] ?? '', $paper_bill_to['location_zip'] ?? '', $paper_bill_to['location_country'] ?? '', "\n"),
     $paper_bill_to['contact_name'] ?? '',
     implode(' · ', array_filter([$paper_bill_to['contact_email'] ?? '', $paper_bill_to['contact_phone'] ?? ''])),
-    !empty($paper_bill_to['client_tax_id_number']) ? 'Tax ID: ' . $paper_bill_to['client_tax_id_number'] : '',
+    !empty($paper_bill_to['client_tax_id_number']) ? t('Tax ID: {id}', ['{id}' => $paper_bill_to['client_tax_id_number']]) : '',
     // Exempt - said only when nothing here is taxed, so an older taxed invoice doesn't contradict itself
     !empty($paper_bill_to['tax_exempt_text']) && $paper_totals['tax'] == 0 ? $paper_bill_to['tax_exempt_text'] : '',
 ]);
@@ -123,16 +123,16 @@ $paper_bill_lines = array_filter([
     <!-- Who it is for, and what it comes to -->
     <div class="itflow-paper-parties">
         <div>
-            <div class="itflow-paper-label"><?= $paper_type === 'quote' ? 'Prepared for' : 'Bill to' ?></div>
+            <div class="itflow-paper-label"><?= $paper_type === 'quote' ? t('Prepared for') : t('Bill to') ?></div>
             <div class="fw-semibold"><?= escapeHtml($paper_bill_to['client_name'] ?? $paper_row['client_name']) ?></div>
             <div class="small text-body-secondary"><?= nl2br(escapeHtml(implode("\n", $paper_bill_lines))) ?></div>
         </div>
         <div class="itflow-paper-due text-md-end">
             <?php if ($paper_type === 'invoice') { ?>
-                <div class="itflow-paper-label"><?= in_array($paper_status, ['Paid', 'Cancelled', 'Non-Billable'], true) ? 'Balance' : 'Amount due' ?></div>
+                <div class="itflow-paper-label"><?= in_array($paper_status, ['Paid', 'Cancelled', 'Non-Billable'], true) ? t('Balance') : t('Amount due') ?></div>
                 <div class="itflow-paper-amount"><?= $paper_money($paper['balance'] ?? $paper_totals['total']) ?></div>
                 <?php if (!in_array($paper_status, ['Paid', 'Cancelled', 'Non-Billable', 'Draft'], true) && ($paper['balance'] ?? 0) > 0) { ?>
-                    <div class="small text-body-secondary">by <?= escapeHtml($paper_row['invoice_due']) ?></div>
+                    <div class="small text-body-secondary"><?= t('by {date}', ['{date}' => escapeHtml($paper_row['invoice_due'])]) ?></div>
                 <?php } ?>
             <?php } elseif ($paper_type === 'quote' && $paper_groups) {
                 $paper_first = true;
@@ -140,22 +140,22 @@ $paper_bill_lines = array_filter([
                     if ($paper_frequency === '' && !$paper_group['items'] && $paper_group['discount'] == 0) {
                         continue;
                     } ?>
-                    <div class="itflow-paper-label <?= $paper_first ? '' : 'mt-2' ?>"><?= $paper_frequency === '' ? 'Up front' : escapeHtml($paper_group['label']) ?></div>
+                    <div class="itflow-paper-label <?= $paper_first ? '' : 'mt-2' ?>"><?= $paper_frequency === '' ? t('Up front') : escapeHtml(billingEmailGroupLabel($paper_group['label'])) ?></div>
                     <div class="<?= $paper_first ? 'itflow-paper-amount' : 'fs-5 fw-semibold' ?>"><?= $paper_money($paper_group['total']) ?></div>
                 <?php $paper_first = false;
                 }
             } elseif ($paper_type === 'quote') { ?>
-                <div class="itflow-paper-label">Quote total</div>
+                <div class="itflow-paper-label"><?= t('Quote total') ?></div>
                 <div class="itflow-paper-amount"><?= $paper_money($paper_totals['total']) ?></div>
             <?php } else { ?>
-                <div class="itflow-paper-label">Each <?= recurringInvoicePeriodWord($paper_row['recurring_invoice_frequency']) ?></div>
+                <div class="itflow-paper-label"><?= escapeHtml(recurringInvoiceEachLabel($paper_row['recurring_invoice_frequency'])) ?></div>
                 <div class="itflow-paper-amount"><?= $paper_money($paper_totals['total']) ?></div>
             <?php } ?>
         </div>
     </div>
 
     <?php if (trim((string) $paper_row["{$paper_c}_scope"]) !== '') { ?>
-        <div class="itflow-paper-scope"><span class="itflow-paper-label me-2">For</span><?= escapeHtml($paper_row["{$paper_c}_scope"]) ?></div>
+        <div class="itflow-paper-scope"><span class="itflow-paper-label me-2"><?= t('For') ?></span><?= escapeHtml($paper_row["{$paper_c}_scope"]) ?></div>
     <?php } ?>
 
     <!-- The lines -->
@@ -173,11 +173,11 @@ $paper_bill_lines = array_filter([
             <thead>
             <tr>
                 <?php if ($paper_edit) { ?><th class="itflow-paper-handle d-print-none"></th><?php } ?>
-                <th>Item</th>
-                <th class="text-end">Qty</th>
-                <th class="text-end">Price</th>
-                <th class="text-end">Tax</th>
-                <th class="text-end">Amount</th>
+                <th><?= t('Item') ?></th>
+                <th class="text-end"><?= t('Qty') ?></th>
+                <th class="text-end"><?= t('Price') ?></th>
+                <th class="text-end"><?= t('Tax') ?></th>
+                <th class="text-end"><?= t('Amount') ?></th>
                 <?php if ($paper_edit) { ?><th class="d-print-none"></th><?php } ?>
             </tr>
             </thead>
@@ -249,7 +249,7 @@ $paper_bill_lines = array_filter([
                 <?php }
             } ?>
             <?php if (!$paper_items && !$paper_edit) { ?>
-                <tr><td colspan="5" class="text-center text-body-secondary py-4">Nothing on it yet.</td></tr>
+                <tr><td colspan="5" class="text-center text-body-secondary py-4"><?= t('Nothing on it yet.') ?></td></tr>
             <?php } ?>
             </tbody>
             <?php if ($paper_edit) { ?>
@@ -325,7 +325,7 @@ $paper_bill_lines = array_filter([
                     data-csrf="<?= escapeHtml($paper['csrf'] ?? '') ?>"><?= escapeHtml($paper_row["{$paper_c}_note"]) ?></textarea>
                 <div class="d-none d-print-block small"><?= nl2br(escapeHtml($paper_row["{$paper_c}_note"])) ?></div>
             <?php } elseif (trim((string) $paper_row["{$paper_c}_note"]) !== '') { ?>
-                <div class="itflow-paper-label">Notes</div>
+                <div class="itflow-paper-label"><?= t('Notes') ?></div>
                 <div class="small"><?= nl2br(escapeHtml($paper_row["{$paper_c}_note"])) ?></div>
             <?php } ?>
         </div>
@@ -335,33 +335,33 @@ $paper_bill_lines = array_filter([
                     if ($paper_frequency === '' && !$paper_group['items'] && $paper_group['discount'] == 0) {
                         continue;
                     } ?>
-                    <tr class="itflow-paper-totals-head"><th colspan="2"><?= escapeHtml($paper_group['label']) ?></th></tr>
-                    <tr><th>Subtotal</th><td><?= $paper_money($paper_group['subtotal']) ?></td></tr>
+                    <tr class="itflow-paper-totals-head"><th colspan="2"><?= escapeHtml(billingEmailGroupLabel($paper_group['label'])) ?></th></tr>
+                    <tr><th><?= t('Subtotal') ?></th><td><?= $paper_money($paper_group['subtotal']) ?></td></tr>
                     <?php if ($paper_group['discount'] != 0) { ?>
-                        <tr><th>Discount</th><td>-<?= $paper_money($paper_group['discount']) ?></td></tr>
+                        <tr><th><?= t('Discount') ?></th><td>-<?= $paper_money($paper_group['discount']) ?></td></tr>
                     <?php } ?>
                     <?php foreach ($paper_group['taxes'] as $tax_label => $tax_amount) { ?>
                         <tr><th><?= escapeHtml($tax_label) ?></th><td><?= $paper_money($tax_amount) ?></td></tr>
                     <?php } ?>
-                    <tr class="itflow-paper-total"><th><?= $paper_frequency === '' ? 'Total up front' : 'Total ' . strtolower(escapeHtml($paper_group['label'])) ?></th><td><?= $paper_money($paper_group['total']) ?></td></tr>
+                    <tr class="itflow-paper-total"><th><?= billingGroupTotalLabel($paper_frequency) ?></th><td><?= $paper_money($paper_group['total']) ?></td></tr>
                 <?php } ?>
             </table>
         <?php } else { ?>
         <table class="itflow-paper-totals">
-            <tr><th>Subtotal</th><td><?= $paper_money($paper_totals['subtotal']) ?></td></tr>
+            <tr><th><?= t('Subtotal') ?></th><td><?= $paper_money($paper_totals['subtotal']) ?></td></tr>
             <?php if ($paper_totals['discount'] != 0) { ?>
-                <tr><th>Discount</th><td>-<?= $paper_money($paper_totals['discount']) ?></td></tr>
+                <tr><th><?= t('Discount') ?></th><td>-<?= $paper_money($paper_totals['discount']) ?></td></tr>
             <?php } ?>
             <?php foreach ($paper_totals['taxes'] as $tax_label => $tax_amount) { ?>
                 <tr><th><?= escapeHtml($tax_label) ?></th><td><?= $paper_money($tax_amount) ?></td></tr>
             <?php } ?>
             <?php if ($paper_totals['credit'] > 0) { ?>
-                <tr><th>Credit</th><td>-<?= $paper_money($paper_totals['credit']) ?></td></tr>
+                <tr><th><?= t('Credit') ?></th><td>-<?= $paper_money($paper_totals['credit']) ?></td></tr>
             <?php } ?>
-            <tr class="itflow-paper-total"><th>Total</th><td><?= $paper_money($paper_totals['total']) ?></td></tr>
+            <tr class="itflow-paper-total"><th><?= t('Total') ?></th><td><?= $paper_money($paper_totals['total']) ?></td></tr>
             <?php if ($paper_type === 'invoice' && ($paper['paid'] ?? 0) > 0) { ?>
-                <tr class="text-success"><th>Paid</th><td>-<?= $paper_money($paper['paid']) ?></td></tr>
-                <tr class="itflow-paper-total"><th>Balance due</th><td><?= $paper_money($paper['balance']) ?></td></tr>
+                <tr class="text-success"><th><?= t('Paid') ?></th><td>-<?= $paper_money($paper['paid']) ?></td></tr>
+                <tr class="itflow-paper-total"><th><?= t('Balance due') ?></th><td><?= $paper_money($paper['balance']) ?></td></tr>
             <?php } ?>
         </table>
         <?php } ?>

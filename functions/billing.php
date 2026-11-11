@@ -680,7 +680,7 @@ function billingTaxRegistrationLines(array $totals) {
     foreach ($totals['tax_registrations'] ?? [] as $name => $number) {
         // One number used by two rates is shown once
         if (!isset($lines[$number])) {
-            $lines[$number] = "$name No. $number";
+            $lines[$number] = t('{name} No. {number}', ['{name}' => $name, '{number}' => $number]);
         }
     }
     return array_values($lines);
@@ -1858,6 +1858,21 @@ function recurringInvoiceFrequencies() {
 /** How many months a run covers. */
 function recurringInvoiceMonths($frequency) {
     return ['quarter' => 3, 'year' => 12][(string) $frequency] ?? 1;
+}
+
+/** "Total up front", "Total each month"... - the totals line of a quote's block, in the current language. */
+function billingGroupTotalLabel($frequency) {
+    return match ((string) $frequency) {
+        'month' => t('Total each month'),
+        'quarter' => t('Total each quarter'),
+        'year' => t('Total each year'),
+        default => t('Total up front'),
+    };
+}
+
+/** "Each month", "Each quarter" or "Each year" for a recurring invoice's frequency, in the current language. */
+function recurringInvoiceEachLabel($frequency) {
+    return billingEmailGroupLabel('Each ' . recurringInvoicePeriodWord($frequency));
 }
 
 /** "month", "quarter" or "year" - for "each month", "a quarter". */
