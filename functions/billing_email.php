@@ -370,6 +370,7 @@ function _billingInvoiceEmail(array $invoice, array $opts = []) {
     if ($kind === 'reminder') {
         $days = $state['days'] !== null ? -intval($state['days']) : 0;
         $balance = billingMoney($state['balance'], $currency);
+        $summary += lateFeeEmailRows($invoice); // one row for each reminder fee the invoice carries (functions/late_fee_fixed.php)
         $summary[t('Balance due')] = $balance;
         $n += ['{balance}' => $balance, '{date}' => billingEmailDate($invoice['invoice_due']), '{n}' => $days];
         if ($days < 0) {

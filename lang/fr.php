@@ -1700,4 +1700,12 @@ return [
     'Receipt{qr_bill}' => 'Récépissé{qr_bill}',
     'Pay by QR-bill' => 'Payer avec la QR-facture',
     'Scan it with your banking app, or enter the IBAN and the reference below.' => 'Scannez-le avec votre application bancaire, ou saisissez l’IBAN et la référence ci-dessous.',
+    'Reminder fee' => 'Frais de rappel',
+    'Fee for reminder {number}, applied on {date}' => 'Frais pour le rappel n° {number}, appliqués le {date}',
+    'First reminder fee' => 'Frais de premier rappel',
+    'Second reminder fee' => 'Frais de deuxième rappel',
+    'Third reminder fee' => 'Frais de troisième rappel',
+    'Fourth reminder fee' => 'Frais de quatrième rappel',
+    'Fifth reminder fee' => 'Frais de cinquième rappel',
+    'Later reminder fees' => 'Frais des rappels suivants',
 ];
