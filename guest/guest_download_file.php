@@ -15,6 +15,7 @@ require_once "../includes/inc_set_timezone.php";
 require_once "../functions.php";
 require_once "../includes/load_global_settings.php";
 require_once "../includes/session_init.php";
+i18n_set_language(client_language());
 
 header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex, nofollow');
@@ -31,7 +32,7 @@ function shareDownloadStop($message, $gone = false) {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    shareDownloadStop('Open the link you were sent, and download from there.');
+    shareDownloadStop(t('Open the link you were sent, and download from there.'));
 }
 
 $input = json_decode((string) file_get_contents('php://input'), true);
@@ -43,23 +44,23 @@ shareSweep();
 $secret = (string) ($input['key'] ?? '');
 $row = shareFind(intval($input['id'] ?? 0), $secret);
 if (!$row || !in_array($row['item_type'], ['File', 'Export'], true)) {
-    shareDownloadStop('The link is not right - check you have all of it.', true);
+    shareDownloadStop(t('The link is not right - check you have all of it.'), true);
 }
 
 $state = shareState($row);
 $again = shareOpenedHere($row);
 if (!($state === 'active' || ($state === 'used' && $again))) {
-    shareDownloadStop($state === 'expired' ? 'It has expired.' : ($state === 'used' ? 'It has been downloaded as many times as it allowed.' : 'It was turned off.'), true);
+    shareDownloadStop($state === 'expired' ? t('It has expired.') : ($state === 'used' ? t('It has been downloaded as many times as it allowed.') : t('It was turned off.')), true);
 }
 if (!shareVerified($row)) {
-    shareDownloadStop('Enter the passphrase or code first.');
+    shareDownloadStop(t('Enter the passphrase or code first.'));
 }
 
 if ($row['item_type'] === 'Export') {
     // The PDF made with the link - opened with its secret, read before a view is used
     $pdf = shareExportRead($row['item_id'], shareContentKey($secret));
     if ($pdf === null) {
-        shareDownloadStop('The documentation it shared is no longer there - ask for a new link.', true);
+        shareDownloadStop(t('The documentation it shared is no longer there - ask for a new link.'), true);
     }
     $file = ['file_name' => shareName($row)];
     $what = 'IT documentation ' . $file['file_name'];
@@ -71,7 +72,7 @@ if ($row['item_type'] === 'Export') {
 
     // Don't use a view on a file that is missing from disk
     if (!$file || !$client_dir || !$path || strpos($path, $client_dir . DIRECTORY_SEPARATOR) !== 0 || !is_readable($path)) {
-        shareDownloadStop('The file it shared has been removed.', true);
+        shareDownloadStop(t('The file it shared has been removed.'), true);
     }
     $what = 'File ' . $file['file_name'];
 }
@@ -79,7 +80,7 @@ if ($row['item_type'] === 'Export') {
 if (!$again) {
     // The claim, before a byte is sent - racing requests cannot both win the last view
     if (!shareClaim($row['item_id'])) {
-        shareDownloadStop('It has been downloaded as many times as it allowed.', true);
+        shareDownloadStop(t('It has been downloaded as many times as it allowed.'), true);
     }
     shareSessionMark($row['item_id'], 'opened');
     $who = shareProtection($row) === 'code' ? ' by ' . $row['item_recipient'] . ' (emailed code)' : (shareProtection($row) === 'passphrase' ? ' with the passphrase' : '');
@@ -91,8 +92,10 @@ if (!$again) {
 $after_row = shareRow($row['item_id']);
 $left = intval($after_row['item_view_limit']) - intval($after_row['item_views']);
 $after = intval($after_row['item_view_limit']) && $left <= 0
-    ? 'That was the last download this link allows.'
-    : (intval($after_row['item_view_limit']) ? "It can be downloaded $left more " . ($left === 1 ? 'time' : 'times') . '.' : 'The link keeps working until ' . date('M j \a\t g:i A', strtotime($after_row['item_expire_at'])) . '.');
+    ? t('That was the last download this link allows.')
+    : (intval($after_row['item_view_limit'])
+        ? ($left === 1 ? t('It can be downloaded {n} more time.', ['{n}' => $left]) : t('It can be downloaded {n} more times.', ['{n}' => $left]))
+        : t('The link keeps working until {when}.', ['{when}' => t('{date} at {time}', ['{date}' => date('M j', strtotime($after_row['item_expire_at'])), '{time}' => date('g:i A', strtotime($after_row['item_expire_at']))])]));
 
 $name = str_replace(["\r", "\n", '"'], ['', '', "'"], (string) $file['file_name']);
 $ascii = preg_replace('/[^\x20-\x7E]/', '_', $name);
