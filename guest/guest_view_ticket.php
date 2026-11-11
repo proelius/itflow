@@ -223,7 +223,7 @@ $urgent = $open && $company_phone !== '' && in_array($ticket['ticket_priority'],
                         <li class="itflow-portal-todo itflow-portal-todo-wrap">
                             <span class="itflow-portal-todo-icon is-info"><i class="fas fa-calendar-check"></i></span>
                             <span class="itflow-portal-todo-main">
-                                <div><?= t('Booked for {when}', ['{when}' => escapeHtml(date('l, F j', strtotime($ticket['ticket_schedule'])) . ' at ' . date($config_time_format, strtotime($ticket['ticket_schedule'])))]) ?></div>
+                                <div><?= t('Booked for {when}', ['{when}' => escapeHtml(t('{date} at {time}', ['{date}' => i18n_date('l, F j', strtotime($ticket['ticket_schedule'])), '{time}' => i18n_date($config_time_format, strtotime($ticket['ticket_schedule']))]))]) ?></div>
                                 <div><?= !empty($ticket['ticket_onsite']) ? ($booked_where !== '' ? t('Onsite at {where}', ['{where}' => escapeHtml($booked_where)]) : t('Onsite')) : t('Remote - we will connect to you') ?></div>
                             </span>
                             <a class="btn btn-sm btn-light border" href="guest_post.php?ticket_calendar=<?= $ticket_id ?>&amp;url_key=<?= rawurlencode($url_key) ?>"><i class="far fa-calendar-plus me-1"></i><?= t('Add to calendar') ?></a>
