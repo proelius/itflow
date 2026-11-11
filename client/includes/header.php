@@ -53,7 +53,7 @@ $portal_contact_name = (string) ($contact['contact_name'] ?? '');
 ?>
 
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="<?= $portal_dark ? 'dark' : 'light' ?>" data-lte-color-mode="off" data-lte-print="plain">
+<html lang="<?= escapeHtml(i18n_current_language()) ?>" data-bs-theme="<?= $portal_dark ? 'dark' : 'light' ?>" data-lte-color-mode="off" data-lte-print="plain">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">

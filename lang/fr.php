@@ -2093,4 +2093,10 @@ return [
     'Y-m-d' => 'd.m.Y',
     '{n} day before it ends' => '{n} jour avant la fin',
     'It renews itself for another {term} unless notice is given at least {n} day before it ends.' => 'Il se renouvelle automatiquement pour une durée de {term}, sauf préavis donné au moins {n} jour avant son terme.',
+    'Guest View Quote' => 'Devis',
+    'Guest View Invoice' => 'Facture',
+    'Guest View Contract' => 'Contrat',
+    'Guest Approve Ticket Task' => 'Approbation d’une tâche de ticket',
+    'Guest Calendar Feed' => 'Calendrier',
+    'Share' => 'Partage',
 ];

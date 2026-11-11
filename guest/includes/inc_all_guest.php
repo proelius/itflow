@@ -29,6 +29,16 @@ $session_company_name = $row['company_name'];
 // Page setup
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/page_title.php';
 
+// How each guest page is named in the browser tab (the footer sets the tab title)
+$guest_page_titles = [
+    'Guest View Quote' => t('Guest View Quote'),
+    'Guest View Invoice' => t('Guest View Invoice'),
+    'Guest View Contract' => t('Guest View Contract'),
+    'Guest Approve Ticket Task' => t('Guest Approve Ticket Task'),
+    'Guest Calendar Feed' => t('Guest Calendar Feed'),
+    'Share' => t('Share'),
+];
+
 // Layout UI
 require_once $_SERVER['DOCUMENT_ROOT'] . '/guest/includes/guest_header.php';
 

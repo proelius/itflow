@@ -51,7 +51,7 @@ if (empty($_SESSION['portal_signup_form'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light" data-lte-color-mode="off">
+<html lang="<?= escapeHtml(i18n_current_language()) ?>" data-bs-theme="light" data-lte-color-mode="off">
 <head>
     <meta charset="utf-8">
     <title><?= escapeHtml($company_name) ?> | <?= t('Create an account') ?></title>
