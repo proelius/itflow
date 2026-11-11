@@ -416,7 +416,7 @@ function billingStatementPdfRender(array $statement) {
         $company['company_website'] ?? '',
     ]);
     $logo = !empty($company['logo_path']) ? '<img src="' . $e($company['logo_path']) . '" height="42"><br>' : '';
-    $dates = [t('Statement date') => date('Y-m-d'), t('Period') => $statement['from'] !== '' ? t('{from} to {to}', ['{from}' => $statement['from'], '{to}' => $statement['to']]) : t('Up to {date}', ['{date}' => $statement['to']])];
+    $dates = [t('Statement date') => i18n_date_value(date('Y-m-d')), t('Period') => $statement['from'] !== '' ? t('{from} to {to}', ['{from}' => i18n_date_value($statement['from']), '{to}' => i18n_date_value($statement['to'])]) : t('Up to {date}', ['{date}' => i18n_date_value($statement['to'])])];
     $dates_html = '';
     foreach ($dates as $date_label => $value) {
         $dates_html .= '<tr><td align="right" style="color:' . $grey . ';">' . $e($date_label) . '</td><td align="right" width="42mm">' . $e($value) . '</td></tr>';
