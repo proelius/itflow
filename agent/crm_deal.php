@@ -305,57 +305,124 @@ $kind_badge = ['open' => 'bg-secondary', 'won' => 'bg-success', 'lost' => 'bg-da
             <div class="card-body">
                 <h5 class="mb-3">Activities</h5>
                 <?php if ($can_edit) { ?>
-                    <form action="post.php" method="post" class="mb-3">
+                    <form action="post.php" method="post" class="mb-3" id="crmActivityForm">
                         <?= crmCsrf() ?>
                         <input type="hidden" name="deal_id" value="<?= intval($deal['deal_id']) ?>">
                         <div class="row g-2 mb-2">
                             <div class="col-md-4">
-                                <select class="form-select" name="type"><?= crmOptions(forkCrmActivityTypes(), 'note') ?></select>
+                                <select class="form-select" name="status" id="crmStatus" title="Did it happen, or is it planned?">
+                                    <option value="done">It happened - log it</option>
+                                    <option value="planned">Plan it</option>
+                                </select>
                             </div>
-                            <div class="col-md-4">
-                                <input type="date" class="form-control" name="due" title="Due date - makes it a task">
-                            </div>
-                            <div class="col-md-4">
-                                <select class="form-select" name="assignee" title="Who does the task">
+                            <div class="col-md-4"><select class="form-select" name="type"><?= crmOptions(forkCrmActivityTypes(), 'call') ?></select></div>
+                            <div class="col-md-4" id="crmWho" style="display:none">
+                                <select class="form-select" name="assignee" title="Who does it">
                                     <option value="0">Anyone</option>
                                     <?= crmOptions($user_choices, $session_user_id) ?>
                                 </select>
                             </div>
                         </div>
-                        <textarea class="form-control mb-2" name="text" rows="2" maxlength="5000" placeholder="What was said or done, or what is to do (a date makes it a task)" required></textarea>
+                        <div class="row g-2 mb-2" id="crmPlannedFields" style="display:none">
+                            <div class="col-md-4"><input type="date" class="form-control" name="due" title="Date"></div>
+                            <div class="col-md-4"><input type="time" class="form-control" name="time" title="Time (optional)"></div>
+                            <div class="col-md-4"><select class="form-select" name="minutes" title="Length"><?= crmOptions(forkCrmMinutesChoices(), 60) ?></select></div>
+                        </div>
+                        <textarea class="form-control mb-2" name="text" rows="2" maxlength="5000" placeholder="What was said or done - or what is planned" required></textarea>
+                        <div id="crmNextStep" class="border rounded p-2 mb-2">
+                            <div class="fw-semibold small mb-1"><i class="fas fa-calendar-plus me-1"></i>Next step (optional) - e.g. the meeting the call was to fix</div>
+                            <?= crmNextStepFields($user_choices, $session_user_id) ?>
+                        </div>
                         <button type="submit" name="add_crm_activity" value="1" class="btn btn-primary btn-sm"><i class="fas fa-plus me-2"></i>Add</button>
                     </form>
+                    <script>
+                    (function () {
+                        var status = document.getElementById('crmStatus');
+                        function sync() {
+                            var planned = status.value === 'planned';
+                            document.getElementById('crmPlannedFields').style.display = planned ? '' : 'none';
+                            document.getElementById('crmWho').style.display = planned ? '' : 'none';
+                            document.getElementById('crmNextStep').style.display = planned ? 'none' : '';
+                        }
+                        status.addEventListener('change', sync);
+                        sync();
+                    })();
+                    </script>
                 <?php } ?>
                 <?php if (!$activities) { ?>
                     <p class="text-secondary mb-0">Nothing yet.</p>
                 <?php } ?>
-                <?php foreach ($activities as $activity) {
+                <?php
+                $by_id = [];
+                foreach ($activities as $activity) {
+                    $by_id[intval($activity['activity_id'])] = $activity;
+                }
+                $complete_id = intval($_GET['complete'] ?? 0);
+                $open_stage_choices = [];
+                foreach ($all_stages as $stage_option) {
+                    if ($stage_option['stage_kind'] !== 'lost') {
+                        $open_stage_choices[intval($stage_option['stage_id'])] = $stage_option['stage_name'];
+                    }
+                }
+                foreach ($activities as $activity) {
                     $is_task = $activity['activity_due'] !== null;
                     $is_done = $activity['activity_done_at'] !== null;
+                    $meeting = forkCrmNeedsDebrief($activity);
+                    $late = $meeting && forkCrmDueState($activity['activity_due'], $today) === 'overdue';
+                    $parent = $by_id[intval($activity['activity_parent_id'])] ?? null;
                     ?>
-                    <div class="d-flex justify-content-between border-bottom py-2">
-                        <div>
-                            <span class="badge bg-secondary"><?= escapeHtml(forkCrmActivityTypes()[$activity['activity_type']] ?? 'Note') ?></span>
-                            <?php if ($is_task) { ?>
-                                <?= $is_done ? '<span class="badge bg-success">Done</span>' : crmDueBadge($activity['activity_due']) ?>
-                            <?php } ?>
-                            <div class="<?= $is_task && $is_done ? 'text-decoration-line-through text-secondary' : '' ?>"><?= nl2br(escapeHtml($activity['activity_text'])) ?></div>
-                            <div class="small text-secondary"><?= escapeHtml(substr($activity['activity_created_at'], 0, 16)) ?><?= $is_task && (string) $activity['user_name'] !== '' ? ' &middot; for ' . escapeHtml($activity['user_name']) : '' ?></div>
-                        </div>
-                        <?php if ($can_edit) { ?>
-                            <div class="text-nowrap ms-2">
+                    <div class="border-bottom py-2" id="a-<?= intval($activity['activity_id']) ?>">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <span class="badge bg-secondary"><?= escapeHtml(forkCrmActivityTypes()[$activity['activity_type']] ?? 'Note') ?></span>
                                 <?php if ($is_task) { ?>
-                                    <form action="post.php" method="post" class="d-inline">
+                                    <?= $is_done ? '<span class="badge bg-success">Done</span> <span class="small text-secondary">' . escapeHtml(forkCrmWhen($activity['activity_due'], $activity['activity_due_time'])) . '</span>' : crmWhenBadge($activity) ?>
+                                    <?= $late ? '<span class="badge bg-warning text-dark">To debrief</span>' : '' ?>
+                                <?php } ?>
+                                <div class="<?= $is_task && $is_done ? 'text-secondary' : '' ?>"><?= nl2br(escapeHtml($activity['activity_text'])) ?></div>
+                                <?php if ((string) $activity['activity_outcome'] !== '') { ?>
+                                    <div class="border-start border-3 border-success ps-2 mt-1"><span class="small text-secondary">Debrief</span><br><?= nl2br(escapeHtml($activity['activity_outcome'])) ?></div>
+                                <?php } ?>
+                                <div class="small text-secondary">
+                                    <?= escapeHtml(substr($activity['activity_created_at'], 0, 16)) ?><?= $is_task && (string) $activity['user_name'] !== '' ? ' &middot; for ' . escapeHtml($activity['user_name']) : '' ?>
+                                    <?php if ($parent) { ?>&middot; planned during the <?= escapeHtml(strtolower(forkCrmActivityTypes()[$parent['activity_type']] ?? 'activity')) ?> of <?= escapeHtml(substr($parent['activity_created_at'], 0, 10)) ?><?php } ?>
+                                    <?php if ($meeting && forkCrmDateClean($activity['activity_due']) !== null) { ?>&middot; <a href="crm_ics.php?activity_id=<?= intval($activity['activity_id']) ?>"><i class="far fa-calendar-plus"></i> Add to my calendar</a><?php } ?>
+                                </div>
+                            </div>
+                            <?php if ($can_edit) { ?>
+                                <div class="text-nowrap ms-2">
+                                    <?php if ($is_task && !$is_done && in_array($activity['activity_type'], ['meeting', 'call'], true)) { ?>
+                                        <button type="button" class="btn btn-sm btn-success" data-bs-toggle="collapse" data-bs-target="#complete-<?= intval($activity['activity_id']) ?>" title="Done - write the debrief"><i class="fas fa-clipboard-check me-1"></i>Debrief</button>
+                                    <?php } elseif ($is_task) { ?>
+                                        <form action="post.php" method="post" class="d-inline">
+                                            <?= crmCsrf() ?>
+                                            <input type="hidden" name="activity_id" value="<?= intval($activity['activity_id']) ?>">
+                                            <?php if ($is_done) { ?><input type="hidden" name="reopen" value="1"><?php } ?>
+                                            <button type="submit" name="done_crm_activity" value="1" class="btn btn-sm btn-outline-success" title="<?= $is_done ? 'Open again' : 'Mark done' ?>"><i class="fas fa-<?= $is_done ? 'undo' : 'check' ?>"></i></button>
+                                        </form>
+                                    <?php } ?>
+                                    <form action="post.php" method="post" class="d-inline" onsubmit="return confirm('Delete this activity?');">
                                         <?= crmCsrf() ?>
                                         <input type="hidden" name="activity_id" value="<?= intval($activity['activity_id']) ?>">
-                                        <?php if ($is_done) { ?><input type="hidden" name="reopen" value="1"><?php } ?>
-                                        <button type="submit" name="done_crm_activity" value="1" class="btn btn-sm btn-outline-success" title="<?= $is_done ? 'Open again' : 'Mark done' ?>"><i class="fas fa-<?= $is_done ? 'undo' : 'check' ?>"></i></button>
+                                        <button type="submit" name="delete_crm_activity" value="1" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
                                     </form>
-                                <?php } ?>
-                                <form action="post.php" method="post" class="d-inline" onsubmit="return confirm('Delete this activity?');">
+                                </div>
+                            <?php } ?>
+                        </div>
+                        <?php if ($can_edit && $is_task && !$is_done && in_array($activity['activity_type'], ['meeting', 'call'], true)) { ?>
+                            <div class="collapse<?= $complete_id === intval($activity['activity_id']) ? ' show' : '' ?> mt-2" id="complete-<?= intval($activity['activity_id']) ?>">
+                                <form action="post.php" method="post" class="border rounded p-2">
                                     <?= crmCsrf() ?>
                                     <input type="hidden" name="activity_id" value="<?= intval($activity['activity_id']) ?>">
-                                    <button type="submit" name="delete_crm_activity" value="1" class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                                    <label class="form-label small fw-semibold">Point de situation - how did it go?</label>
+                                    <textarea class="form-control mb-2" name="outcome" rows="3" maxlength="5000" placeholder="What was decided, what the client thinks, what is left to do"></textarea>
+                                    <div class="fw-semibold small mb-1"><i class="fas fa-calendar-plus me-1"></i>Next step (optional)</div>
+                                    <div class="mb-2"><?= crmNextStepFields($user_choices, $session_user_id) ?></div>
+                                    <div class="row g-2 align-items-center mb-2">
+                                        <div class="col-auto"><label class="col-form-label small">Move the deal to</label></div>
+                                        <div class="col-auto"><select class="form-select form-select-sm" name="stage_id"><?= crmOptions($open_stage_choices, $deal['deal_stage_id']) ?></select></div>
+                                    </div>
+                                    <button type="submit" name="complete_crm_activity" value="1" class="btn btn-success btn-sm"><i class="fas fa-check me-2"></i>Done - save the debrief</button>
                                 </form>
                             </div>
                         <?php } ?>

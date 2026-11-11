@@ -68,3 +68,24 @@ function crmAddressFields($required) {
     }
     return $html . '</select></div></div>';
 }
+
+/** The fields of a next step - what, when, how long, who - named next_*; for the activity forms. */
+function crmNextStepFields(array $users, $default_user) {
+    $types = array_diff_key(forkCrmActivityTypes(), ['note' => 1]);
+    return '<div class="row g-2">'
+        . '<div class="col-md-3"><label class="form-label small">What</label><select class="form-select form-select-sm" name="next_type">' . crmOptions($types, 'meeting') . '</select></div>'
+        . '<div class="col-md-3"><label class="form-label small">Date</label><input type="date" class="form-control form-control-sm" name="next_date"></div>'
+        . '<div class="col-md-2"><label class="form-label small">Time</label><input type="time" class="form-control form-control-sm" name="next_time"></div>'
+        . '<div class="col-md-2"><label class="form-label small">Length</label><select class="form-select form-select-sm" name="next_minutes">' . crmOptions(forkCrmMinutesChoices(), 60) . '</select></div>'
+        . '<div class="col-md-2"><label class="form-label small">Who</label><select class="form-select form-select-sm" name="next_assignee"><option value="0">Anyone</option>' . crmOptions($users, $default_user) . '</select></div>'
+        . '<div class="col-12"><input type="text" class="form-control form-control-sm" name="next_text" maxlength="500" placeholder="What it is about (optional)"></div>'
+        . '</div>';
+}
+
+/** A planned activity's date, with its time and length, for the lists. */
+function crmWhenBadge(array $activity) {
+    $badge = crmDueBadge($activity['activity_due']);
+    $time = forkCrmTimeClean($activity['activity_due_time'] ?? '');
+    $text = $time !== null ? ' <span class="small">' . escapeHtml($time) . (intval($activity['activity_minutes'] ?? 0) > 0 ? ' &middot; ' . escapeHtml(forkCrmMinutesChoices()[intval($activity['activity_minutes'])] ?? '') : '') . '</span>' : '';
+    return $badge . $text;
+}

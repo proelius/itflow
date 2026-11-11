@@ -169,6 +169,36 @@ function forkCrmDateClean($value) {
     return $text;
 }
 
+/** A time of day HH:MM from input (14:30, 9:05, 14h30), or null when it is not one. */
+function forkCrmTimeClean($value) {
+    $text = trim((string) $value);
+    if (!preg_match('/^([0-9]{1,2})[:h.]([0-9]{2})(?::[0-9]{2})?$/', $text, $m) || (int) $m[1] > 23 || (int) $m[2] > 59) {
+        return null;
+    }
+    return sprintf('%02d:%02d', (int) $m[1], (int) $m[2]);
+}
+
+/** The lengths a meeting or call may have, in minutes. */
+function forkCrmMinutesChoices() {
+    return [15 => '15 min', 30 => '30 min', 45 => '45 min', 60 => '1 hour', 90 => '1 h 30', 120 => '2 hours', 180 => '3 hours', 240 => '4 hours'];
+}
+
+/** A length in minutes from input: one of the choices, else 60. */
+function forkCrmMinutesClean($value) {
+    $value = intval($value);
+    return isset(forkCrmMinutesChoices()[$value]) ? $value : 60;
+}
+
+/** When something is due, as words: "2026-11-20", or "2026-11-20 14:30" with a time. */
+function forkCrmWhen($date, $time) {
+    $date = forkCrmDateClean($date);
+    if ($date === null) {
+        return '';
+    }
+    $time = forkCrmTimeClean($time);
+    return $date . ($time !== null ? " $time" : '');
+}
+
 /** Text from input: tags out, trimmed, cut to $max characters. */
 function forkCrmTextClean($value, $max = 255) {
     $text = trim(strip_tags((string) $value));
@@ -377,6 +407,11 @@ function forkCrmEnsure() {
         `activity_created_at` datetime NOT NULL DEFAULT current_timestamp(),
         `activity_created_by` int(11) NOT NULL DEFAULT 0,
         `activity_auto` tinyint(1) NOT NULL DEFAULT 0,
+        `activity_due_time` time DEFAULT NULL,
+        `activity_minutes` smallint(5) unsigned NOT NULL DEFAULT 0,
+        `activity_outcome` text DEFAULT NULL,
+        `activity_parent_id` int(11) NOT NULL DEFAULT 0,
+        `activity_debrief_notified_at` datetime DEFAULT NULL,
         `activity_notified_at` datetime DEFAULT NULL,
         PRIMARY KEY (`activity_id`),
         KEY `activity_deal_id` (`activity_deal_id`),
@@ -394,6 +429,11 @@ function forkCrmEnsure() {
             mysqli_query($mysqli, "UPDATE fork_crm_stages SET stage_quote_trigger = '$trigger' WHERE stage_kind = '$kind' ORDER BY stage_order LIMIT 1");
         }
     }
+    forkCrmColumnEnsure('fork_crm_activities', 'activity_due_time', "time DEFAULT NULL");
+    forkCrmColumnEnsure('fork_crm_activities', 'activity_minutes', "smallint(5) unsigned NOT NULL DEFAULT 0");
+    forkCrmColumnEnsure('fork_crm_activities', 'activity_outcome', "text DEFAULT NULL");
+    forkCrmColumnEnsure('fork_crm_activities', 'activity_parent_id', "int(11) NOT NULL DEFAULT 0");
+    forkCrmColumnEnsure('fork_crm_activities', 'activity_debrief_notified_at', "datetime DEFAULT NULL");
     forkCrmColumnEnsure('fork_crm_deals', 'deal_monthly', "decimal(15,2) NOT NULL DEFAULT 0.00");
     forkCrmColumnEnsure('fork_crm_deals', 'deal_lost_category', "varchar(20) NOT NULL DEFAULT ''");
     forkCrmColumnEnsure('fork_crm_deals', 'deal_stage_at', "datetime DEFAULT NULL");
@@ -737,9 +777,11 @@ function forkCrmFollowUpCreate(array $deal, array $stage, $user_id) {
 }
 
 /**
- * Each night: the follow-up tasks that fall due today (or were late) tell the agent who has them - in
- * ITFlow and by email - once. A task of a deal that was won, lost or archived in the meantime is left
- * alone. With no agent to tell (gone), the admins are told. Returns how many were told.
+ * Each night: quotes that changed move their deals; then the agent is told - in ITFlow and by email, once
+ * each - of a follow-up task that falls due, of a meeting or call that is today, and of one that was
+ * before today and has no debrief yet. A task of a deal that was won, lost or archived in the meantime is
+ * left alone. With no agent to tell (gone), the admins are told. Then the dormant deals and Monday's
+ * digest (functions/fork_crm_extra.php). Returns how many tasks were told.
  */
 function forkCrmNightly() {
     global $mysqli, $config_base_url;
@@ -751,16 +793,26 @@ function forkCrmNightly() {
     // Quotes sent, accepted or declined since yesterday move their deals first; the follow-up tasks they make fall due later
     forkCrmSyncQuotes();
     $told = 0;
-    $result = mysqli_query($mysqli, "SELECT a.activity_id, a.activity_user_id, a.activity_due, a.activity_text, d.deal_id, d.deal_title, d.deal_client_id, d.deal_prospect, c.client_name
+    // Three kinds: a follow-up task that falls due, a meeting or call that is today, and one that was
+    // yesterday or before and has no debrief yet. Each is told once (its own column keeps it).
+    $base = "SELECT a.activity_id, a.activity_user_id, a.activity_type, a.activity_due, a.activity_due_time, a.activity_text, d.deal_id, d.deal_title, d.deal_client_id, d.deal_prospect, c.client_name
         FROM fork_crm_activities a
         JOIN fork_crm_deals d ON d.deal_id = a.activity_deal_id
         JOIN fork_crm_stages s ON s.stage_id = d.deal_stage_id
         LEFT JOIN clients c ON c.client_id = d.deal_client_id
-        WHERE a.activity_auto = 1 AND a.activity_done_at IS NULL AND a.activity_notified_at IS NULL AND a.activity_due <= CURDATE()
-        AND d.deal_archived_at IS NULL AND s.stage_kind = 'open'");
+        WHERE a.activity_done_at IS NULL AND d.deal_archived_at IS NULL AND s.stage_kind = 'open' AND ";
+    $queries = [
+        'follow' => [$base . "a.activity_auto = 1 AND a.activity_notified_at IS NULL AND a.activity_due <= CURDATE()", 'activity_notified_at'],
+        'today' => [$base . "a.activity_auto = 0 AND a.activity_type IN ('meeting', 'call') AND a.activity_notified_at IS NULL AND a.activity_due = CURDATE()", 'activity_notified_at'],
+        'debrief' => [$base . "a.activity_auto = 0 AND a.activity_type IN ('meeting', 'call') AND a.activity_debrief_notified_at IS NULL AND a.activity_due < CURDATE()
+            AND a.activity_due >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)", 'activity_debrief_notified_at'],
+    ];
     $tasks = [];
-    while ($result && ($row = mysqli_fetch_assoc($result))) {
-        $tasks[] = $row;
+    foreach ($queries as $kind => [$sql, $column]) {
+        $result = mysqli_query($mysqli, $sql);
+        while ($result && ($row = mysqli_fetch_assoc($result))) {
+            $tasks[] = $row + ['kind' => $kind, 'column' => $column];
+        }
     }
     foreach ($tasks as $task) {
         $users = [];
@@ -776,24 +828,46 @@ function forkCrmNightly() {
             }
         }
         $who = (string) ($task['client_name'] ?: $task['deal_prospect']);
-        $path = '/agent/crm_deal.php?deal_id=' . intval($task['deal_id']);
-        $message = escapeSql(substr("Time to follow up with " . ($who !== '' ? $who : 'the client') . " - deal " . $task['deal_title'], 0, 900));
+        $with = $who !== '' ? $who : 'the client';
+        $path = '/agent/crm_deal.php?deal_id=' . intval($task['deal_id']) . ($task['kind'] === 'debrief' ? '&complete=' . intval($task['activity_id']) : '') . '#a-' . intval($task['activity_id']);
+        $type_word = strtolower(forkCrmActivityTypes()[$task['activity_type']] ?? 'task');
+        $when = forkCrmWhen($task['activity_due'], $task['activity_due_time']);
+        if ($task['kind'] === 'today') {
+            $text = ucfirst($type_word) . " today" . ($task['activity_due_time'] ? ' at ' . substr($task['activity_due_time'], 0, 5) : '') . " with $with - deal " . $task['deal_title'];
+            $subject = ucfirst($type_word) . " today with $with";
+            $intro = "You have a $type_word today" . ($task['activity_due_time'] ? ' at ' . substr($task['activity_due_time'], 0, 5) : '') . ". " . $task['activity_text'];
+            $button = 'Open the deal';
+            $tone = 'primary';
+        } elseif ($task['kind'] === 'debrief') {
+            $text = "How did the $type_word with $with go? Write the debrief - deal " . $task['deal_title'];
+            $subject = "Debrief: $type_word with $with";
+            $intro = "The $type_word was planned for $when. Write down how it went, plan the next step and move the deal on if it is ready. " . $task['activity_text'];
+            $button = 'Write the debrief';
+            $tone = 'warning';
+        } else {
+            $text = "Time to follow up with $with - deal " . $task['deal_title'];
+            $subject = "Follow up: " . $task['deal_title'] . ($who !== '' ? " - $who" : '');
+            $intro = "The quote went out a while ago. " . $task['activity_text'];
+            $button = 'Open the deal';
+            $tone = 'warning';
+        }
+        $message = escapeSql(substr($text, 0, 900));
         $recipients = [];
         foreach ($users as $user) {
             mysqli_query($mysqli, "INSERT INTO notifications SET notification_type = 'CRM', notification = '$message', notification_action = '$path',
                 notification_client_id = " . intval($task['deal_client_id']) . ", notification_user_id = " . intval($user['user_id']) . ", notification_entity_id = " . intval($task['deal_id']));
-            $recipients[] = ['email' => $user['user_email'], 'name' => $user['user_name'], 'footnote' => 'You get this as a CRM follow-up task is yours in ITFlow.'];
+            $recipients[] = ['email' => $user['user_email'], 'name' => $user['user_name'], 'footnote' => 'You get this as a CRM task is yours in ITFlow.'];
         }
         if ($recipients) {
-            emailQueue($recipients, "Follow up: " . $task['deal_title'] . ($who !== '' ? " - $who" : ''), [
-                'kind' => 'CRM', 'tone' => 'warning',
-                'title' => 'Time to follow up' . ($who !== '' ? " with $who" : ''),
-                'intro' => ["The quote went out a while ago. " . $task['activity_text']],
-                'summary' => array_filter(['Deal' => (string) $task['deal_title'], 'For' => $who, 'Due' => (string) $task['activity_due']]),
-                'button' => ['label' => 'Open the deal', 'url' => "https://$config_base_url$path"],
+            emailQueue($recipients, $subject, [
+                'kind' => 'CRM', 'tone' => $tone,
+                'title' => $subject,
+                'intro' => [$intro],
+                'summary' => array_filter(['Deal' => (string) $task['deal_title'], 'For' => $who, 'When' => $when]),
+                'button' => ['label' => $button, 'url' => "https://$config_base_url$path"],
             ]);
         }
-        mysqli_query($mysqli, "UPDATE fork_crm_activities SET activity_notified_at = NOW() WHERE activity_id = " . intval($task['activity_id']));
+        mysqli_query($mysqli, "UPDATE fork_crm_activities SET " . ($task['column'] === 'activity_debrief_notified_at' ? 'activity_debrief_notified_at' : 'activity_notified_at') . " = NOW() WHERE activity_id = " . intval($task['activity_id']));
         $told++;
     }
     // Deals nobody touched for a while, and Monday's digest
@@ -1044,10 +1118,12 @@ function forkCrmActivity($activity_id) {
 }
 
 /**
- * Add an activity to a deal. A date makes it a task for $assignee until it is done. A note, call,
- * e-mail or meeting without a date is only a log line, done at once. Returns the id, 0 on failure.
+ * Add an activity to a deal. A date makes it planned - a task, meeting or call for $assignee, at $time
+ * (HH:MM, optional) and lasting $minutes for a meeting or call - until it is done. A note, call, email or
+ * meeting without a date is only a log line, done at once. $parent_id is the activity it was planned
+ * during (a call that fixed a meeting). Returns the id, 0 on failure.
  */
-function forkCrmActivityAdd($deal_id, $type, $text, $due, $assignee, $user_id) {
+function forkCrmActivityAdd($deal_id, $type, $text, $due, $assignee, $user_id, $time = '', $minutes = 0, $parent_id = 0) {
     global $mysqli;
     forkCrmEnsure();
     $text = forkCrmTextClean($text, 5000);
@@ -1063,12 +1139,77 @@ function forkCrmActivityAdd($deal_id, $type, $text, $due, $assignee, $user_id) {
     if ($assignee > 0 && !mysqli_fetch_row(mysqli_query($mysqli, "SELECT user_id FROM users WHERE user_id = $assignee AND user_archived_at IS NULL"))) {
         $assignee = 0;
     }
+    $time = $due === null ? null : forkCrmTimeClean($time);
+    $time_sql = $time === null ? 'NULL' : "'$time'";
+    $length = in_array($type, ['meeting', 'call'], true) && $due !== null ? forkCrmMinutesClean($minutes ?: 60) : 0;
     $text_sql = escapeSql($text);
     $due_sql = $due === null ? 'NULL' : "'$due'";
     $done = $due === null ? 'NOW()' : 'NULL';
     mysqli_query($mysqli, "INSERT INTO fork_crm_activities SET activity_deal_id = " . intval($deal_id) . ", activity_type = '$type', activity_text = '$text_sql',
-        activity_due = $due_sql, activity_done_at = $done, activity_user_id = $assignee, activity_created_by = " . intval($user_id));
+        activity_due = $due_sql, activity_due_time = $time_sql, activity_minutes = $length, activity_parent_id = " . intval($parent_id) . ",
+        activity_done_at = $done, activity_user_id = $assignee, activity_created_by = " . intval($user_id));
     return intval(mysqli_insert_id($mysqli));
+}
+
+/**
+ * Finish a planned activity with what came out of it - the debrief - kept on the activity. The
+ * deal's history gets a line. Returns nothing.
+ */
+function forkCrmActivityComplete(array $activity, $outcome, $user_id) {
+    global $mysqli;
+    $outcome = escapeSql(forkCrmTextClean($outcome, 5000));
+    mysqli_query($mysqli, "UPDATE fork_crm_activities SET activity_done_at = NOW(), activity_outcome = " . ($outcome === '' ? 'NULL' : "'$outcome'") . " WHERE activity_id = " . intval($activity['activity_id']));
+    forkCrmHistoryAdd($activity['activity_deal_id'], 'activity', 'Done: ' . (forkCrmActivityTypes()[$activity['activity_type']] ?? 'Task') . ($outcome !== '' ? ' - debrief written' : ''), $user_id);
+}
+
+/** Is this a meeting or call still to be held or debriefed? */
+function forkCrmNeedsDebrief(array $activity) {
+    return in_array($activity['activity_type'], ['meeting', 'call'], true) && $activity['activity_due'] !== null && $activity['activity_done_at'] === null;
+}
+
+/**
+ * An iCalendar file for a planned activity, for the agent's calendar: the date and time as written (no
+ * time zone, so it lands at that time wherever the agent is), $activity['activity_minutes'] long (an hour
+ * by default), or a whole-day event without a time. $deal gives the title and who it is for; $now is the
+ * stamp (timestamp). Lines end in CRLF and are folded at 75 bytes.
+ */
+function forkCrmIcs(array $activity, array $deal, $now, $host = 'itflow') {
+    $esc = function ($text) {
+        return str_replace(["\\", ";", ",", "\r\n", "\n", "\r"], ["\\\\", "\\;", "\\,", "\\n", "\\n", "\\n"], (string) $text);
+    };
+    $who = forkCrmDealWho($deal);
+    $summary = (forkCrmActivityTypes()[$activity['activity_type']] ?? 'Task') . ' - ' . $deal['deal_title'] . ($who !== '' ? " ($who)" : '');
+    $date = forkCrmDateClean($activity['activity_due'] ?? '');
+    $time = forkCrmTimeClean($activity['activity_due_time'] ?? '');
+    $lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ITFlow//CRM//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+        'UID:crm-' . intval($activity['activity_id']) . '@' . preg_replace('/[^A-Za-z0-9.-]/', '', (string) $host),
+        'DTSTAMP:' . gmdate('Ymd\THis\Z', intval($now))];
+    if ($date !== null && $time !== null) {
+        $start = strtotime("$date $time");
+        $minutes = intval($activity['activity_minutes'] ?? 0) ?: 60;
+        $lines[] = 'DTSTART:' . date('Ymd\THis', $start);
+        $lines[] = 'DTEND:' . date('Ymd\THis', $start + $minutes * 60);
+    } elseif ($date !== null) {
+        $lines[] = 'DTSTART;VALUE=DATE:' . str_replace('-', '', $date);
+        $lines[] = 'DTEND;VALUE=DATE:' . date('Ymd', strtotime("$date +1 day"));
+    }
+    $lines[] = 'SUMMARY:' . $esc($summary);
+    $lines[] = 'DESCRIPTION:' . $esc((string) ($activity['activity_text'] ?? ''));
+    $lines[] = 'END:VEVENT';
+    $lines[] = 'END:VCALENDAR';
+    $out = '';
+    foreach ($lines as $line) {
+        while (strlen($line) > 75) {
+            $cut = 75;
+            while ($cut > 0 && (ord($line[$cut]) & 0xC0) === 0x80) {
+                $cut--;
+            }
+            $out .= substr($line, 0, $cut) . "\r\n ";
+            $line = substr($line, $cut);
+        }
+        $out .= $line . "\r\n";
+    }
+    return $out;
 }
 
 /** Mark a task done, or open it again. */
@@ -1101,7 +1242,7 @@ function forkCrmTasks($user_id = 0) {
         JOIN fork_crm_stages s ON s.stage_id = d.deal_stage_id
         LEFT JOIN clients c ON c.client_id = d.deal_client_id
         LEFT JOIN users u ON u.user_id = a.activity_user_id
-        $where ORDER BY a.activity_due, a.activity_id");
+        $where ORDER BY a.activity_due, a.activity_due_time IS NULL, a.activity_due_time, a.activity_id");
     while ($result && ($row = mysqli_fetch_assoc($result))) {
         $out[] = $row;
     }

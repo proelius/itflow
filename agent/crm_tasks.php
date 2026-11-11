@@ -38,7 +38,7 @@ foreach ($tasks as $task) {
     <?php } else { ?>
         <div class="table-responsive">
             <table class="table table-hover mb-0">
-                <thead class="text-dark"><tr><th>Due</th><th>Task</th><th>Deal</th><th>For</th><th>Who</th><th class="text-center">Done</th></tr></thead>
+                <thead class="text-dark"><tr><th>When</th><th>Task</th><th>Deal</th><th>For</th><th>Who</th><th class="text-center">Done</th></tr></thead>
                 <tbody>
                 <?php foreach ($groups as $state => [$label, $class]) {
                     if (empty($by_state[$state])) {
@@ -47,13 +47,15 @@ foreach ($tasks as $task) {
                     <tr><td colspan="6" class="fw-semibold <?= $class ?>"><?= $label ?> (<?= count($by_state[$state]) ?>)</td></tr>
                     <?php foreach ($by_state[$state] as $task) { ?>
                         <tr>
-                            <td><?= crmDueBadge($task['activity_due']) ?></td>
+                            <td class="text-nowrap"><?= crmWhenBadge($task) ?><?= forkCrmNeedsDebrief($task) && forkCrmDueState($task['activity_due'], $today) === 'overdue' ? ' <span class="badge bg-warning text-dark">To debrief</span>' : '' ?></td>
                             <td><span class="badge bg-secondary"><?= escapeHtml(forkCrmActivityTypes()[$task['activity_type']] ?? 'Task') ?></span> <?= escapeHtml(mb_strimwidth(preg_replace('/\s+/', ' ', $task['activity_text']), 0, 120, '...', 'UTF-8')) ?></td>
                             <td><a href="crm_deal.php?deal_id=<?= intval($task['activity_deal_id']) ?>"><?= escapeHtml($task['deal_title']) ?></a></td>
                             <td><?= escapeHtml((string) ($task['client_name'] ?: $task['deal_prospect'])) ?></td>
                             <td><?= escapeHtml((string) $task['user_name']) ?: '<span class="text-secondary">anyone</span>' ?></td>
                             <td class="text-center">
-                                <?php if ($can_edit) { ?>
+                                <?php if ($can_edit && forkCrmNeedsDebrief($task)) { ?>
+                                    <a class="btn btn-sm btn-success" href="crm_deal.php?deal_id=<?= intval($task['activity_deal_id']) ?>&amp;complete=<?= intval($task['activity_id']) ?>#a-<?= intval($task['activity_id']) ?>" title="Done - write the debrief"><i class="fas fa-clipboard-check"></i></a>
+                                <?php } elseif ($can_edit) { ?>
                                     <form action="post.php" method="post" class="d-inline">
                                         <?= crmCsrf() ?>
                                         <input type="hidden" name="activity_id" value="<?= intval($task['activity_id']) ?>">

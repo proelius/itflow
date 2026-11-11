@@ -195,6 +195,32 @@ foreach (['create_crm_quote', 'link_crm_contact', 'send_crm_email', 'amount_from
 crm_test('the nightly job syncs quotes, tells dormant deals and sends the digest', strpos(file_get_contents($itflow_dir . '/functions/fork_crm.php'), 'forkCrmSyncQuotes();') !== false && strpos(file_get_contents($itflow_dir . '/functions/fork_crm.php'), 'forkCrmStaleNightly();') !== false && strpos(file_get_contents($itflow_dir . '/functions/fork_crm.php'), 'forkCrmDigest();') !== false);
 crm_test('an email goes only to the deal or its contacts', strpos(file_get_contents($itflow_dir . '/agent/post/crm.php'), "forkCrmDealContacts(") !== false);
 
+echo "\nMeetings, calls and their debrief\n";
+crm_test('time of day', forkCrmTimeClean('14:30') === '14:30' && forkCrmTimeClean('9:05') === '09:05' && forkCrmTimeClean('14h30') === '14:30' && forkCrmTimeClean('14:30:00') === '14:30');
+crm_test('not a time', forkCrmTimeClean('24:00') === null && forkCrmTimeClean('12:60') === null && forkCrmTimeClean('noon') === null && forkCrmTimeClean('') === null);
+crm_test('lengths', forkCrmMinutesClean(45) === 45 && forkCrmMinutesClean(7) === 60 && forkCrmMinutesClean('') === 60);
+crm_test('when, with and without a time', forkCrmWhen('2026-11-20', '14:30') === '2026-11-20 14:30' && forkCrmWhen('2026-11-20', '') === '2026-11-20' && forkCrmWhen('x', '14:30') === '');
+crm_test('a planned meeting needs a debrief; a logged one or a task does not',
+    forkCrmNeedsDebrief(['activity_type' => 'meeting', 'activity_due' => '2026-11-20', 'activity_done_at' => null])
+    && forkCrmNeedsDebrief(['activity_type' => 'call', 'activity_due' => '2026-11-20', 'activity_done_at' => null])
+    && !forkCrmNeedsDebrief(['activity_type' => 'task', 'activity_due' => '2026-11-20', 'activity_done_at' => null])
+    && !forkCrmNeedsDebrief(['activity_type' => 'call', 'activity_due' => null, 'activity_done_at' => '2026-11-01 10:00:00'])
+    && !forkCrmNeedsDebrief(['activity_type' => 'meeting', 'activity_due' => '2026-11-20', 'activity_done_at' => '2026-11-20 15:00:00']));
+$ics = forkCrmIcs(['activity_id' => 7, 'activity_type' => 'meeting', 'activity_due' => '2026-11-20', 'activity_due_time' => '14:30', 'activity_minutes' => 45, 'activity_text' => "Fix the price; bring, the quote\nSecond line"], ['deal_title' => 'ACME IT', 'deal_client_id' => 0, 'deal_prospect' => 'ACME SA'], 1763000000, 'itflow.example.ch');
+crm_test('ics: a calendar with one event', strpos($ics, "BEGIN:VCALENDAR\r\n") === 0 && substr_count($ics, 'BEGIN:VEVENT') === 1 && substr($ics, -15) === "END:VCALENDAR\r\n");
+crm_test('ics: the start and the end, 45 minutes later', strpos($ics, "DTSTART:20261120T143000\r\n") !== false && strpos($ics, "DTEND:20261120T151500\r\n") !== false);
+crm_test('ics: ; , and line breaks are escaped', strpos($ics, 'Fix the price\\; bring\\, the quote\\nSecond line') !== false);
+crm_test('ics: a stable id', strpos($ics, "UID:crm-7@itflow.example.ch\r\n") !== false);
+crm_test('ics: every line ends in CRLF and none is longer than 75 bytes', !preg_match('/(?<!\r)\n/', $ics) && max(array_map('strlen', explode("\r\n", $ics))) <= 75);
+$ics_long = forkCrmIcs(['activity_id' => 8, 'activity_type' => 'call', 'activity_due' => '2026-11-20', 'activity_due_time' => '', 'activity_minutes' => 0, 'activity_text' => str_repeat('é', 120)], ['deal_title' => 'D', 'deal_client_id' => 0, 'deal_prospect' => ''], 1763000000);
+crm_test('ics: long lines are folded without cutting a character', max(array_map('strlen', explode("\r\n", $ics_long))) <= 75 && strpos(str_replace("\r\n ", '', $ics_long), str_repeat('é', 120)) !== false);
+crm_test('ics: no time is a whole day', strpos($ics_long, "DTSTART;VALUE=DATE:20261120\r\n") !== false && strpos($ics_long, "DTEND;VALUE=DATE:20261121\r\n") !== false);
+$deal_page = file_get_contents($itflow_dir . '/agent/crm_deal.php');
+$handler_all = file_get_contents($itflow_dir . '/agent/post/crm.php');
+crm_test('the deal page can log a call and plan the next step', strpos($deal_page, 'crmNextStepFields(') !== false && strpos($handler_all, 'crmPostNextStep(') !== false);
+crm_test('the debrief form and its handler', strpos($deal_page, 'complete_crm_activity') !== false && strpos($handler_all, "isset(\$_POST['complete_crm_activity'])") !== false);
+crm_test('the ics page checks the role and the deal', strpos(file_get_contents($itflow_dir . '/agent/crm_ics.php'), 'forkCrmEnforce(1)') !== false && strpos(file_get_contents($itflow_dir . '/agent/crm_ics.php'), 'forkCrmDeal(') !== false);
+
 echo "\nWho may use it\n";
 $GLOBALS['session_is_admin'] = true;
 crm_test('an admin role is let in', forkCrmRoleAllowed() === true);

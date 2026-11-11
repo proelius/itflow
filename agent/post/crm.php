@@ -134,18 +134,96 @@ if (isset($_POST['archive_crm_deal'])) {
 
 }
 
+/**
+ * The "next step" of the activity forms: a meeting, call, task or email planned for a date (and time) as
+ * the follow-up of $parent_id. Returns [what was planned in words, error text] - ['', ''] when no date was
+ * given (there is no next step).
+ */
+function crmPostNextStep(array $deal, $parent_id) {
+    global $session_user_id;
+    $date = trim((string) ($_POST['next_date'] ?? ''));
+    if ($date === '') {
+        return ['', ''];
+    }
+    if (forkCrmDateClean($date) === null) {
+        return ['', 'The date of the next step is not a date.'];
+    }
+    $type = forkCrmActivityTypeClean($_POST['next_type'] ?? 'meeting');
+    $text = forkCrmTextClean($_POST['next_text'] ?? '', 5000);
+    if ($text === '') {
+        $who = forkCrmDealWho($deal);
+        $text = forkCrmActivityTypes()[$type] . ' - ' . $deal['deal_title'] . ($who !== '' ? " ($who)" : '');
+    }
+    $id = forkCrmActivityAdd($deal['deal_id'], $type, $text, $date, $_POST['next_assignee'] ?? 0, $session_user_id, $_POST['next_time'] ?? '', $_POST['next_minutes'] ?? 0, $parent_id);
+    if (!$id) {
+        return ['', 'The next step could not be planned.'];
+    }
+    return [strtolower(forkCrmActivityTypes()[$type]) . ' planned for ' . forkCrmWhen($date, $_POST['next_time'] ?? ''), ''];
+}
+
 if (isset($_POST['add_crm_activity'])) {
 
     validateCSRFToken();
     $deal = crmPostDeal($_POST['deal_id'] ?? 0, 2);
 
-    if (!forkCrmActivityAdd($deal['deal_id'], $_POST['type'] ?? '', $_POST['text'] ?? '', $_POST['due'] ?? '', $_POST['assignee'] ?? 0, $session_user_id)) {
+    // Something that happened is logged; something planned has a date and waits to be done
+    $planned = ($_POST['status'] ?? 'done') === 'planned';
+    if ($planned && forkCrmDateClean($_POST['due'] ?? '') === null) {
+        flashAlert("Give a date for what you plan.", 'error');
+        redirect();
+    }
+    $id = forkCrmActivityAdd($deal['deal_id'], $_POST['type'] ?? '', $_POST['text'] ?? '', $planned ? ($_POST['due'] ?? '') : '', $_POST['assignee'] ?? 0, $session_user_id, $_POST['time'] ?? '', $_POST['minutes'] ?? 0);
+    if (!$id) {
         flashAlert("Write something first.", 'error');
         redirect();
     }
+    $next = '';
+    if (!$planned) {
+        [$next, $error] = crmPostNextStep($deal, $id);
+        if ($error !== '') {
+            flashAlert("Logged, but: $error", 'error');
+            redirect();
+        }
+    }
     logAudit("CRM", "Create", "$session_name added an activity to the deal " . escapeSql($deal['deal_title']), intval($deal['deal_client_id']), intval($deal['deal_id']));
-    flashAlert("Activity added");
+    flashAlert("Activity added" . ($next !== '' ? " - " . escapeHtml($next) : ''));
     redirect();
+
+}
+
+if (isset($_POST['complete_crm_activity'])) {
+
+    validateCSRFToken();
+    [$activity, $deal] = crmPostActivity($_POST['activity_id'] ?? 0, 2);
+
+    if ($activity['activity_done_at'] !== null) {
+        flashAlert("That one is done already.", 'error');
+        redirect();
+    }
+    forkCrmActivityComplete($activity, $_POST['outcome'] ?? '', $session_user_id);
+    $message = "Done";
+    [$next, $error] = crmPostNextStep($deal, $activity['activity_id']);
+    if ($error !== '') {
+        flashAlert("Done, but: $error", 'error');
+        redirect();
+    }
+    if ($next !== '') {
+        $message .= " - " . escapeHtml($next);
+    }
+    // The point of the situation may move the deal on (not to lost - that asks why, from the pipeline)
+    $stage = forkCrmStage($_POST['stage_id'] ?? 0);
+    if ($stage && $stage['stage_kind'] !== 'lost' && intval($stage['stage_id']) !== intval($deal['deal_stage_id'])) {
+        if (forkCrmDealMove($deal, $stage['stage_id'], '', $session_user_id) === '') {
+            $message .= " - deal moved to " . escapeHtml($stage['stage_name']);
+            $due = forkCrmFollowUpCreate($deal, $stage, $session_user_id);
+            if ($due) {
+                $message .= " (follow-up task for " . escapeHtml($due) . ")";
+            }
+        }
+    }
+    logAudit("CRM", "Edit", "$session_name finished an activity of the deal " . escapeSql($deal['deal_title']) . ", with its debrief", intval($deal['deal_client_id']), intval($deal['deal_id']));
+    flashAlert($message);
+    redirect("crm_deal.php?deal_id=" . intval($deal['deal_id']));
 
 }
 
