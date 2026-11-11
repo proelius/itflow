@@ -3181,6 +3181,7 @@ CREATE TABLE `settings` (
   `config_invoice_paid_notification_email` varchar(200) DEFAULT NULL,
   `config_invoice_paid_lead_to_client` tinyint(1) NOT NULL DEFAULT 1,
   `config_invoice_show_tax_id` tinyint(1) NOT NULL DEFAULT 0,
+  `config_invoice_qr_iban` varchar(34) NOT NULL DEFAULT '',
   `config_tax_default_id` int(11) NOT NULL DEFAULT 0,
   `config_tax_time` tinyint(1) NOT NULL DEFAULT 0,
   `config_tax_trips` tinyint(1) NOT NULL DEFAULT 0,

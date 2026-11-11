@@ -184,6 +184,7 @@ function settingsFields() {
         'config_recurring_invoice_next_number' => ['page' => 'invoice', 'section' => 'Numbering', 'label' => 'Next recurring invoice number', 'words' => 'recurring invoice number'],
         'config_invoice_footer' => ['page' => 'invoice', 'section' => 'On the invoice', 'label' => 'Invoice footer', 'kind' => 'long', 'words' => 'invoice footer terms bank details text'],
         'config_invoice_show_tax_id' => ['page' => 'invoice', 'section' => 'On the invoice', 'label' => 'Show your tax ID', 'words' => 'tax id vat number on invoice'] + $on_off,
+        'config_invoice_qr_iban' => ['page' => 'invoice', 'section' => 'On the invoice', 'label' => 'QR-IBAN for the QR-bill', 'words' => 'qr bill qr-iban iban swiss qr facture payment slip qrr reference'],
         'config_invoice_late_fee_enable' => ['page' => 'invoice', 'section' => 'Late fees', 'label' => 'Late fees', 'words' => 'late fee overdue charge penalty'] + $on_off,
         'config_invoice_late_fee_percent' => ['page' => 'invoice', 'section' => 'Late fees', 'label' => 'Late fee %', 'words' => 'late fee percent'],
         'config_invoice_paid_notification_email' => ['page' => 'invoice', 'section' => 'Paid online', 'label' => 'Email invoices paid online to', 'words' => 'paid notification email stripe payment'],

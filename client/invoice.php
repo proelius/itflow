@@ -150,6 +150,27 @@ $paper = [
             </div>
         </section>
 
+        <?php
+        // The Swiss QR-bill - the same code as on the PDF, to scan from here (functions/qr_bill.php)
+        $qr_bill = $owing ? qrBillFor($invoice, $company, billingBillTo($session_client_id), $currency, $state['balance'], $number) : null;
+        if ($qr_bill) { ?>
+            <section class="itflow-portal-panel mb-4">
+                <div class="itflow-portal-panel-head">
+                    <h2><i class="fas fa-qrcode"></i><?= t('Pay by QR-bill') ?></h2>
+                </div>
+                <div class="p-3 text-center">
+                    <?= qrBillSvg($qr_bill, 200) ?>
+                    <p class="small text-body-secondary mt-2 mb-3"><?= t('Scan it with your banking app, or enter the IBAN and the reference below.') ?></p>
+                    <div class="text-start small">
+                        <div class="text-body-secondary">IBAN</div>
+                        <div class="fw-semibold mb-2"><?= escapeHtml(qrBillIbanSpaced($qr_bill['iban'])) ?></div>
+                        <div class="text-body-secondary"><?= t('Reference') ?></div>
+                        <div class="fw-semibold"><?= escapeHtml(qrBillReferenceSpaced($qr_bill['reference'])) ?></div>
+                    </div>
+                </div>
+            </section>
+        <?php } ?>
+
         <?php if ($payments) { ?>
             <section class="itflow-portal-panel mb-4">
                 <div class="itflow-portal-panel-head">
