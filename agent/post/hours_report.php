@@ -2,8 +2,8 @@
 
 /*
  * ITFlow - the quarterly report of a client's prepaid hours (functions/fork_hours_report.php):
- * make it for the last civil quarter, change its wording, send it to the client as a PDF, download
- * it. Made, changed and sent by agents with the Financial module; once sent, only an admin can
+ * make it for the last civil quarter, change its wording, send it to the client as a PDF, open
+ * its PDF in a tab. Made, changed and sent by agents with the Financial module; once sent, only an admin can
  * change it or make it again.
  */
 

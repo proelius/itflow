@@ -3,7 +3,7 @@
 /*
  * One prepaid hours report - the blocks of hours and the tickets that took them, as the client will
  * read them, with the introduction, the conclusion and each ticket's wording to change. The numbers
- * are fixed. Send it to the client as a PDF, or download it. Once sent it is locked, except to an
+ * are fixed. Send it to the client as a PDF, or open the PDF in a tab. Once sent it is locked, except to an
  * admin. The work is in functions/fork_hours_report.php; the handlers are agent/post/hours_report.php.
  */
 
@@ -33,7 +33,7 @@ $recipients = billingEmailRecipients($client_id);
             <h3 class="card-title mt-2"><i class="fas fa-fw fa-file-alt me-2"></i>Prepaid hours report - <?= escapeHtml(forkHoursReportTitle($report['report_start'])) ?></h3>
             <div class="card-tools">
                 <a class="btn btn-secondary" href="hours_reports.php?client_id=<?= $client_id ?>"><i class="fas fa-arrow-left me-2"></i>Reports</a>
-                <a class="btn btn-secondary" href="post.php?hours_report_pdf=<?= intval($report['report_id']) ?>"><i class="fas fa-file-pdf me-2"></i>Download PDF</a>
+                <a class="btn btn-secondary" href="post.php?hours_report_pdf=<?= intval($report['report_id']) ?>" target="_blank"><i class="fas fa-file-pdf me-2"></i>PDF</a>
             </div>
         </div>
         <div class="card-body">
