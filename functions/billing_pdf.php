@@ -38,6 +38,14 @@ class BillingPdf extends TCPDF {
     }
 }
 
+/**
+ * A money amount for a PDF with every space made non-breaking, so "1 503.40 CHF"
+ * is never split across two lines (TCPDF breaks at normal and narrow spaces only).
+ */
+function billingPdfMoneyText($text) {
+    return preg_replace('/[ \x{202F}\x{2009}]/u', "\u{00A0}", (string) $text);
+}
+
 /** The footers and the tax ID setting - a page has them loaded, the nightly run reads them here. */
 function billingPdfConfig() {
     global $mysqli, $config_invoice_footer, $config_quote_footer, $config_invoice_show_tax_id;
@@ -72,7 +80,7 @@ function billingPdfRender($type, array $row, $variant = 'document') {
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     };
     $money = function ($amount) use ($currency, $e) {
-        return $e(billingMoney($amount, $currency));
+        return $e(billingPdfMoneyText(billingMoney($amount, $currency)));
     };
 
     $status = $type === 'recurring' ? '' : (string) $row["{$c}_status"];
@@ -385,7 +393,7 @@ function billingStatementPdfRender(array $statement) {
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     };
     $money = function ($amount) use ($currency, $e) {
-        return $e(billingMoney($amount, $currency));
+        return $e(billingPdfMoneyText(billingMoney($amount, $currency)));
     };
     $grey = '#6c757d';
     $red = '#c42b37';
@@ -444,7 +452,7 @@ function billingStatementPdfRender(array $statement) {
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
         <td width="60%">' . $label(t('Statement for')) . '<br><span style="font-size:10pt; font-weight:bold;">' . $e($bill_to['client_name'] ?? $client['client_name']) . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $to_lines))) . '</span></td>
         <td width="40%" align="right">' . $label(t('Total due')) . '<br><span style="font-size:17pt; font-weight:bold;">' . $money($statement['total']) . '</span>'
-        . ($statement['overdue'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $red . ';">' . $e(t('{amount} of it overdue', ['{amount}' => billingMoney($statement['overdue'], $currency)])) . '</span>' : '') . '</td>
+        . ($statement['overdue'] > 0 ? '<br><span style="font-size:7.5pt; color:' . $red . ';">' . $e(t('{amount} of it overdue', ['{amount}' => billingPdfMoneyText(billingMoney($statement['overdue'], $currency))])) . '</span>' : '') . '</td>
     </tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Ln(2);
@@ -462,21 +470,21 @@ function billingStatementPdfRender(array $statement) {
     $th = 'font-size:6.5pt; color:' . $grey . '; font-weight:bold; border-bottom:0.6px solid #adb5bd;';
     $td = 'border-bottom:0.3px solid #dee2e6;';
     $html = '<table cellpadding="4" cellspacing="0" width="100%"><thead><tr>
-        <td width="14%" style="' . $th . '">' . $e(mb_strtoupper(t('Date'))) . '</td><td width="30%" style="' . $th . '">' . $e(mb_strtoupper(t('Invoice'))) . '</td><td width="14%" style="' . $th . '">' . $e(mb_strtoupper(t('Due'))) . '</td>
-        <td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Total'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Paid'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Balance'))) . '</td></tr></thead>';
+        <td width="12%" style="' . $th . '">' . $e(mb_strtoupper(t('Date'))) . '</td><td width="30%" style="' . $th . '">' . $e(mb_strtoupper(t('Invoice'))) . '</td><td width="12%" style="' . $th . '">' . $e(mb_strtoupper(t('Due'))) . '</td>
+        <td width="15%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Total'))) . '</td><td width="15%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Paid'))) . '</td><td width="16%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Balance'))) . '</td></tr></thead>';
     foreach ($statement['invoices'] as $invoice) {
         $late = $invoice['balance'] > 0 && $invoice['days'] > 0;
-        $html .= '<tr nobr="true"><td width="14%" style="' . $td . '">' . $e(i18n_date_value($invoice['invoice_date'])) . '</td>
+        $html .= '<tr nobr="true"><td width="12%" style="' . $td . '">' . $e(i18n_date_value($invoice['invoice_date'])) . '</td>
             <td width="30%" style="' . $td . '"><b>' . $e(billingNumber('invoice', $invoice)) . '</b>' . (trim((string) $invoice['invoice_scope']) !== '' ? '<br><span style="font-size:7pt; color:' . $grey . ';">' . $e($invoice['invoice_scope']) . '</span>' : '') . '</td>
-            <td width="14%" style="' . $td . ($late ? ' color:' . $red . ';' : '') . '">' . $e(i18n_date_value($invoice['invoice_due'])) . ($late ? '<br><span style="font-size:7pt;">' . $e(intval($invoice['days']) === 1 ? t('{n} day late', ['{n}' => 1]) : t('{n} days late', ['{n}' => intval($invoice['days'])])) . '</span>' : '') . '</td>
-            <td width="14%" align="right" style="' . $td . '">' . $money($invoice['invoice_amount']) . '</td>
-            <td width="14%" align="right" style="' . $td . '">' . (floatval($invoice['paid']) > 0 ? $money($invoice['paid']) : '<span style="color:' . $grey . ';">-</span>') . '</td>
-            <td width="14%" align="right" style="' . $td . '"><b>' . ($invoice['balance'] > 0 ? $money($invoice['balance']) : '<span style="color:#198754;">' . t('Paid') . '</span>') . '</b></td></tr>';
+            <td width="12%" style="' . $td . ($late ? ' color:' . $red . ';' : '') . '">' . $e(i18n_date_value($invoice['invoice_due'])) . ($late ? '<br><span style="font-size:7pt;">' . $e(intval($invoice['days']) === 1 ? t('{n} day late', ['{n}' => 1]) : t('{n} days late', ['{n}' => intval($invoice['days'])])) . '</span>' : '') . '</td>
+            <td width="15%" align="right" style="' . $td . '">' . $money($invoice['invoice_amount']) . '</td>
+            <td width="15%" align="right" style="' . $td . '">' . (floatval($invoice['paid']) > 0 ? $money($invoice['paid']) : '<span style="color:' . $grey . ';">-</span>') . '</td>
+            <td width="16%" align="right" style="' . $td . '"><b>' . ($invoice['balance'] > 0 ? $money($invoice['balance']) : '<span style="color:#198754;">' . t('Paid') . '</span>') . '</b></td></tr>';
     }
     if (!$statement['invoices']) {
         $html .= '<tr><td colspan="6" align="center" style="color:' . $grey . ';">' . t('Nothing owed in this period.') . '</td></tr>';
     }
-    $html .= '<tr><td colspan="5" align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . t('Total due') . '</b></td><td align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($statement['total']) . '</b></td></tr></table>';
+    $html .= '<tr><td colspan="4" align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . t('Total due') . '</b></td><td colspan="2" align="right" style="border-top:0.6px solid #adb5bd; font-size:10pt;"><b>' . $money($statement['total']) . '</b></td></tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
 
     $footer = trim((string) $config_invoice_footer);
