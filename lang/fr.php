@@ -1736,4 +1736,5 @@ return [
     'Prepaid hours report - {quarter}' => 'Rapport des heures prépayées - {quarter}',
     'Please find attached the report of your prepaid hours for {quarter}.' => 'Veuillez trouver ci-joint le rapport de vos heures prépayées pour {quarter}.',
     'Prepaid hours reports' => 'Rapports des heures prépayées',
+    'View PDF' => 'Voir le PDF',
 ];

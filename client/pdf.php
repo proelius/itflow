@@ -1,7 +1,8 @@
 <?php
 /*
  * Client Portal
- * An invoice, a quote, a contract or a prepaid hours report as a PDF, downloaded - pdf.php?invoice=ID,
+ * An invoice, a quote, a contract or a prepaid hours report as a PDF - downloaded, but a report opens
+ * in the browser's tab - pdf.php?invoice=ID,
  * pdf.php?quote=ID, pdf.php?contract=ID or pdf.php?hours_report=ID. The same PDF the agents send
  * (functions/billing_pdf.php, functions/contract_pdf.php).
  *
@@ -29,7 +30,7 @@ if (isset($_GET['contract']) && contractsReady()) {
 if (isset($_GET['hours_report']) && contractHoursReady()) {
     $report = forkHoursReportRow(intval($_GET['hours_report']));
     if ($report && intval($report['report_client_id']) === intval($session_client_id) && $report['report_status'] === 'sent') {
-        billingPdfSend(forkHoursReportPdf($report), true);
+        billingPdfSend(forkHoursReportPdf($report));
     }
 }
 

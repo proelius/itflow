@@ -137,7 +137,7 @@ if ($hours_reports) { ?>
         <ul class="itflow-portal-list">
             <?php foreach ($hours_reports as $report) { ?>
                 <li>
-                    <a class="itflow-portal-ticket" href="pdf.php?hours_report=<?= intval($report['report_id']) ?>">
+                    <a class="itflow-portal-ticket" href="pdf.php?hours_report=<?= intval($report['report_id']) ?>" target="_blank" rel="noopener">
                         <span class="itflow-portal-ticket-main">
                             <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml(forkHoursReportTitle($report['report_start'])) ?></span>
                             <span class="itflow-portal-ticket-meta">
@@ -145,7 +145,7 @@ if ($hours_reports) { ?>
                                 <span><?= t('Sent {date}', ['{date}' => escapeHtml(i18n_date_value(substr($report['report_sent_at'], 0, 10)))]) ?></span>
                             </span>
                         </span>
-                        <span class="itflow-portal-ticket-side"><i class="fas fa-fw fa-file-pdf"></i> <?= t('Download PDF') ?></span>
+                        <span class="itflow-portal-ticket-side"><i class="fas fa-fw fa-file-pdf"></i> <?= t('View PDF') ?></span>
                     </a>
                 </li>
             <?php } ?>
