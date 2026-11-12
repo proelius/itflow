@@ -32,6 +32,9 @@ $num_contracts_soon = lookupUserPermission('module_sales') >= 1 && contractsRead
 // CRM tasks due today or late - the agent's own
 $num_crm_tasks = forkCrmLevel() >= 1 ? forkCrmTasksDueCount($session_user_id) : 0;
 
+// To-do tasks given to the agent that are late or due today
+$num_todo_tasks = forkTodoDueCount($session_user_id);
+
 // Unbilled tickets - billable, done and on no invoice (Billing > Unbilled Time)
 $num_unbilled_tickets = $config_module_enable_accounting == 1 && $config_module_enable_ticketing == 1 && lookupUserPermission('module_sales') >= 1 ? billingUnbilledCount() : 0;
 
