@@ -103,6 +103,14 @@ function cronJobRegistry(): array
             'interval_minutes' => 1,
         ],
         [
+            'name' => 'todo_reminders',
+            'label' => 'To-do Reminders',
+            'script' => 'todo_reminders.php',
+            'description' => 'Sends the reminders of the to-do list - before a task\'s deadline and at it - and tells once a day about tasks still late.',
+            'schedule' => 'Interval',
+            'interval_minutes' => 1,
+        ],
+        [
             'name' => 'ai_triage',
             'label' => 'AI Triage',
             'script' => 'ai_triage.php',

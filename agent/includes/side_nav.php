@@ -140,6 +140,19 @@
                     <?php } ?>
                 <?php } ?>
 
+                <li class="nav-header mt-3">Personal</li>
+                <li class="nav-item">
+                    <a href="/agent/todo.php" class="nav-link <?php if (in_array(basename($_SERVER["PHP_SELF"]), ["todo.php", "todo_task.php"])) { echo "active"; } ?>">
+                        <i class="nav-icon fas fa-clipboard-check"></i>
+                        <p>
+                            To-do
+                            <?php if ($num_todo_tasks) { ?>
+                                <span class="right badge text-light" data-bs-toggle="tooltip" title="Your tasks due today or late"><?= $num_todo_tasks ?></span>
+                            <?php } ?>
+                        </p>
+                    </a>
+                </li>
+
                 <?php if (forkCrmLevel() >= 1) { ?>
                     <li class="nav-header mt-3">CRM</li>
                     <li class="nav-item">
