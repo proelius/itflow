@@ -1745,4 +1745,13 @@ return [
     'Thank you for your time' => 'Merci pour votre temps',
     'Thank you for the time you gave us. We understand that {company} goes another way for now.' => 'Merci du temps que vous nous avez accordé. Nous comprenons que {company} choisisse une autre voie pour le moment.',
     'If your needs change, we will gladly start again.' => 'Si vos besoins évoluent, nous reprendrons volontiers contact avec vous.',
+    'Quarterly backup check report' => 'Rapport trimestriel du contrôle des sauvegardes',
+    'Backup check report' => 'Rapport du contrôle des sauvegardes',
+    'Comment' => 'Commentaire',
+    'Week' => 'Semaine',
+    'Detail' => 'Détail',
+    'OK' => 'OK',
+    'Failed' => 'Échec',
+    'Issue followed up' => 'Incident traité',
+    '{server}: {comment}' => '{server} : {comment}',
 ];

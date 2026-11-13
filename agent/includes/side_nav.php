@@ -138,6 +138,12 @@
                             </a>
                         </li>
                     <?php } ?>
+                    <li class="nav-item">
+                        <a href="/agent/backup_checks.php" class="nav-link <?php if (in_array(basename($_SERVER["PHP_SELF"]), ["backup_checks.php", "backup_check.php", "backup_client.php"])) { echo "active"; } ?>">
+                            <i class="nav-icon fas fa-hdd"></i>
+                            <p>Backup Checks</p>
+                        </a>
+                    </li>
                 <?php } ?>
 
                 <?php if (forkCrmLevel() >= 1) { ?>

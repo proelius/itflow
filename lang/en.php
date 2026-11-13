@@ -1698,4 +1698,13 @@ return [
     'Thank you for your time' => 'Thank you for your time',
     'Thank you for the time you gave us. We understand that {company} goes another way for now.' => 'Thank you for the time you gave us. We understand that {company} goes another way for now.',
     'If your needs change, we will gladly start again.' => 'If your needs change, we will gladly start again.',
+    'Quarterly backup check report' => 'Quarterly backup check report',
+    'Backup check report' => 'Backup check report',
+    'Comment' => 'Comment',
+    'Week' => 'Week',
+    'Detail' => 'Detail',
+    'OK' => 'OK',
+    'Failed' => 'Failed',
+    'Issue followed up' => 'Issue followed up',
+    '{server}: {comment}' => '{server}: {comment}',
 ];
