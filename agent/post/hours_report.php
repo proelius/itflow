@@ -2,7 +2,7 @@
 
 /*
  * ITFlow - the quarterly report of a client's prepaid hours (functions/fork_hours_report.php):
- * make it for the last civil quarter, change its wording, send it to the client as a PDF, open
+ * make it for the last civil quarter or for another period, change its wording, send it to the client as a PDF, open
  * its PDF in a tab. Made, changed and sent by agents with the Financial module; once sent, only an admin can
  * change it or make it again.
  */
@@ -32,8 +32,14 @@ if (isset($_POST['generate_hours_report'])) {
         flashAlert("Prepaid hours need the database update - run it from Maintenance > Update first.", 'error');
         redirect();
     }
-    $period = forkHoursReportPeriod();
-    $existing = forkHoursReportFor($client_id, $period['start']);
+    // The two dates of the form - empty, the last civil quarter
+    [$start, $end, $error] = forkHoursReportPeriodFrom($_POST['start'] ?? '', $_POST['end'] ?? '');
+    if ($error !== '') {
+        flashAlert($error, 'error');
+        redirect();
+    }
+    $period = ['start' => $start, 'end' => $end];
+    $existing = forkHoursReportFor($client_id, $period['start'], $period['end']);
     if ($existing) {
         redirect("hours_report.php?client_id=$client_id&report_id=" . intval($existing['report_id']));
     }
@@ -42,8 +48,8 @@ if (isset($_POST['generate_hours_report'])) {
         flashAlert("The report could not be made.", 'error');
         redirect();
     }
-    logAudit("Contract", "Create", "$session_name made the prepaid hours report for " . escapeSql(forkHoursReportTitle($period['start'])), $client_id, $client_id);
-    flashAlert("Report made for <strong>" . escapeHtml(forkHoursReportTitle($period['start'])) . "</strong> - read it and change its wording before it is sent");
+    logAudit("Contract", "Create", "$session_name made the prepaid hours report for " . escapeSql(forkHoursReportTitle($period['start'], $period['end'])), $client_id, $client_id);
+    flashAlert("Report made for <strong>" . escapeHtml(forkHoursReportTitle($period['start'], $period['end'])) . "</strong> - read it and change its wording before it is sent");
     redirect("hours_report.php?client_id=$client_id&report_id=$report_id");
 
 }
@@ -57,7 +63,7 @@ if (isset($_POST['save_hours_report'])) {
         redirect();
     }
     forkHoursReportSave($report, $_POST['intro'] ?? '', $_POST['conclusion'] ?? '', (array) ($_POST['label'] ?? []));
-    logAudit("Contract", "Edit", "$session_name changed the prepaid hours report for " . escapeSql(forkHoursReportTitle($report['report_start'])), $report['report_client_id'], $report['report_client_id']);
+    logAudit("Contract", "Edit", "$session_name changed the prepaid hours report for " . escapeSql(forkHoursReportTitle($report['report_start'], $report['report_end'])), $report['report_client_id'], $report['report_client_id']);
     flashAlert("Report saved");
     redirect();
 
@@ -72,7 +78,7 @@ if (isset($_POST['rebuild_hours_report'])) {
         redirect();
     }
     forkHoursReportRebuild($report);
-    logAudit("Contract", "Edit", "$session_name made the prepaid hours report for " . escapeSql(forkHoursReportTitle($report['report_start'])) . " again", $report['report_client_id'], $report['report_client_id']);
+    logAudit("Contract", "Edit", "$session_name made the prepaid hours report for " . escapeSql(forkHoursReportTitle($report['report_start'], $report['report_end'])) . " again", $report['report_client_id'], $report['report_client_id']);
     flashAlert("Report made again from what is in ITFlow now - the edits and the sent mark are gone");
     redirect();
 
@@ -96,7 +102,7 @@ if (isset($_POST['send_hours_report'])) {
         flashAlert("Nobody to send it to - the client has no contact that gets its invoices, with an email address.", 'error');
         redirect();
     }
-    logAudit("Contract", "Edit", "$session_name sent the prepaid hours report for " . escapeSql(forkHoursReportTitle($report['report_start'])) . " to " . escapeSql(implode(', ', $sent)), $report['report_client_id'], $report['report_client_id']);
+    logAudit("Contract", "Edit", "$session_name sent the prepaid hours report for " . escapeSql(forkHoursReportTitle($report['report_start'], $report['report_end'])) . " to " . escapeSql(implode(', ', $sent)), $report['report_client_id'], $report['report_client_id']);
     flashAlert("Report sent to <strong>" . escapeHtml(implode(', ', $sent)) . "</strong> - it can no longer be changed, except by an admin");
     redirect();
 

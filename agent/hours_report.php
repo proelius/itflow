@@ -30,7 +30,7 @@ $recipients = billingEmailRecipients($client_id);
 
     <div class="card card-dark">
         <div class="card-header py-2">
-            <h3 class="card-title mt-2"><i class="fas fa-fw fa-file-alt me-2"></i>Prepaid hours report - <?= escapeHtml(forkHoursReportTitle($report['report_start'])) ?></h3>
+            <h3 class="card-title mt-2"><i class="fas fa-fw fa-file-alt me-2"></i>Prepaid hours report - <?= escapeHtml(forkHoursReportTitle($report['report_start'], $report['report_end'])) ?></h3>
             <div class="card-tools">
                 <a class="btn btn-secondary" href="hours_reports.php?client_id=<?= $client_id ?>"><i class="fas fa-arrow-left me-2"></i>Reports</a>
                 <a class="btn btn-secondary" href="post.php?hours_report_pdf=<?= intval($report['report_id']) ?>&amp;csrf_token=<?= $_SESSION['csrf_token'] ?>" target="_blank"><i class="fas fa-file-pdf me-2"></i>PDF</a>
@@ -59,7 +59,7 @@ $recipients = billingEmailRecipients($client_id);
             <h5>Blocks of hours</h5>
             <div class="table-responsive mb-4">
                 <table class="table table-sm">
-                    <thead><tr><th>Hours</th><th>Contract</th><th class="text-end">Prepaid</th><th class="text-end">Used this quarter</th><th class="text-end">Left</th><th class="text-end">Expires</th></tr></thead>
+                    <thead><tr><th>Hours</th><th>Contract</th><th class="text-end">Prepaid</th><th class="text-end"><?= escapeHtml(forkHoursReportWords($report['report_start'], $report['report_end'])['used']) ?></th><th class="text-end">Left</th><th class="text-end">Expires</th></tr></thead>
                     <tbody>
                     <?php foreach ($data['blocks'] as $block) { ?>
                         <tr>
@@ -72,7 +72,7 @@ $recipients = billingEmailRecipients($client_id);
                         </tr>
                     <?php } ?>
                     <?php if (!$data['blocks']) { ?>
-                        <tr><td colspan="6" class="text-secondary text-center">No prepaid hours this quarter.</td></tr>
+                        <tr><td colspan="6" class="text-secondary text-center"><?= escapeHtml(forkHoursReportWords($report['report_start'], $report['report_end'])['no_hours']) ?></td></tr>
                     <?php } ?>
                     </tbody>
                     <tfoot><tr class="fw-semibold"><td colspan="3" class="text-end">Total</td><td class="text-end"><?= escapeHtml(contractHoursText($data['used'])) ?></td><td class="text-end"><?= escapeHtml(contractHoursText($data['left'])) ?></td><td></td></tr></tfoot>
@@ -93,7 +93,7 @@ $recipients = billingEmailRecipients($client_id);
                         </tr>
                     <?php } ?>
                     <?php if (!$data['lines']) { ?>
-                        <tr><td colspan="4" class="text-secondary text-center">No ticket drew hours this quarter.</td></tr>
+                        <tr><td colspan="4" class="text-secondary text-center"><?= escapeHtml(forkHoursReportWords($report['report_start'], $report['report_end'])['no_tickets']) ?></td></tr>
                     <?php } ?>
                     </tbody>
                 </table>
