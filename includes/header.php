@@ -40,6 +40,8 @@ header("X-Frame-Options: DENY");
         <link rel="icon" type="image/x-icon" href="/uploads/favicon.ico">
     <?php } ?>
 
+    <?php require_once __DIR__ . '/pwa_head.php'; ?>
+
     <?php /* The select picker is the first thing includes/footer.php runs,
              because until it does the browser is showing raw <select>
              controls. Preloading here starts the fetch during head parse, in

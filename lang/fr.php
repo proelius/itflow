@@ -1764,4 +1764,9 @@ return [
     'Please find attached the backup check report for the period {period}.' => 'Vous trouverez ci-joint le rapport du contrôle des sauvegardes pour la période {period}.',
     'The report is attached to this message as a PDF. In case of questions, reply to this email.' => 'Le rapport est joint à ce message au format PDF. En cas de question, répondez à cet e-mail.',
     'You received this email as a contact of {client} with {company}.' => 'Vous recevez cet e-mail en tant que contact de {client} chez {company}.',
+    // Installable app (manifest.php, offline.php)
+    'Clients' => 'Clients',
+    'You are offline' => 'Vous êtes hors ligne',
+    '{app} needs a network connection. Check your connection, then try again.' => '{app} a besoin d’une connexion réseau. Vérifiez votre connexion, puis réessayez.',
+    'Try again' => 'Réessayer',
 ];

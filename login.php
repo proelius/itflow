@@ -790,6 +790,8 @@ $show_login_form = (!$show_role_choice && !$show_mfa_form);
         <link rel="icon" type="image/x-icon" href="/uploads/favicon.ico">
     <?php } ?>
 
+    <?php require_once __DIR__ . '/includes/pwa_head.php'; ?>
+
     <link rel="stylesheet" href="<?= staticFileUrl('/libs/adminlte/css/adminlte.min.css') ?>">
     <link rel="stylesheet" href="<?= staticFileUrl('/css/itflow_custom.css') ?>">
 </head>
