@@ -181,7 +181,7 @@
                         <li class="nav-header mt-3">SUPPORT</li>
                     <?php } ?>
                     <li class="nav-item">
-                        <a href="/agent/backup_client.php?client_id=<?= $client_id ?>" class="nav-link <?php if (in_array(basename($_SERVER["PHP_SELF"]), ["backup_client.php", "backup_check.php", "backup_reports.php", "backup_report.php"])) { echo "active"; } ?>">
+                        <a href="<?= lookupUserPermission('module_financial') >= 1 ? '/agent/backup_client.php' : '/agent/backup_check.php' ?>?client_id=<?= $client_id ?>" class="nav-link <?php if (in_array(basename($_SERVER["PHP_SELF"]), ["backup_client.php", "backup_check.php", "backup_reports.php", "backup_report.php"])) { echo "active"; } ?>">
                             <i class="nav-icon fas fa-hdd"></i>
                             <p>Backup Checks</p>
                         </a>

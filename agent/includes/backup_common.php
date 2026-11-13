@@ -32,12 +32,12 @@ function backupStateBadge($state) {
     return '<span class="badge ' . $class . '">' . escapeHtml(forkBackupStates()[$state] ?? '-') . '</span>';
 }
 
-/** The tabs of the client's backup pages: the service and checks, and the reports (Financial module). */
+/** The tabs of the client's backup pages: the service and checks, and the reports - both with the Financial module, none without it. */
 function backupClientTabs($client_id, $active) {
-    $tabs = ['service' => ['backup_client.php', 'fa-server', 'Service and checks']];
-    if (lookupUserPermission('module_financial') >= 1) {
-        $tabs['reports'] = ['backup_reports.php', 'fa-file-alt', 'Reports'];
+    if (lookupUserPermission('module_financial') < 1) {
+        return '';
     }
+    $tabs = ['service' => ['backup_client.php', 'fa-server', 'Service and checks'], 'reports' => ['backup_reports.php', 'fa-file-alt', 'Reports']];
     $html = '<ul class="nav nav-pills mb-3">';
     foreach ($tabs as $key => [$page, $icon, $label]) {
         $html .= '<li class="nav-item"><a class="nav-link' . ($key === $active ? ' active' : '') . '" href="' . $page . '?client_id=' . intval($client_id) . '"><i class="fas fa-fw ' . $icon . ' me-2"></i>' . $label . '</a></li>';

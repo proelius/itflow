@@ -10,8 +10,14 @@ require_once "includes/backup_common.php";
 
 enforceUserPermission('module_support');
 
+// The week's checks are for the Support module; the clients with the service are managed like the reports, with the Financial module
 $tab = ($_GET['tab'] ?? '') === 'clients' ? 'clients' : 'week';
+if ($tab === 'clients') {
+    enforceUserPermission('module_financial');
+}
 $can_edit = lookupUserPermission('module_support') >= 2;
+$can_service = lookupUserPermission('module_financial') >= 1;
+$can_edit_service = lookupUserPermission('module_financial') >= 2;
 $week = forkBackupMonday($_GET['week'] ?? '') ?? forkBackupMonday(date('Y-m-d'));
 $this_week = forkBackupMonday(date('Y-m-d'));
 $previous = date('Y-m-d', strtotime($week . ' 12:00:00 -7 days'));
@@ -22,7 +28,9 @@ $frequencies = forkBackupFrequencies();
 
 <ul class="nav nav-pills mb-3">
     <li class="nav-item"><a class="nav-link<?= $tab === 'week' ? ' active' : '' ?>" href="backup_checks.php"><i class="fas fa-fw fa-calendar-check me-2"></i>Checks of the week</a></li>
-    <li class="nav-item"><a class="nav-link<?= $tab === 'clients' ? ' active' : '' ?>" href="backup_checks.php?tab=clients"><i class="fas fa-fw fa-users me-2"></i>Clients with the service</a></li>
+    <?php if ($can_service) { ?>
+        <li class="nav-item"><a class="nav-link<?= $tab === 'clients' ? ' active' : '' ?>" href="backup_checks.php?tab=clients"><i class="fas fa-fw fa-users me-2"></i>Clients with the service</a></li>
+    <?php } ?>
 </ul>
 
 <?php if ($tab === 'week') {
@@ -47,14 +55,14 @@ $frequencies = forkBackupFrequencies();
                     <tbody>
                     <?php foreach ($rows as $row) { ?>
                         <tr>
-                            <td class="fw-semibold"><a href="<?= $row['servers'] ? "backup_check.php?client_id={$row['client_id']}&week=$week" : "backup_client.php?client_id={$row['client_id']}" ?>"><?= escapeHtml($row['client_name']) ?></a></td>
+                            <td class="fw-semibold"><?php if ($row['servers'] || $can_service) { ?><a href="<?= $row['servers'] ? "backup_check.php?client_id={$row['client_id']}&week=$week" : "backup_client.php?client_id={$row['client_id']}" ?>"><?= escapeHtml($row['client_name']) ?></a><?php } else { echo escapeHtml($row['client_name']); } ?></td>
                             <td><?= escapeHtml($frequencies[$row['frequency']]) ?></td>
-                            <td><?= $row['servers'] ?: '<span class="text-danger">none - add them</span>' ?></td>
+                            <td><?= $row['servers'] ?: '<span class="text-danger">none' . ($can_service ? ' - add them' : '') . '</span>' ?></td>
                             <td><?= $row['done'] ? backupStateBadge($row['state']) : '<span class="badge bg-secondary">To do</span>' ?></td>
                             <td class="text-end">
                                 <?php if ($row['servers']) { ?>
                                     <button type="button" class="btn btn-sm btn-primary ajax-modal" data-modal-size="xl" data-modal-url="modals/backup/backup_check.php?client_id=<?= $row['client_id'] ?>&week=<?= $week ?>"><i class="fas fa-pen me-2"></i><?= $row['done'] ? 'Open' : 'Enter' ?></button>
-                                <?php } else { ?>
+                                <?php } elseif ($can_service) { ?>
                                     <a class="btn btn-sm btn-secondary" href="backup_client.php?client_id=<?= $row['client_id'] ?>">Servers</a>
                                 <?php } ?>
                             </td>
@@ -70,7 +78,7 @@ $frequencies = forkBackupFrequencies();
     $to_add = forkBackupClientsToAdd(); ?>
     <div class="card card-dark">
         <div class="card-header py-2"><h3 class="card-title mt-2"><i class="fas fa-fw fa-users me-2"></i>Clients with the service</h3></div>
-        <?php if ($can_edit && $to_add) { ?>
+        <?php if ($can_edit_service && $to_add) { ?>
             <form action="post.php" method="post" class="card-body border-bottom row g-2 align-items-end">
                 <?= backupCsrf() ?>
                 <div class="col-md-4"><label class="form-label">Add a client</label><select class="form-select" name="client_id" required><option value="">Choose a client</option><?= backupOptions($to_add, '') ?></select></div>

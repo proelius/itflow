@@ -12,7 +12,7 @@ require_once "includes/backup_common.php";
 enforceUserPermission('module_support');
 
 $service = forkBackupClient($client_id);
-if (!$service) {
+if (!$service && lookupUserPermission('module_financial') >= 1) {
     redirect("backup_client.php?client_id=$client_id");
 }
 $week = forkBackupMonday($_GET['week'] ?? '') ?? forkBackupMonday(date('Y-m-d'));
@@ -30,7 +30,7 @@ $user = $check ? mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT user_name FROM
 <?= backupClientTabs($client_id, 'service') ?>
 
 <?php if (!$servers) { ?>
-    <div class="card card-dark"><div class="card-body">This client has no server to check yet. <a href="backup_client.php?client_id=<?= $client_id ?>">Add the servers</a> first.</div></div>
+    <div class="card card-dark"><div class="card-body">This client has no server to check yet.<?php if (lookupUserPermission('module_financial') >= 1) { ?> <a href="backup_client.php?client_id=<?= $client_id ?>">Add the servers</a> first.<?php } ?></div></div>
 <?php } else { ?>
     <form action="post.php" method="post" autocomplete="off">
         <?= backupCsrf() ?>

@@ -34,7 +34,7 @@ ob_start();
 </div>
 
 <?php if (!$servers) { ?>
-    <div class="modal-body">This client has no server to check yet. <a href="backup_client.php?client_id=<?= $client_id ?>">Add the servers</a> first.</div>
+    <div class="modal-body">This client has no server to check yet.<?php if (lookupUserPermission('module_financial') >= 1) { ?> <a href="backup_client.php?client_id=<?= $client_id ?>">Add the servers</a> first.<?php } ?></div>
     <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fa fa-times me-2"></i>Close</button></div>
 <?php } else { ?>
     <form action="post.php" method="post" autocomplete="off">

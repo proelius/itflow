@@ -9,9 +9,17 @@
 
 defined('FROM_POST_HANDLER') || die("Direct file access is not allowed");
 
-/** A client the agent may work on, with the Support module at $level. */
+/** A client the agent may work on, with the Support module at $level - the checks. */
 function backupPostClient($level = 2) {
     enforceUserPermission('module_support', $level);
+    $client_id = intval($_POST['client_id'] ?? $_GET['client_id'] ?? 0);
+    enforceClientAccess($client_id);
+    return $client_id;
+}
+
+/** A client the agent may work on, with the Financial module at $level - the service and its servers, like the reports. */
+function backupPostService($level = 2) {
+    enforceUserPermission('module_financial', $level);
     $client_id = intval($_POST['client_id'] ?? $_GET['client_id'] ?? 0);
     enforceClientAccess($client_id);
     return $client_id;
@@ -32,7 +40,7 @@ function backupPostReport($report_id, $level = 1) {
 if (isset($_POST['backup_client_add'])) {
 
     validateCSRFToken();
-    $client_id = backupPostClient();
+    $client_id = backupPostService();
     if (!forkBackupClientAdd($client_id, $_POST['frequency'] ?? 'weekly', $_POST['anchor'] ?? null)) {
         flashAlert("That client could not be added - it may have the service already.", 'error');
         redirect();
@@ -46,7 +54,7 @@ if (isset($_POST['backup_client_add'])) {
 if (isset($_POST['backup_client_save'])) {
 
     validateCSRFToken();
-    $client_id = backupPostClient();
+    $client_id = backupPostService();
     if (!forkBackupClientSave($client_id, $_POST['frequency'] ?? 'weekly', $_POST['anchor'] ?? '', !empty($_POST['active']))) {
         flashAlert("Give the Monday the service starts, as a date.", 'error');
         redirect();
@@ -60,7 +68,7 @@ if (isset($_POST['backup_client_save'])) {
 if (isset($_POST['backup_client_remove'])) {
 
     validateCSRFToken();
-    $client_id = backupPostClient();
+    $client_id = backupPostService();
     forkBackupClientRemove($client_id);
     logAudit("Backup check", "Delete", "$session_name took the backup check service away from the client", $client_id, $client_id);
     flashAlert("Service removed - what was entered is kept");
@@ -71,7 +79,7 @@ if (isset($_POST['backup_client_remove'])) {
 if (isset($_POST['backup_server_add'])) {
 
     validateCSRFToken();
-    $client_id = backupPostClient();
+    $client_id = backupPostService();
     if (!forkBackupServerAdd($client_id, $_POST['asset_id'] ?? 0, $_POST['name'] ?? '')) {
         flashAlert("That server could not be added - choose an asset or give a name, and not one already there.", 'error');
         redirect();
@@ -84,7 +92,7 @@ if (isset($_POST['backup_server_add'])) {
 if (isset($_POST['backup_server_remove'])) {
 
     validateCSRFToken();
-    $client_id = backupPostClient();
+    $client_id = backupPostService();
     forkBackupServerRemove($client_id, $_POST['server_id'] ?? 0);
     flashAlert("Server removed - what was entered for it is kept");
     redirect();

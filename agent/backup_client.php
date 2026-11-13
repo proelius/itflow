@@ -8,10 +8,10 @@
 require_once "includes/inc_all_client.php";
 require_once "includes/backup_common.php";
 
-enforceUserPermission('module_support');
+enforceUserPermission('module_financial'); // the service is managed like the reports
 
 $service = forkBackupClient($client_id);
-$can_edit = lookupUserPermission('module_support') >= 2;
+$can_edit = lookupUserPermission('module_financial') >= 2;
 $servers = $service ? forkBackupServers($client_id) : [];
 $taken = array_column($servers, 'asset_id', 'asset_id');
 $assets = [];
