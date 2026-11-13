@@ -270,6 +270,30 @@ $out = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($pr
 unlink($probe);
 backup_test('the fields have two volumes, each with its free and its total space: the total starts from the last check, the free space is empty', trim($out) === 'VOLUMES');
 backup_test('the volumes are stored in the lines, added to a table made before, and the old disks are no longer written', strpos($fork_source, '`bl_vol1_free` varchar(30)') !== false && strpos($fork_source, "ADD COLUMN `\$column` varchar(30)") !== false && strpos($fork_source, "bl_vol2_total = '") !== false && strpos($fork_source, "bl_disk1 = '") === false);
+backup_test('the letter of a volume is one capital letter, or nothing', forkBackupLetterClean('c') === 'C' && forkBackupLetterClean(' D ') === 'D' && forkBackupLetterClean('CD') === '' && forkBackupLetterClean('1') === '' && forkBackupLetterClean('') === '' && forkBackupLetterClean(null) === '');
+$probe = tempnam(sys_get_temp_dir(), 'bkl');
+file_put_contents($probe, '<?php
+error_reporting(E_ALL); ini_set("display_errors", "1");
+function escapeHtml($v) { return htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8"); }
+function lookupUserPermission($m) { return 3; }
+$_SESSION = ["csrf_token" => "t"];
+require ' . var_export($itflow_dir . '/functions/fork_backup.php', true) . ';
+$client_id = 7; $week = "2026-11-09"; $session_name = "Tech"; $can_edit = true; $user = null; $tickets = [];
+$servers = [3 => ["id" => 3, "asset_id" => 5, "name" => "SRV", "os" => ""]];
+$check = ["bk_ticket_id" => 0, "bk_user_id" => 1, "lines" => [3 => ["bl_state" => "red", "bl_comment" => "Disk dead", "bl_second" => "fail", "bl_second_comment" => "Still failing", "bl_raid" => "ok", "bl_sys" => "ok", "bl_data" => "fail", "bl_cloud" => "ok",
+    "bl_vol1_letter" => "E", "bl_vol1_free" => "10 Go", "bl_vol1_total" => "20 Go", "bl_vol2_letter" => "", "bl_vol2_free" => "", "bl_vol2_total" => ""]]];
+$previous = [];
+$statuses = forkBackupStatuses(); $parts = ["raid" => "RAID", "sys" => "BKP SYS", "data" => "BKP DATA", "cloud" => "Cloud"];
+ob_start(); require ' . var_export($itflow_dir . '/agent/includes/backup_check_fields.php', true) . '; $html = ob_get_clean();
+$at = fn($needle) => strpos($html, $needle);
+$ok = $at("name=\\"line[3][comment]\\"") !== false && $at("line[3][comment]") < $at("line[3][second]") && $at("line[3][second]") < $at("line[3][second_comment]")
+    && str_contains($html, "Still failing") && str_contains($html, "Second check comment")
+    && str_contains($html, "line[3][vol1_letter]") && str_contains($html, "line[3][vol2_letter]") && str_contains($html, "<option value=\\"E\\" selected>E</option>") && substr_count($html, "<option value=\\"Z\\"") === 2;
+echo $ok ? "LAYOUT" : "WRONG";');
+$out = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($probe) . ' 2>&1');
+unlink($probe);
+backup_test('the second check is under the comment, with a comment of its own, and each volume has a letter to choose', trim($out) === 'LAYOUT');
+backup_test('the letters and the comment of the second check are stored, added to a table made before, and the comment is dropped when there is no second check', strpos($fork_source, '`bl_vol1_letter` varchar(1)') !== false && strpos($fork_source, '`bl_second_comment` text') !== false && strpos($fork_source, "'bl_second_comment' => \"text DEFAULT NULL\"") !== false && strpos($fork_source, "\$second === 'none' ? '' :") !== false && strpos($fork_source, "bl_second_comment = '\" . escapeSql") !== false);
 backup_test('the tables are not in ITFlow\'s own database updates', strpos(file_get_contents($itflow_dir . '/db.sql'), 'fork_backup') === false && !glob($itflow_dir . '/admin/database_updates/*') === false);
 
 echo "\n$passed passed, $failed failed\n";

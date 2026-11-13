@@ -29,10 +29,13 @@ require_once __DIR__ . '/backup_common.php'; // the window does not load it by i
     <div class="border rounded p-3 mb-3 bk-line" data-state="<?= escapeHtml($line['bl_state'] ?? '') ?>">
         <div class="fw-semibold mb-2"><i class="fas fa-server me-2"></i><?= escapeHtml($server['name']) ?><?= $server['os'] !== '' ? ' <span class="text-secondary fw-normal">- ' . escapeHtml($server['os']) . '</span>' : '' ?></div>
         <div class="row g-2 mb-2">
-            <div class="col-6 col-md-3"><label class="form-label">Volume 1 - free space</label><input type="text" class="form-control" name="<?= $name ?>[vol1_free]" maxlength="30" placeholder="349 Go" value="<?= $line ? escapeHtml($value('vol1_free')) : '' ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
-            <div class="col-6 col-md-3"><label class="form-label">Volume 1 - total space</label><input type="text" class="form-control" name="<?= $name ?>[vol1_total]" maxlength="30" placeholder="424 Go" value="<?= escapeHtml($value('vol1_total')) ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
-            <div class="col-6 col-md-3"><label class="form-label">Volume 2 - free space</label><input type="text" class="form-control" name="<?= $name ?>[vol2_free]" maxlength="30" placeholder="2.60 To" value="<?= $line ? escapeHtml($value('vol2_free')) : '' ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
-            <div class="col-6 col-md-3"><label class="form-label">Volume 2 - total space</label><input type="text" class="form-control" name="<?= $name ?>[vol2_total]" maxlength="30" placeholder="3.45 To" value="<?= escapeHtml($value('vol2_total')) ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
+            <?php foreach ([1 => ['349 Go', '424 Go'], 2 => ['2.60 To', '3.45 To']] as $n => [$free_example, $total_example]) { ?>
+                <div class="col-md-6"><div class="row g-2">
+                    <div class="col-4 col-md-3"><label class="form-label">Volume <?= $n ?> - letter</label><select class="form-select" name="<?= $name ?>[vol<?= $n ?>_letter]" <?= $can_edit ? '' : 'disabled' ?>><?= backupOptions(['' => '-'] + array_combine(range('A', 'Z'), range('A', 'Z')), $value("vol{$n}_letter")) ?></select></div>
+                    <div class="col-4 col-md-4"><label class="form-label">Volume <?= $n ?> - free space</label><input type="text" class="form-control" name="<?= $name ?>[vol<?= $n ?>_free]" maxlength="30" placeholder="<?= $free_example ?>" value="<?= $line ? escapeHtml($value("vol{$n}_free")) : '' ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
+                    <div class="col-4 col-md-5"><label class="form-label">Volume <?= $n ?> - total space</label><input type="text" class="form-control" name="<?= $name ?>[vol<?= $n ?>_total]" maxlength="30" placeholder="<?= $total_example ?>" value="<?= escapeHtml($value("vol{$n}_total")) ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
+                </div></div>
+            <?php } ?>
             <?php if ($legacy !== '' && !$has_volumes) { ?><div class="col-12 small text-secondary">Entered as text before: <?= escapeHtml($legacy) ?></div><?php } ?>
         </div>
         <div class="row g-2 mb-2">
@@ -41,13 +44,17 @@ require_once __DIR__ . '/backup_common.php'; // the window does not load it by i
             <?php } ?>
         </div>
         <div class="row g-2 mb-2">
-            <div class="col-md-3 bk-second-box"><label class="form-label">Second check</label>
-                <select class="form-select bk-second" name="<?= $name ?>[second]" <?= $can_edit ? '' : 'disabled' ?>><?= backupOptions(['pending' => 'Not done yet', 'ok' => 'OK', 'fail' => 'Failed'], in_array($line['bl_second'] ?? '', ['ok', 'fail'], true) ? $line['bl_second'] : 'pending') ?></select></div>
             <div class="col-md-3 bk-state-box"><label class="form-label">Colour</label>
                 <select class="form-select bk-state" name="<?= $name ?>[state]" <?= $can_edit ? '' : 'disabled' ?>><?= backupOptions(forkBackupStates(), $line['bl_state'] ?? 'green') ?></select></div>
         </div>
         <label class="form-label">Comment <span class="text-secondary bk-need">(what happened - needed when it is not green)</span></label>
         <textarea class="form-control" name="<?= $name ?>[comment]" rows="2" maxlength="2000" <?= $can_edit ? '' : 'disabled' ?>><?= escapeHtml($line['bl_comment'] ?? '') ?></textarea>
+        <div class="bk-second-box mt-3">
+            <label class="form-label">Second check</label>
+            <select class="form-select bk-second mb-2" style="max-width: 16rem;" name="<?= $name ?>[second]" <?= $can_edit ? '' : 'disabled' ?>><?= backupOptions(['pending' => 'Not done yet', 'ok' => 'OK', 'fail' => 'Failed'], in_array($line['bl_second'] ?? '', ['ok', 'fail'], true) ? $line['bl_second'] : 'pending') ?></select>
+            <label class="form-label">Second check comment <span class="text-secondary">(optional - what the second check showed)</span></label>
+            <textarea class="form-control" name="<?= $name ?>[second_comment]" rows="2" maxlength="2000" <?= $can_edit ? '' : 'disabled' ?>><?= escapeHtml($line['bl_second_comment'] ?? '') ?></textarea>
+        </div>
     </div>
 <?php } ?>
 

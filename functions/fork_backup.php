@@ -257,6 +257,8 @@ function forkBackupEnsure() {
         `bl_vol1_total` varchar(30) NOT NULL DEFAULT '',
         `bl_vol2_free` varchar(30) NOT NULL DEFAULT '',
         `bl_vol2_total` varchar(30) NOT NULL DEFAULT '',
+        `bl_vol1_letter` varchar(1) NOT NULL DEFAULT '',
+        `bl_vol2_letter` varchar(1) NOT NULL DEFAULT '',
         `bl_raid` varchar(10) NOT NULL DEFAULT 'na',
         `bl_sys` varchar(10) NOT NULL DEFAULT 'na',
         `bl_data` varchar(10) NOT NULL DEFAULT 'na',
@@ -264,6 +266,7 @@ function forkBackupEnsure() {
         `bl_second` varchar(10) NOT NULL DEFAULT 'none',
         `bl_state` varchar(10) NOT NULL DEFAULT 'green',
         `bl_comment` text DEFAULT NULL,
+        `bl_second_comment` text DEFAULT NULL,
         PRIMARY KEY (`bl_id`),
         KEY `bl_check_id` (`bl_check_id`)
     ) $tail");
@@ -272,6 +275,12 @@ function forkBackupEnsure() {
     foreach (['bl_vol1_free', 'bl_vol1_total', 'bl_vol2_free', 'bl_vol2_total'] as $column) {
         if (!mysqli_fetch_row(mysqli_query($mysqli, "SHOW COLUMNS FROM `fork_backup_lines` LIKE '$column'"))) {
             mysqli_query($mysqli, "ALTER TABLE `fork_backup_lines` ADD COLUMN `$column` varchar(30) NOT NULL DEFAULT ''");
+        }
+    }
+    // The letter of each volume, and the comment of the second check, came after the others
+    foreach (['bl_vol1_letter' => "varchar(1) NOT NULL DEFAULT ''", 'bl_vol2_letter' => "varchar(1) NOT NULL DEFAULT ''", 'bl_second_comment' => "text DEFAULT NULL"] as $column => $definition) {
+        if (!mysqli_fetch_row(mysqli_query($mysqli, "SHOW COLUMNS FROM `fork_backup_lines` LIKE '$column'"))) {
+            mysqli_query($mysqli, "ALTER TABLE `fork_backup_lines` ADD COLUMN `$column` $definition");
         }
     }
     mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_backup_reports` (
@@ -642,8 +651,14 @@ function forkBackupVolumeClean($value) {
     return mb_substr(trim(str_replace(["\r", "\n"], ' ', (string) $value)), 0, 30);
 }
 
+/** The letter of a volume: one capital letter A to Z, or nothing. */
+function forkBackupLetterClean($value) {
+    $value = strtoupper(trim((string) $value));
+    return preg_match('/^[A-Z]$/', $value) === 1 ? $value : '';
+}
+
 /**
- * Saves a client's check for a week. $lines: for each server id, the fields of the form (vol1_free, vol1_total, vol2_free, vol2_total, raid, sys,
+ * Saves a client's check for a week. $lines: for each server id, the fields of the form (vol1_letter, vol1_free, vol1_total, vol2_letter, vol2_free, vol2_total, raid, sys,
  * data, cloud, second, state, comment). Returns [check_id, error] - the error says what to correct and nothing
  * is saved.
  */
@@ -670,10 +685,11 @@ function forkBackupCheckSave($client_id, $week, $user_id, $ticket_id, array $lin
         if ($state !== 'green' && $comment === '') {
             return [0, 'Say what happened on ' . $server['name'] . ' in its comment - it is ' . $state . '.'];
         }
-        $clean[$server_id] = ['name' => $server['name'], 'vol1_free' => forkBackupVolumeClean($line['vol1_free'] ?? ''), 'vol1_total' => forkBackupVolumeClean($line['vol1_total'] ?? ''),
+        $clean[$server_id] = ['name' => $server['name'], 'vol1_letter' => forkBackupLetterClean($line['vol1_letter'] ?? ''), 'vol2_letter' => forkBackupLetterClean($line['vol2_letter'] ?? ''), 'vol1_free' => forkBackupVolumeClean($line['vol1_free'] ?? ''), 'vol1_total' => forkBackupVolumeClean($line['vol1_total'] ?? ''),
             'vol2_free' => forkBackupVolumeClean($line['vol2_free'] ?? ''), 'vol2_total' => forkBackupVolumeClean($line['vol2_total'] ?? ''),
             'raid' => $statuses[0], 'sys' => $statuses[1], 'data' => $statuses[2], 'cloud' => $statuses[3],
-            'second' => $second, 'state' => $state, 'comment' => $comment];
+            'second' => $second, 'second_comment' => $second === 'none' ? '' : mb_substr(str_replace("\r", '', trim((string) ($line['second_comment'] ?? ''))), 0, 2000),
+            'state' => $state, 'comment' => $comment];
     }
     $existing = forkBackupCheck($client_id, $week);
     if ($existing) {
@@ -686,8 +702,8 @@ function forkBackupCheckSave($client_id, $week, $user_id, $ticket_id, array $lin
     }
     foreach ($clean as $server_id => $line) {
         mysqli_query($mysqli, "INSERT INTO fork_backup_lines SET bl_check_id = $check_id, bl_server_id = " . intval($server_id) . ", bl_server_name = '" . escapeSql($line['name']) . "',
-            bl_vol1_free = '" . escapeSql($line['vol1_free']) . "', bl_vol1_total = '" . escapeSql($line['vol1_total']) . "', bl_vol2_free = '" . escapeSql($line['vol2_free']) . "', bl_vol2_total = '" . escapeSql($line['vol2_total']) . "', bl_raid = '{$line['raid']}', bl_sys = '{$line['sys']}', bl_data = '{$line['data']}',
-            bl_cloud = '{$line['cloud']}', bl_second = '{$line['second']}', bl_state = '{$line['state']}', bl_comment = '" . escapeSql($line['comment']) . "'");
+            bl_vol1_letter = '{$line['vol1_letter']}', bl_vol2_letter = '{$line['vol2_letter']}', bl_vol1_free = '" . escapeSql($line['vol1_free']) . "', bl_vol1_total = '" . escapeSql($line['vol1_total']) . "', bl_vol2_free = '" . escapeSql($line['vol2_free']) . "', bl_vol2_total = '" . escapeSql($line['vol2_total']) . "', bl_raid = '{$line['raid']}', bl_sys = '{$line['sys']}', bl_data = '{$line['data']}',
+            bl_cloud = '{$line['cloud']}', bl_second = '{$line['second']}', bl_state = '{$line['state']}', bl_comment = '" . escapeSql($line['comment']) . "', bl_second_comment = '" . escapeSql($line['second_comment']) . "'");
     }
     return [$check_id, ''];
 }
