@@ -164,6 +164,12 @@
                             <p>Contract Templates</p>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a href="/admin/billing_notes.php" class="nav-link <?= (basename($_SERVER['PHP_SELF']) == 'billing_notes.php' ? 'active' : '') ?>">
+                            <i class="nav-icon fas fa-sticky-note"></i>
+                            <p>Billing Notes</p>
+                        </a>
+                    </li>
                 <?php } ?>
                 <?php if ($config_module_enable_itdoc) { ?>
                     <li class="nav-item">

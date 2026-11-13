@@ -302,7 +302,10 @@ $paper_bill_lines = array_filter([
     <div class="itflow-paper-bottom">
         <div class="itflow-paper-notes">
             <?php if (!empty($paper['notes_edit'])) { ?>
-                <div class="itflow-paper-label d-flex align-items-center">Notes <span class="ms-2 d-print-none fw-normal text-transform-none" data-note-status-for="billingNotes"></span></div>
+                <?php $paper_note_templates = forkBillingNotesFor($paper_c === 'quote' ? 'quote' : 'invoice'); ?>
+                <div class="itflow-paper-label d-flex align-items-center">Notes <span class="ms-2 d-print-none fw-normal text-transform-none" data-note-status-for="billingNotes"></span>
+                    <?php require __DIR__ . '/billing_note_picker.php'; ?>
+                </div>
                 <textarea class="form-control form-control-sm itflow-inline-note d-print-none" rows="3" id="billingNotes"
                     placeholder="Payment details, terms, a thank you - shown on the <?= strtolower($paper_title) ?>"
                     data-endpoint="<?= $paper_c ?>_set_notes" data-id-field="<?= $paper_t['param'] ?>" data-id="<?= $paper_id ?>"
