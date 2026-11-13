@@ -815,6 +815,30 @@ function forkBackupReportRows(array $report) {
     return $rows;
 }
 
+/**
+ * The email that sends a report to the client's contacts - [subject, email], in the client's language, in the same
+ * layout as the billing emails. The PDF is attached by the handler. $opts: 'note', the agent's own words.
+ */
+function forkBackupReportEmail(array $report, array $opts = []) {
+    return billingEmailInClientLanguage(function () use ($report, $opts) {
+        return _forkBackupReportEmail($report, $opts);
+    });
+}
+
+function _forkBackupReportEmail(array $report, array $opts = []) {
+    $title = forkBackupReportTitle($report);
+    $period = t('{from} to {to}', ['{from}' => i18n_date_value($report['br_start']), '{to}' => i18n_date_value($report['br_end'])]);
+    $n = ['{title}' => $title, '{company}' => billingCompany()['company_name'] ?? '', '{period}' => $period, '{client}' => $report['client_name']];
+    return [t('{title} from {company} - {period}', $n), [
+        'kind' => t('Report'), 'tone' => 'primary', 'title' => $title,
+        'intro' => [t('Please find attached the backup check report of {client} for the period {period}.', $n)],
+        'note' => $opts['note'] ?? '',
+        'summary' => [t('Report') => $title, t('Period') => $period, t('Weeks checked') => (string) array_sum(array_map('count', $report['data']['months']))],
+        'after' => [t('The report is attached to this message as a PDF. In case of questions, reply to this email.')],
+        'footnote' => t('You received this email as a contact of {client} with {company}.', $n),
+    ]];
+}
+
 /** The colour of a state in the report - [fill]. */
 function forkBackupStateColours($state) {
     return ['red' => ['FF0000'], 'yellow' => ['FFFF00']][$state] ?? ['00B050'];

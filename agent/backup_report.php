@@ -32,11 +32,12 @@ $token = escapeHtml($_SESSION['csrf_token']);
             <div class="card-tools">
                 <a class="btn btn-secondary" href="backup_reports.php?client_id=<?= $client_id ?>"><i class="fas fa-arrow-left me-2"></i>Reports</a>
                 <a class="btn btn-secondary" href="post.php?backup_report_pdf=<?= intval($report['br_id']) ?>&amp;csrf_token=<?= $token ?>" target="_blank"><i class="fas fa-file-pdf me-2"></i>PDF</a>
+                <?php if ($can_edit) { ?><button type="button" class="btn btn-primary ajax-modal" data-modal-url="modals/backup/backup_report_email.php?report_id=<?= intval($report['br_id']) ?>"><i class="fas fa-paper-plane me-2"></i>Send by email</button><?php } ?>
             </div>
         </div>
         <div class="card-body">
             <div class="mb-3 text-secondary"><?= escapeHtml($report['client_name']) ?> &middot; <?= intval($report['data']['total']) ?> checks:
-                <?= intval($counts['green']) ?> green, <?= intval($counts['yellow']) ?> yellow, <?= intval($counts['red']) ?> red. Not sent anywhere - download it and send it yourself.</div>
+                <?= intval($counts['green']) ?> green, <?= intval($counts['yellow']) ?> yellow, <?= intval($counts['red']) ?> red. Nothing is sent by itself - send it by email from here, or download the PDF.</div>
             <div class="mb-3"><label class="form-label fw-semibold">Comment</label>
                 <textarea class="form-control" name="comment" rows="4" maxlength="3000" <?= $can_edit ? '' : 'readonly' ?>><?= escapeHtml($report['br_comment']) ?></textarea></div>
             <div class="table-responsive"><table class="table table-sm align-middle">

@@ -49,6 +49,7 @@ $service = forkBackupClient($client_id);
                     <td class="text-center text-nowrap">
                         <a class="btn btn-sm btn-secondary" href="backup_report.php?client_id=<?= $client_id ?>&report_id=<?= intval($report['br_id']) ?>" title="View"><i class="fas fa-eye"></i></a>
                         <a class="btn btn-sm btn-secondary" href="post.php?backup_report_pdf=<?= intval($report['br_id']) ?>&amp;csrf_token=<?= $_SESSION['csrf_token'] ?>" target="_blank" title="PDF"><i class="fas fa-file-pdf"></i></a>
+                        <?php if ($can_edit) { ?><button type="button" class="btn btn-sm btn-primary ajax-modal" data-modal-url="modals/backup/backup_report_email.php?report_id=<?= intval($report['br_id']) ?>" title="Send by email"><i class="fas fa-paper-plane"></i></button><?php } ?>
                     </td>
                 </tr>
             <?php } ?>

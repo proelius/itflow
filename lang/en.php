@@ -1704,4 +1704,10 @@ return [
     'Week' => 'Week',
     'Detail' => 'Detail',
     '{server}: {comment}' => '{server}: {comment}',
+    '{title} from {company} - {period}' => '{title} from {company} - {period}',
+    'Report' => 'Report',
+    'Weeks checked' => 'Weeks checked',
+    'Please find attached the backup check report of {client} for the period {period}.' => 'Please find attached the backup check report of {client} for the period {period}.',
+    'The report is attached to this message as a PDF. In case of questions, reply to this email.' => 'The report is attached to this message as a PDF. In case of questions, reply to this email.',
+    'You received this email as a contact of {client} with {company}.' => 'You received this email as a contact of {client} with {company}.',
 ];

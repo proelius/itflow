@@ -178,6 +178,32 @@ if (isset($_POST['save_backup_report'])) {
 
 }
 
+if (isset($_POST['email_backup_report'])) {
+
+    validateCSRFToken();
+    $report = backupPostReport($_POST['report_id'] ?? 0, 2);
+    $client_id = intval($report['br_client_id']);
+    $recipients = billingEmailRecipients($client_id, (array) ($_POST['contacts'] ?? []));
+    if (!$recipients) {
+        flashAlert(empty($_POST['contacts']) ? "Select at least one contact to send to" : "None of the selected contacts have a usable email address", 'error');
+        redirect();
+    }
+    // The report as the client reads it, with the agent's own words, and the PDF attached - the same way a quote goes out
+    [$subject, $email] = forkBackupReportEmail($report, ['note' => trim(mb_substr((string) ($_POST['note'] ?? ''), 0, 2000))]);
+    $file = billingEmailPdf(forkBackupPdf($report));
+    if (!$file) {
+        flashAlert("The PDF could not be made, so nothing was sent.", 'error');
+        redirect();
+    }
+    $sent = billingEmailQueue($recipients, $subject, $email, ['from' => 'invoice', 'attach' => [$file]]);
+    foreach ($recipients as $recipient) {
+        logAudit("Backup check", "Email", "$session_name emailed the backup check report of " . escapeSql($report['br_start']) . " to " . escapeSql($report['br_end']) . " to " . escapeSql($recipient['email']) . " with the PDF", $client_id, $report['br_id']);
+    }
+    flashAlert("Report queued to " . count($sent) . " " . (count($sent) === 1 ? "recipient" : "recipients"));
+    redirect();
+
+}
+
 if (isset($_POST['reset_backup_report'])) {
 
     validateCSRFToken();
