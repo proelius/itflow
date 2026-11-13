@@ -34,6 +34,12 @@ function forkHoursReportPeriod($today = null) {
     return ['start' => $start, 'end' => date('Y-m-t', strtotime(sprintf('%04d-%02d-01', $year, $first_month + 2))), 'year' => $year, 'quarter' => $quarter];
 }
 
+/** The company's name without its legal form at the end ("Proxycore Sàrl" gives "Proxycore") - for the signature. */
+function forkHoursReportCompanyShort($name) {
+    $short = trim(preg_replace('/[\s,]+(s[àa]rl|sa|ag|gmbh|sas|sasu|eurl|ltd|llc|inc|bv|srl)\.?$/iu', '', trim((string) $name)));
+    return $short !== '' ? $short : trim((string) $name);
+}
+
 /** Whether a period is exactly a civil quarter: January-March, April-June, July-September or October-December. */
 function forkHoursReportIsQuarter($start, $end) {
     return preg_match('/^\d{4}-(01|04|07|10)-01$/', (string) $start) === 1
@@ -411,7 +417,7 @@ function forkHoursReportPdfRender(array $report) {
     }
     // The signature, in the colour of the header - the company's name is the one in the settings
     $pdf->Ln(8);
-    $pdf->writeHTML('<span style="font-weight:bold; color:#0a58ca;">' . $e(t('The {company} team', ['{company}' => $company['company_name'] ?? ''])) . '</span>', true, false, true, false, '');
+    $pdf->writeHTML('<span style="font-size:10.5pt; font-weight:bold; color:#0a58ca;">' . $e(t('The {company} team', ['{company}' => forkHoursReportCompanyShort($company['company_name'] ?? '')])) . '</span>', true, false, true, false, '');
 
     $which = forkHoursReportIsQuarter($report['report_start'], $report['report_end'])
         ? substr($report['report_start'], 0, 4) . '-Q' . (intdiv(intval(substr($report['report_start'], 5, 2)) - 1, 3) + 1)

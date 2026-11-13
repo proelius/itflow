@@ -67,6 +67,14 @@ period_test('in French, the title of a quarter has not changed', forkHoursReport
 i18n_set_language('en');
 period_test('in English, a quarter is still "Quarter 3 2026"', forkHoursReportTitle('2026-07-01', '2026-09-30') === 'Quarter 3 2026');
 
+echo "\nThe signature\n";
+period_test('the legal form is left out of the name', forkHoursReportCompanyShort('Proxycore Sàrl') === 'Proxycore' && forkHoursReportCompanyShort('Proxycore SA') === 'Proxycore' && forkHoursReportCompanyShort('Acme GmbH') === 'Acme');
+period_test('a name without a legal form is kept', forkHoursReportCompanyShort('Proxycore') === 'Proxycore' && forkHoursReportCompanyShort('Sarlat Info') === 'Sarlat Info');
+period_test('a name that is only a legal form is kept', forkHoursReportCompanyShort('SA') === 'SA');
+i18n_set_language('fr');
+period_test('in French, "L’Équipe" with capitals', t('The {company} team', ['{company}' => 'Proxycore']) === 'L’Équipe Proxycore');
+i18n_set_language('en');
+
 echo "\nThe wiring\n";
 $fn = $read('functions/fork_hours_report.php');
 $pages = $read('agent/hours_reports.php');
