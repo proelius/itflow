@@ -41,7 +41,7 @@ if (isset($_POST['backup_client_add'])) {
 
     validateCSRFToken();
     $client_id = backupPostService();
-    if (!forkBackupClientAdd($client_id, $_POST['frequency'] ?? 'weekly', $_POST['anchor'] ?? null)) {
+    if (!forkBackupClientAdd($client_id, $_POST['frequency'] ?? 'weekly', $_POST['anchor'] ?? null, !empty($_POST['autonomous']))) {
         flashAlert("That client could not be added - it may have the service already.", 'error');
         redirect();
     }
@@ -55,7 +55,7 @@ if (isset($_POST['backup_client_save'])) {
 
     validateCSRFToken();
     $client_id = backupPostService();
-    if (!forkBackupClientSave($client_id, $_POST['frequency'] ?? 'weekly', $_POST['anchor'] ?? '', !empty($_POST['active']))) {
+    if (!forkBackupClientSave($client_id, $_POST['frequency'] ?? 'weekly', $_POST['anchor'] ?? '', !empty($_POST['active']), !empty($_POST['autonomous']))) {
         flashAlert("Give the Monday the service starts, as a date.", 'error');
         redirect();
     }

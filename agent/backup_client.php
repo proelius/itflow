@@ -44,6 +44,7 @@ if ($service) {
                 <div class="col-md-3"><label class="form-label">Checked</label><select class="form-select" name="frequency"><?= backupOptions(forkBackupFrequencies(), 'weekly') ?></select></div>
                 <div class="col-md-3"><label class="form-label">Starting the week of</label><input type="date" class="form-control" name="anchor" value="<?= $week ?>"></div>
                 <div class="col-md-2"><button type="submit" name="backup_client_add" value="1" class="btn btn-primary w-100"><i class="fas fa-plus me-2"></i>Give the service</button></div>
+                <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="autonomous" id="bkAutonomousNew" value="1"><label class="form-check-label" for="bkAutonomousNew">The technician may take the corrective action on his own, without the client's approval</label></div></div>
             </form>
         <?php } ?>
     </div></div>
@@ -57,6 +58,7 @@ if ($service) {
                     <input type="hidden" name="client_id" value="<?= $client_id ?>">
                     <div class="mb-2"><label class="form-label">Checked</label><select class="form-select" name="frequency" <?= $can_edit ? '' : 'disabled' ?>><?= backupOptions(forkBackupFrequencies(), $service['frequency']) ?></select></div>
                     <div class="mb-2"><label class="form-label">Starting the week of</label><input type="date" class="form-control" name="anchor" value="<?= escapeHtml($service['anchor']) ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
+                    <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="autonomous" id="bkAutonomous" value="1" <?= $service['autonomous'] ? 'checked' : '' ?> <?= $can_edit ? '' : 'disabled' ?>><label class="form-check-label" for="bkAutonomous">The technician may take the corrective action on his own, without the client's approval</label></div>
                     <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="active" id="bkActive" value="1" <?= $service['active'] ? 'checked' : '' ?> <?= $can_edit ? '' : 'disabled' ?>><label class="form-check-label" for="bkActive">Active - untick to pause the checks</label></div>
                     <?php if ($can_edit) { ?>
                         <button type="submit" name="backup_client_save" value="1" class="btn btn-primary"><i class="fas fa-check me-2"></i>Save</button>

@@ -216,9 +216,14 @@ function forkBackupEnsure() {
         `bc_frequency` varchar(10) NOT NULL DEFAULT 'weekly',
         `bc_anchor` date NOT NULL,
         `bc_active` tinyint(1) NOT NULL DEFAULT 1,
+        `bc_autonomous` tinyint(1) NOT NULL DEFAULT 0,
         `bc_created_at` datetime NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`bc_client_id`)
     ) $tail");
+    // The column came after the table: add it to a table made before (the fork's own table, not an ITFlow one)
+    if (!mysqli_fetch_row(mysqli_query($mysqli, "SHOW COLUMNS FROM `fork_backup_clients` LIKE 'bc_autonomous'"))) {
+        mysqli_query($mysqli, "ALTER TABLE `fork_backup_clients` ADD COLUMN `bc_autonomous` tinyint(1) NOT NULL DEFAULT 0 AFTER `bc_active`");
+    }
     mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_backup_servers` (
         `bs_id` int(11) NOT NULL AUTO_INCREMENT,
         `bs_client_id` int(11) NOT NULL,
@@ -281,7 +286,7 @@ function forkBackupClients() {
         WHERE c.client_archived_at IS NULL ORDER BY c.client_name");
     while ($row = mysqli_fetch_assoc($sql)) {
         $rows[] = ['client_id' => intval($row['bc_client_id']), 'client_name' => $row['client_name'], 'frequency' => forkBackupFrequencyClean($row['bc_frequency']),
-            'anchor' => $row['bc_anchor'], 'active' => intval($row['bc_active']) === 1, 'servers' => intval($row['servers'])];
+            'anchor' => $row['bc_anchor'], 'active' => intval($row['bc_active']) === 1, 'autonomous' => intval($row['bc_autonomous']) === 1, 'servers' => intval($row['servers'])];
     }
     return $rows;
 }
@@ -309,8 +314,13 @@ function forkBackupClientsToAdd() {
     return $rows;
 }
 
+/** Whether the technician may take the corrective action on his own, as a badge's words: the text and the badge class. */
+function forkBackupAutonomyLabel($autonomous) {
+    return $autonomous ? ['Technician acts on his own', 'bg-success'] : ['Client approval needed', 'bg-warning text-dark'];
+}
+
 /** Gives a client the service, starting the Monday of $anchor (today by default). */
-function forkBackupClientAdd($client_id, $frequency, $anchor = null) {
+function forkBackupClientAdd($client_id, $frequency, $anchor = null, $autonomous = false) {
     global $mysqli;
     forkBackupEnsure();
     $client_id = intval($client_id);
@@ -320,17 +330,17 @@ function forkBackupClientAdd($client_id, $frequency, $anchor = null) {
     }
     $anchor = forkBackupMonday($anchor) ?? forkBackupMonday(date('Y-m-d'));
     $frequency = forkBackupFrequencyClean($frequency);
-    return (bool) mysqli_query($mysqli, "INSERT INTO fork_backup_clients SET bc_client_id = $client_id, bc_frequency = '$frequency', bc_anchor = '$anchor'");
+    return (bool) mysqli_query($mysqli, "INSERT INTO fork_backup_clients SET bc_client_id = $client_id, bc_frequency = '$frequency', bc_anchor = '$anchor', bc_autonomous = " . ($autonomous ? 1 : 0));
 }
 
-function forkBackupClientSave($client_id, $frequency, $anchor, $active) {
+function forkBackupClientSave($client_id, $frequency, $anchor, $active, $autonomous = null) {
     global $mysqli;
     forkBackupEnsure();
     $anchor = forkBackupMonday($anchor);
     if ($anchor === null) {
         return false;
     }
-    return (bool) mysqli_query($mysqli, "UPDATE fork_backup_clients SET bc_frequency = '" . forkBackupFrequencyClean($frequency) . "', bc_anchor = '$anchor', bc_active = " . ($active ? 1 : 0) . " WHERE bc_client_id = " . intval($client_id));
+    return (bool) mysqli_query($mysqli, "UPDATE fork_backup_clients SET bc_frequency = '" . forkBackupFrequencyClean($frequency) . "', bc_anchor = '$anchor', bc_active = " . ($active ? 1 : 0) . ($autonomous === null ? '' : ', bc_autonomous = ' . ($autonomous ? 1 : 0)) . " WHERE bc_client_id = " . intval($client_id));
 }
 
 /** Takes the service away from a client. What was entered stays, so a report of the past still reads. */

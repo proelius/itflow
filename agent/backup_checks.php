@@ -51,13 +51,14 @@ $frequencies = forkBackupFrequencies();
             <div class="card-body border-bottom py-2 text-secondary"><?= $to_do ? "$to_do still to do out of " . count($rows) : 'All ' . count($rows) . ' done' ?>.</div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
-                    <thead class="text-dark"><tr><th>Client</th><th>Checked</th><th>Servers</th><th>This week</th><th></th></tr></thead>
+                    <thead class="text-dark"><tr><th>Client</th><th>Checked</th><th>Servers</th><th>Corrective action</th><th>This week</th><th></th></tr></thead>
                     <tbody>
                     <?php foreach ($rows as $row) { ?>
                         <tr>
                             <td class="fw-semibold"><?php if ($row['servers'] || $can_service) { ?><a href="<?= $row['servers'] ? "backup_check.php?client_id={$row['client_id']}&week=$week" : "backup_client.php?client_id={$row['client_id']}" ?>"><?= escapeHtml($row['client_name']) ?></a><?php } else { echo escapeHtml($row['client_name']); } ?></td>
                             <td><?= escapeHtml($frequencies[$row['frequency']]) ?></td>
                             <td><?= $row['servers'] ?: '<span class="text-danger">none' . ($can_service ? ' - add them' : '') . '</span>' ?></td>
+                            <td><?php [$words, $class] = forkBackupAutonomyLabel($row['autonomous']); ?><span class="badge <?= $class ?>"><?= $words ?></span></td>
                             <td><?= $row['done'] ? backupStateBadge($row['state']) : '<span class="badge bg-secondary">To do</span>' ?></td>
                             <td class="text-end">
                                 <?php if ($row['servers']) { ?>
@@ -85,6 +86,7 @@ $frequencies = forkBackupFrequencies();
                 <div class="col-md-3"><label class="form-label">Checked</label><select class="form-select" name="frequency"><?= backupOptions($frequencies, 'weekly') ?></select></div>
                 <div class="col-md-3"><label class="form-label">Starting the week of</label><input type="date" class="form-control" name="anchor" value="<?= $this_week ?>"></div>
                 <div class="col-md-2"><button type="submit" name="backup_client_add" value="1" class="btn btn-primary w-100"><i class="fas fa-plus me-2"></i>Add</button></div>
+                <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="autonomous" id="bkAutonomous" value="1"><label class="form-check-label" for="bkAutonomous">The technician may take the corrective action on his own, without the client's approval</label></div></div>
             </form>
         <?php } ?>
         <?php if (!$clients) { ?>
@@ -92,7 +94,7 @@ $frequencies = forkBackupFrequencies();
         <?php } else { ?>
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
-                    <thead class="text-dark"><tr><th>Client</th><th>Checked</th><th>Since</th><th>Servers</th><th>Status</th><th></th></tr></thead>
+                    <thead class="text-dark"><tr><th>Client</th><th>Checked</th><th>Since</th><th>Servers</th><th>Corrective action</th><th>Status</th><th></th></tr></thead>
                     <tbody>
                     <?php foreach ($clients as $row) { ?>
                         <tr>
@@ -100,6 +102,7 @@ $frequencies = forkBackupFrequencies();
                             <td><?= escapeHtml($frequencies[$row['frequency']]) ?></td>
                             <td><?= escapeHtml($row['anchor']) ?></td>
                             <td><?= $row['servers'] ?></td>
+                            <td><?php [$words, $class] = forkBackupAutonomyLabel($row['autonomous']); ?><span class="badge <?= $class ?>"><?= $words ?></span></td>
                             <td><?= $row['active'] ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Paused</span>' ?></td>
                             <td class="text-end"><a class="btn btn-sm btn-secondary" href="backup_client.php?client_id=<?= $row['client_id'] ?>"><i class="fas fa-cog me-2"></i>Open</a></td>
                         </tr>
