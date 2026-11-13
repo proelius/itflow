@@ -40,26 +40,36 @@ $token = escapeHtml($_SESSION['csrf_token']);
                 <?= intval($counts['green']) ?> green, <?= intval($counts['yellow']) ?> yellow, <?= intval($counts['red']) ?> red. Not sent anywhere - download it and send it yourself.</div>
             <div class="mb-3"><label class="form-label fw-semibold">Comment</label>
                 <textarea class="form-control" name="comment" rows="4" maxlength="3000" <?= $can_edit ? '' : 'readonly' ?>><?= escapeHtml($report['br_comment']) ?></textarea></div>
-            <div class="table-responsive"><table class="table table-sm">
-                <thead><tr><th style="width:6rem">Week</th><th style="width:9rem">Colour</th><th>Detail (the client reads this)</th></tr></thead>
+            <div class="table-responsive"><table class="table table-sm align-middle">
+                <thead><tr><th style="width:6rem">Week</th><th style="width:10rem">Colour</th><th>Detail (the client reads this)</th></tr></thead>
                 <tbody>
                 <?php foreach ($report['data']['months'] as $month => $weeks) { ?>
                     <tr class="table-light"><td colspan="3" class="fw-semibold"><?= escapeHtml(date('F Y', strtotime($month . '-01 12:00:00'))) ?></td></tr>
-                    <?php foreach ($weeks as $week) { ?>
+                    <?php foreach ($weeks as $week) {
+                        $auto = i18n_with(client_language(), fn() => forkBackupDetailText($week['detail']));
+                        $text = isset($week['text']) ? $week['text'] : ($auto === '/' ? '' : $auto);
+                        $changed = $week['state'] !== $week['orig_state'] || isset($week['text']); ?>
                         <tr>
                             <td><?= escapeHtml($week['week']) ?></td>
-                            <td><?= backupStateBadge($week['state']) ?></td>
-                            <td><?= $week['detail'] ? nl2br(escapeHtml(implode("\n", array_map(fn($d) => ($d['server'] !== '' ? $d['server'] . ': ' : '') . $d['comment'], $week['detail'])))) : '<span class="text-secondary">/</span>' ?></td>
+                            <td>
+                                <select class="form-select form-select-sm" name="week[<?= escapeHtml($week['week']) ?>][state]" <?= $can_edit ? '' : 'disabled' ?>><?= backupOptions(forkBackupStates(), $week['state']) ?></select>
+                                <?php if ($week['state'] !== $week['orig_state']) { ?><div class="text-secondary small">entered: <?= escapeHtml(strtolower(forkBackupStates()[$week['orig_state']])) ?></div><?php } ?>
+                            </td>
+                            <td>
+                                <textarea class="form-control form-control-sm" name="week[<?= escapeHtml($week['week']) ?>][text]" rows="<?= max(1, min(4, substr_count($text, "\n") + 1)) ?>" maxlength="1000" placeholder="/" <?= $can_edit ? '' : 'readonly' ?>><?= escapeHtml($text) ?></textarea>
+                                <?php if (isset($week['text']) && $auto !== '/') { ?><div class="text-secondary small">entered: <?= nl2br(escapeHtml($auto)) ?></div><?php } ?>
+                            </td>
                         </tr>
                     <?php } ?>
                 <?php } ?>
                 </tbody>
             </table></div>
-            <div class="text-secondary small">The table comes from the checks entered and is fixed once the report is made. It is written in the client's language.</div>
+            <div class="text-secondary small">You can change the colour and the wording of a week for the client: the checks as the technicians entered them stay as they are, and "entered" shows what they put. The report is written in the client's language.</div>
         </div>
         <?php if ($can_edit) { ?>
             <div class="card-footer d-flex gap-2">
-                <button type="submit" name="save_backup_report" value="1" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save the comment</button>
+                <button type="submit" name="save_backup_report" value="1" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save the report</button>
+                <button type="submit" name="reset_backup_report" value="1" class="btn btn-outline-secondary" onclick="return confirm('Put the weeks back to what the technicians entered? Your changes to the weeks go; the comment stays.')"><i class="fas fa-undo me-2"></i>Back to what was entered</button>
                 <button type="submit" name="delete_backup_report" value="1" class="btn btn-outline-danger ms-auto" onclick="return confirm('Delete this report?')"><i class="fas fa-trash me-2"></i>Delete</button>
             </div>
         <?php } ?>

@@ -88,6 +88,33 @@ backup_test('several servers: the worst colour, and the servers named', $model['
 backup_test('several servers: every problem is listed', count($model['months']['2026-06'][1]['detail']) === 2);
 backup_test('no check, no month', forkBackupReportModel([])['months'] === [] && forkBackupReportModel([])['total'] === 0);
 
+echo "\nChanging the report without changing the checks\n";
+$auto = fn(array $detail) => $detail ? implode("\n", array_map(fn($d) => ($d['server'] !== '' ? $d['server'] . ': ' : '') . $d['comment'], $detail)) : '/';
+$before = json_encode($model);
+$edited = forkBackupReportApplyEdits($model, [
+    '2026-05-18' => ['state' => 'green', 'text' => 'Cloud backup restarted'],
+    '2026-06-01' => ['state' => 'red', 'text' => 'SRV2: Disk dead'],
+    '2026-04-06' => ['state' => 'yellow', 'text' => ''],
+    '2026-06-08' => ['state' => 'blue'],
+], $auto);
+backup_test('the original is not touched', json_encode($model) === $before);
+backup_test('a new colour is shown, the entered one is kept', $edited['months']['2026-05'][1]['state'] === 'green' && $edited['months']['2026-05'][1]['orig_state'] === 'yellow');
+backup_test('a new wording is shown, the entered detail is kept', $edited['months']['2026-05'][1]['text'] === 'Cloud backup restarted' && $edited['months']['2026-05'][1]['detail'] === $model['months']['2026-05'][1]['detail']);
+backup_test('a wording equal to the automatic one stays automatic', $edited['months']['2026-06'][0]['text'] === null);
+backup_test('an empty wording where there is nothing to say stays automatic', $edited['months']['2026-04'][0]['text'] === null && $edited['months']['2026-04'][0]['state'] === 'yellow');
+backup_test('a wrong colour is ignored', $edited['months']['2026-06'][1]['state'] === 'red');
+backup_test('a week that is not posted is left as it is', $edited['months']['2026-05'][0] === $model['months']['2026-05'][0]);
+backup_test('the counts follow the colours shown', $edited['counts'] === ['green' => 2, 'yellow' => 1, 'red' => 2] && $edited['total'] === 5);
+$cleared = forkBackupReportApplyEdits($model, ['2026-05-18' => ['state' => 'yellow', 'text' => '']], $auto);
+backup_test('an emptied wording shows "/" in the report', $cleared['months']['2026-05'][1]['text'] === '');
+$edited_report = ['data' => $edited] + ['br_start' => '2026-04-01', 'br_end' => '2026-06-30', 'br_comment' => 'x', 'client_name' => 'X'];
+i18n_set_language('en');
+$rows_edited = forkBackupReportRows($edited_report);
+backup_test('the report rows show the changed colour and wording', $rows_edited[4]['state'] === 'green' && $rows_edited[4]['detail'] === 'Cloud backup restarted' && $rows_edited[4]['label'] === 'OK');
+$rows_cleared = forkBackupReportRows(['data' => $cleared] + $edited_report);
+backup_test('the report rows show "/" for an emptied wording', $rows_cleared[4]['detail'] === '/');
+backup_test('the report rows show the automatic wording where nothing changed', $rows_edited[6]['detail'] === 'SRV2: Disk dead' && $rows_edited[1]['detail'] === '/');
+
 echo "\nThe report as the client reads it\n";
 $report = ['br_start' => '2026-04-01', 'br_end' => '2026-06-30', 'br_comment' => "All backups ran.\nOne cloud failure in May.", 'client_name' => 'Société Éléphant & Fils', 'data' => $model];
 i18n_set_language('en');
@@ -136,11 +163,11 @@ i18n_set_language('en');
 
 echo "\nWiring\n";
 $handler = file_get_contents($itflow_dir . '/agent/post/backup.php');
-foreach (['backup_client_add', 'backup_client_save', 'backup_client_remove', 'backup_server_add', 'backup_server_remove', 'save_backup_check', 'generate_backup_report', 'save_backup_report', 'delete_backup_report'] as $action) {
+foreach (['backup_client_add', 'backup_client_save', 'backup_client_remove', 'backup_server_add', 'backup_server_remove', 'save_backup_check', 'generate_backup_report', 'save_backup_report', 'reset_backup_report', 'delete_backup_report'] as $action) {
     backup_test("the handler has $action", strpos($handler, "isset(\$_POST['$action'])") !== false);
 }
 backup_test('the handler opens the PDF and the Word file', strpos($handler, "isset(\$_GET['backup_report_pdf'])") !== false && strpos($handler, "isset(\$_GET['backup_report_docx'])") !== false);
-backup_test('every action checks the CSRF token', substr_count($handler, 'validateCSRFToken()') >= 11);
+backup_test('every action checks the CSRF token', substr_count($handler, 'validateCSRFToken()') >= 12);
 backup_test('checks need Support, reports need Financial', strpos($handler, "enforceUserPermission('module_support', \$level)") !== false && substr_count($handler, "'module_financial'") >= 2);
 backup_test('nothing is sent by email', stripos($handler . file_get_contents($itflow_dir . '/functions/fork_backup.php'), 'emailQueue') === false && stripos($handler, 'mail(') === false);
 foreach (['backup_checks', 'backup_check', 'backup_client', 'backup_reports', 'backup_report'] as $page) {

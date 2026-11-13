@@ -145,11 +145,40 @@ function forkBackupReportModel(array $checks) {
             }
         }
         $month = substr($check['week'], 0, 7);
-        $months[$month][] = ['week' => $check['week'], 'state' => $state, 'detail' => $detail];
+        $months[$month][] = ['week' => $check['week'], 'state' => $state, 'orig_state' => $state, 'detail' => $detail, 'text' => null];
         $counts[$state]++;
     }
     ksort($months);
     return ['months' => $months, 'counts' => $counts, 'total' => count($checks)];
+}
+
+/**
+ * A report's weeks after the agent changed what the client will read. $posted: week => ['state', 'text']. $auto: the
+ * text a week's detail makes by itself - callable (array $detail) => string. The state is the colour shown, and the text
+ * the detail shown ("" gives "/"); a text that is what the detail makes by itself stays automatic (null). What the
+ * technicians entered ('orig_state', 'detail') is never touched, and the counts follow the colours shown.
+ */
+function forkBackupReportApplyEdits(array $data, array $posted, callable $auto) {
+    $counts = ['green' => 0, 'yellow' => 0, 'red' => 0];
+    foreach ($data['months'] as $month => $weeks) {
+        foreach ($weeks as $i => $week) {
+            $edit = $posted[$week['week']] ?? null;
+            if (is_array($edit)) {
+                $state = forkBackupStateClean($edit['state'] ?? '');
+                if ($state !== '') {
+                    $week['state'] = $state;
+                }
+                if (array_key_exists('text', $edit)) {
+                    $text = mb_substr(trim(str_replace("\r", '', (string) $edit['text'])), 0, 1000);
+                    $week['text'] = ($text === '' ? '/' : $text) === trim($auto($week['detail'])) ? null : $text;
+                }
+            }
+            $data['months'][$month][$i] = $week;
+            $counts[$week['state']]++;
+        }
+    }
+    $data['counts'] = $counts;
+    return $data;
 }
 
 /* ------------------------------------------------------------------ database ---- */
@@ -549,6 +578,11 @@ function forkBackupReportRow($report_id) {
         return null;
     }
     $row['data'] = json_decode((string) $row['br_data'], true) ?: ['months' => [], 'counts' => ['green' => 0, 'yellow' => 0, 'red' => 0], 'total' => 0];
+    foreach ($row['data']['months'] as $month => $weeks) { // a report made before the weeks could be changed
+        foreach ($weeks as $i => $week) {
+            $row['data']['months'][$month][$i] += ['orig_state' => $week['state'], 'text' => null];
+        }
+    }
     return $row;
 }
 
@@ -563,13 +597,22 @@ function forkBackupReports($client_id) {
     return $rows;
 }
 
-function forkBackupReportCommentSave($report_id, $comment) {
+/** Saves the comment and the wording of the weeks. What the technicians entered is not touched. */
+function forkBackupReportEditSave(array $report, $comment, array $posted) {
     global $mysqli;
     $comment = mb_substr(str_replace("\r", '', trim((string) $comment)), 0, 3000);
     if ($comment === '') {
         return false;
     }
-    return (bool) mysqli_query($mysqli, "UPDATE fork_backup_reports SET br_comment = '" . escapeSql($comment) . "' WHERE br_id = " . intval($report_id));
+    $data = forkBackupReportApplyEdits($report['data'], $posted, fn(array $detail) => i18n_with(client_language(), fn() => forkBackupDetailText($detail)));
+    return (bool) mysqli_query($mysqli, "UPDATE fork_backup_reports SET br_comment = '" . escapeSql($comment) . "', br_data = '" . escapeSql(json_encode($data, JSON_UNESCAPED_UNICODE)) . "' WHERE br_id = " . intval($report['br_id']));
+}
+
+/** Makes the weeks of a report again from what the technicians entered - the agent's changes to the weeks go, the comment stays. */
+function forkBackupReportReset(array $report) {
+    global $mysqli;
+    $model = forkBackupReportModel(forkBackupChecksBetween($report['br_client_id'], $report['br_start'], $report['br_end']));
+    return (bool) mysqli_query($mysqli, "UPDATE fork_backup_reports SET br_data = '" . escapeSql(json_encode($model, JSON_UNESCAPED_UNICODE)) . "' WHERE br_id = " . intval($report['br_id']));
 }
 
 function forkBackupReportDelete($report_id) {
@@ -615,7 +658,7 @@ function forkBackupReportRows(array $report) {
         $rows[] = ['type' => 'month', 'label' => i18n_date('F', strtotime($month . '-01 12:00:00'))];
         foreach ($weeks as $week) {
             $rows[] = ['type' => 'week', 'day' => date('j', strtotime($week['week'] . ' 12:00:00')), 'state' => $week['state'],
-                'label' => forkBackupStateLabel($week['state']), 'detail' => forkBackupDetailText($week['detail'])];
+                'label' => forkBackupStateLabel($week['state']), 'detail' => isset($week['text']) ? ($week['text'] === '' ? '/' : $week['text']) : forkBackupDetailText($week['detail'])];
         }
     }
     return $rows;

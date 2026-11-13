@@ -132,12 +132,23 @@ if (isset($_POST['save_backup_report'])) {
 
     validateCSRFToken();
     $report = backupPostReport($_POST['report_id'] ?? 0, 2);
-    if (!forkBackupReportCommentSave($report['br_id'], $_POST['comment'] ?? '')) {
+    if (!forkBackupReportEditSave($report, $_POST['comment'] ?? '', (array) ($_POST['week'] ?? []))) {
         flashAlert("The comment cannot be empty.", 'error');
         redirect();
     }
-    logAudit("Backup check", "Edit", "$session_name changed the comment of a backup check report", $report['br_client_id'], $report['br_id']);
-    flashAlert("Comment saved");
+    logAudit("Backup check", "Edit", "$session_name changed a backup check report (the checks as the technicians entered them are untouched)", $report['br_client_id'], $report['br_id']);
+    flashAlert("Report saved - the checks entered by the technicians are untouched");
+    redirect();
+
+}
+
+if (isset($_POST['reset_backup_report'])) {
+
+    validateCSRFToken();
+    $report = backupPostReport($_POST['report_id'] ?? 0, 2);
+    forkBackupReportReset($report);
+    logAudit("Backup check", "Edit", "$session_name made the weeks of a backup check report again from the checks entered", $report['br_client_id'], $report['br_id']);
+    flashAlert("The weeks are back to what the technicians entered");
     redirect();
 
 }
