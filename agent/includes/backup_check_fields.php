@@ -15,18 +15,25 @@ require_once __DIR__ . '/backup_common.php'; // the window does not load it by i
         <select class="form-select" name="ticket_id" <?= $can_edit ? '' : 'disabled' ?>><option value="0">No ticket</option><?= backupOptions($tickets, $check['bk_ticket_id'] ?? 0) ?></select></div>
 </div>
 <?php if (!empty($service) && !$service['autonomous'] && !intval($check['bk_ticket_id'] ?? 0)) { ?><div class="alert alert-warning py-2 small mb-3"><i class="fas fa-ticket-alt me-2"></i>The technician may not act without the client's approval: if something fails, a ticket is opened and linked to this check when it is saved.</div><?php } ?>
-<?php if (!$check) { ?><div class="text-secondary small mb-3">The statuses start at OK: when everything is OK the line is green by itself; change what is not OK, then choose the colour and say why in the comment. The disks are those of the last check.</div><?php } ?>
+<?php if (!$check) { ?><div class="text-secondary small mb-3">The statuses start at OK: when everything is OK the line is green by itself; change what is not OK, then choose the colour and say why in the comment. The total space of the volumes is the last check's.</div><?php } ?>
 
 <?php foreach ($servers as $server_id => $server) {
     $line = $check['lines'][$server_id] ?? null;
     $old = $previous[$server_id] ?? [];
-    $value = fn($key, $default = '') => $line ? (string) $line['bl_' . $key] : (string) ($old['bl_' . $key] ?? $default);
+    $value = fn($key, $default = '') => $line ? (string) ($line['bl_' . $key] ?? '') : (string) ($old['bl_' . $key] ?? $default);
+    // The volumes: the free space is entered each time, the total is the last one's to start from
+    $source = $line ?: $old;
+    $legacy = trim(implode(' ; ', array_filter([trim((string) ($source['bl_disk1'] ?? '')), trim((string) ($source['bl_disk2'] ?? ''))])));
+    $has_volumes = trim(implode('', [$source['bl_vol1_free'] ?? '', $source['bl_vol1_total'] ?? '', $source['bl_vol2_free'] ?? '', $source['bl_vol2_total'] ?? ''])) !== '';
     $name = "line[$server_id]"; ?>
     <div class="border rounded p-3 mb-3 bk-line" data-state="<?= escapeHtml($line['bl_state'] ?? '') ?>">
         <div class="fw-semibold mb-2"><i class="fas fa-server me-2"></i><?= escapeHtml($server['name']) ?><?= $server['os'] !== '' ? ' <span class="text-secondary fw-normal">- ' . escapeHtml($server['os']) . '</span>' : '' ?></div>
         <div class="row g-2 mb-2">
-            <div class="col-md-3"><label class="form-label">Disk 1</label><input type="text" class="form-control" name="<?= $name ?>[disk1]" maxlength="100" placeholder="C: 349 / 424 Go" value="<?= escapeHtml($value('disk1')) ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
-            <div class="col-md-3"><label class="form-label">Disk 2</label><input type="text" class="form-control" name="<?= $name ?>[disk2]" maxlength="100" placeholder="D: 2.60 / 3.45 To" value="<?= escapeHtml($value('disk2')) ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
+            <div class="col-6 col-md-3"><label class="form-label">Volume 1 - free space</label><input type="text" class="form-control" name="<?= $name ?>[vol1_free]" maxlength="30" placeholder="349 Go" value="<?= $line ? escapeHtml($value('vol1_free')) : '' ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
+            <div class="col-6 col-md-3"><label class="form-label">Volume 1 - total space</label><input type="text" class="form-control" name="<?= $name ?>[vol1_total]" maxlength="30" placeholder="424 Go" value="<?= escapeHtml($value('vol1_total')) ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
+            <div class="col-6 col-md-3"><label class="form-label">Volume 2 - free space</label><input type="text" class="form-control" name="<?= $name ?>[vol2_free]" maxlength="30" placeholder="2.60 To" value="<?= $line ? escapeHtml($value('vol2_free')) : '' ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
+            <div class="col-6 col-md-3"><label class="form-label">Volume 2 - total space</label><input type="text" class="form-control" name="<?= $name ?>[vol2_total]" maxlength="30" placeholder="3.45 To" value="<?= escapeHtml($value('vol2_total')) ?>" <?= $can_edit ? '' : 'disabled' ?>></div>
+            <?php if ($legacy !== '' && !$has_volumes) { ?><div class="col-12 small text-secondary">Entered as text before: <?= escapeHtml($legacy) ?></div><?php } ?>
         </div>
         <div class="row g-2 mb-2">
             <?php foreach ($parts as $key => $label) { ?>

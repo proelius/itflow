@@ -253,8 +253,10 @@ function forkBackupEnsure() {
         `bl_check_id` int(11) NOT NULL,
         `bl_server_id` int(11) NOT NULL DEFAULT 0,
         `bl_server_name` varchar(200) NOT NULL DEFAULT '',
-        `bl_disk1` varchar(100) NOT NULL DEFAULT '',
-        `bl_disk2` varchar(100) NOT NULL DEFAULT '',
+        `bl_vol1_free` varchar(30) NOT NULL DEFAULT '',
+        `bl_vol1_total` varchar(30) NOT NULL DEFAULT '',
+        `bl_vol2_free` varchar(30) NOT NULL DEFAULT '',
+        `bl_vol2_total` varchar(30) NOT NULL DEFAULT '',
         `bl_raid` varchar(10) NOT NULL DEFAULT 'na',
         `bl_sys` varchar(10) NOT NULL DEFAULT 'na',
         `bl_data` varchar(10) NOT NULL DEFAULT 'na',
@@ -265,6 +267,13 @@ function forkBackupEnsure() {
         PRIMARY KEY (`bl_id`),
         KEY `bl_check_id` (`bl_check_id`)
     ) $tail");
+    // The volumes (free and total space) replace the two free-text disks of the first version: a table made before gets
+    // the columns, and keeps bl_disk1 and bl_disk2 - what was entered as text is still shown (agent/includes/backup_check_fields.php)
+    foreach (['bl_vol1_free', 'bl_vol1_total', 'bl_vol2_free', 'bl_vol2_total'] as $column) {
+        if (!mysqli_fetch_row(mysqli_query($mysqli, "SHOW COLUMNS FROM `fork_backup_lines` LIKE '$column'"))) {
+            mysqli_query($mysqli, "ALTER TABLE `fork_backup_lines` ADD COLUMN `$column` varchar(30) NOT NULL DEFAULT ''");
+        }
+    }
     mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_backup_reports` (
         `br_id` int(11) NOT NULL AUTO_INCREMENT,
         `br_client_id` int(11) NOT NULL,
@@ -628,8 +637,13 @@ function forkBackupTicketOpen($client_id, $week, $user_id) {
     return ['id' => $ticket_id, 'reference' => $prefix . $ticket_number];
 }
 
+/** A space entered for a volume (free or total) - what the technician typed, trimmed and cut to 30 characters. */
+function forkBackupVolumeClean($value) {
+    return mb_substr(trim(str_replace(["\r", "\n"], ' ', (string) $value)), 0, 30);
+}
+
 /**
- * Saves a client's check for a week. $lines: for each server id, the fields of the form (disk1, disk2, raid, sys,
+ * Saves a client's check for a week. $lines: for each server id, the fields of the form (vol1_free, vol1_total, vol2_free, vol2_total, raid, sys,
  * data, cloud, second, state, comment). Returns [check_id, error] - the error says what to correct and nothing
  * is saved.
  */
@@ -656,7 +670,8 @@ function forkBackupCheckSave($client_id, $week, $user_id, $ticket_id, array $lin
         if ($state !== 'green' && $comment === '') {
             return [0, 'Say what happened on ' . $server['name'] . ' in its comment - it is ' . $state . '.'];
         }
-        $clean[$server_id] = ['name' => $server['name'], 'disk1' => mb_substr(trim((string) ($line['disk1'] ?? '')), 0, 100), 'disk2' => mb_substr(trim((string) ($line['disk2'] ?? '')), 0, 100),
+        $clean[$server_id] = ['name' => $server['name'], 'vol1_free' => forkBackupVolumeClean($line['vol1_free'] ?? ''), 'vol1_total' => forkBackupVolumeClean($line['vol1_total'] ?? ''),
+            'vol2_free' => forkBackupVolumeClean($line['vol2_free'] ?? ''), 'vol2_total' => forkBackupVolumeClean($line['vol2_total'] ?? ''),
             'raid' => $statuses[0], 'sys' => $statuses[1], 'data' => $statuses[2], 'cloud' => $statuses[3],
             'second' => $second, 'state' => $state, 'comment' => $comment];
     }
@@ -671,7 +686,7 @@ function forkBackupCheckSave($client_id, $week, $user_id, $ticket_id, array $lin
     }
     foreach ($clean as $server_id => $line) {
         mysqli_query($mysqli, "INSERT INTO fork_backup_lines SET bl_check_id = $check_id, bl_server_id = " . intval($server_id) . ", bl_server_name = '" . escapeSql($line['name']) . "',
-            bl_disk1 = '" . escapeSql($line['disk1']) . "', bl_disk2 = '" . escapeSql($line['disk2']) . "', bl_raid = '{$line['raid']}', bl_sys = '{$line['sys']}', bl_data = '{$line['data']}',
+            bl_vol1_free = '" . escapeSql($line['vol1_free']) . "', bl_vol1_total = '" . escapeSql($line['vol1_total']) . "', bl_vol2_free = '" . escapeSql($line['vol2_free']) . "', bl_vol2_total = '" . escapeSql($line['vol2_total']) . "', bl_raid = '{$line['raid']}', bl_sys = '{$line['sys']}', bl_data = '{$line['data']}',
             bl_cloud = '{$line['cloud']}', bl_second = '{$line['second']}', bl_state = '{$line['state']}', bl_comment = '" . escapeSql($line['comment']) . "'");
     }
     return [$check_id, ''];

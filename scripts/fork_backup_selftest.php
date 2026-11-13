@@ -249,6 +249,27 @@ echo str_contains($html, "line[3][raid]") && str_contains($html, "C: 1 / 2 Go") 
 $out = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($probe) . ' 2>&1');
 unlink($probe);
 backup_test('the fields draw with only the files the window loads', trim($out) === 'DRAWN');
+backup_test('a space of a volume is trimmed, on one line, cut at 30 characters', forkBackupVolumeClean("  349 Go \n") === '349 Go' && forkBackupVolumeClean(str_repeat('9', 40)) === str_repeat('9', 30) && forkBackupVolumeClean(null) === '');
+$probe = tempnam(sys_get_temp_dir(), 'bkv');
+file_put_contents($probe, '<?php
+error_reporting(E_ALL); ini_set("display_errors", "1");
+function escapeHtml($v) { return htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8"); }
+function lookupUserPermission($m) { return 3; }
+$_SESSION = ["csrf_token" => "t"];
+require ' . var_export($itflow_dir . '/functions/fork_backup.php', true) . ';
+$client_id = 7; $week = "2026-11-09"; $session_name = "Tech"; $can_edit = true; $check = null; $user = null;
+$servers = [3 => ["id" => 3, "asset_id" => 5, "name" => "SRV", "os" => ""]];
+$previous = [3 => ["bl_vol1_free" => "111 Go", "bl_vol1_total" => "424 Go", "bl_vol2_free" => "222 To", "bl_vol2_total" => "3.45 To"]]; $tickets = [];
+$statuses = forkBackupStatuses(); $parts = ["raid" => "RAID", "sys" => "BKP SYS", "data" => "BKP DATA", "cloud" => "Cloud"];
+ob_start(); require ' . var_export($itflow_dir . '/agent/includes/backup_check_fields.php', true) . '; $html = ob_get_clean();
+$ok = str_contains($html, "line[3][vol1_free]") && str_contains($html, "line[3][vol1_total]") && str_contains($html, "line[3][vol2_free]") && str_contains($html, "line[3][vol2_total]")
+    && str_contains($html, "424 Go") && str_contains($html, "3.45 To") && !str_contains($html, "111 Go") && !str_contains($html, "222 To")
+    && !str_contains($html, "Disk 1") && !str_contains($html, "line[3][disk1]") && str_contains($html, "Volume 1 - free space") && str_contains($html, "Volume 2 - total space");
+echo $ok ? "VOLUMES" : "WRONG";');
+$out = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($probe) . ' 2>&1');
+unlink($probe);
+backup_test('the fields have two volumes, each with its free and its total space: the total starts from the last check, the free space is empty', trim($out) === 'VOLUMES');
+backup_test('the volumes are stored in the lines, added to a table made before, and the old disks are no longer written', strpos($fork_source, '`bl_vol1_free` varchar(30)') !== false && strpos($fork_source, "ADD COLUMN `\$column` varchar(30)") !== false && strpos($fork_source, "bl_vol2_total = '") !== false && strpos($fork_source, "bl_disk1 = '") === false);
 backup_test('the tables are not in ITFlow\'s own database updates', strpos(file_get_contents($itflow_dir . '/db.sql'), 'fork_backup') === false && !glob($itflow_dir . '/admin/database_updates/*') === false);
 
 echo "\n$passed passed, $failed failed\n";
