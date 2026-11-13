@@ -1678,7 +1678,7 @@ return [
     'View your prepaid hours' => 'View your prepaid hours',
     'Quarter {quarter} {year}' => 'Quarter {quarter} {year}',
     'Here is how your prepaid hours were used between {from} and {to}.' => 'Here is how your prepaid hours were used between {from} and {to}.',
-    'We remain at your disposal should you need any further information.' => 'We remain at your disposal should you need any further information.',
+    'We remain at your disposal should you need any further information. Thank you for your trust.' => 'We remain at your disposal should you need any further information. Thank you for your trust.',
     'The {company} team' => 'The {company} team',
     'Hours included in {month}' => 'Hours included in {month}',
     '{hours} bought on {date}' => '{hours} bought on {date}',

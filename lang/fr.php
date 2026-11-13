@@ -1725,7 +1725,7 @@ return [
     'View your prepaid hours' => 'Voir vos heures prépayées',
     'Quarter {quarter} {year}' => 'Trimestre {quarter} {year}',
     'Here is how your prepaid hours were used between {from} and {to}.' => 'Voici comment vos heures prépayées ont été utilisées entre le {from} et le {to}.',
-    'We remain at your disposal should you need any further information.' => 'Nous restons à disposition en cas de besoin d’informations complémentaires.',
+    'We remain at your disposal should you need any further information. Thank you for your trust.' => 'Nous restons à disposition en cas de besoin d’informations complémentaires. Merci de votre confiance.',
     'The {company} team' => 'L’Équipe {company}',
     'Hours included in {month}' => 'Heures incluses en {month}',
     '{hours} bought on {date}' => '{hours} achetées le {date}',
