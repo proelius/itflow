@@ -77,7 +77,7 @@ foreach (glob($itflow_dir . '/admin/database_updates/*.php') as $file) {
         $latest = basename($file, '.php');
     }
 }
-hours_test("latest database update is ITFlow's ($latest)", $latest === '3.6.2');
+hours_test("latest database update is ITFlow's ($latest)", $latest === '3.6.6');
 
 echo "\n" . ($failed === 0 ? "All $passed tests passed" : "$failed failed, $passed passed") . "\n";
 exit($failed === 0 ? 0 : 1);
