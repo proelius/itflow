@@ -361,9 +361,9 @@ function forkHoursReportPdfRender(array $report) {
     $logo = !empty($company['logo_path']) ? '<img src="' . $e($company['logo_path']) . '" height="42"><br>' : '';
 
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
-        <td width="55%">' . $logo . '<span style="font-size:12pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>
-        <td width="45%" align="right"><span style="font-size:8pt; color:#0a58ca; font-weight:bold; letter-spacing:2px;">' . $e(mb_strtoupper(t('Prepaid hours report'))) . '</span><br>
-            <span style="font-size:13pt; font-weight:bold;">' . $e($title) . '</span></td>
+        <td width="38%">' . $logo . '<span style="font-size:12pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>
+        <td width="62%" align="right"><span style="font-size:13pt; color:#0a58ca; font-weight:bold; letter-spacing:0.5px;">' . $e(mb_strtoupper(t('Prepaid hours report'))) . '</span><br>
+            <span style="font-size:8pt; font-weight:bold;">' . $e($title) . '</span></td>
     </tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Ln(10);
