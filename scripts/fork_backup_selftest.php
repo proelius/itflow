@@ -3,7 +3,7 @@
 /**
  * Fork backup checks self-test - functions/fork_backup.php
  * The Monday of a week, when a check is due, the colour of a line, the rows of a report, and the report as a real
- * Word file and PDF in both languages. The queries are not run here (no database): they are checked by use on the
+ * PDF in both languages. The queries are not run here (no database): they are checked by use on the
  * test server.
  *
  * CLI only - protected from web access
@@ -110,7 +110,7 @@ backup_test('an emptied wording shows "/" in the report', $cleared['months']['20
 $edited_report = ['data' => $edited] + ['br_start' => '2026-04-01', 'br_end' => '2026-06-30', 'br_comment' => 'x', 'client_name' => 'X'];
 i18n_set_language('en');
 $rows_edited = forkBackupReportRows($edited_report);
-backup_test('the report rows show the changed colour and wording', $rows_edited[4]['state'] === 'green' && $rows_edited[4]['detail'] === 'Cloud backup restarted' && $rows_edited[4]['label'] === 'OK');
+backup_test('the report rows show the changed colour and wording', $rows_edited[4]['state'] === 'green' && $rows_edited[4]['detail'] === 'Cloud backup restarted');
 $rows_cleared = forkBackupReportRows(['data' => $cleared] + $edited_report);
 backup_test('the report rows show "/" for an emptied wording', $rows_cleared[4]['detail'] === '/');
 backup_test('the report rows show the automatic wording where nothing changed', $rows_edited[6]['detail'] === 'SRV2: Disk dead' && $rows_edited[1]['detail'] === '/');
@@ -118,32 +118,16 @@ backup_test('the report rows show the automatic wording where nothing changed', 
 echo "\nThe report as the client reads it\n";
 $report = ['br_start' => '2026-04-01', 'br_end' => '2026-06-30', 'br_comment' => "All backups ran.\nOne cloud failure in May.", 'client_name' => 'Société Éléphant & Fils', 'data' => $model];
 i18n_set_language('en');
-backup_test('English: the title and the states', forkBackupReportTitle($report) === 'Quarterly backup check report' && forkBackupStateLabel('green') === 'OK' && forkBackupStateLabel('yellow') === 'Issue followed up' && forkBackupStateLabel('red') === 'Failed');
+backup_test('English: the title', forkBackupReportTitle($report) === 'Quarterly backup check report');
 backup_test('English: another period is not "quarterly"', forkBackupReportTitle(['br_start' => '2026-04-06', 'br_end' => '2026-06-30'] + $report) === 'Backup check report');
 $rows = forkBackupReportRows($report);
 backup_test('rows: a month, then its weeks, with the day', $rows[0] === ['type' => 'month', 'label' => 'April'] && $rows[1]['day'] === '6' && $rows[1]['detail'] === '/');
 backup_test('rows: the detail of a week', $rows[4]['detail'] === 'Cloud backup restarted after a failure' && $rows[6]['detail'] === 'SRV2: Disk dead');
 i18n_set_language('fr');
-backup_test('French: the title and the states', forkBackupReportTitle($report) === 'Rapport trimestriel du contrôle des sauvegardes' && forkBackupStateLabel('yellow') === 'Incident traité' && forkBackupStateLabel('red') === 'Échec');
+backup_test('French: the title', forkBackupReportTitle($report) === 'Rapport trimestriel du contrôle des sauvegardes');
 $rows = forkBackupReportRows($report);
 backup_test('French: month names and server detail', $rows[0]['label'] === 'avril' && $rows[6]['detail'] === 'SRV2 : Disk dead');
-backup_test('colours of the states', forkBackupStateColours('green') === ['00B050', 'FFFFFF'] && forkBackupStateColours('yellow') === ['FFFF00', '000000'] && forkBackupStateColours('red') === ['FF0000', 'FFFFFF']);
-
-foreach (['en', 'fr'] as $lang) {
-    i18n_set_language($lang);
-    $word = forkBackupDocxRender($report);
-    $path = tempnam(sys_get_temp_dir(), 'bkt');
-    file_put_contents($path, $word['data']);
-    $zip = new ZipArchive();
-    $opened = $zip->open($path) === true;
-    $xml = $opened ? $zip->getFromName('word/document.xml') : '';
-    $dom = new DOMDocument();
-    $valid = $xml !== '' && @$dom->loadXML($xml);
-    backup_test("Word ($lang): a zip with a well-formed document", $opened && $valid && $zip->getFromName('[Content_Types].xml') !== false && $zip->getFromName('_rels/.rels') !== false);
-    backup_test("Word ($lang): the client, the comment and the colours are in it", $valid && str_contains($xml, 'Société Éléphant &amp; Fils') && str_contains($xml, 'One cloud failure in May.') && str_contains($xml, 'w:fill="00B050"') && str_contains($xml, 'w:fill="FFFF00"') && str_contains($xml, 'w:fill="FF0000"'));
-    backup_test("Word ($lang): a name that is safe", preg_match('/^[A-Za-z0-9_\-]+\.docx$/', $word['name']) === 1);
-    unlink($path);
-}
+backup_test('colours of the states', forkBackupStateColours('green') === ['00B050'] && forkBackupStateColours('yellow') === ['FFFF00'] && forkBackupStateColours('red') === ['FF0000']);
 
 if (is_file($itflow_dir . '/libs/TCPDF/tcpdf.php')) {
     $GLOBALS['config_invoice_footer'] = '';
@@ -155,6 +139,15 @@ if (is_file($itflow_dir . '/libs/TCPDF/tcpdf.php')) {
         i18n_set_language($lang);
         $pdf = forkBackupPdfRender($report, ['company_name' => 'Proxycore Sàrl', 'company_country' => 'Switzerland']);
         backup_test("PDF ($lang): a PDF file", str_starts_with($pdf['data'], '%PDF') && strlen($pdf['data']) > 3000 && preg_match('/^[A-Za-z0-9_\-]+\.pdf$/', $pdf['name']) === 1);
+        $tmp = tempnam(sys_get_temp_dir(), 'bkp');
+        file_put_contents($tmp, $pdf['data']);
+        $text = trim((string) @shell_exec('pdftotext -layout ' . escapeshellarg($tmp) . ' - 2>/dev/null'));
+        unlink($tmp);
+        if ($text === '') {
+            echo "  - PDF ($lang): pdftotext is not there - the wording of the status cells was NOT checked (not counted as passed)\n";
+        } else {
+            backup_test("PDF ($lang): the report is readable and its status cells have no wording", str_contains($text, 'Client X') || str_contains($text, 'Société Éléphant') ? !preg_match('/\b(OK|Failed|Échec|Incident traité|Issue followed up)\b/u', $text) : false);
+        }
     }
 } else {
     backup_test('PDF: TCPDF is there', false);
@@ -166,8 +159,8 @@ $handler = file_get_contents($itflow_dir . '/agent/post/backup.php');
 foreach (['backup_client_add', 'backup_client_save', 'backup_client_remove', 'backup_server_add', 'backup_server_remove', 'save_backup_check', 'generate_backup_report', 'save_backup_report', 'reset_backup_report', 'delete_backup_report'] as $action) {
     backup_test("the handler has $action", strpos($handler, "isset(\$_POST['$action'])") !== false);
 }
-backup_test('the handler opens the PDF and the Word file', strpos($handler, "isset(\$_GET['backup_report_pdf'])") !== false && strpos($handler, "isset(\$_GET['backup_report_docx'])") !== false);
-backup_test('every action checks the CSRF token', substr_count($handler, 'validateCSRFToken()') >= 12);
+backup_test('the handler opens the PDF, and there is no Word export', strpos($handler, "isset(\$_GET['backup_report_pdf'])") !== false && stripos($handler . file_get_contents($itflow_dir . '/agent/backup_report.php') . file_get_contents($itflow_dir . '/agent/backup_reports.php'), 'docx') === false);
+backup_test('every action checks the CSRF token', substr_count($handler, 'validateCSRFToken()') >= 11);
 backup_test('checks need Support, reports need Financial', strpos($handler, "enforceUserPermission('module_support', \$level)") !== false && substr_count($handler, "'module_financial'") >= 2);
 backup_test('nothing is sent by email', stripos($handler . file_get_contents($itflow_dir . '/functions/fork_backup.php'), 'emailQueue') === false && stripos($handler, 'mail(') === false);
 foreach (['backup_checks', 'backup_check', 'backup_client', 'backup_reports', 'backup_report'] as $page) {

@@ -49,7 +49,6 @@ $service = forkBackupClient($client_id);
                     <td class="text-center text-nowrap">
                         <a class="btn btn-sm btn-secondary" href="backup_report.php?client_id=<?= $client_id ?>&report_id=<?= intval($report['br_id']) ?>" title="View"><i class="fas fa-eye"></i></a>
                         <a class="btn btn-sm btn-secondary" href="post.php?backup_report_pdf=<?= intval($report['br_id']) ?>&amp;csrf_token=<?= $_SESSION['csrf_token'] ?>" target="_blank" title="PDF"><i class="fas fa-file-pdf"></i></a>
-                        <a class="btn btn-sm btn-secondary" href="post.php?backup_report_docx=<?= intval($report['br_id']) ?>&amp;csrf_token=<?= $_SESSION['csrf_token'] ?>" title="Word"><i class="fas fa-file-word"></i></a>
                     </td>
                 </tr>
             <?php } ?>

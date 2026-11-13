@@ -1750,8 +1750,5 @@ return [
     'Comment' => 'Commentaire',
     'Week' => 'Semaine',
     'Detail' => 'Détail',
-    'OK' => 'OK',
-    'Failed' => 'Échec',
-    'Issue followed up' => 'Incident traité',
     '{server}: {comment}' => '{server} : {comment}',
 ];

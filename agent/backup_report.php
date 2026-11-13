@@ -1,8 +1,8 @@
 <?php
 
 /*
- * One backup check report (functions/fork_backup.php): what the client will read, the comment to change, and the PDF and
- * Word files. The handlers are agent/post/backup.php.
+ * One backup check report (functions/fork_backup.php): what the client will read, the comment to change, and the PDF.
+ * The handlers are agent/post/backup.php.
  */
 
 require_once "includes/inc_all_client.php";
@@ -32,7 +32,6 @@ $token = escapeHtml($_SESSION['csrf_token']);
             <div class="card-tools">
                 <a class="btn btn-secondary" href="backup_reports.php?client_id=<?= $client_id ?>"><i class="fas fa-arrow-left me-2"></i>Reports</a>
                 <a class="btn btn-secondary" href="post.php?backup_report_pdf=<?= intval($report['br_id']) ?>&amp;csrf_token=<?= $token ?>" target="_blank"><i class="fas fa-file-pdf me-2"></i>PDF</a>
-                <a class="btn btn-secondary" href="post.php?backup_report_docx=<?= intval($report['br_id']) ?>&amp;csrf_token=<?= $token ?>"><i class="fas fa-file-word me-2"></i>Word</a>
             </div>
         </div>
         <div class="card-body">

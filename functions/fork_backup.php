@@ -9,7 +9,7 @@
  * fork_backup_lines) with RAID, system and data backups, cloud, Veeam version, a comment, and a colour - green,
  * yellow (a problem that was followed up) or red. A report for a client and a period (the last civil quarter is
  * suggested) is made by hand by an agent with the Financial module, with a comment typed each time, and kept as
- * a snapshot (fork_backup_reports). It is exported as PDF or Word, never sent by itself.
+ * a snapshot (fork_backup_reports). It is exported as a PDF, never sent by itself.
  *
  * Everything that decides something - the Monday of a week, whether a check is due, the colour of a line, the
  * rows of a report - takes plain values and touches no database, so scripts/fork_backup_selftest.php can test
@@ -627,15 +627,6 @@ function forkBackupReportTitle(array $report) {
     return forkBackupIsQuarter($report['br_start'], $report['br_end']) ? t('Quarterly backup check report') : t('Backup check report');
 }
 
-/** What a colour means to the client, in the language in force. */
-function forkBackupStateLabel($state) {
-    return match ($state) {
-        'red' => t('Failed'),
-        'yellow' => t('Issue followed up'),
-        default => t('OK'),
-    };
-}
-
 /** A week's detail as text: the comment, or "/" when there is none; several servers each on a line with its name. */
 function forkBackupDetailText(array $detail) {
     if (!$detail) {
@@ -650,7 +641,7 @@ function forkBackupDetailText(array $detail) {
 
 /**
  * The rows of the table of a report, in the language in force: ['type' => 'month', 'label'] and
- * ['type' => 'week', 'day', 'state', 'label', 'detail'].
+ * ['type' => 'week', 'day', 'state', 'detail'].
  */
 function forkBackupReportRows(array $report) {
     $rows = [];
@@ -658,15 +649,15 @@ function forkBackupReportRows(array $report) {
         $rows[] = ['type' => 'month', 'label' => i18n_date('F', strtotime($month . '-01 12:00:00'))];
         foreach ($weeks as $week) {
             $rows[] = ['type' => 'week', 'day' => date('j', strtotime($week['week'] . ' 12:00:00')), 'state' => $week['state'],
-                'label' => forkBackupStateLabel($week['state']), 'detail' => isset($week['text']) ? ($week['text'] === '' ? '/' : $week['text']) : forkBackupDetailText($week['detail'])];
+                'detail' => isset($week['text']) ? ($week['text'] === '' ? '/' : $week['text']) : forkBackupDetailText($week['detail'])];
         }
     }
     return $rows;
 }
 
-/** The colours of a state in the report - [fill, text]. */
+/** The colour of a state in the report - [fill]. */
 function forkBackupStateColours($state) {
-    return ['red' => ['FF0000', 'FFFFFF'], 'yellow' => ['FFFF00', '000000']][$state] ?? ['00B050', 'FFFFFF'];
+    return ['red' => ['FF0000'], 'yellow' => ['FFFF00']][$state] ?? ['00B050'];
 }
 
 /** The report as a PDF, in the client's language - ['name', 'data']. */
@@ -714,72 +705,13 @@ function forkBackupPdfRender(array $report, array $company) {
             $html .= '<tr nobr="true"><td colspan="3" style="background-color:#f1f3f5; font-weight:bold; border-bottom:0.3px solid #dee2e6;">' . $e($row['label']) . '</td></tr>';
             continue;
         }
-        [$fill, $text] = forkBackupStateColours($row['state']);
+        [$fill] = forkBackupStateColours($row['state']);
         $html .= '<tr nobr="true"><td width="12%" style="border-bottom:0.3px solid #dee2e6;">' . $e($row['day']) . '</td>
-            <td width="24%" style="border-bottom:0.3px solid #dee2e6; background-color:#' . $fill . '; color:#' . $text . ';" align="center">' . $e($row['label']) . '</td>
+            <td width="24%" style="border-bottom:0.3px solid #dee2e6; background-color:#' . $fill . ';">&nbsp;</td>
             <td width="64%" style="border-bottom:0.3px solid #dee2e6;">' . nl2br($e($row['detail'])) . '</td></tr>';
     }
     $pdf->writeHTML($html . '</table>', true, false, true, false, '');
 
     $name = preg_replace('/[^A-Za-z0-9_\-]+/', '_', trim($report['br_end'] . '_' . $report['client_name'] . '_Backup_check_' . $report['br_start'], '_')) . '.pdf';
     return ['name' => $name, 'data' => $pdf->Output($name, 'S')];
-}
-
-/** The report as a Word file (.docx), in the client's language - ['name', 'data']. */
-function forkBackupDocx(array $report) {
-    return i18n_with(client_language(), fn() => forkBackupDocxRender($report));
-}
-
-function forkBackupDocxRender(array $report) {
-    $x = fn($value) => htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-    $run = function ($text, $bold = false, $colour = '') use ($x) {
-        $parts = explode("\n", (string) $text);
-        $xml = '';
-        foreach ($parts as $i => $part) {
-            $xml .= '<w:r><w:rPr>' . ($bold ? '<w:b/>' : '') . ($colour !== '' ? '<w:color w:val="' . $colour . '"/>' : '') . '<w:sz w:val="21"/></w:rPr>'
-                . ($i > 0 ? '<w:br/>' : '') . '<w:t xml:space="preserve">' . $x($part) . '</w:t></w:r>';
-        }
-        return $xml;
-    };
-    $para = fn($inner, $after = 120) => '<w:p><w:pPr><w:spacing w:after="' . $after . '"/></w:pPr>' . $inner . '</w:p>';
-    $cell = fn($width, $inner, $fill = '') => '<w:tc><w:tcPr><w:tcW w:w="' . $width . '" w:type="dxa"/>' . ($fill !== '' ? '<w:shd w:val="clear" w:color="auto" w:fill="' . $fill . '"/>' : '') . '</w:tcPr>' . $para($inner, 0) . '</w:tc>';
-    $widths = [1100, 2200, 5700];
-
-    $body = $para($run(forkBackupReportTitle($report), true), 240);
-    $body .= $para($run(t('Client') . ' : ', true) . $run($report['client_name']), 60);
-    $body .= $para($run(t('Period') . ' : ', true) . $run(t('{from} to {to}', ['{from}' => i18n_date_value($report['br_start']), '{to}' => i18n_date_value($report['br_end'])])), 240);
-    $body .= $para($run(t('Comment') . ' :', true), 60);
-    $body .= $para($run($report['br_comment']), 240);
-
-    $borders = '<w:tblBorders>' . implode('', array_map(fn($side) => '<w:' . $side . ' w:val="single" w:sz="4" w:space="0" w:color="BFBFBF"/>', ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'])) . '</w:tblBorders>';
-    $table = '<w:tbl><w:tblPr><w:tblW w:w="9000" w:type="dxa"/>' . $borders . '<w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>' . implode('', array_map(fn($w) => '<w:gridCol w:w="' . $w . '"/>', $widths)) . '</w:tblGrid>';
-    $table .= '<w:tr><w:trPr><w:tblHeader/></w:trPr>' . $cell($widths[0], $run(t('Week'), true), 'F1F3F5') . $cell($widths[1], $run(t('Status'), true), 'F1F3F5') . $cell($widths[2], $run(t('Detail'), true), 'F1F3F5') . '</w:tr>';
-    foreach (forkBackupReportRows($report) as $row) {
-        if ($row['type'] === 'month') {
-            $table .= '<w:tr><w:trPr><w:cantSplit/></w:trPr><w:tc><w:tcPr><w:tcW w:w="9000" w:type="dxa"/><w:gridSpan w:val="3"/><w:shd w:val="clear" w:color="auto" w:fill="E9ECEF"/></w:tcPr>' . $para($run($row['label'], true), 0) . '</w:tc></w:tr>';
-            continue;
-        }
-        [$fill, $text] = forkBackupStateColours($row['state']);
-        $table .= '<w:tr><w:trPr><w:cantSplit/></w:trPr>' . $cell($widths[0], $run($row['day'])) . $cell($widths[1], $run($row['label'], true, $text), $fill) . $cell($widths[2], $run($row['detail'])) . '</w:tr>';
-    }
-    $table .= '</w:tbl>';
-    $body .= $table . $para('', 0);
-
-    $document = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' . $body
-        . '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1418" w:bottom="1134" w:left="1418" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>';
-    $types = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
-    $rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
-
-    $file = tempnam(sys_get_temp_dir(), 'bkdocx');
-    $zip = new ZipArchive();
-    $zip->open($file, ZipArchive::OVERWRITE);
-    $zip->addFromString('[Content_Types].xml', $types);
-    $zip->addFromString('_rels/.rels', $rels);
-    $zip->addFromString('word/document.xml', $document);
-    $zip->close();
-    $data = (string) file_get_contents($file);
-    unlink($file);
-
-    $name = preg_replace('/[^A-Za-z0-9_\-]+/', '_', trim($report['br_end'] . '_' . $report['client_name'] . '_Backup_check_' . $report['br_start'], '_')) . '.docx';
-    return ['name' => $name, 'data' => $data];
 }

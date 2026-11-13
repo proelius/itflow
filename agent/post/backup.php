@@ -2,7 +2,7 @@
 
 /*
  * ITFlow - backup checks (functions/fork_backup.php): give a client the service and its servers, enter a
- * client's check for a week, make a client's report for a period, change its comment, open it as PDF or Word.
+ * client's check for a week, make a client's report for a period, change its comment, open it as PDF.
  * Checks are for agents with the Support module (level 2); reports for agents with the Financial module.
  * Nothing here sends anything to a client.
  */
@@ -123,7 +123,7 @@ if (isset($_POST['generate_backup_report'])) {
         redirect();
     }
     logAudit("Backup check", "Create", "$session_name made the backup check report of " . escapeSql($_POST['start']) . " to " . escapeSql($_POST['end']), $client_id, $report_id);
-    flashAlert("Report made - open it as PDF or Word below");
+    flashAlert("Report made - open it as PDF below");
     redirect("backup_report.php?client_id=$client_id&report_id=$report_id");
 
 }
@@ -169,20 +169,5 @@ if (isset($_GET['backup_report_pdf'])) {
     validateCSRFToken();
     $report = backupPostReport($_GET['backup_report_pdf']);
     billingPdfSend(forkBackupPdf($report));
-
-}
-
-if (isset($_GET['backup_report_docx'])) {
-
-    validateCSRFToken();
-    $report = backupPostReport($_GET['backup_report_docx']);
-    $file = forkBackupDocx($report);
-    header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    header('Content-Disposition: attachment; filename="' . $file['name'] . '"');
-    header('Content-Length: ' . strlen($file['data']));
-    header('Cache-Control: private, no-store');
-    header('X-Content-Type-Options: nosniff');
-    echo $file['data'];
-    exit;
 
 }
