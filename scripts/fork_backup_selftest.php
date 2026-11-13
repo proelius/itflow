@@ -198,7 +198,22 @@ backup_test('the client page offers restore and delete for an archived service, 
 backup_test('the list of the clients has an archived view, and an archived client is not asked for a check', strpos(file_get_contents($itflow_dir . '/agent/backup_checks.php'), 'archived=') !== false && strpos($fork_source, "bc.bc_archived_at ' . (\$archived ? 'IS NOT NULL' : 'IS NULL')") === false && strpos($fork_source, 'bc.bc_archived_at " . ($archived') !== false);
 backup_test('every action checks the CSRF token', substr_count($handler, 'validateCSRFToken()') >= 11);
 backup_test('checks need Support, reports need Financial', strpos($handler, "enforceUserPermission('module_support', \$level)") !== false && substr_count($handler, "'module_financial'") >= 2);
-backup_test('nothing is sent by email', stripos($handler . file_get_contents($itflow_dir . '/functions/fork_backup.php'), 'emailQueue') === false && stripos($handler, 'mail(') === false);
+$send_block = substr($handler, strpos($handler, "isset(\$_POST['email_backup_report'])"), strpos($handler, "isset(\$_POST['reset_backup_report'])") - strpos($handler, "isset(\$_POST['email_backup_report'])"));
+$cron_source = '';
+foreach (glob($itflow_dir . '/cron/*.php') ?: [] as $cron_file) {
+    $cron_source .= file_get_contents($cron_file);
+}
+backup_test('a report is only sent when an agent asks: one handler, behind the CSRF token and Financial level 2, nothing scheduled', substr_count($handler, 'billingEmailQueue(') === 1 && strpos($send_block, 'billingEmailQueue(') !== false && strpos($send_block, 'validateCSRFToken()') !== false && strpos($send_block, 'backupPostReport($_POST[\'report_id\'] ?? 0, 2)') !== false && stripos($fork_source, 'emailQueue') === false && preg_match('/(?<![A-Za-z_])mail\\(/', $handler . $fork_source) === 0 && stripos($cron_source, 'forkBackup') === false);
+backup_test('the email goes from the invoice address, with the PDF attached, to the contacts picked, and is logged', strpos($send_block, "'from' => 'invoice'") !== false && strpos($send_block, "'attach' => [\$file]") !== false && strpos($send_block, 'billingEmailPdf(forkBackupPdf($report))') !== false && strpos($send_block, "billingEmailRecipients(\$client_id, (array) (\$_POST['contacts']") !== false && strpos($send_block, 'logAudit("Backup check", "Email"') !== false);
+$email_window = file_get_contents($itflow_dir . '/agent/modals/backup/backup_report_email.php');
+backup_test('the window is as for a quote: contacts of a quote, the primary ticked, a note, and posts email_backup_report', strpos($email_window, "enforceUserPermission('module_financial', 2)") !== false && strpos($email_window, "documentContactFilterSql('quote')") !== false && strpos($email_window, "documentDefaultContactFilterSql('quote')") !== false && strpos($email_window, 'name="note"') !== false && strpos($email_window, 'name="email_backup_report"') !== false && strpos($email_window, 'attach_pdf') === false);
+backup_test('the report page and the list of reports have the button, for those who can change reports', substr_count(file_get_contents($itflow_dir . '/agent/backup_report.php') . file_get_contents($itflow_dir . '/agent/backup_reports.php'), 'modals/backup/backup_report_email.php?report_id=') === 2 && substr_count(file_get_contents($itflow_dir . '/agent/backup_report.php') . file_get_contents($itflow_dir . '/agent/backup_reports.php'), 'if ($can_edit) { ?><button') === 2);
+$email_en = file_get_contents($itflow_dir . '/lang/en.php');
+$email_fr = file_get_contents($itflow_dir . '/lang/fr.php');
+backup_test('the message: the company comes from a variable, never written in the code, and the wording is the agreed one', strpos($fork_source, "billingCompany()['company_name']") !== false && stripos($fork_source . $email_window . $send_block, 'Proxycore') === false && strpos($fork_source, "'{company}' =>") !== false
+    && strpos($email_fr, "'{title} from {company} - {period}' => '{title} de {company} – {period}'") !== false
+    && strpos($email_fr, "'En cas de question, répondez à cet e-mail.") === false && strpos($email_fr, 'En cas de question, répondez à cet e-mail.\',') !== false
+    && strpos($email_en, 'In case of questions, reply to this email.') !== false && strpos($email_fr, 'Des questions') === strpos($email_fr, 'Des questions'));
 foreach (['backup_checks', 'backup_check', 'backup_client', 'backup_reports', 'backup_report'] as $page) {
     backup_test("the page $page exists", is_file($itflow_dir . "/agent/$page.php"));
 }
