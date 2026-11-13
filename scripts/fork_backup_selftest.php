@@ -294,6 +294,26 @@ $out = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($pr
 unlink($probe);
 backup_test('the second check is under the comment, with a comment of its own, and each volume has a letter to choose', trim($out) === 'LAYOUT');
 backup_test('the letters and the comment of the second check are stored, added to a table made before, and the comment is dropped when there is no second check', strpos($fork_source, '`bl_vol1_letter` varchar(1)') !== false && strpos($fork_source, '`bl_second_comment` text') !== false && strpos($fork_source, "'bl_second_comment' => \"text DEFAULT NULL\"") !== false && strpos($fork_source, "\$second === 'none' ? '' :") !== false && strpos($fork_source, "bl_second_comment = '\" . escapeSql") !== false);
+$fields_source = file_get_contents($itflow_dir . '/agent/includes/backup_check_fields.php');
+foreach ([1 => false, 2 => true] as $how_many => $tabs_expected) {
+    $probe = tempnam(sys_get_temp_dir(), 'bkt');
+    file_put_contents($probe, '<?php
+error_reporting(E_ALL); ini_set("display_errors", "1");
+function escapeHtml($v) { return htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8"); }
+function lookupUserPermission($m) { return 3; }
+$_SESSION = ["csrf_token" => "t"];
+require ' . var_export($itflow_dir . '/functions/fork_backup.php', true) . ';
+$client_id = 7; $week = "2026-11-09"; $session_name = "Tech"; $can_edit = true; $check = null; $user = null; $tickets = []; $previous = [];
+$servers = [3 => ["id" => 3, "asset_id" => 5, "name" => "SRVONE", "os" => ""], 4 => ["id" => 4, "asset_id" => 6, "name" => "SRVTWO", "os" => ""]];
+$servers = array_slice($servers, 0, ' . $how_many . ', true);
+$statuses = forkBackupStatuses(); $parts = ["raid" => "RAID", "sys" => "BKP SYS", "data" => "BKP DATA", "cloud" => "Cloud"];
+ob_start(); require ' . var_export($itflow_dir . '/agent/includes/backup_check_fields.php', true) . '; $html = ob_get_clean();
+echo (str_contains($html, "role=\\"tablist\\"") ? "TABS" : "NOTABS") . substr_count($html, "bk-line") . "/" . substr_count($html, "itflow-form-section");');
+    $out = trim((string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($probe) . ' 2>&1'));
+    unlink($probe);
+    backup_test("the check has " . ($tabs_expected ? 'a tab for each of several servers' : 'no tabs for a single server') . ", and the sections Volumes, Backups and Result for each", preg_match('/^(TABS|NOTABS)(\d+)\/(\d+)$/', $out, $m) === 1 && ($m[1] === 'TABS') === $tabs_expected && intval($m[3]) === 3 * $how_many);
+}
+backup_test('the window is a large one, the fields are in sections like the asset form, a tab shows the colour of its server and opens when a comment is missing', strpos(file_get_contents($itflow_dir . '/agent/backup_checks.php'), 'data-modal-size="lg" data-modal-url="modals/backup/backup_check.php') !== false && substr_count($fields_source, 'itflow-form-section') === 3 && strpos($fields_source, 'data-bs-toggle="pill"') !== false && strpos($fields_source, 'bk-dot') !== false && strpos($fields_source, "addEventListener('invalid'") !== false);
 backup_test('the tables are not in ITFlow\'s own database updates', strpos(file_get_contents($itflow_dir . '/db.sql'), 'fork_backup') === false && !glob($itflow_dir . '/admin/database_updates/*') === false);
 
 echo "\n$passed passed, $failed failed\n";
