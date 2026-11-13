@@ -831,7 +831,7 @@ function _forkBackupReportEmail(array $report, array $opts = []) {
     $n = ['{title}' => $title, '{company}' => billingCompany()['company_name'] ?? '', '{period}' => $period, '{client}' => $report['client_name']];
     return [t('{title} from {company} - {period}', $n), [
         'kind' => t('Report'), 'tone' => 'primary', 'title' => $title,
-        'intro' => [t('Please find attached the backup check report of {client} for the period {period}.', $n)],
+        'intro' => [t('Please find attached the backup check report for the period {period}.', $n)],
         'note' => $opts['note'] ?? '',
         'summary' => [t('Report') => $title, t('Period') => $period, t('Weeks checked') => (string) array_sum(array_map('count', $report['data']['months']))],
         'after' => [t('The report is attached to this message as a PDF. In case of questions, reply to this email.')],

@@ -1754,7 +1754,7 @@ return [
     '{title} from {company} - {period}' => '{title} de {company} – {period}',
     'Report' => 'Rapport',
     'Weeks checked' => 'Semaines contrôlées',
-    'Please find attached the backup check report of {client} for the period {period}.' => 'Vous trouverez ci-joint le rapport du contrôle des sauvegardes de {client} pour la période {period}.',
+    'Please find attached the backup check report for the period {period}.' => 'Vous trouverez ci-joint le rapport du contrôle des sauvegardes pour la période {period}.',
     'The report is attached to this message as a PDF. In case of questions, reply to this email.' => 'Le rapport est joint à ce message au format PDF. En cas de question, répondez à cet e-mail.',
     'You received this email as a contact of {client} with {company}.' => 'Vous recevez cet e-mail en tant que contact de {client} chez {company}.',
 ];
