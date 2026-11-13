@@ -359,6 +359,7 @@ return [
     'Renewal' => 'Renewal',
     'Needs you' => 'Needs you',
     'Nothing is waiting on you right now.' => 'Nothing is waiting on you right now.',
+    "You're all caught up" => "You're all caught up",
     'All tickets' => 'All tickets',
     'No open tickets' => 'No open tickets',
     'Something not working? Raise a ticket and we will pick it up.' => 'Something not working? Raise a ticket and we will pick it up.',

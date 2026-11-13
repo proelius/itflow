@@ -389,6 +389,7 @@ return [
     'Renewal' => 'Renouvellement',
     'Needs you' => 'Besoin de vous',
     'Nothing is waiting on you right now.' => 'Rien ne vous attend pour l’instant.',
+    "You're all caught up" => 'Tout est à jour',
     'All tickets' => 'Tous les tickets',
     'No open tickets' => 'Aucun ticket ouvert',
     'Something not working? Raise a ticket and we will pick it up.' => 'Quelque chose ne fonctionne pas ? Ouvrez un ticket et nous nous en occuperons.',
