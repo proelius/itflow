@@ -322,6 +322,7 @@ function forkHoursReportPdf(array $report) {
 }
 
 function forkHoursReportPdfRender(array $report) {
+    global $config_invoice_show_tax_id;
     billingPdfConfig();
     $company = billingCompany();
     $data = $report['data'];
@@ -350,8 +351,17 @@ function forkHoursReportPdfRender(array $report) {
     $pdf->SetFont('dejavusans', '', 8.5);
     $pdf->SetTextColor(33, 37, 41);
 
+    // Who it is from - as on the invoices (functions/billing_pdf.php)
+    $from_lines = array_filter([
+        formatAddress($company['company_address'] ?? '', $company['company_city'] ?? '', $company['company_state'] ?? '', $company['company_zip'] ?? '', $company['company_country'] ?? '', "\n"),
+        implode('  ·  ', array_filter([$company['company_email'] ?? '', $company['phone_display'] ?? ''])),
+        $company['company_website'] ?? '',
+        !empty($config_invoice_show_tax_id) && !empty($company['company_tax_id']) ? t('Tax ID: {id}', ['{id}' => $company['company_tax_id']]) : '',
+    ]);
+    $logo = !empty($company['logo_path']) ? '<img src="' . $e($company['logo_path']) . '" height="42"><br>' : '';
+
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
-        <td width="55%"><span style="font-size:12pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span></td>
+        <td width="55%">' . $logo . '<span style="font-size:12pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>
         <td width="45%" align="right"><span style="font-size:8pt; color:#0a58ca; font-weight:bold; letter-spacing:2px;">' . $e(mb_strtoupper(t('Prepaid hours report'))) . '</span><br>
             <span style="font-size:13pt; font-weight:bold;">' . $e($title) . '</span></td>
     </tr></table>';
