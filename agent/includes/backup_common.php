@@ -17,6 +17,15 @@ function backupOptions(array $options, $selected) {
     return $html;
 }
 
+/** The <optgroup>s of a list of groups (label => [value => label]). */
+function backupOptionGroups(array $groups, $selected) {
+    $html = '';
+    foreach ($groups as $group => $options) {
+        $html .= '<optgroup label="' . escapeHtml($group) . '">' . backupOptions($options, $selected) . '</optgroup>';
+    }
+    return $html;
+}
+
 /** A colour as a badge. */
 function backupStateBadge($state) {
     $class = ['green' => 'bg-success', 'yellow' => 'bg-warning text-dark', 'red' => 'bg-danger'][$state] ?? 'bg-secondary';

@@ -309,16 +309,26 @@ function forkBackupServers($client_id) {
     return $rows;
 }
 
-/** The servers in the client's assets that could be checked - asset_id => "name (os)". */
+/**
+ * The assets of a client a server can be chosen from, in two groups - ['Servers' => [asset_id => "name (os)"], 'Other assets' => [...]]:
+ * the servers (Server, Virtual Machine, NAS) first, then the rest, so a server entered under another type can still be found.
+ * Archived assets are left out; an empty group is left out.
+ */
 function forkBackupAssets($client_id) {
     global $mysqli;
-    $rows = [];
-    $sql = mysqli_query($mysqli, "SELECT asset_id, asset_name, asset_os FROM assets WHERE asset_client_id = " . intval($client_id) . "
-        AND asset_archived_at IS NULL AND asset_type = 'Server' ORDER BY asset_name");
+    $groups = ['Servers' => [], 'Other assets' => []];
+    $sql = mysqli_query($mysqli, "SELECT asset_id, asset_name, asset_type, asset_os FROM assets WHERE asset_client_id = " . intval($client_id) . "
+        AND asset_archived_at IS NULL ORDER BY asset_name");
     while ($row = mysqli_fetch_assoc($sql)) {
-        $rows[intval($row['asset_id'])] = $row['asset_name'] . ((string) $row['asset_os'] !== '' ? ' (' . $row['asset_os'] . ')' : '');
+        $label = $row['asset_name'] . ((string) $row['asset_os'] !== '' ? ' (' . $row['asset_os'] . ')' : '') . ' - ' . $row['asset_type'];
+        $groups[forkBackupIsServerType($row['asset_type']) ? 'Servers' : 'Other assets'][intval($row['asset_id'])] = $label;
     }
-    return $rows;
+    return array_filter($groups);
+}
+
+/** Whether an asset type is a server. */
+function forkBackupIsServerType($type) {
+    return in_array((string) $type, ['Server', 'Virtual Machine', 'NAS'], true);
 }
 
 /** Adds a server to check, from an asset of the client or by name. */

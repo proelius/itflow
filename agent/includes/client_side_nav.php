@@ -176,6 +176,18 @@
 
                 <?php } ?>
 
+                <?php if (lookupUserPermission("module_support") >= 1) { ?>
+                    <?php if ($config_module_enable_ticketing != 1) { ?>
+                        <li class="nav-header mt-3">SUPPORT</li>
+                    <?php } ?>
+                    <li class="nav-item">
+                        <a href="/agent/backup_client.php?client_id=<?= $client_id ?>" class="nav-link <?php if (in_array(basename($_SERVER["PHP_SELF"]), ["backup_client.php", "backup_check.php", "backup_reports.php", "backup_report.php"])) { echo "active"; } ?>">
+                            <i class="nav-icon fas fa-hdd"></i>
+                            <p>Backup Checks</p>
+                        </a>
+                    </li>
+                <?php } ?>
+
                 <?php if ($config_module_enable_itdoc == 1) { ?>
 
                     <li class="nav-header mt-3">INFRASTRUCTURE</li>
@@ -363,15 +375,6 @@
                                             <span class="right badge text-light"><?= $num_unbilled_tickets + intval($num_unbilled_expenses ?? 0) + intval($num_unbilled_trips ?? 0) ?></span>
                                         <?php } ?>
                                     </p>
-                                </a>
-                            </li>
-                        <?php } ?>
-
-                        <?php if (lookupUserPermission('module_support') >= 1) { ?>
-                            <li class="nav-item">
-                                <a href="/agent/backup_client.php?client_id=<?= $client_id ?>" class="nav-link <?php if (in_array(basename($_SERVER["PHP_SELF"]), ["backup_client.php", "backup_check.php", "backup_reports.php", "backup_report.php"])) { echo "active"; } ?>">
-                                    <i class="nav-icon fas fa-hdd"></i>
-                                    <p>Backup Checks</p>
                                 </a>
                             </li>
                         <?php } ?>

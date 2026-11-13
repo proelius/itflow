@@ -13,7 +13,12 @@ enforceUserPermission('module_support');
 $service = forkBackupClient($client_id);
 $can_edit = lookupUserPermission('module_support') >= 2;
 $servers = $service ? forkBackupServers($client_id) : [];
-$assets = $service && $can_edit ? array_diff_key(forkBackupAssets($client_id), array_column($servers, 'asset_id', 'asset_id')) : [];
+$taken = array_column($servers, 'asset_id', 'asset_id');
+$assets = [];
+foreach ($service && $can_edit ? forkBackupAssets($client_id) : [] as $group => $options) {
+    $assets[$group] = array_diff_key($options, $taken);
+}
+$assets = array_filter($assets);
 $week = forkBackupMonday(date('Y-m-d'));
 $checks = [];
 if ($service) {
@@ -78,10 +83,13 @@ if ($service) {
                         <?= backupCsrf() ?>
                         <input type="hidden" name="client_id" value="<?= $client_id ?>">
                         <?php if ($assets) { ?>
-                            <div class="input-group mb-2"><select class="form-select" name="asset_id"><option value="0">Choose a server asset</option><?= backupOptions($assets, '') ?></select><button type="submit" name="backup_server_add" value="1" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add</button></div>
+                            <label class="form-label">Add a server from the client's assets</label>
+                            <div class="input-group mb-3"><select class="form-select" name="asset_id"><option value="0">Choose an asset</option><?= backupOptionGroups($assets, '') ?></select><button type="submit" name="backup_server_add" value="1" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Add</button></div>
+                        <?php } else { ?>
+                            <div class="alert alert-warning py-2">This client has no asset yet - <a href="assets.php?client_id=<?= $client_id ?>">add its servers as assets</a> first, so the Windows version comes from them.</div>
                         <?php } ?>
                         <div class="input-group"><input type="text" class="form-control" name="name" maxlength="200" placeholder="Or a server that is not an asset: its name"><button type="submit" name="backup_server_add" value="1" class="btn btn-secondary"><i class="fas fa-plus me-2"></i>Add</button></div>
-                        <div class="text-secondary small mt-2">The servers come from the client's assets of type Server - the Windows version is read from the asset.</div>
+                        <div class="text-secondary small mt-2">A server taken from an asset keeps in step with it: its name and Windows version are read from the asset.</div>
                     </form>
                 <?php } ?>
             </div>
