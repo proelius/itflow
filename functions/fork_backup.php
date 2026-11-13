@@ -217,12 +217,16 @@ function forkBackupEnsure() {
         `bc_anchor` date NOT NULL,
         `bc_active` tinyint(1) NOT NULL DEFAULT 1,
         `bc_autonomous` tinyint(1) NOT NULL DEFAULT 0,
+        `bc_archived_at` datetime DEFAULT NULL,
         `bc_created_at` datetime NOT NULL DEFAULT current_timestamp(),
         PRIMARY KEY (`bc_client_id`)
     ) $tail");
-    // The column came after the table: add it to a table made before (the fork's own table, not an ITFlow one)
+    // The columns that came after the table: added to a table made before (the fork's own table, not an ITFlow one)
     if (!mysqli_fetch_row(mysqli_query($mysqli, "SHOW COLUMNS FROM `fork_backup_clients` LIKE 'bc_autonomous'"))) {
         mysqli_query($mysqli, "ALTER TABLE `fork_backup_clients` ADD COLUMN `bc_autonomous` tinyint(1) NOT NULL DEFAULT 0 AFTER `bc_active`");
+    }
+    if (!mysqli_fetch_row(mysqli_query($mysqli, "SHOW COLUMNS FROM `fork_backup_clients` LIKE 'bc_archived_at'"))) {
+        mysqli_query($mysqli, "ALTER TABLE `fork_backup_clients` ADD COLUMN `bc_archived_at` datetime DEFAULT NULL AFTER `bc_autonomous`");
     }
     mysqli_query($mysqli, "CREATE TABLE IF NOT EXISTS `fork_backup_servers` (
         `bs_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -276,24 +280,24 @@ function forkBackupEnsure() {
 }
 
 /** The clients that have the service, not archived - client_id, client_name, frequency, anchor, active, servers. */
-function forkBackupClients() {
+function forkBackupClients($archived = false) {
     global $mysqli;
     forkBackupEnsure();
     $rows = [];
     $sql = mysqli_query($mysqli, "SELECT bc.*, c.client_name,
             (SELECT COUNT(*) FROM fork_backup_servers s WHERE s.bs_client_id = bc.bc_client_id AND s.bs_active = 1) AS servers
         FROM fork_backup_clients bc JOIN clients c ON c.client_id = bc.bc_client_id
-        WHERE c.client_archived_at IS NULL ORDER BY c.client_name");
+        WHERE c.client_archived_at IS NULL AND bc.bc_archived_at " . ($archived ? 'IS NOT NULL' : 'IS NULL') . " ORDER BY c.client_name");
     while ($row = mysqli_fetch_assoc($sql)) {
         $rows[] = ['client_id' => intval($row['bc_client_id']), 'client_name' => $row['client_name'], 'frequency' => forkBackupFrequencyClean($row['bc_frequency']),
-            'anchor' => $row['bc_anchor'], 'active' => intval($row['bc_active']) === 1, 'autonomous' => intval($row['bc_autonomous']) === 1, 'servers' => intval($row['servers'])];
+            'anchor' => $row['bc_anchor'], 'active' => intval($row['bc_active']) === 1, 'autonomous' => intval($row['bc_autonomous']) === 1, 'archived_at' => $row['bc_archived_at'], 'servers' => intval($row['servers'])];
     }
     return $rows;
 }
 
-/** One client's service, or null when it has none. */
-function forkBackupClient($client_id) {
-    foreach (forkBackupClients() as $row) {
+/** One client's service, or null when it has none - an archived one only when $archived. */
+function forkBackupClient($client_id, $archived = false) {
+    foreach (forkBackupClients($archived) as $row) {
         if ($row['client_id'] === intval($client_id)) {
             return $row;
         }
@@ -343,13 +347,51 @@ function forkBackupClientSave($client_id, $frequency, $anchor, $active, $autonom
     return (bool) mysqli_query($mysqli, "UPDATE fork_backup_clients SET bc_frequency = '" . forkBackupFrequencyClean($frequency) . "', bc_anchor = '$anchor', bc_active = " . ($active ? 1 : 0) . ($autonomous === null ? '' : ', bc_autonomous = ' . ($autonomous ? 1 : 0)) . " WHERE bc_client_id = " . intval($client_id));
 }
 
-/** Takes the service away from a client. What was entered stays, so a report of the past still reads. */
-function forkBackupClientRemove($client_id) {
+/**
+ * Archives a client's service (the first step, as for assets): no check is asked for any more, and everything that was
+ * entered is kept - the checks, the reports, the servers. Restoring brings it back; deleting it is a second step.
+ */
+function forkBackupClientArchive($client_id) {
+    global $mysqli;
+    forkBackupEnsure();
+    mysqli_query($mysqli, "UPDATE fork_backup_clients SET bc_archived_at = NOW() WHERE bc_client_id = " . intval($client_id) . " AND bc_archived_at IS NULL");
+}
+
+/** Brings an archived service back. */
+function forkBackupClientRestore($client_id) {
+    global $mysqli;
+    forkBackupEnsure();
+    mysqli_query($mysqli, "UPDATE fork_backup_clients SET bc_archived_at = NULL WHERE bc_client_id = " . intval($client_id));
+}
+
+/** What is kept for a client: the number of checks, reports and servers entered. */
+function forkBackupClientData($client_id) {
     global $mysqli;
     forkBackupEnsure();
     $client_id = intval($client_id);
+    $count = fn($table, $column) => intval(mysqli_fetch_row(mysqli_query($mysqli, "SELECT COUNT(*) FROM $table WHERE $column = $client_id"))[0] ?? 0);
+    return ['checks' => $count('fork_backup_checks', 'bk_client_id'), 'reports' => $count('fork_backup_reports', 'br_client_id'), 'servers' => $count('fork_backup_servers', 'bs_client_id')];
+}
+
+/**
+ * Deletes for good what the backup checks hold for a client: its service, servers, checks and reports (the second step,
+ * after the archive). Not allowed while the service is active. Tickets are ITFlow's and stay. Returns the counts that
+ * were deleted, or null when the service is still active.
+ */
+function forkBackupClientDelete($client_id) {
+    global $mysqli;
+    forkBackupEnsure();
+    $client_id = intval($client_id);
+    if (forkBackupClient($client_id)) {
+        return null;
+    }
+    $data = forkBackupClientData($client_id);
+    mysqli_query($mysqli, "DELETE l FROM fork_backup_lines l JOIN fork_backup_checks k ON k.bk_id = l.bl_check_id WHERE k.bk_client_id = $client_id");
+    mysqli_query($mysqli, "DELETE FROM fork_backup_checks WHERE bk_client_id = $client_id");
+    mysqli_query($mysqli, "DELETE FROM fork_backup_reports WHERE br_client_id = $client_id");
+    mysqli_query($mysqli, "DELETE FROM fork_backup_servers WHERE bs_client_id = $client_id");
     mysqli_query($mysqli, "DELETE FROM fork_backup_clients WHERE bc_client_id = $client_id");
-    mysqli_query($mysqli, "UPDATE fork_backup_servers SET bs_active = 0 WHERE bs_client_id = $client_id");
+    return $data;
 }
 
 /** The servers of a client that are checked - bs_id, asset_id, name, os (from the asset). */

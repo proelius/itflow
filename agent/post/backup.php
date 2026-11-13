@@ -69,9 +69,35 @@ if (isset($_POST['backup_client_remove'])) {
 
     validateCSRFToken();
     $client_id = backupPostService();
-    forkBackupClientRemove($client_id);
-    logAudit("Backup check", "Delete", "$session_name took the backup check service away from the client", $client_id, $client_id);
-    flashAlert("Service removed - what was entered is kept");
+    forkBackupClientArchive($client_id);
+    logAudit("Backup check", "Archive", "$session_name archived the backup check service of the client", $client_id, $client_id);
+    flashAlert("Service archived - what was entered is kept. Restore it, or delete it for good, from the client's backup checks", 'error');
+    redirect("backup_checks.php?tab=clients");
+
+}
+
+if (isset($_POST['backup_client_restore'])) {
+
+    validateCSRFToken();
+    $client_id = backupPostService(2);
+    forkBackupClientRestore($client_id);
+    logAudit("Backup check", "Restore", "$session_name restored the backup check service of the client", $client_id, $client_id);
+    flashAlert("Service restored");
+    redirect("backup_client.php?client_id=$client_id");
+
+}
+
+if (isset($_POST['backup_client_delete'])) {
+
+    validateCSRFToken();
+    $client_id = backupPostService(3);
+    $deleted = forkBackupClientDelete($client_id);
+    if ($deleted === null) {
+        flashAlert("Archive the service first - an active service cannot be deleted.", 'error');
+        redirect();
+    }
+    logAudit("Backup check", "Delete", "$session_name deleted the backup checks of the client for good ({$deleted['checks']} checks, {$deleted['reports']} reports, {$deleted['servers']} servers)", $client_id, $client_id);
+    flashAlert("Backup checks deleted for good - {$deleted['checks']} checks, {$deleted['reports']} reports, {$deleted['servers']} servers", 'error');
     redirect("backup_checks.php?tab=clients");
 
 }

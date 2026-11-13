@@ -75,10 +75,14 @@ $frequencies = forkBackupFrequencies();
         <?php } ?>
     </div>
 <?php } else {
-    $clients = forkBackupClients();
-    $to_add = forkBackupClientsToAdd(); ?>
+    $archived = !empty($_GET['archived']);
+    $clients = forkBackupClients($archived);
+    $to_add = $archived ? [] : forkBackupClientsToAdd(); ?>
     <div class="card card-dark">
-        <div class="card-header py-2"><h3 class="card-title mt-2"><i class="fas fa-fw fa-users me-2"></i>Clients with the service</h3></div>
+        <div class="card-header py-2">
+            <h3 class="card-title mt-2"><i class="fas fa-fw fa-users me-2"></i><?= $archived ? 'Archived clients' : 'Clients with the service' ?></h3>
+            <div class="card-tools"><a href="backup_checks.php?tab=clients&archived=<?= $archived ? 0 : 1 ?>" class="btn <?= $archived ? 'btn-dark' : 'btn-outline-dark' ?>" title="<?= $archived ? 'Back to the clients with the service' : 'Show the archived clients' ?>"><i class="fa fa-fw fa-archive"></i><span class="ms-2">Archived</span></a></div>
+        </div>
         <?php if ($can_edit_service && $to_add) { ?>
             <form action="post.php" method="post" class="card-body border-bottom row g-2 align-items-end">
                 <?= backupCsrf() ?>
@@ -90,7 +94,7 @@ $frequencies = forkBackupFrequencies();
             </form>
         <?php } ?>
         <?php if (!$clients) { ?>
-            <div class="card-body text-secondary">No client has the service yet.</div>
+            <div class="card-body text-secondary"><?= $archived ? 'No client is archived.' : 'No client has the service yet.' ?></div>
         <?php } else { ?>
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
@@ -103,7 +107,7 @@ $frequencies = forkBackupFrequencies();
                             <td><?= escapeHtml($row['anchor']) ?></td>
                             <td><?= $row['servers'] ?></td>
                             <td><?php [$words, $class] = forkBackupAutonomyLabel($row['autonomous']); ?><span class="badge <?= $class ?>"><?= $words ?></span></td>
-                            <td><?= $row['active'] ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Paused</span>' ?></td>
+                            <td><?= $archived ? '<span class="badge bg-secondary">Archived</span>' : ($row['active'] ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-warning text-dark">Paused</span>') ?></td>
                             <td class="text-end"><a class="btn btn-sm btn-secondary" href="backup_client.php?client_id=<?= $row['client_id'] ?>"><i class="fas fa-cog me-2"></i>Open</a></td>
                         </tr>
                     <?php } ?>

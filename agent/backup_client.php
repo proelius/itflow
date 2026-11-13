@@ -20,8 +20,11 @@ foreach ($service && $can_edit ? forkBackupAssets($client_id) : [] as $group => 
 }
 $assets = array_filter($assets);
 $week = forkBackupMonday(date('Y-m-d'));
+$archived_service = $service ? null : forkBackupClient($client_id, true);
+$data = forkBackupClientData($client_id);
+$can_delete = lookupUserPermission('module_financial') >= 3;
 $checks = [];
-if ($service) {
+if ($service || $archived_service) {
     $sql = mysqli_query($mysqli, "SELECT k.bk_week, k.bk_ticket_id, u.user_name, GROUP_CONCAT(l.bl_state) AS states FROM fork_backup_checks k
         JOIN fork_backup_lines l ON l.bl_check_id = k.bk_id LEFT JOIN users u ON u.user_id = k.bk_user_id
         WHERE k.bk_client_id = $client_id GROUP BY k.bk_id ORDER BY k.bk_week DESC LIMIT 26");
@@ -34,7 +37,25 @@ if ($service) {
 
 <?= backupClientTabs($client_id, 'service') ?>
 
-<?php if (!$service) { ?>
+<?php if ($archived_service) { ?>
+    <div class="card card-dark">
+        <div class="card-header py-2"><h3 class="card-title mt-2"><i class="fas fa-fw fa-archive me-2"></i>Service archived</h3></div>
+        <div class="card-body">
+            <p class="mb-2">The service is archived since <?= escapeHtml(substr($archived_service['archived_at'], 0, 10)) ?>: no check is asked for any more. What was entered is kept: <?= backupDataText($data) ?>.</p>
+            <?php if ($can_edit) { ?>
+                <form action="post.php" method="post" class="d-inline"><?= backupCsrf() ?><input type="hidden" name="client_id" value="<?= $client_id ?>">
+                    <button type="submit" name="backup_client_restore" value="1" class="btn btn-primary"><i class="fas fa-redo me-2"></i>Restore the service</button></form>
+            <?php } ?>
+            <?php if ($can_delete) { ?>
+                <button type="button" class="btn btn-outline-danger ajax-modal" data-modal-url="modals/backup/backup_delete.php?client_id=<?= $client_id ?>"><i class="fas fa-trash me-2"></i>Delete for good</button>
+            <?php } ?>
+        </div>
+    </div>
+    <div class="card card-dark">
+        <div class="card-header py-2"><h3 class="card-title mt-2"><i class="fas fa-fw fa-calendar-check me-2"></i>Checks entered</h3></div>
+        <?= backupChecksTable($checks, $client_id) ?>
+    </div>
+<?php } elseif (!$service) { ?>
     <div class="card card-dark"><div class="card-body">
         This client does not have the backup check service.
         <?php if ($can_edit) { ?>
@@ -46,6 +67,13 @@ if ($service) {
                 <div class="col-md-2"><button type="submit" name="backup_client_add" value="1" class="btn btn-primary w-100"><i class="fas fa-plus me-2"></i>Give the service</button></div>
                 <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" name="autonomous" id="bkAutonomousNew" value="1"><label class="form-check-label" for="bkAutonomousNew">The technician may take the corrective action on his own, without the client's approval</label></div></div>
             </form>
+        <?php } ?>
+        <?php if (array_sum($data) > 0) { ?>
+            <hr>
+            <p class="mb-2">Still kept for this client: <?= backupDataText($data) ?>.</p>
+            <?php if ($can_delete) { ?>
+                <button type="button" class="btn btn-outline-danger ajax-modal" data-modal-url="modals/backup/backup_delete.php?client_id=<?= $client_id ?>"><i class="fas fa-trash me-2"></i>Delete for good</button>
+            <?php } ?>
         <?php } ?>
     </div></div>
 <?php } else { ?>
@@ -62,7 +90,7 @@ if ($service) {
                     <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="active" id="bkActive" value="1" <?= $service['active'] ? 'checked' : '' ?> <?= $can_edit ? '' : 'disabled' ?>><label class="form-check-label" for="bkActive">Active - untick to pause the checks</label></div>
                     <?php if ($can_edit) { ?>
                         <button type="submit" name="backup_client_save" value="1" class="btn btn-primary"><i class="fas fa-check me-2"></i>Save</button>
-                        <button type="submit" name="backup_client_remove" value="1" class="btn btn-outline-danger float-end" onclick="return confirm('Take the service away from this client? What was entered is kept.')"><i class="fas fa-times me-2"></i>Remove the service</button>
+                        <button type="submit" name="backup_client_remove" value="1" class="btn btn-outline-danger float-end" onclick="return confirm('Archive the service of this client? No check is asked for any more; what was entered is kept, and the service can be restored or deleted for good afterwards.')"><i class="fas fa-archive me-2"></i>Archive the service</button>
                     <?php } ?>
                 </form>
             </div>
@@ -102,23 +130,7 @@ if ($service) {
                     <h3 class="card-title mt-2"><i class="fas fa-fw fa-calendar-check me-2"></i>Checks entered</h3>
                     <?php if ($servers && $can_edit) { ?><div class="card-tools"><a class="btn btn-primary" href="backup_check.php?client_id=<?= $client_id ?>&week=<?= $week ?>"><i class="fas fa-pen me-2"></i>Enter this week's check</a></div><?php } ?>
                 </div>
-                <?php if (!$checks) { ?>
-                    <div class="card-body text-secondary">Nothing entered yet.</div>
-                <?php } else { ?>
-                    <div class="table-responsive"><table class="table table-hover mb-0">
-                        <thead class="text-dark"><tr><th>Week of</th><th>Result</th><th>By</th><th></th></tr></thead>
-                        <tbody>
-                        <?php foreach ($checks as $check) { ?>
-                            <tr>
-                                <td><?= escapeHtml($check['bk_week']) ?></td>
-                                <td><?= backupStateBadge(forkBackupWorst(explode(',', $check['states']))) ?></td>
-                                <td><?= escapeHtml((string) $check['user_name']) ?></td>
-                                <td class="text-end"><a class="btn btn-sm btn-secondary" href="backup_check.php?client_id=<?= $client_id ?>&week=<?= escapeHtml($check['bk_week']) ?>"><i class="fas fa-eye"></i></a></td>
-                            </tr>
-                        <?php } ?>
-                        </tbody>
-                    </table></div>
-                <?php } ?>
+                <?= backupChecksTable($checks, $client_id) ?>
             </div>
         </div>
     </div>
