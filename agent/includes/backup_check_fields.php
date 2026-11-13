@@ -52,6 +52,7 @@ document.querySelectorAll('.bk-line').forEach(function (box) {
         secondBox.style.display = failed ? '' : 'none';
         stateBox.style.display = failed ? '' : 'none'; // everything OK: green, nothing to choose
         if (!failed) { state.value = 'green'; }
+        Array.prototype.forEach.call(state.options, function (o) { if (o.value === 'green') { o.disabled = failed; } }); // a failure cannot be green
         if (!touched) { state.value = !failed ? 'green' : (second.value === 'ok' ? 'yellow' : 'red'); }
         if (failed && state.value === 'green') { state.value = second.value === 'ok' ? 'yellow' : 'red'; }
         comment.required = state.value !== 'green';
