@@ -81,6 +81,18 @@ function forkBackupSuggestState(array $statuses, $second) {
     return forkBackupSecondClean($second, $statuses) === 'ok' ? 'yellow' : 'red';
 }
 
+/**
+ * The colour of a line from its statuses, the second check and the colour the form sent: green when everything is OK
+ * (whatever was sent), never green when something failed, otherwise the colour sent or, without one, the suggested one.
+ */
+function forkBackupLineState(array $statuses, $second, $posted) {
+    if (!forkBackupSecondNeeded($statuses)) {
+        return 'green';
+    }
+    $state = forkBackupStateClean($posted);
+    return $state === '' || $state === 'green' ? forkBackupSuggestState($statuses, $second) : $state;
+}
+
 /** The worst of some colours (red, then yellow, then green); green when there are none. */
 function forkBackupWorst(array $states) {
     foreach (['red', 'yellow'] as $state) {
@@ -495,10 +507,7 @@ function forkBackupCheckSave($client_id, $week, $user_id, $ticket_id, array $lin
         $line = (array) ($lines[$server_id] ?? []);
         $statuses = [forkBackupStatusClean($line['raid'] ?? ''), forkBackupStatusClean($line['sys'] ?? ''), forkBackupStatusClean($line['data'] ?? ''), forkBackupStatusClean($line['cloud'] ?? '')];
         $second = forkBackupSecondClean($line['second'] ?? '', $statuses);
-        $state = forkBackupStateClean($line['state'] ?? '') ?: forkBackupSuggestState($statuses, $second);
-        if ($state === 'green' && forkBackupSecondNeeded($statuses)) {
-            $state = forkBackupSuggestState($statuses, $second); // something failed: the line cannot be green
-        }
+        $state = forkBackupLineState($statuses, $second, $line['state'] ?? '');
         $comment = mb_substr(str_replace("\r", '', trim((string) ($line['comment'] ?? ''))), 0, 2000);
         if ($state !== 'green' && $comment === '') {
             return [0, 'Say what happened on ' . $server['name'] . ' in its comment - it is ' . $state . '.'];

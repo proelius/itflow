@@ -74,6 +74,9 @@ backup_test('the second check is ok, fail or not done yet', forkBackupSecondClea
 backup_test('green when nothing failed', forkBackupSuggestState(['ok', 'na', 'ok', 'ok'], '') === 'green');
 backup_test('yellow when the second check put it right', forkBackupSuggestState(['ok', 'ok', 'ok', 'fail'], 'ok') === 'yellow');
 backup_test('red when the second check failed or is not done', forkBackupSuggestState(['ok', 'ok', 'ok', 'fail'], 'fail') === 'red' && forkBackupSuggestState(['ok', 'ok', 'fail', 'ok'], '') === 'red');
+backup_test('everything OK is green by itself, whatever the form sent', forkBackupLineState(['ok', 'ok', 'ok', 'na'], 'none', '') === 'green' && forkBackupLineState(['ok', 'ok', 'ok', 'ok'], 'none', 'red') === 'green' && forkBackupLineState(['ok', 'ok', 'ok', 'ok'], 'none', 'yellow') === 'green');
+backup_test('a failure is never green; the chosen colour is kept', forkBackupLineState(['ok', 'fail', 'ok', 'ok'], 'pending', 'green') === 'red' && forkBackupLineState(['ok', 'fail', 'ok', 'ok'], 'ok', '') === 'yellow' && forkBackupLineState(['ok', 'fail', 'ok', 'ok'], 'ok', 'red') === 'red' && forkBackupLineState(['ok', 'fail', 'ok', 'ok'], 'pending', 'yellow') === 'yellow');
+backup_test('the colour choice is hidden when everything is OK', strpos(file_get_contents($itflow_dir . '/agent/includes/backup_check_fields.php'), 'bk-state-box') !== false && strpos(file_get_contents($itflow_dir . '/agent/includes/backup_check_fields.php'), "stateBox.style.display = failed") !== false);
 backup_test('the worst colour wins', forkBackupWorst(['green', 'yellow', 'green']) === 'yellow' && forkBackupWorst(['yellow', 'red', 'green']) === 'red' && forkBackupWorst(['green']) === 'green' && forkBackupWorst([]) === 'green');
 
 echo "\nThe report\n";
