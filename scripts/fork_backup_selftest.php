@@ -44,7 +44,7 @@ backup_test('a quarter is a quarter', forkBackupIsQuarter('2026-04-01', '2026-06
 backup_test('another period is not', !forkBackupIsQuarter('2026-04-01', '2026-05-31') && !forkBackupIsQuarter('2026-04-06', '2026-06-30') && !forkBackupIsQuarter('2026-02-01', '2026-04-30'));
 
 echo "\nHow often\n";
-backup_test('three frequencies', array_keys(forkBackupFrequencies()) === ['weekly', 'biweekly', 'monthly']);
+backup_test('four frequencies', array_keys(forkBackupFrequencies()) === ['weekly', 'biweekly', 'monthly', 'bimonthly'] && forkBackupFrequencies()['bimonthly'] === 'Every 2 months' && forkBackupFrequencyClean('bimonthly') === 'bimonthly');
 backup_test('an unknown frequency is weekly', forkBackupFrequencyClean('daily') === 'weekly' && forkBackupFrequencyClean('monthly') === 'monthly');
 backup_test('weekly: every week from the start', forkBackupDue('weekly', '2026-11-02', '2026-11-09', []) && forkBackupDue('weekly', '2026-11-02', '2026-11-02', []));
 backup_test('not before the service starts', !forkBackupDue('weekly', '2026-11-09', '2026-11-02', []) && !forkBackupDue('monthly', '2026-11-09', '2026-11-02', []));
@@ -58,6 +58,11 @@ backup_test('biweekly: across the clock change', forkBackupDue('biweekly', '2026
 backup_test('monthly: due until one is entered in the month', forkBackupDue('monthly', '2026-11-02', '2026-11-09', []) && forkBackupDue('monthly', '2026-11-02', '2026-11-30', []));
 backup_test('monthly: not again once done in the month', !forkBackupDue('monthly', '2026-11-02', '2026-11-16', ['2026-11-02']));
 backup_test('monthly: due again next month', forkBackupDue('monthly', '2026-11-02', '2026-12-07', ['2026-11-02']));
+backup_test('every 2 months: due with no check yet, from the start', forkBackupDue('bimonthly', '2026-11-02', '2026-11-02', []) && forkBackupDue('bimonthly', '2026-11-02', '2026-11-30', []) && !forkBackupDue('bimonthly', '2026-11-09', '2026-11-02', []));
+backup_test('every 2 months: not in the month of the last check nor the next', !forkBackupDue('bimonthly', '2026-09-07', '2026-09-21', ['2026-09-07']) && !forkBackupDue('bimonthly', '2026-09-07', '2026-10-05', ['2026-09-07']) && !forkBackupDue('bimonthly', '2026-09-07', '2026-10-26', ['2026-09-07']));
+backup_test('every 2 months: due from the second month after', forkBackupDue('bimonthly', '2026-09-07', '2026-11-02', ['2026-09-07']) && forkBackupDue('bimonthly', '2026-09-07', '2026-11-30', ['2026-09-07']));
+backup_test('every 2 months: a missed one stays due, counted from the last done', forkBackupDue('bimonthly', '2026-01-05', '2026-06-01', ['2026-01-05']) && !forkBackupDue('bimonthly', '2026-01-05', '2026-06-08', ['2026-01-05', '2026-05-04']));
+backup_test('every 2 months: across the year', forkBackupDue('bimonthly', '2026-11-02', '2027-01-04', ['2026-11-02']) && !forkBackupDue('bimonthly', '2026-11-02', '2026-12-07', ['2026-11-02']));
 backup_test('a week already done is always listed', forkBackupDue('monthly', '2026-11-02', '2026-11-02', ['2026-11-02']) && forkBackupDue('biweekly', '2026-11-02', '2026-11-09', ['2026-11-02', '2026-11-09']));
 
 echo "\nStatuses and colours\n";

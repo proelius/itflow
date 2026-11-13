@@ -29,7 +29,7 @@ function forkBackupMonday($date) {
 
 /** How often a client is checked. */
 function forkBackupFrequencies() {
-    return ['weekly' => 'Every week', 'biweekly' => 'Every 2 weeks', 'monthly' => 'Once a month'];
+    return ['weekly' => 'Every week', 'biweekly' => 'Every 2 weeks', 'monthly' => 'Once a month', 'bimonthly' => 'Every 2 months'];
 }
 
 function forkBackupFrequencyClean($value) {
@@ -95,7 +95,8 @@ function forkBackupWorst(array $states) {
  * Whether a client is to be checked in the week of $week (a Monday). $frequency, $anchor (the Monday the service
  * starts), $done_weeks: the Mondays a check was entered for. A week already done is always shown. Every week:
  * every week. Every two weeks: two weeks after the last check - and when one is missed it stays due. Once a month:
- * until one is entered in the calendar month.
+ * until one is entered in the calendar month. Every two months: from the second calendar month after the last check,
+ * and it stays due until one is entered.
  */
 function forkBackupDue($frequency, $anchor, $week, array $done_weeks) {
     if (in_array($week, $done_weeks, true)) {
@@ -113,6 +114,13 @@ function forkBackupDue($frequency, $anchor, $week, array $done_weeks) {
             }
         }
         return true;
+    }
+    if ($frequency === 'bimonthly') {
+        $before = array_filter($done_weeks, fn($done) => $done < $week);
+        if ($before) {
+            $months = fn($date) => intval(substr($date, 0, 4)) * 12 + intval(substr($date, 5, 2));
+            return $months($week) - $months(max($before)) >= 2;
+        }
     }
     if ($frequency === 'biweekly') {
         $before = array_filter($done_weeks, fn($done) => $done < $week);
