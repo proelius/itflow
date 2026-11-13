@@ -366,7 +366,7 @@ function forkHoursReportPdfRender(array $report) {
             <span style="font-size:13pt; font-weight:bold;">' . $e($title) . '</span></td>
     </tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
-    $pdf->Ln(2);
+    $pdf->Ln(10);
     $pdf->writeHTML('<span style="font-size:10pt; font-weight:bold;">' . $e($report['client_name']) . '</span>', true, false, true, false, '');
     $pdf->Ln(1);
     if (trim((string) $report['report_intro']) !== '') {
