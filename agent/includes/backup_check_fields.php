@@ -14,6 +14,7 @@ require_once __DIR__ . '/backup_common.php'; // the window does not load it by i
     <div class="col-md-8"><label class="form-label">Ticket <span class="text-secondary">(optional)</span></label>
         <select class="form-select" name="ticket_id" <?= $can_edit ? '' : 'disabled' ?>><option value="0">No ticket</option><?= backupOptions($tickets, $check['bk_ticket_id'] ?? 0) ?></select></div>
 </div>
+<?php if (!empty($service) && !$service['autonomous'] && !intval($check['bk_ticket_id'] ?? 0)) { ?><div class="alert alert-warning py-2 small mb-3"><i class="fas fa-ticket-alt me-2"></i>The technician may not act without the client's approval: if something fails, a ticket is opened and linked to this check when it is saved.</div><?php } ?>
 <?php if (!$check) { ?><div class="text-secondary small mb-3">The statuses start at OK: when everything is OK the line is green by itself; change what is not OK, then choose the colour and say why in the comment. The disks are those of the last check.</div><?php } ?>
 
 <?php foreach ($servers as $server_id => $server) {

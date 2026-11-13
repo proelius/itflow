@@ -494,6 +494,98 @@ function forkBackupTickets($client_id, $include = 0) {
     return $rows;
 }
 
+/** The parts of a line that are checked, as the lists name them - the key without bl_. */
+function forkBackupParts() {
+    return ['raid' => 'RAID', 'sys' => 'BKP SYS', 'data' => 'BKP DATA', 'cloud' => 'Cloud'];
+}
+
+/** The names of the parts that failed on a line of a saved check (the bl_ fields). */
+function forkBackupFailedParts(array $line) {
+    $failed = [];
+    foreach (forkBackupParts() as $key => $label) {
+        if (($line['bl_' . $key] ?? '') === 'fail') {
+            $failed[] = $label;
+        }
+    }
+    return $failed;
+}
+
+/**
+ * Whether a saved check needs a ticket opened for the client's approval: the technician may not act on his own,
+ * something failed on a line, and no ticket is linked to the check yet. $lines: the lines of the check (the bl_ fields).
+ */
+function forkBackupNeedsTicket($autonomous, array $lines, $ticket_id) {
+    if ($autonomous || intval($ticket_id) > 0) {
+        return false;
+    }
+    foreach ($lines as $line) {
+        if (forkBackupFailedParts($line)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** The subject and the details (HTML) of the ticket of a check that found a failure. $lines: the lines of the check. */
+function forkBackupTicketContent($week, array $lines) {
+    $e = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+    $date = date('d.m.Y', strtotime($week . ' 12:00:00'));
+    $items = '';
+    foreach ($lines as $line) {
+        $failed = forkBackupFailedParts($line);
+        if (!$failed) {
+            continue;
+        }
+        $items .= '<li><strong>' . $e($line['bl_server_name']) . '</strong> - ' . $e(implode(', ', $failed)) . ' failed'
+            . (trim((string) $line['bl_comment']) !== '' ? '<br>' . nl2br($e(trim((string) $line['bl_comment']))) : '') . '</li>';
+    }
+    return ["Backup check: failure in the week of $date",
+        "<p>The backup check of the week of $date found a failure. The client has to approve before the corrective action is taken.</p><ul>$items</ul>"];
+}
+
+/**
+ * Opens the ticket of a saved check that needs one (forkBackupNeedsTicket) and links it to the check: assigned to the
+ * technician who entered it, for the client, about the server's asset when only one server failed. Nothing is sent to
+ * the client. Returns ['id', 'reference'], or null when no ticket was needed.
+ */
+function forkBackupTicketOpen($client_id, $week, $user_id) {
+    global $mysqli;
+    $client_id = intval($client_id);
+    $service = forkBackupClient($client_id);
+    $check = forkBackupCheck($client_id, $week);
+    if (!$service || !$check || !forkBackupNeedsTicket($service['autonomous'], $check['lines'], $check['bk_ticket_id'])) {
+        return null;
+    }
+    [$subject, $details] = forkBackupTicketContent($week, $check['lines']);
+    $asset_id = 0;
+    $failed_servers = array_keys(array_filter($check['lines'], fn($line) => forkBackupFailedParts($line)));
+    if (count($failed_servers) === 1) {
+        $asset_id = intval(forkBackupServers($client_id)[$failed_servers[0]]['asset_id'] ?? 0);
+    }
+    $settings = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT config_ticket_prefix, config_ticket_default_billable FROM settings WHERE company_id = 1")) ?: [];
+    $prefix = (string) ($settings['config_ticket_prefix'] ?? '');
+    $assigned_to = ticketAgentId($user_id);
+    $status = $assigned_to ? TICKET_STATUS_OPEN : TICKET_STATUS_NEW;
+
+    // Atomically increment and get the new ticket number
+    mysqli_query($mysqli, "UPDATE settings SET config_ticket_next_number = LAST_INSERT_ID(config_ticket_next_number), config_ticket_next_number = config_ticket_next_number + 1 WHERE company_id = 1");
+    $ticket_number = mysqli_insert_id($mysqli);
+    mysqli_query($mysqli, "INSERT INTO tickets SET ticket_prefix = '" . escapeSql($prefix) . "', ticket_number = $ticket_number, ticket_source = 'Agent',
+        ticket_subject = '" . escapeSql($subject) . "', ticket_details = '" . mysqli_real_escape_string($mysqli, $details) . "', ticket_priority = 'High', ticket_status = $status,
+        ticket_billable = " . (intval($settings['config_ticket_default_billable'] ?? 0) ? 1 : 0) . ", ticket_created_by = " . intval($user_id) . ", ticket_assigned_to = $assigned_to,
+        ticket_asset_id = $asset_id, ticket_url_key = '" . randomString(32) . "', ticket_client_id = $client_id");
+    $ticket_id = intval(mysqli_insert_id($mysqli));
+    if (!$ticket_id) {
+        return null;
+    }
+    applyTicketSla($ticket_id);
+    mysqli_query($mysqli, "UPDATE fork_backup_checks SET bk_ticket_id = $ticket_id WHERE bk_id = " . intval($check['bk_id']));
+    logAudit("Ticket", "Create", "Backup check of the week of $week: ticket $prefix$ticket_number opened for the client's approval", $client_id, $ticket_id);
+    logTicketHistory($ticket_id, "Opened by the backup check of the week of $week");
+    triggerCustomAction('ticket_create', $ticket_id);
+    return ['id' => $ticket_id, 'reference' => $prefix . $ticket_number];
+}
+
 /**
  * Saves a client's check for a week. $lines: for each server id, the fields of the form (disk1, disk2, raid, sys,
  * data, cloud, second, state, comment). Returns [check_id, error] - the error says what to correct and nothing

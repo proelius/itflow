@@ -114,7 +114,9 @@ if (isset($_POST['save_backup_check'])) {
         redirect();
     }
     logAudit("Backup check", "Edit", "$session_name entered the backup check of the week of $week", $client_id, $check_id);
-    flashAlert("Check saved for the week of <strong>" . escapeHtml($week) . "</strong>");
+    // Something failed and the technician may not act without the client's approval: a ticket is opened and linked
+    $ticket = forkBackupTicketOpen($client_id, $week, $session_user_id);
+    flashAlert("Check saved for the week of <strong>" . escapeHtml($week) . "</strong>" . ($ticket ? " - ticket <strong>" . escapeHtml($ticket['reference']) . "</strong> opened for the client's approval" : ''));
     redirect("backup_checks.php?week=$week");
 
 }
