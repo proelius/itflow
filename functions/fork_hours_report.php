@@ -265,7 +265,7 @@ function forkHoursReportTexts($start, $end) {
     return i18n_with(client_language(), function () use ($start, $end) {
         return [
             t('Here is how your prepaid hours were used between {from} and {to}.', ['{from}' => i18n_date_value($start), '{to}' => i18n_date_value($end)]),
-            t('Thank you for your trust. Do not hesitate to contact us to renew your hours.'),
+            t('We remain at your disposal should you need any further information.'),
         ];
     });
 }
@@ -409,6 +409,9 @@ function forkHoursReportPdfRender(array $report) {
         $pdf->Ln(3);
         $pdf->writeHTML('<span>' . nl2br($e($report['report_conclusion'])) . '</span>', true, false, true, false, '');
     }
+    // The signature, in the colour of the header - the company's name is the one in the settings
+    $pdf->Ln(8);
+    $pdf->writeHTML('<span style="font-weight:bold; color:#0a58ca;">' . $e(t('The {company} team', ['{company}' => $company['company_name'] ?? ''])) . '</span>', true, false, true, false, '');
 
     $which = forkHoursReportIsQuarter($report['report_start'], $report['report_end'])
         ? substr($report['report_start'], 0, 4) . '-Q' . (intdiv(intval(substr($report['report_start'], 5, 2)) - 1, 3) + 1)
