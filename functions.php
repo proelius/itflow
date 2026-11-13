@@ -41,6 +41,7 @@ require_once __DIR__ . '/functions/audit_log.php';
 require_once __DIR__ . '/functions/sign_in.php';
 require_once __DIR__ . '/functions/app_log.php';
 require_once __DIR__ . '/functions/app.php';
+require_once __DIR__ . '/functions/pwa.php';
 require_once __DIR__ . '/functions/email.php';
 require_once __DIR__ . '/functions/email_preview.php';
 require_once __DIR__ . '/functions/payments.php';

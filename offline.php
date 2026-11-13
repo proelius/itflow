@@ -29,7 +29,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'unsafe-inline'")
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
-    <meta name="theme-color" content="#0d6efd">
+    <meta name="theme-color" content="#ffffff">
     <title><?= escapeHtml($app_name) ?> | <?= t('You are offline') ?></title>
     <style>
         :root { color-scheme: light dark; }
@@ -40,7 +40,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'unsafe-inline'")
             background: #f8f9fa; color: #212529;
         }
         main { max-width: 360px; }
-        img { width: 72px; height: 72px; border-radius: 16px; }
+        img { width: 72px; height: 72px; border-radius: 16px; box-shadow: 0 1px 4px rgba(0, 0, 0, .15); }
         h1 { font-size: 1.4rem; margin: 20px 0 8px; }
         p { margin: 0 0 24px; line-height: 1.5; color: #6c757d; }
         a {
@@ -55,7 +55,7 @@ header("Content-Security-Policy: default-src 'self'; style-src 'unsafe-inline'")
 </head>
 <body>
 <main>
-    <img src="/img/pwa/icon-192.png" alt="">
+    <img src="/app_icon.php?size=192" alt="">
     <h1><?= t('You are offline') ?></h1>
     <p><?= escapeHtml(t('{app} needs a network connection. Check your connection, then try again.', ['{app}' => $app_name])) ?></p>
     <?php /* An empty href reloads the address the agent was trying to open */ ?>

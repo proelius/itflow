@@ -9,9 +9,11 @@
  * Served from the site root so that its scope covers the whole application.
  */
 
-const CACHE = 'itflow-offline-v1';
+const CACHE = 'itflow-offline-v2';
 const OFFLINE_URL = '/offline.php';
-const OFFLINE_ASSETS = [OFFLINE_URL, '/img/pwa/icon-192.png'];
+// The company logo icon (app_icon.php), as offline.php shows it
+const OFFLINE_ICON = '/app_icon.php?size=192';
+const OFFLINE_ASSETS = [OFFLINE_URL, OFFLINE_ICON];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -33,9 +35,21 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const request = event.request;
 
-    // The offline page's icon, so the page looks right without a network
-    if (request.method === 'GET' && new URL(request.url).pathname === '/img/pwa/icon-192.png') {
-        event.respondWith(caches.match('/img/pwa/icon-192.png').then((cached) => cached || fetch(request)));
+    // The offline page's icon: from the network while there is one, keeping the copy up to
+    // date when the logo changes - the kept copy when there is none
+    const url = new URL(request.url);
+    if (request.method === 'GET' && url.origin === self.location.origin && url.pathname + url.search === OFFLINE_ICON) {
+        event.respondWith(
+            fetch(request)
+                .then((response) => {
+                    if (response.ok) {
+                        const copy = response.clone();
+                        caches.open(CACHE).then((cache) => cache.put(OFFLINE_ICON, copy));
+                    }
+                    return response;
+                })
+                .catch(() => caches.match(OFFLINE_ICON))
+        );
         return;
     }
 
