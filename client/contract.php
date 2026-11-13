@@ -181,16 +181,16 @@ $terms = [
                 </div>
                 <div class="itflow-portal-panel-body">
                     <div class="d-flex align-items-baseline justify-content-between gap-2">
-                        <span class="fs-4 fw-semibold"><?= escapeHtml(contractHoursText($hours['left'])) ?> <span class="fs-6 fw-normal text-body-secondary"><?= t('left') ?></span></span>
-                        <?php if ($hours['bought'] > 0) { ?><span class="small text-body-secondary"><?= t('{used} of {bought} used', ['{used}' => escapeHtml(contractHoursText($hours['used'])), '{bought}' => escapeHtml(contractHoursText($hours['bought']))]) ?></span><?php } ?>
+                        <span class="fs-4 fw-semibold"><?= escapeHtml(forkHoursDuration($hours['left'])) ?> <span class="fs-6 fw-normal text-body-secondary"><?= t('left') ?></span></span>
+                        <?php if ($hours['bought'] > 0) { ?><span class="small text-body-secondary"><?= t('{used} of {bought} used', ['{used}' => escapeHtml(forkHoursDuration($hours['used'])), '{bought}' => escapeHtml(forkHoursDuration($hours['bought']))]) ?></span><?php } ?>
                     </div>
                     <?php if ($hours['bought'] > 0) { ?>
-                        <progress class="itflow-hours-bar my-2" value="<?= escapeHtml((string) $hours['used']) ?>" max="<?= escapeHtml((string) $hours['bought']) ?>"><?= t('{used} used', ['{used}' => escapeHtml(contractHoursText($hours['used']))]) ?></progress>
+                        <progress class="itflow-hours-bar my-2" value="<?= escapeHtml((string) $hours['used']) ?>" max="<?= escapeHtml((string) $hours['bought']) ?>"><?= t('{used} used', ['{used}' => escapeHtml(forkHoursDuration($hours['used']))]) ?></progress>
                     <?php } ?>
                     <ul class="list-unstyled small text-body-secondary mb-0">
                         <?php if ($monthly > 0) { ?><li><?= t('{hours} included each month', ['{hours}' => escapeHtml(portalHoursWords($monthly))]) ?></li><?php } ?>
-                        <?php if ($hours['pending'] > 0) { ?><li><?= t('{hours} to use once the invoice is paid', ['{hours}' => escapeHtml(contractHoursText($hours['pending']))]) ?></li><?php } ?>
-                        <?php if ($hours['next_expiry'] !== '') { ?><li><?= t('{hours} to use by {date}', ['{hours}' => escapeHtml(contractHoursText($hours['next_expiry_hours'])), '{date}' => escapeHtml(i18n_date('M j, Y', strtotime($hours['next_expiry'])))]) ?></li><?php } ?>
+                        <?php if ($hours['pending'] > 0) { ?><li><?= t('{hours} to use once the invoice is paid', ['{hours}' => escapeHtml(forkHoursDuration($hours['pending']))]) ?></li><?php } ?>
+                        <?php if ($hours['next_expiry'] !== '') { ?><li><?= t('{hours} to use by {date}', ['{hours}' => escapeHtml(forkHoursDuration($hours['next_expiry_hours'])), '{date}' => escapeHtml(i18n_date('M j, Y', strtotime($hours['next_expiry'])))]) ?></li><?php } ?>
                         <li><?= t('Time on your tickets comes out of them; time beyond them is invoiced.') ?></li>
                     </ul>
                     <?php if ($hours_uses) { ?>
@@ -206,7 +206,7 @@ $terms = [
                                             <span class="text-body-secondary"><?= t('Ticket {number}', ['{number}' => escapeHtml($use['ticket_prefix'] . $use['ticket_number'])]) ?></span>
                                         <?php } ?>
                                     </span>
-                                    <span class="text-nowrap fw-semibold"><?= escapeHtml(contractHoursText($use['hours'])) ?></span>
+                                    <span class="text-nowrap fw-semibold"><?= escapeHtml(forkHoursDuration($use['hours'])) ?></span>
                                 </li>
                             <?php } ?>
                         </ul>

@@ -103,7 +103,7 @@ function contractsUrl(array $changes) {
                                     <span><?= intval($row['contract_auto_renew']) ? t('Renews {date}', ['{date}' => $end_text]) : t('Ends {date}', ['{date}' => $end_text]) ?></span>
                                 <?php } ?>
                                 <?php if ($hours_left) { ?>
-                                    <span><i class="fas fa-hourglass-half me-1"></i><?= t('{hours} prepaid left', ['{hours}' => escapeHtml(contractHoursText($hours_left['left']))]) ?></span>
+                                    <span><i class="fas fa-hourglass-half me-1"></i><?= t('{hours} prepaid left', ['{hours}' => escapeHtml(forkHoursDuration($hours_left['left']))]) ?></span>
                                 <?php } ?>
                             </span>
                         </span>

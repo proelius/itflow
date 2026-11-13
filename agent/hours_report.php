@@ -65,9 +65,9 @@ $recipients = billingEmailRecipients($client_id);
                         <tr>
                             <td><?= escapeHtml(forkHoursReportBlockName($block)) ?></td>
                             <td><?= escapeHtml($block['contract']) ?></td>
-                            <td class="text-end"><?= escapeHtml(forkHoursReportDuration($block['hours'])) ?></td>
-                            <td class="text-end"><?= escapeHtml(forkHoursReportDuration($block['period'])) ?></td>
-                            <td class="text-end fw-semibold"><?= escapeHtml(forkHoursReportDuration($block['left'])) ?><?= $block['lapsed'] ? ' <span class="text-secondary">(ran out)</span>' : '' ?></td>
+                            <td class="text-end"><?= escapeHtml(forkHoursDuration($block['hours'])) ?></td>
+                            <td class="text-end"><?= escapeHtml(forkHoursDuration($block['period'])) ?></td>
+                            <td class="text-end fw-semibold"><?= escapeHtml(forkHoursDuration($block['left'])) ?><?= $block['lapsed'] ? ' <span class="text-secondary">(ran out)</span>' : '' ?></td>
                             <td class="text-end"><?= $block['expires'] !== null ? escapeHtml($block['expires']) : '-' ?></td>
                         </tr>
                     <?php } ?>
@@ -75,7 +75,7 @@ $recipients = billingEmailRecipients($client_id);
                         <tr><td colspan="6" class="text-secondary text-center"><?= escapeHtml(forkHoursReportWords($report['report_start'], $report['report_end'])['no_hours']) ?></td></tr>
                     <?php } ?>
                     </tbody>
-                    <tfoot><tr class="fw-semibold"><td colspan="3" class="text-end">Total</td><td class="text-end"><?= escapeHtml(forkHoursReportDuration($data['used'])) ?></td><td class="text-end"><?= escapeHtml(forkHoursReportDuration($data['left'])) ?></td><td></td></tr></tfoot>
+                    <tfoot><tr class="fw-semibold"><td colspan="3" class="text-end">Total</td><td class="text-end"><?= escapeHtml(forkHoursDuration($data['used'])) ?></td><td class="text-end"><?= escapeHtml(forkHoursDuration($data['left'])) ?></td><td></td></tr></tfoot>
                 </table>
             </div>
 
@@ -89,7 +89,7 @@ $recipients = billingEmailRecipients($client_id);
                             <td><?= escapeHtml($line['date']) ?></td>
                             <td><?= escapeHtml($line['reference']) ?></td>
                             <td><input type="text" class="form-control form-control-sm" name="label[<?= $i ?>]" maxlength="250" value="<?= escapeHtml($line['label']) ?>" <?= $can_edit ? '' : 'readonly' ?>></td>
-                            <td class="text-end"><?= escapeHtml(forkHoursReportDuration($line['hours'])) ?></td>
+                            <td class="text-end"><?= escapeHtml(forkHoursDuration($line['hours'])) ?></td>
                         </tr>
                     <?php } ?>
                     <?php if (!$data['lines']) { ?>

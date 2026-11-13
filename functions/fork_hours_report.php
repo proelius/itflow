@@ -34,22 +34,6 @@ function forkHoursReportPeriod($today = null) {
     return ['start' => $start, 'end' => date('Y-m-t', strtotime(sprintf('%04d-%02d-01', $year, $first_month + 2))), 'year' => $year, 'quarter' => $quarter];
 }
 
-/**
- * A length of time in the report: the real time, not hundredths of an hour - "20 min", "1 h 05 min", "3 h". The hours are
- * kept as decimals (a slice of 5 minutes is 0.08 h), so they are put back to minutes, to the nearest one.
- */
-function forkHoursReportDuration($hours) {
-    $minutes = (int) round(floatval($hours) * 60);
-    $sign = $minutes < 0 ? '-' : '';
-    $minutes = abs($minutes);
-    $h = intdiv($minutes, 60);
-    $m = $minutes % 60;
-    if ($h === 0) {
-        return $sign . $m . ' min';
-    }
-    return $sign . $h . ' h' . ($m ? ' ' . sprintf('%02d', $m) . ' min' : '');
-}
-
 /** Whether a period is exactly a civil quarter: January-March, April-June, July-September or October-December. */
 function forkHoursReportIsQuarter($start, $end) {
     return preg_match('/^\d{4}-(01|04|07|10)-01$/', (string) $start) === 1
@@ -327,7 +311,7 @@ function forkHoursReportBlockName(array $block) {
     if ($block['month'] !== null) {
         return t('Hours included in {month}', ['{month}' => i18n_date('F Y', strtotime($block['month'] . '-01'))]);
     }
-    return trim((string) $block['note']) !== '' ? (string) $block['note'] : t('{hours} bought on {date}', ['{hours}' => forkHoursReportDuration($block['hours']), '{date}' => i18n_date_value($block['bought'])]);
+    return trim((string) $block['note']) !== '' ? (string) $block['note'] : t('{hours} bought on {date}', ['{hours}' => forkHoursDuration($block['hours']), '{date}' => i18n_date_value($block['bought'])]);
 }
 
 /** The report as a PDF, in the client's language - ['name', 'data']. */
@@ -387,15 +371,15 @@ function forkHoursReportPdfRender(array $report) {
         <td width="18%" align="right" style="' . $th . '">' . $e(mb_strtoupper($words['used'])) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Left'))) . '</td>
         <td width="16%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Expires'))) . '</td></tr></thead>';
     foreach ($data['blocks'] as $block) {
-        $html .= '<tr nobr="true"><td width="38%" style="' . $td . '">' . $e(forkHoursReportBlockName($block)) . '</td><td width="14%" align="right" style="' . $td . '">' . $e(forkHoursReportDuration($block['hours'])) . '</td>
-            <td width="18%" align="right" style="' . $td . '">' . $e(forkHoursReportDuration($block['period'])) . '</td><td width="14%" align="right" style="' . $td . '"><b>' . $e(forkHoursReportDuration($block['left'])) . '</b></td>
+        $html .= '<tr nobr="true"><td width="38%" style="' . $td . '">' . $e(forkHoursReportBlockName($block)) . '</td><td width="14%" align="right" style="' . $td . '">' . $e(forkHoursDuration($block['hours'])) . '</td>
+            <td width="18%" align="right" style="' . $td . '">' . $e(forkHoursDuration($block['period'])) . '</td><td width="14%" align="right" style="' . $td . '"><b>' . $e(forkHoursDuration($block['left'])) . '</b></td>
             <td width="16%" align="right" style="' . $td . '">' . ($block['expires'] !== null ? $e(i18n_date_value($block['expires'])) : '-') . '</td></tr>';
     }
     if (!$data['blocks']) {
         $html .= '<tr><td colspan="5" align="center" style="color:' . $grey . ';">' . $e($words['no_hours']) . '</td></tr>';
     }
-    $html .= '<tr><td colspan="2" align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e($words['total']) . '</b></td><td align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e(forkHoursReportDuration($data['used'])) . '</b></td>
-        <td align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e(forkHoursReportDuration($data['left'])) . '</b></td><td style="border-top:0.6px solid #adb5bd;"></td></tr></table>';
+    $html .= '<tr><td colspan="2" align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e($words['total']) . '</b></td><td align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e(forkHoursDuration($data['used'])) . '</b></td>
+        <td align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e(forkHoursDuration($data['left'])) . '</b></td><td style="border-top:0.6px solid #adb5bd;"></td></tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Ln(3);
 
@@ -405,7 +389,7 @@ function forkHoursReportPdfRender(array $report) {
         <td width="58%" style="' . $th . '">' . $e(mb_strtoupper(t('Description'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Hours'))) . '</td></tr></thead>';
     foreach ($data['lines'] as $line) {
         $html .= '<tr nobr="true"><td width="14%" style="' . $td . '">' . $e(i18n_date_value($line['date'])) . '</td><td width="14%" style="' . $td . '">' . $e($line['reference']) . '</td>
-            <td width="58%" style="' . $td . '">' . $e($line['label']) . '</td><td width="14%" align="right" style="' . $td . '">' . $e(forkHoursReportDuration($line['hours'])) . '</td></tr>';
+            <td width="58%" style="' . $td . '">' . $e($line['label']) . '</td><td width="14%" align="right" style="' . $td . '">' . $e(forkHoursDuration($line['hours'])) . '</td></tr>';
     }
     if (!$data['lines']) {
         $html .= '<tr><td colspan="4" align="center" style="color:' . $grey . ';">' . $e($words['no_tickets']) . '</td></tr>';
@@ -438,8 +422,8 @@ function forkHoursReportEmail(array $report) {
                 : t('Please find attached the report of your prepaid hours for the period {from} to {to}.', ['{from}' => billingEmailDate($report['report_start']), '{to}' => billingEmailDate($report['report_end'])])],
             'summary' => [
                 t('Period') => t('{from} to {to}', ['{from}' => billingEmailDate($report['report_start']), '{to}' => billingEmailDate($report['report_end'])]),
-                $words['used'] => forkHoursReportDuration($report['data']['used']),
-                t('Left') => forkHoursReportDuration($report['data']['left']),
+                $words['used'] => forkHoursDuration($report['data']['used']),
+                t('Left') => forkHoursDuration($report['data']['left']),
             ],
             'after' => [$contact_line],
             'footnote' => billingEmailFootnote($report['client_name']),

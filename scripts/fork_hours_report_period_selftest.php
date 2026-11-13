@@ -13,6 +13,7 @@ if (PHP_SAPI !== 'cli') {
 
 $itflow_dir = __DIR__ . '/..';
 require_once $itflow_dir . '/functions/i18n.php';
+require_once $itflow_dir . '/functions/fork_hours.php';
 require_once $itflow_dir . '/functions/fork_hours_report.php';
 i18n_set_language('en');
 
@@ -82,14 +83,15 @@ foreach (['Period {from} to {to}', 'Used in the period', 'Total used in the peri
 }
 
 echo "\nTime in the report: real time, not decimals\n";
-period_test('0.33 h is 20 min', forkHoursReportDuration(0.33) === '20 min');
-period_test('0.08 h is 5 min', forkHoursReportDuration(0.08) === '5 min');
-period_test('0.92 h is 55 min', forkHoursReportDuration(0.92) === '55 min');
-period_test('3.67 h is 3 h 40 min', forkHoursReportDuration(3.67) === '3 h 40 min');
-period_test('1.08 h is 1 h 05 min', forkHoursReportDuration(1.08) === '1 h 05 min');
-period_test('5 h is 5 h', forkHoursReportDuration(5) === '5 h');
-period_test('0 is 0 min', forkHoursReportDuration(0) === '0 min');
+period_test('0.33 h is 20 min', forkHoursDuration(0.33) === '20 min');
+period_test('0.08 h is 5 min', forkHoursDuration(0.08) === '5 min');
+period_test('0.92 h is 55 min', forkHoursDuration(0.92) === '55 min');
+period_test('3.67 h is 3 h 40 min', forkHoursDuration(3.67) === '3 h 40 min');
+period_test('1.08 h is 1 h 05 min', forkHoursDuration(1.08) === '1 h 05 min');
+period_test('5 h is 5 h', forkHoursDuration(5) === '5 h');
+period_test('0 is 0 min', forkHoursDuration(0) === '0 min');
 $fnsrc = $read('functions/fork_hours_report.php');
+period_test('the contract pages (agent and portal) show real time too', !preg_match('/contractHoursText\\(/', $read('agent/contract.php') . $read('agent/contracts.php') . $read('client/contract.php') . $read('client/contracts.php')));
 period_test('the report does not show hours in decimals any more', !str_contains($fnsrc . $read('agent/hours_report.php'), 'contractHoursText('));
 
 echo "\n$passed passed, $failed failed\n";

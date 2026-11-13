@@ -52,6 +52,22 @@ function forkHoursStepHours($seconds, $step, ?array $rules = null) {
     return round((int) round($seconds / ($step * 60)) * $step / 60, 2);
 }
 
+/**
+ * A length of time in the prepaid hours reports and on the contract pages: the real time, not hundredths of an hour - "20 min", "1 h 05 min", "3 h". The hours are
+ * kept as decimals (a slice of 5 minutes is 0.08 h), so they are put back to minutes, to the nearest one.
+ */
+function forkHoursDuration($hours) {
+    $minutes = (int) round(floatval($hours) * 60);
+    $sign = $minutes < 0 ? '-' : '';
+    $minutes = abs($minutes);
+    $h = intdiv($minutes, 60);
+    $m = $minutes % 60;
+    if ($h === 0) {
+        return $sign . $m . ' min';
+    }
+    return $sign . $h . ' h' . ($m ? ' ' . sprintf('%02d', $m) . ' min' : '');
+}
+
 /** The tables, made if they are not there yet. */
 function forkHoursEnsure() {
     global $mysqli;
