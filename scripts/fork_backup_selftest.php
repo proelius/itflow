@@ -176,6 +176,15 @@ backup_test('the menus link the pages', strpos(file_get_contents($itflow_dir . '
 $client_nav = file_get_contents($itflow_dir . '/agent/includes/client_side_nav.php');
 backup_test('the client menu entry is in Support, before Billing, behind the Support module only', ($at = strpos($client_nav, '/agent/backup_client.php')) !== false && $at < strpos($client_nav, '>BILLING<') && $at > strpos($client_nav, '>SUPPORT<') && substr_count($client_nav, '/agent/backup_client.php') === 1 && preg_match('/module_support"\) >= 1\) \{ \?>\s*<\?php if \(\$config_module_enable_ticketing != 1\)/', $client_nav) === 1);
 backup_test('servers are told from other assets', forkBackupIsServerType('Server') && forkBackupIsServerType('Virtual Machine') && forkBackupIsServerType('NAS') && !forkBackupIsServerType('Desktop') && !forkBackupIsServerType('Switch') && !forkBackupIsServerType(''));
+$list = file_get_contents($itflow_dir . '/agent/backup_checks.php');
+$modal = file_get_contents($itflow_dir . '/agent/modals/backup/backup_check.php');
+backup_test('the list of the week opens the check in a window, not the client page', strpos($list, 'ajax-modal') !== false && strpos($list, 'modals/backup/backup_check.php?client_id=') !== false && strpos($list, 'href="backup_check.php?client_id') === false);
+backup_test('the window checks the Support module and the client, and posts the same form', strpos($modal, "enforceUserPermission('module_support')") !== false && strpos($modal, 'enforceClientAccess()') !== false && strpos($modal, 'save_backup_check') !== false && strpos($modal, 'backup_check_fields.php') !== false && strpos(file_get_contents($itflow_dir . '/agent/backup_check.php'), 'backup_check_fields.php') !== false);
+$veeam = '';
+foreach (['functions/fork_backup.php', 'agent/backup_check.php', 'agent/includes/backup_check_fields.php', 'agent/modals/backup/backup_check.php', 'agent/post/backup.php', 'agent/backup_report.php'] as $file) {
+    $veeam .= file_get_contents($itflow_dir . '/' . $file);
+}
+backup_test('there is no Veeam version in the check', stripos($veeam, 'veeam') === false);
 backup_test('the tables are not in ITFlow\'s own database updates', strpos(file_get_contents($itflow_dir . '/db.sql'), 'fork_backup') === false && !glob($itflow_dir . '/admin/database_updates/*') === false);
 
 echo "\n$passed passed, $failed failed\n";

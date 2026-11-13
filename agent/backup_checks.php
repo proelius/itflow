@@ -53,7 +53,7 @@ $frequencies = forkBackupFrequencies();
                             <td><?= $row['done'] ? backupStateBadge($row['state']) : '<span class="badge bg-secondary">To do</span>' ?></td>
                             <td class="text-end">
                                 <?php if ($row['servers']) { ?>
-                                    <a class="btn btn-sm btn-primary" href="backup_check.php?client_id=<?= $row['client_id'] ?>&week=<?= $week ?>"><i class="fas fa-pen me-2"></i><?= $row['done'] ? 'Open' : 'Enter' ?></a>
+                                    <button type="button" class="btn btn-sm btn-primary ajax-modal" data-modal-size="xl" data-modal-url="modals/backup/backup_check.php?client_id=<?= $row['client_id'] ?>&week=<?= $week ?>"><i class="fas fa-pen me-2"></i><?= $row['done'] ? 'Open' : 'Enter' ?></button>
                                 <?php } else { ?>
                                     <a class="btn btn-sm btn-secondary" href="backup_client.php?client_id=<?= $row['client_id'] ?>">Servers</a>
                                 <?php } ?>

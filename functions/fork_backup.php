@@ -6,7 +6,7 @@
  * A client that has the service is listed in fork_backup_clients with how often it is checked (every week, every
  * two weeks, once a month) and the servers to check (fork_backup_servers, each tied to an ITFlow asset). The
  * technician enters a check for a client and a week: one line for each server (fork_backup_checks and
- * fork_backup_lines) with RAID, system and data backups, cloud, Veeam version, a comment, and a colour - green,
+ * fork_backup_lines) with RAID, system and data backups, cloud, a comment, and a colour - green,
  * yellow (a problem that was followed up) or red. A report for a client and a period (the last civil quarter is
  * suggested) is made by hand by an agent with the Financial module, with a comment typed each time, and kept as
  * a snapshot (fork_backup_reports). It is exported as a PDF, never sent by itself.
@@ -238,7 +238,6 @@ function forkBackupEnsure() {
         `bl_sys` varchar(10) NOT NULL DEFAULT 'na',
         `bl_data` varchar(10) NOT NULL DEFAULT 'na',
         `bl_cloud` varchar(10) NOT NULL DEFAULT 'na',
-        `bl_veeam` varchar(50) NOT NULL DEFAULT '',
         `bl_second` varchar(10) NOT NULL DEFAULT 'none',
         `bl_state` varchar(10) NOT NULL DEFAULT 'green',
         `bl_comment` text DEFAULT NULL,
@@ -475,7 +474,7 @@ function forkBackupTickets($client_id, $include = 0) {
 
 /**
  * Saves a client's check for a week. $lines: for each server id, the fields of the form (disk1, disk2, raid, sys,
- * data, cloud, veeam, second, state, comment). Returns [check_id, error] - the error says what to correct and nothing
+ * data, cloud, second, state, comment). Returns [check_id, error] - the error says what to correct and nothing
  * is saved.
  */
 function forkBackupCheckSave($client_id, $week, $user_id, $ticket_id, array $lines) {
@@ -505,7 +504,7 @@ function forkBackupCheckSave($client_id, $week, $user_id, $ticket_id, array $lin
             return [0, 'Say what happened on ' . $server['name'] . ' in its comment - it is ' . $state . '.'];
         }
         $clean[$server_id] = ['name' => $server['name'], 'disk1' => mb_substr(trim((string) ($line['disk1'] ?? '')), 0, 100), 'disk2' => mb_substr(trim((string) ($line['disk2'] ?? '')), 0, 100),
-            'raid' => $statuses[0], 'sys' => $statuses[1], 'data' => $statuses[2], 'cloud' => $statuses[3], 'veeam' => mb_substr(trim((string) ($line['veeam'] ?? '')), 0, 50),
+            'raid' => $statuses[0], 'sys' => $statuses[1], 'data' => $statuses[2], 'cloud' => $statuses[3],
             'second' => $second, 'state' => $state, 'comment' => $comment];
     }
     $existing = forkBackupCheck($client_id, $week);
@@ -520,7 +519,7 @@ function forkBackupCheckSave($client_id, $week, $user_id, $ticket_id, array $lin
     foreach ($clean as $server_id => $line) {
         mysqli_query($mysqli, "INSERT INTO fork_backup_lines SET bl_check_id = $check_id, bl_server_id = " . intval($server_id) . ", bl_server_name = '" . escapeSql($line['name']) . "',
             bl_disk1 = '" . escapeSql($line['disk1']) . "', bl_disk2 = '" . escapeSql($line['disk2']) . "', bl_raid = '{$line['raid']}', bl_sys = '{$line['sys']}', bl_data = '{$line['data']}',
-            bl_cloud = '{$line['cloud']}', bl_veeam = '" . escapeSql($line['veeam']) . "', bl_second = '{$line['second']}', bl_state = '{$line['state']}', bl_comment = '" . escapeSql($line['comment']) . "'");
+            bl_cloud = '{$line['cloud']}', bl_second = '{$line['second']}', bl_state = '{$line['state']}', bl_comment = '" . escapeSql($line['comment']) . "'");
     }
     return [$check_id, ''];
 }
