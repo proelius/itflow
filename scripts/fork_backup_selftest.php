@@ -185,6 +185,23 @@ foreach (['functions/fork_backup.php', 'agent/backup_check.php', 'agent/includes
     $veeam .= file_get_contents($itflow_dir . '/' . $file);
 }
 backup_test('there is no Veeam version in the check', stripos($veeam, 'veeam') === false);
+// The window loads fewer files than a page: draw the fields in a fresh process that loads only what the window loads
+$probe = tempnam(sys_get_temp_dir(), 'bkf');
+file_put_contents($probe, '<?php
+error_reporting(E_ALL); ini_set("display_errors", "1");
+function escapeHtml($v) { return htmlspecialchars((string) $v, ENT_QUOTES, "UTF-8"); }
+function lookupUserPermission($m) { return 3; }
+$_SESSION = ["csrf_token" => "t"];
+require ' . var_export($itflow_dir . '/functions/fork_backup.php', true) . ';
+$client_id = 7; $week = "2026-11-09"; $session_name = "Tech"; $can_edit = true; $check = null; $user = null;
+$servers = [3 => ["id" => 3, "asset_id" => 5, "name" => "SRV", "os" => "Windows Server 2022"]];
+$previous = [3 => ["bl_disk1" => "C: 1 / 2 Go", "bl_disk2" => ""]]; $tickets = [1 => "TCK-1 x"];
+$statuses = forkBackupStatuses(); $parts = ["raid" => "RAID", "sys" => "BKP SYS", "data" => "BKP DATA", "cloud" => "Cloud"];
+ob_start(); require ' . var_export($itflow_dir . '/agent/includes/backup_check_fields.php', true) . '; $html = ob_get_clean();
+echo str_contains($html, "line[3][raid]") && str_contains($html, "C: 1 / 2 Go") ? "DRAWN" : "EMPTY";');
+$out = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($probe) . ' 2>&1');
+unlink($probe);
+backup_test('the fields draw with only the files the window loads', trim($out) === 'DRAWN');
 backup_test('the tables are not in ITFlow\'s own database updates', strpos(file_get_contents($itflow_dir . '/db.sql'), 'fork_backup') === false && !glob($itflow_dir . '/admin/database_updates/*') === false);
 
 echo "\n$passed passed, $failed failed\n";

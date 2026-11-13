@@ -6,6 +6,8 @@
  * Expects $client_id, $week, $servers, $check, $previous, $can_edit, $tickets, $statuses, $parts, $user.
  */
 
+require_once __DIR__ . '/backup_common.php'; // the window does not load it by itself
+
 ?>
 <div class="row g-2 mb-3">
     <div class="col-md-4"><label class="form-label">Technician</label><input type="text" class="form-control" value="<?= escapeHtml($user['user_name'] ?? $session_name) ?>" disabled></div>
