@@ -1,13 +1,14 @@
 <?php
 
 /*
- * Quarterly report of a client's prepaid hours.
+ * Report of a client's prepaid hours, by default for the last civil quarter.
  *
  * An agent with the Financial module makes it by hand, for the last civil
- * quarter (January-March, April-June, July-September, October-December): the
+ * quarter (January-March, April-June, July-September, October-December) that is
+ * suggested - or for any other period, by changing the two dates: the
  * blocks of hours that were good in it, what was drawn from each, what is
  * left, and the tickets that took the hours. One report for each client and
- * quarter - the button opens the one made rather than making another; only an
+ * period - making it again for a period that has its report opens that one; only an
  * admin can make it again, which takes the edits away. The agent can change
  * the introduction, the conclusion and each ticket's wording, but not the
  * numbers. Sent to the client's invoice contacts as a PDF, in the client's
@@ -31,6 +32,42 @@ function forkHoursReportPeriod($today = null) {
     $first_month = ($quarter - 1) * 3 + 1;
     $start = sprintf('%04d-%02d-01', $year, $first_month);
     return ['start' => $start, 'end' => date('Y-m-t', strtotime(sprintf('%04d-%02d-01', $year, $first_month + 2))), 'year' => $year, 'quarter' => $quarter];
+}
+
+/** The company's name without its legal form at the end ("Proxycore Sàrl" gives "Proxycore") - for the signature. */
+function forkHoursReportCompanyShort($name) {
+    $short = trim(preg_replace('/[\s,]+(s[àa]rl|sa|ag|gmbh|sas|sasu|eurl|ltd|llc|inc|bv|srl)\.?$/iu', '', trim((string) $name)));
+    return $short !== '' ? $short : trim((string) $name);
+}
+
+/** Whether a period is exactly a civil quarter: January-March, April-June, July-September or October-December. */
+function forkHoursReportIsQuarter($start, $end) {
+    return preg_match('/^\d{4}-(01|04|07|10)-01$/', (string) $start) === 1
+        && $end === date('Y-m-t', strtotime($start . ' +2 months'));
+}
+
+/** A date as 'Y-m-d' when it is a real one, else null. */
+function forkHoursReportDate($value) {
+    $value = trim((string) $value);
+    $date = DateTime::createFromFormat('!Y-m-d', $value);
+    return $date && $date->format('Y-m-d') === $value ? $value : null;
+}
+
+/**
+ * The period of a report from the two dates of the form: [start, end, error]. Empty dates give the last civil quarter,
+ * and the error says what to correct (the dates are not dates, or the end is before the start).
+ */
+function forkHoursReportPeriodFrom($start, $end, $today = null) {
+    if (trim((string) $start) === '' && trim((string) $end) === '') {
+        $period = forkHoursReportPeriod($today);
+        return [$period['start'], $period['end'], ''];
+    }
+    $start = forkHoursReportDate($start);
+    $end = forkHoursReportDate($end);
+    if ($start === null || $end === null || $end < $start) {
+        return ['', '', 'Give a period that starts before it ends.'];
+    }
+    return [$start, $end, ''];
 }
 
 /**
@@ -125,13 +162,36 @@ function forkHoursReportEnsure() {
         `report_sent_by` int(11) NOT NULL DEFAULT 0,
         `report_sent_to` text DEFAULT NULL,
         PRIMARY KEY (`report_id`),
-        UNIQUE KEY `report_client_period` (`report_client_id`, `report_start`)
+        UNIQUE KEY `report_client_period` (`report_client_id`, `report_start`, `report_end`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+    // A table made when a report was one for each quarter: its key was the client and the start only. A period can now be
+    // chosen, so the key is the client, the start and the end (the fork's own table, not an ITFlow one)
+    $columns = mysqli_fetch_all(mysqli_query($mysqli, "SHOW INDEX FROM `fork_hours_reports` WHERE Key_name = 'report_client_period'"), MYSQLI_ASSOC);
+    if (count($columns) === 2) {
+        mysqli_query($mysqli, "ALTER TABLE `fork_hours_reports` DROP INDEX `report_client_period`, ADD UNIQUE KEY `report_client_period` (`report_client_id`, `report_start`, `report_end`)");
+    }
 }
 
-/** "Quarter 3 2026", in the language in force. */
-function forkHoursReportTitle($start) {
+/**
+ * "Quarter 3 2026" in the language in force - or, for another period (when $end is given and it is not a civil
+ * quarter), "Period from 01.04.2026 to 15.05.2026".
+ */
+function forkHoursReportTitle($start, $end = null) {
+    if ($end !== null && !forkHoursReportIsQuarter($start, $end)) {
+        return t('Period {from} to {to}', ['{from}' => i18n_date_value($start), '{to}' => i18n_date_value($end)]);
+    }
     return t('Quarter {quarter} {year}', ['{quarter}' => intdiv(intval(substr($start, 5, 2)) - 1, 3) + 1, '{year}' => substr($start, 0, 4)]);
+}
+
+/**
+ * The words of the report that say "this quarter", in the language in force: for a civil quarter they are the ones
+ * the reports have always had; for another period they say "the period".
+ */
+function forkHoursReportWords($start, $end) {
+    if (forkHoursReportIsQuarter($start, $end)) {
+        return ['used' => t('Used this quarter'), 'total' => t('Total used this quarter'), 'no_hours' => t('No prepaid hours this quarter.'), 'no_tickets' => t('No ticket drew hours this quarter.')];
+    }
+    return ['used' => t('Used in the period'), 'total' => t('Total used in the period'), 'no_hours' => t('No prepaid hours in this period.'), 'no_tickets' => t('No ticket drew hours in this period.')];
 }
 
 /** A client's report row, by id - or null. */
@@ -146,11 +206,12 @@ function forkHoursReportRow($report_id) {
     return $row;
 }
 
-/** The report a client has for a quarter starting $start - or null. */
-function forkHoursReportFor($client_id, $start) {
+/** The report a client has for the period from $start to $end ($end empty: the one starting $start) - or null. */
+function forkHoursReportFor($client_id, $start, $end = null) {
     global $mysqli;
     forkHoursReportEnsure();
-    $id = intval(mysqli_fetch_row(mysqli_query($mysqli, "SELECT report_id FROM fork_hours_reports WHERE report_client_id = " . intval($client_id) . " AND report_start = '" . escapeSql($start) . "'"))[0] ?? 0);
+    $id = intval(mysqli_fetch_row(mysqli_query($mysqli, "SELECT report_id FROM fork_hours_reports WHERE report_client_id = " . intval($client_id) . " AND report_start = '" . escapeSql($start) . "'"
+        . ($end !== null ? " AND report_end = '" . escapeSql($end) . "'" : '') . " ORDER BY report_end DESC LIMIT 1"))[0] ?? 0);
     return $id ? forkHoursReportRow($id) : null;
 }
 
@@ -210,12 +271,12 @@ function forkHoursReportTexts($start, $end) {
     return i18n_with(client_language(), function () use ($start, $end) {
         return [
             t('Here is how your prepaid hours were used between {from} and {to}.', ['{from}' => i18n_date_value($start), '{to}' => i18n_date_value($end)]),
-            t('Thank you for your trust. Do not hesitate to contact us to renew your hours.'),
+            t('We remain at your disposal should you need any further information. Thank you for your trust.'),
         ];
     });
 }
 
-/** Make the report for the last quarter. Its id, or 0 when one exists already. */
+/** Make the report for a period ($period: start, end). Its id, or 0 when one exists already for it. */
 function forkHoursReportCreate($client_id, array $period, $user_id) {
     global $mysqli;
     forkHoursReportEnsure();
@@ -256,7 +317,7 @@ function forkHoursReportBlockName(array $block) {
     if ($block['month'] !== null) {
         return t('Hours included in {month}', ['{month}' => i18n_date('F Y', strtotime($block['month'] . '-01'))]);
     }
-    return trim((string) $block['note']) !== '' ? (string) $block['note'] : t('{hours} bought on {date}', ['{hours}' => contractHoursText($block['hours']), '{date}' => i18n_date_value($block['bought'])]);
+    return trim((string) $block['note']) !== '' ? (string) $block['note'] : t('{hours} bought on {date}', ['{hours}' => forkHoursDuration($block['hours']), '{date}' => i18n_date_value($block['bought'])]);
 }
 
 /** The report as a PDF, in the client's language - ['name', 'data']. */
@@ -267,6 +328,7 @@ function forkHoursReportPdf(array $report) {
 }
 
 function forkHoursReportPdfRender(array $report) {
+    global $config_invoice_show_tax_id;
     billingPdfConfig();
     $company = billingCompany();
     $data = $report['data'];
@@ -276,7 +338,8 @@ function forkHoursReportPdfRender(array $report) {
     $grey = '#6c757d';
     $th = 'font-size:6.5pt; color:' . $grey . '; font-weight:bold; border-bottom:0.6px solid #adb5bd;';
     $td = 'border-bottom:0.3px solid #dee2e6;';
-    $title = forkHoursReportTitle($report['report_start']);
+    $title = forkHoursReportTitle($report['report_start'], $report['report_end']);
+    $words = forkHoursReportWords($report['report_start'], $report['report_end']);
 
     $format = in_array($company['company_country'] ?? '', ['United States', 'USA', 'US', 'Canada'], true) ? 'LETTER' : 'A4';
     $pdf = new BillingPdf('P', 'mm', $format, true, 'UTF-8', false);
@@ -294,36 +357,44 @@ function forkHoursReportPdfRender(array $report) {
     $pdf->SetFont('dejavusans', '', 8.5);
     $pdf->SetTextColor(33, 37, 41);
 
+    // Who it is from - as on the invoices (functions/billing_pdf.php)
+    $from_lines = array_filter([
+        formatAddress($company['company_address'] ?? '', $company['company_city'] ?? '', $company['company_state'] ?? '', $company['company_zip'] ?? '', $company['company_country'] ?? '', "\n"),
+        implode('  ·  ', array_filter([$company['company_email'] ?? '', $company['phone_display'] ?? ''])),
+        $company['company_website'] ?? '',
+        !empty($config_invoice_show_tax_id) && !empty($company['company_tax_id']) ? t('Tax ID: {id}', ['{id}' => $company['company_tax_id']]) : '',
+    ]);
+    $logo = !empty($company['logo_path']) ? '<img src="' . $e($company['logo_path']) . '" height="42"><br>' : '';
+
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
-        <td width="55%"><span style="font-size:12pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span></td>
-        <td width="45%" align="right"><span style="font-size:8pt; color:#0a58ca; font-weight:bold; letter-spacing:2px;">' . $e(mb_strtoupper(t('Prepaid hours report'))) . '</span><br>
-            <span style="font-size:13pt; font-weight:bold;">' . $e($title) . '</span><br>
-            <span style="font-size:8pt; color:' . $grey . ';">' . $e(t('{from} to {to}', ['{from}' => i18n_date_value($report['report_start']), '{to}' => i18n_date_value($report['report_end'])])) . '</span></td>
+        <td width="38%">' . $logo . '<span style="font-size:12pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span><br><span style="font-size:7.5pt; color:' . $grey . '; line-height:1.4;">' . nl2br($e(implode("\n", $from_lines))) . '</span></td>
+        <td width="62%" align="right"><span style="font-size:13pt; color:#0a58ca; font-weight:bold; letter-spacing:0.5px;">' . $e(mb_strtoupper(t('Prepaid hours report'))) . '</span><br>
+            <span style="font-size:8pt; font-weight:bold;">' . $e($title) . '</span></td>
     </tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
-    $pdf->Ln(2);
+    $pdf->Ln(10);
     $pdf->writeHTML('<span style="font-size:10pt; font-weight:bold;">' . $e($report['client_name']) . '</span>', true, false, true, false, '');
     $pdf->Ln(1);
     if (trim((string) $report['report_intro']) !== '') {
         $pdf->writeHTML('<span>' . nl2br($e($report['report_intro'])) . '</span>', true, false, true, false, '');
-        $pdf->Ln(2);
+        $pdf->Ln(6);
     }
 
     // The blocks of hours
     $html = '<table cellpadding="4" cellspacing="0" width="100%"><thead><tr>
         <td width="38%" style="' . $th . '">' . $e(mb_strtoupper(t('Hours'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Prepaid'))) . '</td>
-        <td width="18%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Used this quarter'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Left'))) . '</td>
+        <td width="18%" align="right" style="' . $th . '">' . $e(mb_strtoupper($words['used'])) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Left'))) . '</td>
         <td width="16%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Expires'))) . '</td></tr></thead>';
     foreach ($data['blocks'] as $block) {
-        $html .= '<tr nobr="true"><td width="38%" style="' . $td . '">' . $e(forkHoursReportBlockName($block)) . '</td><td width="14%" align="right" style="' . $td . '">' . $e(contractHoursText($block['hours'])) . '</td>
-            <td width="18%" align="right" style="' . $td . '">' . $e(contractHoursText($block['period'])) . '</td><td width="14%" align="right" style="' . $td . '"><b>' . $e(contractHoursText($block['left'])) . '</b></td>
+        $html .= '<tr nobr="true"><td width="38%" style="' . $td . '">' . $e(forkHoursReportBlockName($block)) . '</td><td width="14%" align="right" style="' . $td . '">' . $e(forkHoursDuration($block['hours'])) . '</td>
+            <td width="18%" align="right" style="' . $td . '">' . $e(forkHoursDuration($block['period'])) . '</td><td width="14%" align="right" style="' . $td . '"><b>' . $e(forkHoursDuration($block['left'])) . '</b></td>
             <td width="16%" align="right" style="' . $td . '">' . ($block['expires'] !== null ? $e(i18n_date_value($block['expires'])) : '-') . '</td></tr>';
     }
     if (!$data['blocks']) {
-        $html .= '<tr><td colspan="5" align="center" style="color:' . $grey . ';">' . $e(t('No prepaid hours this quarter.')) . '</td></tr>';
+        $html .= '<tr><td colspan="5" align="center" style="color:' . $grey . ';">' . $e($words['no_hours']) . '</td></tr>';
     }
-    $html .= '<tr><td colspan="2" align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e(t('Total used this quarter')) . '</b></td><td align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e(contractHoursText($data['used'])) . '</b></td>
-        <td align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e(contractHoursText($data['left'])) . '</b></td><td style="border-top:0.6px solid #adb5bd;"></td></tr></table>';
+    $html .= '<tr><td colspan="2" align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e($words['total']) . '</b></td><td align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e(forkHoursDuration($data['used'])) . '</b></td>
+        <td align="right" style="border-top:0.6px solid #adb5bd;"><b>' . $e(forkHoursDuration($data['left'])) . '</b></td><td style="border-top:0.6px solid #adb5bd;"></td></tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Ln(3);
 
@@ -333,10 +404,10 @@ function forkHoursReportPdfRender(array $report) {
         <td width="58%" style="' . $th . '">' . $e(mb_strtoupper(t('Description'))) . '</td><td width="14%" align="right" style="' . $th . '">' . $e(mb_strtoupper(t('Hours'))) . '</td></tr></thead>';
     foreach ($data['lines'] as $line) {
         $html .= '<tr nobr="true"><td width="14%" style="' . $td . '">' . $e(i18n_date_value($line['date'])) . '</td><td width="14%" style="' . $td . '">' . $e($line['reference']) . '</td>
-            <td width="58%" style="' . $td . '">' . $e($line['label']) . '</td><td width="14%" align="right" style="' . $td . '">' . $e(contractHoursText($line['hours'])) . '</td></tr>';
+            <td width="58%" style="' . $td . '">' . $e($line['label']) . '</td><td width="14%" align="right" style="' . $td . '">' . $e(forkHoursDuration($line['hours'])) . '</td></tr>';
     }
     if (!$data['lines']) {
-        $html .= '<tr><td colspan="4" align="center" style="color:' . $grey . ';">' . $e(t('No ticket drew hours this quarter.')) . '</td></tr>';
+        $html .= '<tr><td colspan="4" align="center" style="color:' . $grey . ';">' . $e($words['no_tickets']) . '</td></tr>';
     }
     $html .= '</table>';
     $pdf->writeHTML($html, true, false, true, false, '');
@@ -344,24 +415,33 @@ function forkHoursReportPdfRender(array $report) {
         $pdf->Ln(3);
         $pdf->writeHTML('<span>' . nl2br($e($report['report_conclusion'])) . '</span>', true, false, true, false, '');
     }
+    // The signature, in the colour of the header - the company's name is the one in the settings
+    $pdf->Ln(8);
+    $pdf->writeHTML('<span style="font-size:9.5pt; font-weight:bold; color:#0a58ca;">' . $e(t('The {company} team', ['{company}' => forkHoursReportCompanyShort($company['company_name'] ?? '')])) . '</span>', true, false, true, false, '');
 
-    $name = preg_replace('/[^A-Za-z0-9_\-]+/', '_', trim($report['report_end'] . '_' . $report['client_name'] . '_Prepaid_hours_' . substr($report['report_start'], 0, 4) . '-Q' . (intdiv(intval(substr($report['report_start'], 5, 2)) - 1, 3) + 1), '_')) . '.pdf';
+    $which = forkHoursReportIsQuarter($report['report_start'], $report['report_end'])
+        ? substr($report['report_start'], 0, 4) . '-Q' . (intdiv(intval(substr($report['report_start'], 5, 2)) - 1, 3) + 1)
+        : $report['report_start'] . '_' . $report['report_end'];
+    $name = preg_replace('/[^A-Za-z0-9_\-]+/', '_', trim($report['report_end'] . '_' . $report['client_name'] . '_Prepaid_hours_' . $which, '_')) . '.pdf';
     return ['name' => $name, 'data' => $pdf->Output($name, 'S')];
 }
 
 /** The email that carries the report - [subject, email], in the client's language. */
 function forkHoursReportEmail(array $report) {
     return billingEmailInClientLanguage(function () use ($report) {
-        $title = forkHoursReportTitle($report['report_start']);
+        $title = forkHoursReportTitle($report['report_start'], $report['report_end']);
+        $quarter = forkHoursReportIsQuarter($report['report_start'], $report['report_end']);
+        $words = forkHoursReportWords($report['report_start'], $report['report_end']);
         $company = billingCompany();
         $contact_line = !empty($company['phone_display']) ? t('Questions? Reply to this email or call us on {phone}.', ['{phone}' => $company['phone_display']]) : t('Questions? Reply to this email.');
         return [t('Prepaid hours report - {quarter}', ['{quarter}' => $title]), [
             'kind' => t('Prepaid hours'), 'tone' => 'primary', 'title' => t('Prepaid hours report - {quarter}', ['{quarter}' => $title]),
-            'intro' => [t('Please find attached the report of your prepaid hours for {quarter}.', ['{quarter}' => $title])],
+            'intro' => [$quarter ? t('Please find attached the report of your prepaid hours for {quarter}.', ['{quarter}' => $title])
+                : t('Please find attached the report of your prepaid hours for the period {from} to {to}.', ['{from}' => billingEmailDate($report['report_start']), '{to}' => billingEmailDate($report['report_end'])])],
             'summary' => [
                 t('Period') => t('{from} to {to}', ['{from}' => billingEmailDate($report['report_start']), '{to}' => billingEmailDate($report['report_end'])]),
-                t('Used this quarter') => contractHoursText($report['data']['used']),
-                t('Left') => contractHoursText($report['data']['left']),
+                $words['used'] => forkHoursDuration($report['data']['used']),
+                t('Left') => forkHoursDuration($report['data']['left']),
             ],
             'after' => [$contact_line],
             'footnote' => billingEmailFootnote($report['client_name']),

@@ -256,7 +256,7 @@ $csrf = $_SESSION['csrf_token'];
                                     <?php if (isset($hours_left[$contract_id])) {
                                         $left = $hours_left[$contract_id]['left'];
                                         $low = $row['contract_status'] === 'Active' && ($left <= 0 || $left < floatval($row['contract_hours_alert'] ?? 0)); ?>
-                                        · <span class="<?= $low ? 'text-warning-emphasis' : '' ?>" title="Prepaid hours left, of <?= escapeHtml(contractHoursText($hours_left[$contract_id]['bought'])) ?>" data-contract-hours-chip><i class="fas fa-fw fa-hourglass-half"></i><?= escapeHtml(contractHoursText($left)) ?> left</span>
+                                        · <span class="<?= $low ? 'text-warning-emphasis' : '' ?>" title="Prepaid hours left, of <?= escapeHtml(forkHoursDuration($hours_left[$contract_id]['bought'])) ?>" data-contract-hours-chip><i class="fas fa-fw fa-hourglass-half"></i><?= escapeHtml(forkHoursDuration($left)) ?> left</span>
                                     <?php } ?>
                                 </div>
                             </div>

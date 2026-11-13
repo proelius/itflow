@@ -457,10 +457,10 @@ if (!$contract || ($client_url && intval($contract['contract_client_id']) !== in
                         <div class="row g-3 align-items-end mb-3">
                             <div class="col-sm-5">
                                 <div class="small text-body-secondary text-uppercase fw-semibold">Left</div>
-                                <div class="itflow-contract-hours-left <?= $hours_low ? 'text-warning-emphasis' : '' ?>" data-contract-hours-left><?= escapeHtml(contractHoursText($hours['left'])) ?></div>
+                                <div class="itflow-contract-hours-left <?= $hours_low ? 'text-warning-emphasis' : '' ?>" data-contract-hours-left><?= escapeHtml(forkHoursDuration($hours['left'])) ?></div>
                                 <div class="small text-body-secondary">
                                     <?php if ($hours['bought'] > 0) { ?>
-                                        Of <?= escapeHtml(contractHoursText($hours['bought'])) ?> &middot; <?= escapeHtml(contractHoursText($hours['used'])) ?> used
+                                        Of <?= escapeHtml(forkHoursDuration($hours['bought'])) ?> &middot; <?= escapeHtml(forkHoursDuration($hours['used'])) ?> used
                                     <?php } else { ?>
                                         No hours to draw from<?= $monthly > 0 && $status === 'Draft' ? ' until it is active' : '' ?>
                                     <?php } ?>
@@ -477,11 +477,11 @@ if (!$contract || ($client_url && intval($contract['contract_client_id']) !== in
                                         <li><i class="fas fa-fw fa-redo me-1"></i><?= escapeHtml(contractHoursWords($monthly)) ?> included each month, for that month only</li>
                                     <?php } ?>
                                     <?php if ($hours['next_expiry'] !== '') { ?>
-                                        <li><i class="fas fa-fw fa-calendar-times me-1"></i><?= escapeHtml(contractHoursText($hours['next_expiry_hours'])) ?> run out on <?= escapeHtml(date('M j, Y', strtotime($hours['next_expiry']))) ?></li>
+                                        <li><i class="fas fa-fw fa-calendar-times me-1"></i><?= escapeHtml(forkHoursDuration($hours['next_expiry_hours'])) ?> run out on <?= escapeHtml(date('M j, Y', strtotime($hours['next_expiry']))) ?></li>
                                     <?php } ?>
-                                    <li><i class="fas fa-fw fa-bell me-1"></i><?= $hours_alert > 0 ? 'The owner is told under ' . escapeHtml(contractHoursText($hours_alert)) . ' left' : 'No one is told when they run low' ?></li>
+                                    <li><i class="fas fa-fw fa-bell me-1"></i><?= $hours_alert > 0 ? 'The owner is told under ' . escapeHtml(forkHoursDuration($hours_alert)) . ' left' : 'No one is told when they run low' ?></li>
                                     <?php if ($hours['lapsed'] > 0) { ?>
-                                        <li><i class="fas fa-fw fa-hourglass-end me-1"></i><?= escapeHtml(contractHoursText($hours['lapsed'])) ?> ran out unused</li>
+                                        <li><i class="fas fa-fw fa-hourglass-end me-1"></i><?= escapeHtml(forkHoursDuration($hours['lapsed'])) ?> ran out unused</li>
                                     <?php } ?>
                                 </ul>
                             </div>
@@ -512,7 +512,7 @@ if (!$contract || ($client_url && intval($contract['contract_client_id']) !== in
                                         $what = $block['contract_block_note'] ?: ($block['contract_block_month'] ? 'Included hours' : 'Bought'); ?>
                                         <tr class="<?= $block['expired'] ? 'opacity-50' : '' ?>">
                                             <td class="min-w-0">
-                                                <span class="fw-semibold"><?= escapeHtml(contractHoursText($block['contract_block_hours'])) ?></span>
+                                                <span class="fw-semibold"><?= escapeHtml(forkHoursDuration($block['contract_block_hours'])) ?></span>
                                                 <span class="small text-body-secondary ms-1"><?= escapeHtml($what) ?></span>
                                                 <?php if ($block['expired']) { ?><span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis fw-normal ms-1">Ran out</span><?php } ?>
                                                 <?php if ($block['pending']) { ?><span class="badge rounded-pill bg-warning-subtle text-warning-emphasis fw-normal ms-1">Waits for payment</span><?php } ?>
@@ -521,8 +521,8 @@ if (!$contract || ($client_url && intval($contract['contract_client_id']) !== in
                                             <td class="small text-nowrap d-none d-md-table-cell">
                                                 <?= escapeHtml(date('M j, Y', strtotime($block['contract_block_bought']))) ?> &ndash; <?= $block['contract_block_expires'] ? escapeHtml(date('M j, Y', strtotime($block['contract_block_expires']))) : 'no end' ?>
                                             </td>
-                                            <td class="text-end text-nowrap"><?= escapeHtml(contractHoursText($block['used'])) ?></td>
-                                            <td class="text-end text-nowrap fw-semibold"><?= escapeHtml(contractHoursText($block['left'])) ?></td>
+                                            <td class="text-end text-nowrap"><?= escapeHtml(forkHoursDuration($block['used'])) ?></td>
+                                            <td class="text-end text-nowrap fw-semibold"><?= escapeHtml(forkHoursDuration($block['left'])) ?></td>
                                             <td class="small text-nowrap d-none d-sm-table-cell ps-3">
                                                 <?php if (intval($block['contract_block_invoice_id']) && $block['invoice_number'] !== null) { ?>
                                                     <a href="invoice.php?client_id=<?= $client_id ?>&invoice_id=<?= intval($block['contract_block_invoice_id']) ?>"><?= escapeHtml(billingNumber('invoice', $block)) ?></a>
@@ -537,7 +537,7 @@ if (!$contract || ($client_url && intval($contract['contract_client_id']) !== in
                                                 <td class="text-end">
                                                     <?php if (!intval($block['uses'])) { ?>
                                                         <a class="btn btn-sm btn-link text-danger p-0 confirm-link" href="post.php?delete_contract_block=<?= $block_id ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" title="Delete these hours"
-                                                            data-confirm-title="Delete <?= escapeHtml(contractHoursText($block['contract_block_hours'])) ?>?" data-confirm-text="Nothing was drawn from them.<?= intval($block['contract_block_invoice_id']) ? ' Their invoice stays - void it if it should go too.' : '' ?>" data-confirm-button="Delete"><i class="fas fa-fw fa-trash-alt"></i></a>
+                                                            data-confirm-title="Delete <?= escapeHtml(forkHoursDuration($block['contract_block_hours'])) ?>?" data-confirm-text="Nothing was drawn from them.<?= intval($block['contract_block_invoice_id']) ? ' Their invoice stays - void it if it should go too.' : '' ?>" data-confirm-button="Delete"><i class="fas fa-fw fa-trash-alt"></i></a>
                                                     <?php } ?>
                                                 </td>
                                             <?php } ?>
@@ -564,10 +564,10 @@ if (!$contract || ($client_url && intval($contract['contract_client_id']) !== in
                                                 <?= intval($use['ticket_invoice_id']) ? ' &middot; invoiced' : '' ?>
                                             </div>
                                         </div>
-                                        <span class="fw-semibold text-nowrap"><?= escapeHtml(contractHoursText($use['hours'])) ?></span>
+                                        <span class="fw-semibold text-nowrap"><?= escapeHtml(forkHoursDuration($use['hours'])) ?></span>
                                         <?php if ($can_edit && !intval($use['ticket_invoice_id'])) { ?>
                                             <a class="btn btn-sm btn-outline-secondary confirm-link" href="post.php?put_back_contract_hours=<?= intval($use['ticket_id']) ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" title="Put the hours back"
-                                                data-confirm-title="Put <?= escapeHtml($reference) ?> back?" data-confirm-text="Its <?= escapeHtml(contractHoursText($use['hours'])) ?> go back on the prepaid hours, and the ticket goes to Unbilled Time to bill as usual. Tonight's draw leaves it alone." data-confirm-button="Put back"><i class="fas fa-fw fa-undo"></i></a>
+                                                data-confirm-title="Put <?= escapeHtml($reference) ?> back?" data-confirm-text="Its <?= escapeHtml(forkHoursDuration($use['hours'])) ?> go back on the prepaid hours, and the ticket goes to Unbilled Time to bill as usual. Tonight's draw leaves it alone." data-confirm-button="Put back"><i class="fas fa-fw fa-undo"></i></a>
                                         <?php } ?>
                                     </li>
                                 <?php } ?>

@@ -103,7 +103,7 @@ function contractsUrl(array $changes) {
                                     <span><?= intval($row['contract_auto_renew']) ? t('Renews {date}', ['{date}' => $end_text]) : t('Ends {date}', ['{date}' => $end_text]) ?></span>
                                 <?php } ?>
                                 <?php if ($hours_left) { ?>
-                                    <span><i class="fas fa-hourglass-half me-1"></i><?= t('{hours} prepaid left', ['{hours}' => escapeHtml(contractHoursText($hours_left['left']))]) ?></span>
+                                    <span><i class="fas fa-hourglass-half me-1"></i><?= t('{hours} prepaid left', ['{hours}' => escapeHtml(forkHoursDuration($hours_left['left']))]) ?></span>
                                 <?php } ?>
                             </span>
                         </span>
@@ -139,7 +139,7 @@ if ($hours_reports) { ?>
                 <li>
                     <a class="itflow-portal-ticket" href="pdf.php?hours_report=<?= intval($report['report_id']) ?>" target="_blank" rel="noopener">
                         <span class="itflow-portal-ticket-main">
-                            <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml(forkHoursReportTitle($report['report_start'])) ?></span>
+                            <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml(forkHoursReportTitle($report['report_start'], $report['report_end'])) ?></span>
                             <span class="itflow-portal-ticket-meta">
                                 <span><?= t('{from} to {to}', ['{from}' => escapeHtml(i18n_date_value($report['report_start'])), '{to}' => escapeHtml(i18n_date_value($report['report_end']))]) ?></span>
                                 <span><?= t('Sent {date}', ['{date}' => escapeHtml(i18n_date_value(substr($report['report_sent_at'], 0, 10)))]) ?></span>
