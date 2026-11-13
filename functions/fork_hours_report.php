@@ -353,8 +353,7 @@ function forkHoursReportPdfRender(array $report) {
     $html = '<table cellpadding="0" cellspacing="0" width="100%"><tr>
         <td width="55%"><span style="font-size:12pt; font-weight:bold;">' . $e($company['company_name'] ?? '') . '</span></td>
         <td width="45%" align="right"><span style="font-size:8pt; color:#0a58ca; font-weight:bold; letter-spacing:2px;">' . $e(mb_strtoupper(t('Prepaid hours report'))) . '</span><br>
-            <span style="font-size:13pt; font-weight:bold;">' . $e($title) . '</span><br>
-            <span style="font-size:8pt; color:' . $grey . ';">' . $e(t('{from} to {to}', ['{from}' => i18n_date_value($report['report_start']), '{to}' => i18n_date_value($report['report_end'])])) . '</span></td>
+            <span style="font-size:13pt; font-weight:bold;">' . $e($title) . '</span></td>
     </tr></table>';
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Ln(2);
@@ -362,7 +361,7 @@ function forkHoursReportPdfRender(array $report) {
     $pdf->Ln(1);
     if (trim((string) $report['report_intro']) !== '') {
         $pdf->writeHTML('<span>' . nl2br($e($report['report_intro'])) . '</span>', true, false, true, false, '');
-        $pdf->Ln(2);
+        $pdf->Ln(6);
     }
 
     // The blocks of hours

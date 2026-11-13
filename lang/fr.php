@@ -1728,7 +1728,7 @@ return [
     'Thank you for your trust. Do not hesitate to contact us to renew your hours.' => 'Merci de votre confiance. N’hésitez pas à nous contacter pour renouveler vos heures.',
     'Hours included in {month}' => 'Heures incluses en {month}',
     '{hours} bought on {date}' => '{hours} achetées le {date}',
-    'Prepaid hours report' => 'Rapport des heures prépayées',
+    'Prepaid hours report' => 'Rapport carnet d’heures',
     'Hours' => 'Heures',
     'Used this quarter' => 'Utilisées ce trimestre',
     'Total used this quarter' => 'Total utilisé ce trimestre',
