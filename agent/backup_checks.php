@@ -47,7 +47,7 @@ $frequencies = forkBackupFrequencies();
                     <tbody>
                     <?php foreach ($rows as $row) { ?>
                         <tr>
-                            <td class="fw-semibold"><?= escapeHtml($row['client_name']) ?></td>
+                            <td class="fw-semibold"><a href="<?= $row['servers'] ? "backup_check.php?client_id={$row['client_id']}&week=$week" : "backup_client.php?client_id={$row['client_id']}" ?>"><?= escapeHtml($row['client_name']) ?></a></td>
                             <td><?= escapeHtml($frequencies[$row['frequency']]) ?></td>
                             <td><?= $row['servers'] ?: '<span class="text-danger">none - add them</span>' ?></td>
                             <td><?= $row['done'] ? backupStateBadge($row['state']) : '<span class="badge bg-secondary">To do</span>' ?></td>
