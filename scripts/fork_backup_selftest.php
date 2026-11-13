@@ -131,6 +131,7 @@ backup_test('English: the title', forkBackupReportTitle($report) === 'Quarterly 
 backup_test('English: another period is not "quarterly"', forkBackupReportTitle(['br_start' => '2026-04-06', 'br_end' => '2026-06-30'] + $report) === 'Backup check report');
 $rows = forkBackupReportRows($report);
 backup_test('rows: a month, then its weeks, with the day', $rows[0] === ['type' => 'month', 'label' => 'April'] && $rows[1]['day'] === '6' && $rows[1]['detail'] === '/');
+backup_test('rows: the date of a week is the Monday as 06.04.2026', $rows[1]['date'] === '06.04.2026' && $rows[3]['date'] === '04.05.2026' && $rows[4]['date'] === '18.05.2026' && preg_match('/^\d{2}\.\d{2}\.\d{4}$/', $rows[6]['date']) === 1);
 backup_test('rows: the detail of a week', $rows[4]['detail'] === 'Cloud backup restarted after a failure' && $rows[6]['detail'] === 'SRV2: Disk dead');
 i18n_set_language('fr');
 backup_test('French: the title', forkBackupReportTitle($report) === 'Rapport trimestriel du contrôle des sauvegardes');
@@ -155,6 +156,7 @@ if (is_file($itflow_dir . '/libs/TCPDF/tcpdf.php')) {
         if ($text === '') {
             echo "  - PDF ($lang): pdftotext is not there - the wording of the status cells was NOT checked (not counted as passed)\n";
         } else {
+            backup_test("PDF ($lang): the weeks are dated with their Monday (06.04.2026)", str_contains($text, '06.04.2026'));
             backup_test("PDF ($lang): the report is readable and its status cells have no wording", str_contains($text, 'Client X') || str_contains($text, 'Société Éléphant') ? !preg_match('/\b(OK|Failed|Échec|Incident traité|Issue followed up)\b/u', $text) : false);
         }
     }

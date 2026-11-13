@@ -667,14 +667,14 @@ function forkBackupDetailText(array $detail) {
 
 /**
  * The rows of the table of a report, in the language in force: ['type' => 'month', 'label'] and
- * ['type' => 'week', 'day', 'state', 'detail'].
+ * ['type' => 'week', 'day', 'date' (the Monday as 09.11.2026), 'state', 'detail'].
  */
 function forkBackupReportRows(array $report) {
     $rows = [];
     foreach ($report['data']['months'] as $month => $weeks) {
         $rows[] = ['type' => 'month', 'label' => i18n_date('F', strtotime($month . '-01 12:00:00'))];
         foreach ($weeks as $week) {
-            $rows[] = ['type' => 'week', 'day' => date('j', strtotime($week['week'] . ' 12:00:00')), 'state' => $week['state'],
+            $rows[] = ['type' => 'week', 'day' => date('j', strtotime($week['week'] . ' 12:00:00')), 'date' => date('d.m.Y', strtotime($week['week'] . ' 12:00:00')), 'state' => $week['state'],
                 'detail' => isset($week['text']) ? ($week['text'] === '' ? '/' : $week['text']) : forkBackupDetailText($week['detail'])];
         }
     }
@@ -725,16 +725,16 @@ function forkBackupPdfRender(array $report, array $company) {
     $pdf->Ln(4);
 
     $th = 'font-size:8pt; font-weight:bold; border-bottom:0.6px solid #adb5bd;';
-    $html = '<table cellpadding="4" cellspacing="0" width="100%"><thead><tr><td width="12%" style="' . $th . '">' . $e(t('Week')) . '</td><td width="24%" style="' . $th . '">' . $e(t('Status')) . '</td><td width="64%" style="' . $th . '">' . $e(t('Detail')) . '</td></tr></thead>';
+    $html = '<table cellpadding="4" cellspacing="0" width="100%"><thead><tr><td width="16%" style="' . $th . '">' . $e(t('Week')) . '</td><td width="22%" style="' . $th . '">' . $e(t('Status')) . '</td><td width="62%" style="' . $th . '">' . $e(t('Detail')) . '</td></tr></thead>';
     foreach (forkBackupReportRows($report) as $row) {
         if ($row['type'] === 'month') {
             $html .= '<tr nobr="true"><td colspan="3" style="background-color:#f1f3f5; font-weight:bold; border-bottom:0.3px solid #dee2e6;">' . $e($row['label']) . '</td></tr>';
             continue;
         }
         [$fill] = forkBackupStateColours($row['state']);
-        $html .= '<tr nobr="true"><td width="12%" style="border-bottom:0.3px solid #dee2e6;">' . $e($row['day']) . '</td>
-            <td width="24%" style="border-bottom:0.3px solid #dee2e6; background-color:#' . $fill . ';">&nbsp;</td>
-            <td width="64%" style="border-bottom:0.3px solid #dee2e6;">' . nl2br($e($row['detail'])) . '</td></tr>';
+        $html .= '<tr nobr="true"><td width="16%" style="border-bottom:0.3px solid #dee2e6;">' . $e($row['date']) . '</td>
+            <td width="22%" style="border-bottom:0.3px solid #dee2e6; background-color:#' . $fill . ';">&nbsp;</td>
+            <td width="62%" style="border-bottom:0.3px solid #dee2e6;">' . nl2br($e($row['detail'])) . '</td></tr>';
     }
     $pdf->writeHTML($html . '</table>', true, false, true, false, '');
 
