@@ -54,7 +54,7 @@ foreach ($updates as $file) {
         $latest = $version;
     }
 }
-fork_test("latest database update is ITFlow's ($latest)", $latest === '3.6.2');
+fork_test("latest database update is ITFlow's ($latest)", $latest === '3.6.6');
 $db = (string) file_get_contents($itflow_dir . '/db.sql');
 foreach (array_keys($defaults) as $key) {
     fork_test("$key is not a column of settings in db.sql", strpos($db, "`$key`") === false);
