@@ -46,13 +46,16 @@ require_once __DIR__ . '/backup_common.php'; // the window does not load it by i
 <script>
 document.querySelectorAll('.bk-line').forEach(function (box) {
     var statuses = box.querySelectorAll('.bk-status'), second = box.querySelector('.bk-second'), secondBox = box.querySelector('.bk-second-box'),
-        state = box.querySelector('.bk-state'), stateBox = box.querySelector('.bk-state-box'), comment = box.querySelector('textarea'), touched = box.dataset.state !== '';
+        state = box.querySelector('.bk-state'), stateBox = box.querySelector('.bk-state-box'), comment = box.querySelector('textarea'), greenOption = null, greenAt = 0, touched = box.dataset.state !== '';
     function refresh() {
         var failed = Array.prototype.some.call(statuses, function (s) { return s.value === 'fail'; });
         secondBox.style.display = failed ? '' : 'none';
         stateBox.style.display = failed ? '' : 'none'; // everything OK: green, nothing to choose
+        // a failure cannot be green: the option is taken out of the list, and put back when everything is OK again
+        var green = Array.prototype.find.call(state.options, function (o) { return o.value === 'green'; });
+        if (failed && green) { greenAt = green.index; greenOption = green; state.removeChild(green); }
+        if (!failed && !green && greenOption) { state.insertBefore(greenOption, state.options[greenAt] || null); }
         if (!failed) { state.value = 'green'; }
-        Array.prototype.forEach.call(state.options, function (o) { if (o.value === 'green') { o.disabled = failed; } }); // a failure cannot be green
         if (!touched) { state.value = !failed ? 'green' : (second.value === 'ok' ? 'yellow' : 'red'); }
         if (failed && state.value === 'green') { state.value = second.value === 'ok' ? 'yellow' : 'red'; }
         comment.required = state.value !== 'green';
