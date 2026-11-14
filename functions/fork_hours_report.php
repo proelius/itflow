@@ -291,6 +291,7 @@ function forkHoursReportCreate($client_id, array $period, $user_id) {
 /** Make it again from what is in ITFlow now (an admin) - the edits go. */
 function forkHoursReportRebuild(array $report) {
     global $mysqli;
+    forkHoursReportEnsure();
     $model = forkHoursReportBuild($report['report_client_id'], $report['report_start'], $report['report_end']);
     [$intro, $conclusion] = forkHoursReportTexts($report['report_start'], $report['report_end']);
     mysqli_query($mysqli, "UPDATE fork_hours_reports SET report_intro = '" . escapeSql($intro) . "', report_conclusion = '" . escapeSql($conclusion) . "',
@@ -301,6 +302,7 @@ function forkHoursReportRebuild(array $report) {
 /** Save the wording: the introduction, the conclusion and each ticket's label (by position). */
 function forkHoursReportSave(array $report, $intro, $conclusion, array $labels) {
     global $mysqli;
+    forkHoursReportEnsure();
     $data = $report['data'];
     foreach ($data['lines'] as $i => $line) {
         if (isset($labels[$i])) {
@@ -452,6 +454,7 @@ function forkHoursReportEmail(array $report) {
 /** Send the report to the client's invoice contacts, as a PDF - and lock it. Who it went to ("Name (email)"), or [] when there is nobody. */
 function forkHoursReportSend(array $report, $user_id) {
     global $mysqli;
+    forkHoursReportEnsure();
     $recipients = billingEmailRecipients($report['report_client_id']);
     if (!$recipients) {
         return [];

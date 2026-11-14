@@ -497,6 +497,7 @@ function forkBackupDoneWeeks($client_id) {
  */
 function forkBackupWeek($week) {
     global $mysqli;
+    forkBackupEnsure();
     $rows = [];
     $states = [];
     $sql = mysqli_query($mysqli, "SELECT k.bk_client_id, l.bl_state FROM fork_backup_checks k JOIN fork_backup_lines l ON l.bl_check_id = k.bk_id WHERE k.bk_week = '" . escapeSql($week) . "'");
@@ -610,6 +611,7 @@ function forkBackupTicketContent($week, array $lines) {
  */
 function forkBackupTicketOpen($client_id, $week, $user_id) {
     global $mysqli;
+    forkBackupEnsure();
     $client_id = intval($client_id);
     $service = forkBackupClient($client_id);
     $check = forkBackupCheck($client_id, $week);
@@ -791,6 +793,7 @@ function forkBackupReports($client_id) {
 /** Saves the comment and the wording of the weeks. What the technicians entered is not touched. */
 function forkBackupReportEditSave(array $report, $comment, array $posted) {
     global $mysqli;
+    forkBackupEnsure();
     $comment = mb_substr(str_replace("\r", '', trim((string) $comment)), 0, 3000);
     if ($comment === '') {
         return false;
@@ -802,12 +805,14 @@ function forkBackupReportEditSave(array $report, $comment, array $posted) {
 /** Makes the weeks of a report again from what the technicians entered - the agent's changes to the weeks go, the comment stays. */
 function forkBackupReportReset(array $report) {
     global $mysqli;
+    forkBackupEnsure();
     $model = forkBackupReportModel(forkBackupChecksBetween($report['br_client_id'], $report['br_start'], $report['br_end']));
     return (bool) mysqli_query($mysqli, "UPDATE fork_backup_reports SET br_data = '" . escapeSql(json_encode($model, JSON_UNESCAPED_UNICODE)) . "' WHERE br_id = " . intval($report['br_id']));
 }
 
 function forkBackupReportDelete($report_id) {
     global $mysqli;
+    forkBackupEnsure();
     mysqli_query($mysqli, "DELETE FROM fork_backup_reports WHERE br_id = " . intval($report_id));
 }
 
