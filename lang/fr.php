@@ -1764,4 +1764,5 @@ return [
     'Please find attached the backup check report for the period {period}.' => 'Vous trouverez ci-joint le rapport du contrôle des sauvegardes pour la période {period}.',
     'The report is attached to this message as a PDF. In case of questions, reply to this email.' => 'Le rapport est joint à ce message au format PDF. En cas de question, répondez à cet e-mail.',
     'You received this email as a contact of {client} with {company}.' => 'Vous recevez cet e-mail en tant que contact de {client} chez {company}.',
+    'You can reply to {name} at {email}.' => 'Vous pouvez répondre à {name} à l’adresse {email}.',
 ];
