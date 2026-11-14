@@ -476,12 +476,14 @@ function forkCrmEmailSend(array $deal, $to, $name, $subject, $body, $agent_name,
         return 'Email is not set up in ITFlow - set it up in Admin > Mail first.';
     }
     $paragraphs = array_values(array_filter(array_map('trim', preg_split('/\R{2,}/', $body))));
-    if (trim((string) $agent_email) !== '') {
-        $paragraphs[] = "You can reply to " . trim((string) $agent_name) . " at " . trim((string) $agent_email) . ".";
-    }
-    $sent = emailQueue([['email' => $to, 'name' => (string) $name, 'greet' => (string) $name]], $subject, [
-        'kind' => 'CRM', 'tone' => 'primary', 'title' => $subject, 'intro' => $paragraphs,
-    ]);
+    // The email is for someone outside: its greeting and its reply line are drawn in the client's language
+    [, $email] = billingEmailInClientLanguage(function () use (&$paragraphs, $subject, $agent_name, $agent_email) {
+        if (trim((string) $agent_email) !== '') {
+            $paragraphs[] = t('You can reply to {name} at {email}.', ['{name}' => trim((string) $agent_name), '{email}' => trim((string) $agent_email)]);
+        }
+        return [$subject, ['kind' => 'CRM', 'tone' => 'primary', 'title' => $subject, 'intro' => $paragraphs]];
+    });
+    $sent = emailQueue([['email' => $to, 'name' => (string) $name, 'greet' => (string) $name]], $subject, $email);
     if (!$sent) {
         return 'The email could not be queued.';
     }
