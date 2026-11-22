@@ -82,12 +82,15 @@ echo "\nThe admin page and its handler\n";
 $post = $read('admin/post/billing_note.php');
 note_test('each action checks the CSRF token', substr_count($post, 'validateCSRFToken();') === 4);
 note_test('each action is written to the audit log', substr_count($post, 'logAudit(') === 4);
-note_test('the page is in the TEMPLATES section of the Admin menu, with the accounting module', (function () use ($read) {
-    $nav = $read('admin/includes/side_nav.php');
-    $at = strpos($nav, '/admin/billing_notes.php');
-    $templates = strpos($nav, 'TEMPLATES');
-    $management = strpos($nav, 'MANAGEMENT');
-    return $at !== false && $templates !== false && $at > $templates && $at < $management && strrpos(substr($nav, 0, $at), 'config_module_enable_accounting') > $templates;
+note_test('the page is a tab of the Templates group of the Admin menu, with the accounting module', (function () use ($read) {
+    $groups = $read('functions/settings.php');
+    $at = strpos($groups, "'billing_notes.php'");
+    $templates = strpos($groups, "'templates' => ");
+    $text = strpos($groups, "'text' => ");
+    return $at !== false && $templates !== false && $at > $templates && $at < $text
+        && str_contains(substr($groups, strrpos(substr($groups, 0, $at), "\n")), '$accounting ?')
+        && !str_contains($read('admin/includes/side_nav.php'), '/admin/billing_notes.php')
+        && str_contains($read('admin/billing_notes.php'), "adminNavGroupTabsHtml('templates')");
 })());
 note_test('the page lists them by name, a page at a time', str_contains($read('admin/billing_notes.php'), 'forkBillingNoteList($q, $show_archived, $record_from, $record_to)'));
 note_test('deleting asks first', str_contains($read('admin/billing_notes.php'), 'data-confirm-title="Delete this billing note?"'));

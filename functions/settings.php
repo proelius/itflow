@@ -144,6 +144,7 @@ function adminNavGroups() {
             $ticketing ? ['file' => 'project_templates.php', 'icon' => 'fa-project-diagram', 'label' => 'Projects', 'also' => ['project_template.php']] : null,
             $ticketing ? ['file' => 'canned_responses.php', 'icon' => 'fa-comment-dots', 'label' => 'Canned Responses'] : null,
             $accounting ? ['file' => 'contract_templates.php', 'icon' => 'fa-file-contract', 'label' => 'Contracts'] : null,
+            $accounting ? ['file' => 'billing_notes.php', 'icon' => 'fa-sticky-note', 'label' => 'Billing Notes'] : null,
             $itdoc ? ['file' => 'vendor_templates.php', 'icon' => 'fa-building', 'label' => 'Vendors', 'also' => ['vendor_template.php']] : null,
             $itdoc ? ['file' => 'software_templates.php', 'icon' => 'fa-box-open', 'label' => 'Licenses', 'also' => ['software_template.php']] : null,
             $itdoc ? ['file' => 'document_templates.php', 'icon' => 'fa-file-alt', 'label' => 'Documents', 'also' => ['document_template.php']] : null,

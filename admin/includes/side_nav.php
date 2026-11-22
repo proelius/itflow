@@ -119,14 +119,6 @@
                 </li>
                 <?php // Every kind of template, and canned responses, as tabs (adminNavGroups()) ?>
                 <?= adminNavGroupItemHtml('templates') ?>
-                <?php if ($config_module_enable_accounting) { ?>
-                    <li class="nav-item">
-                        <a href="/admin/billing_notes.php" class="nav-link <?= (basename($_SERVER['PHP_SELF']) == 'billing_notes.php' ? 'active' : '') ?>">
-                            <i class="nav-icon fas fa-sticky-note"></i>
-                            <p>Billing Notes</p>
-                        </a>
-                    </li>
-                <?php } ?>
 
                 <li class="nav-header">INTEGRATIONS</li>
                 <?php if ($config_module_enable_accounting) { ?>
