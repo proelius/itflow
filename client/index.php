@@ -83,7 +83,7 @@ if ($can_billing) {
                 'icon' => 'fa-file-invoice-dollar',
                 'tone' => 'is-danger',
                 'title' => t('Invoice {number} is past due', ['{number}' => $invoice['invoice_prefix'] . $invoice['invoice_number']]),
-                'line' => t('{amount} left - due {date}', ['{amount}' => numfmt_format_currency($currency_format, $left, $client_currency), '{date}' => i18n_date('M j, Y', strtotime($invoice['invoice_due']))]),
+                'line' => t('{amount} left - due {date}', ['{amount}' => billingMoney($left, $client_currency), '{date}' => i18n_date('M j, Y', strtotime($invoice['invoice_due']))]),
             ];
         } elseif ($next_due === null || $invoice['invoice_due'] < $next_due) {
             $next_due = $invoice['invoice_due'];
@@ -215,10 +215,10 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
             <a class="itflow-portal-stat<?= $overdue > 0 ? ' itflow-portal-stat-danger' : '' ?>" href="<?= $balance > 0 ? $pay_href : 'invoices.php' ?>">
                 <span class="itflow-portal-stat-icon"><i class="fas fa-file-invoice-dollar"></i></span>
                 <span class="min-w-0">
-                    <span class="itflow-portal-stat-value d-block"><?= numfmt_format_currency($currency_format, $balance, $client_currency) ?></span>
+                    <span class="itflow-portal-stat-value d-block"><?= billingMoney($balance, $client_currency) ?></span>
                     <span class="itflow-portal-stat-label">
                         <?php if ($overdue > 0) { ?>
-                            <?= t('{amount} past due', ['{amount}' => numfmt_format_currency($currency_format, $overdue, $client_currency)]) ?>
+                            <?= t('{amount} past due', ['{amount}' => billingMoney($overdue, $client_currency)]) ?>
 
                         <?php } elseif ($balance > 0 && $next_due) { ?>
                             <?= t('Due {date}', ['{date}' => i18n_date('M j', strtotime($next_due))]) ?>
@@ -278,7 +278,7 @@ $first_name = strtok(trim((string) $contact['contact_name']), ' ') ?: '';
             </div>
             <?php if (!mysqli_num_rows($recent)) { ?>
                 <?= emptyStateHtml(['title' => t('No open tickets'), 'text' => t('Something not working? Raise a ticket and we will pick it up.'), 'icon' => 'fa-life-ring', 'filtered' => false,
-                    'actions' => [['label' => t('New ticket'), 'href' => 'ticket_add.php']]]) ?>
+                    'actions' => [['label' => t('New Ticket'), 'href' => 'ticket_add.php']]]) ?>
             <?php } else { ?>
                 <ul class="itflow-portal-list">
                     <?php while ($row = mysqli_fetch_assoc($recent)) {

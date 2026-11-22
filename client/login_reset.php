@@ -20,8 +20,7 @@ i18n_set_language(client_language());
 require_once '../includes/load_global_settings.php';
 
 if (intval($config_client_portal_enable) !== 1) {
-    header("Location: /login.php");
-    exit();
+    redirect("/login.php");
 }
 
 require_once __DIR__ . "/../includes/session_init.php";
@@ -100,8 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_reset_email_
         portalMailAccountChange($link_user['user_email'], $link_user['contact_name'], 'password_link');
         $_SESSION['login_message'] = t('Your password is set - sign in with it below.');
         $_SESSION['login_message_type'] = 'success';
-        header("Location: /login.php");
-        exit();
+        redirect("/login.php");
     }
 
 } elseif (isset($_GET['token'])) {
@@ -166,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_reset_email_
                         <input type="password" class="form-control" placeholder="<?= t('The same again') ?>" name="confirm_password" minlength="<?= USER_PASSWORD_MIN ?>" autocomplete="new-password" aria-label="<?= t('New password again') ?>" required>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 mb-3" name="password_reset_set_password"><?= t('Set password') ?></button>
+                    <button type="submit" class="btn btn-primary w-100 mb-3" name="password_reset_set_password"><?= t('Set Password') ?></button>
                 </form>
 
             <?php } else { ?>
@@ -184,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_reset_email_
                             <span class="input-group-text"><i class="fas fa-fw fa-envelope"></i></span>
                             <input type="email" class="form-control" placeholder="<?= t('Email address') ?>" name="email" maxlength="200" autocomplete="email" aria-label="<?= t('Email address') ?>" required<?= $message_type === 'success' ? '' : ' autofocus' ?>>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 mb-3" name="password_reset_email_request"><?= t('Email me a link') ?></button>
+                        <button type="submit" class="btn btn-primary w-100 mb-3" name="password_reset_email_request"><?= t('Email Me a Link') ?></button>
                     </form>
                 <?php } else { ?>
                     <div class="alert alert-secondary small"><?= t('Email is not set up here, so a link can\'t be sent - ask us to reset it for you.') ?></div>

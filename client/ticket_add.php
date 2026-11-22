@@ -33,7 +33,7 @@ $forms = ticketTemplatePortalForms($session_client_id, $sees_all);
 $form_key = (string) ($_GET['form'] ?? '');
 $form = $form_key !== '' && $form_key !== 'problem' ? ticketTemplatePortalForm(intval($form_key), $session_client_id, $sees_all) : null;
 $choosing = $forms && $form_key === '' && !isset($_GET['subject']) && !isset($_GET['asset']);
-$back = $forms && !$choosing ? ['ticket_add.php', t('New ticket')] : ['tickets.php', t('Tickets')];
+$back = $forms && !$choosing ? ['ticket_add.php', t('New Ticket')] : ['tickets.php', t('Tickets')];
 
 $categories = mysqli_query($mysqli, "SELECT category_id, category_name, category_color, category_icon FROM categories
     WHERE category_type = 'Ticket' AND category_archived_at IS NULL ORDER BY category_name ASC");
@@ -46,6 +46,9 @@ $priorities = [
 ];
 
 $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, company_phone_country_code FROM companies WHERE company_id = 1"));
+
+// How soon each priority hears back, from the SLAs - in the priority list and What happens next
+$reply_times = portalReplyTimes();
 ?>
 
 <a class="itflow-portal-back" href="<?= $back[0] ?>"><i class="fas fa-chevron-left"></i><?= $back[1] ?></a>
@@ -53,13 +56,13 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
 <?php if ($form_key !== '' && $form_key !== 'problem' && !$form) { ?>
 
     <?= emptyStateHtml(['title' => t('That form isn\'t here'), 'text' => t('It may have been taken down, or it is not one for you. Tell us what you need instead.'), 'icon' => 'fa-clipboard-list', 'filtered' => false,
-        'actions' => [['label' => t('New ticket'), 'href' => 'ticket_add.php', 'icon' => 'fa-plus']]]) ?>
+        'actions' => [['label' => t('New Ticket'), 'href' => 'ticket_add.php', 'icon' => 'fa-plus']]]) ?>
 
 <?php } elseif ($choosing) { ?>
 
     <div class="itflow-portal-page-head">
         <div>
-            <h1><?= t('New ticket') ?></h1>
+            <h1><?= t('New Ticket') ?></h1>
             <p><?= t('What do you need?') ?></p>
         </div>
     </div>
@@ -134,7 +137,7 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
                     <div class="mb-3">
                         <label class="form-label"><?= t('Which device?') ?></label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-fw fa-desktop"></i></span>
+                            <span class="input-group-text"><i class="fas fa-fw fa-desktop"></i></span>
                             <select class="form-select select2" name="asset">
                                 <option value="0"><?= t('None, or not sure') ?></option>
                                 <?php foreach ($assets as $asset) { ?>
@@ -149,7 +152,7 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
                 <div class="mb-3">
                     <label class="form-label" for="requestNotes"><?= t('Anything else we should know?') ?></label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fa fa-fw fa-comment"></i></span>
+                        <span class="input-group-text"><i class="fas fa-fw fa-comment"></i></span>
                         <textarea class="form-control" id="requestNotes" name="notes" rows="4" maxlength="5000" placeholder="<?= t('Optional') ?>"></textarea>
                     </div>
                 </div>
@@ -164,7 +167,7 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" name="add_ticket_from_form"><i class="fas fa-paper-plane me-2"></i><?= t('Send request') ?></button>
+                <button type="submit" class="btn btn-primary" name="add_ticket_from_form"><i class="fas fa-paper-plane me-2"></i><?= t('Send Request') ?></button>
             </form>
         </div>
 
@@ -177,7 +180,7 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1><?= t('New ticket') ?></h1>
+        <h1><?= t('New Ticket') ?></h1>
         <p><?= t('Tell us what is wrong and we will get on it.') ?></p>
     </div>
 </div>
@@ -190,9 +193,16 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
             <div class="mb-3">
                 <label class="form-label" for="ticketSubject"><?= t('Subject') ?> <strong class="text-danger">*</strong></label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="fa fa-fw fa-tag"></i></span>
+                    <span class="input-group-text"><i class="fas fa-fw fa-tag"></i></span>
                     <input type="text" class="form-control" id="ticketSubject" name="subject" placeholder="<?= t('In a few words - &quot;Outlook keeps asking for my password&quot;') ?>" maxlength="500" required autofocus value="<?= escapeHtml(mb_substr(trim((string) ($_GET['subject'] ?? '')), 0, 500)) ?>">
                 </div>
+                <?php if (kbClientHas($session_client_id)) { ?>
+                    <!-- The Help articles that might answer it, as the subject is typed (js/portal.js) -->
+                    <div class="itflow-portal-kb-suggest" data-portal-kb-suggest="ticketSubject" hidden>
+                        <div class="small fw-semibold mb-1"><i class="fas fa-fw fa-book me-1"></i>These might help</div>
+                        <ul class="itflow-portal-kb-suggest-list" data-portal-kb-suggest-list></ul>
+                    </div>
+                <?php } ?>
             </div>
 
             <div class="mb-3">
@@ -205,10 +215,10 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
                 <div class="col-md-6 mb-3">
                     <label class="form-label"><?= t('How much is it getting in the way?') ?></label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fa fa-fw fa-thermometer-half"></i></span>
+                        <span class="input-group-text"><i class="fas fa-fw fa-thermometer-half"></i></span>
                         <select class="form-select select2" name="priority" required>
                             <?php foreach ($priorities as $priority => [$color, $hint]) { ?>
-                                <option value="<?= $priority ?>" data-color="<?= $color ?>" data-description="<?= escapeHtml($hint) ?>"<?= $priority === 'Medium' ? ' selected' : '' ?>><?= i18n_ticket_priority_label($priority) ?></option>
+                                <option value="<?= $priority ?>" data-color="<?= $color ?>" data-description="<?= escapeHtml($hint . (isset($reply_times[$priority]) ? ' - a reply ' . $reply_times[$priority] : '')) ?>"<?= $priority === 'Medium' ? ' selected' : '' ?>><?= i18n_ticket_priority_label($priority) ?></option>
                             <?php } ?>
                         </select>
                     </div>
@@ -216,7 +226,7 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
                 <div class="col-md-6 mb-3">
                     <label class="form-label"><?= t('What is it about?') ?></label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fa fa-fw fa-layer-group"></i></span>
+                        <span class="input-group-text"><i class="fas fa-fw fa-layer-group"></i></span>
                         <select class="form-select select2" name="category">
                             <option value="0"><?= t('Not sure') ?></option>
                             <?php while ($row = mysqli_fetch_assoc($categories)) { ?>
@@ -231,7 +241,7 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
                 <div class="mb-3">
                     <label class="form-label"><?= t('Which device?') ?></label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fa fa-fw fa-desktop"></i></span>
+                        <span class="input-group-text"><i class="fas fa-fw fa-desktop"></i></span>
                         <select class="form-select select2" name="asset">
                             <option value="0"><?= t('None, or not sure') ?></option>
                             <?php foreach ($assets as $asset) { ?>
@@ -253,7 +263,7 @@ $company = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT company_phone, compa
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary" name="add_ticket"><i class="fas fa-paper-plane me-2"></i><?= t('Send ticket') ?></button>
+            <button type="submit" class="btn btn-primary" name="add_ticket"><i class="fas fa-paper-plane me-2"></i><?= t('Send Ticket') ?></button>
         </form>
     </div>
 

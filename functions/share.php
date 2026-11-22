@@ -202,16 +202,9 @@ function shareUrl($item_id, $secret) {
     return "https://$config_base_url/guest/share.php?id=" . intval($item_id) . "#$secret";
 }
 
-/** A QR code of the link, as inline SVG - '' without GD, which libs/barcode needs. */
+/** A QR code of the link, as inline SVG. */
 function shareQrSvg($url) {
-    if (!extension_loaded('gd')) {
-        return '';
-    }
-    require_once dirname(__DIR__) . '/libs/barcode/barcode.php';
-    $generator = new barcode_generator();
-    $svg = (string) $generator->render_svg('qr', $url, ['w' => 180, 'h' => 180, 'p' => 0]);
-    $svg = preg_replace('/^<\?xml[^>]*>\s*/', '', $svg);
-    return preg_replace('/<svg /', '<svg class="itflow-share-qr" role="img" aria-label="QR code of the link" ', $svg, 1);
+    return qrCodeSvg($url, 'class="itflow-share-qr" role="img" aria-label="QR code of the link"');
 }
 
 /** One link by id, with who made it and the client - raw, or null. */
@@ -693,7 +686,7 @@ function _shareEmailLink($row, $url, $protect, $lang) {
         'summary' => $summary,
         'callout' => $callout,
         'button' => ['label' => $button, 'url' => (string) $url, 'show_url' => true],
-    ], ['from' => shareMailFrom()]);
+    ], ['from' => shareMailFrom(), 'sensitive' => true]);
 }
 
 /** The code that opens a link protected by one, to its recipient. True when it was queued. */
@@ -712,7 +705,7 @@ function _shareEmailCode($row, $code, $lang) {
         'title' => t('Your code is {code}', ['{code}' => $code]),
         'intro' => [t('Enter it on the page that asked for it, to open the secure link {company} sent you. It works for {n} minutes.', ['{company}' => $company['name'], '{n}' => SHARE_CODE_MINUTES])],
         'callout' => t('If you did not ask for it, someone else has the link - ignore this email and let us know.'),
-    ], ['from' => shareMailFrom()]);
+    ], ['from' => shareMailFrom(), 'sensitive' => true]);
 }
 
 /**

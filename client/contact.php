@@ -37,7 +37,7 @@ if (!$new) {
         <a class="itflow-portal-back" href="contacts.php"><i class="fas fa-chevron-left"></i><?= t('Contacts') ?></a>
         <section class="itflow-portal-panel">
             <?= emptyStateHtml(['title' => t('That person isn\'t here'), 'text' => t('They may have been removed from your company\'s contacts.'), 'icon' => 'fa-address-book', 'filtered' => false,
-                'actions' => [['label' => t('All contacts'), 'href' => 'contacts.php', 'icon' => 'fa-arrow-left']]]) ?>
+                'actions' => [['label' => t('All Contacts'), 'href' => 'contacts.php', 'icon' => 'fa-arrow-left']]]) ?>
         </section>
         <?php
         require_once "includes/footer.php";
@@ -69,7 +69,7 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
 
     <div class="itflow-portal-page-head">
         <div>
-            <h1><?= t('Add a person') ?></h1>
+            <h1><?= t('Add a Person') ?></h1>
             <p><?= t('Someone new at {client} - and whether they can sign in here', ['{client}' => escapeHtml($session_client_name)]) ?></p>
         </div>
     </div>
@@ -102,7 +102,7 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
             </div>
         </div>
         <?php if ($self) { ?>
-            <a class="btn btn-outline-secondary" href="profile.php"><i class="fas fa-user me-2"></i><?= t('Your account') ?></a>
+            <a class="btn btn-outline-secondary" href="profile.php"><i class="fas fa-user me-2"></i><?= t('Your Account') ?></a>
         <?php } ?>
     </div>
 
@@ -135,7 +135,7 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
                         <?php if ($manage && !$self) { ?>
                             <p class="small text-body-secondary mt-3 mb-0"><?= t('This is the company\'s primary contact - {link} to change who that is.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl('Change the primary contact')) . '">' . t('ask us') . '</a>']) ?></p>
                         <?php } elseif ($self) { ?>
-                            <p class="small text-body-secondary mt-3 mb-0"><?= t('Change your own phone numbers and sign-in in {link}.', ['{link}' => '<a href="profile.php">' . t('Your account') . '</a>']) ?></p>
+                            <p class="small text-body-secondary mt-3 mb-0"><?= t('Change your own phone numbers and sign-in in {link}.', ['{link}' => '<a href="profile.php">' . t('Your Account') . '</a>']) ?></p>
                         <?php } ?>
                     </div>
                 </section>
@@ -163,9 +163,9 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
                                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                                 <input type="hidden" name="contact_id" value="<?= intval($contact['contact_id']) ?>">
                                 <input type="hidden" name="method" value="<?= escapeHtml($access['key']) ?>">
-                                <button type="submit" class="btn btn-outline-primary" name="portal_contact_access" value="invite"><i class="fas fa-paper-plane me-2"></i><?= t('Email the invite again') ?></button>
+                                <button type="submit" class="btn btn-outline-primary" name="portal_contact_access" value="invite"><i class="fas fa-paper-plane me-2"></i><?= t('Email the Invite Again') ?></button>
                                 <button type="submit" class="btn btn-outline-danger confirm-link" name="portal_contact_access" value="off"
-                                    data-confirm-title="<?= t('Turn off {name}\'s access?', ['{name}' => escapeHtml($contact['contact_name'])]) ?>" data-confirm-text="<?= t('They are signed out straight away and can\'t sign in again until you give them access.') ?>" data-confirm-button="<?= t('Turn off') ?>"><i class="fas fa-ban me-2"></i><?= t('Turn off access') ?></button>
+                                    data-confirm-title="<?= t('Turn off {name}\'s access?', ['{name}' => escapeHtml($contact['contact_name'])]) ?>" data-confirm-text="<?= t('They are signed out straight away and can\'t sign in again until you give them access.') ?>" data-confirm-button="<?= t('Turn off') ?>"><i class="fas fa-ban me-2"></i><?= t('Turn Off Access') ?></button>
                             </form>
                         <?php } else { ?>
                             <p class="small text-body-secondary"><?= t('Give them access and we email <strong>{email}</strong> a link to sign in.', ['{email}' => escapeHtml($contact['contact_email'] ?: t('them'))]) ?></p>
@@ -176,7 +176,7 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
                                     <div class="mb-3">
                                         <label class="form-label" for="accessMethod"><?= t('They sign in') ?></label>
                                         <div class="input-group">
-                                            <span class="input-group-text"><i class="fa fa-fw fa-sign-in-alt"></i></span>
+                                            <span class="input-group-text"><i class="fas fa-fw fa-sign-in-alt"></i></span>
                                             <select class="form-select" id="accessMethod" name="method">
                                                 <?php foreach ($methods as $key => $label) { ?>
                                                     <option value="<?= $key ?>"><?= i18n_portal_label($label) ?></option>
@@ -187,7 +187,7 @@ $value = function ($field, $fallback = '') use ($form, $contact) {
                                 <?php } else { ?>
                                     <input type="hidden" name="method" value="local">
                                 <?php } ?>
-                                <button type="submit" class="btn btn-primary" name="portal_contact_access" value="invite"<?= empty($contact['contact_email']) ? ' disabled' : '' ?>><i class="fas fa-paper-plane me-2"></i><?= t('Give access and email an invite') ?></button>
+                                <button type="submit" class="btn btn-primary" name="portal_contact_access" value="invite"<?= empty($contact['contact_email']) ? ' disabled' : '' ?>><i class="fas fa-paper-plane me-2"></i><?= t('Give Access and Email an Invite') ?></button>
                             </form>
                         <?php } ?>
                     </div>

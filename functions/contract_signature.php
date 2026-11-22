@@ -579,7 +579,7 @@ function _contractSignatureRequestEmail(array $round, $note, $lang) {
         'note' => trim((string) $note),
         'summary' => array_filter([t('Contract') => (string) $round['contract_name'], t('For') => (string) $round['client_name'], t('Term') => $term, t('Sent by') => (string) $by]),
         'button' => ['label' => t('Review and sign'), 'url' => contractSignatureUrl($round)],
-    ], ['from' => contractEmailFrom()]);
+    ], ['from' => contractEmailFrom(), 'sensitive' => true]);
     return (bool) $sent;
 }
 
@@ -629,11 +629,15 @@ function contractSignatureWithdraw(array $round, $reason) {
 
 /*
  * The client has opened a round - the first time is noted, and the agents
- * told. Nothing when an agent is looking (the portal's View as contact).
+ * told. Nothing when an agent is looking (the portal's View as contact, or
+ * its link opened in a browser signed in to ITFlow).
  */
 function contractSignatureViewed(array $round, $who = '') {
     global $mysqli;
     if (!empty($round['contract_signature_viewed_at']) || !contractSignaturePending($round) || !empty($round['contract_signature_client_signed_at'])) {
+        return;
+    }
+    if (trim((string) $who) === '' && userSignedInAgent()) {
         return;
     }
     mysqli_query($mysqli, "UPDATE contract_signatures SET contract_signature_viewed_at = NOW() WHERE contract_signature_id = " . intval($round['contract_signature_id']) . " AND contract_signature_viewed_at IS NULL");
