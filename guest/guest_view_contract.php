@@ -100,7 +100,7 @@ $signature_pad = [
                 <?php } ?>
 
                 <div class="d-flex gap-2 mt-3">
-                    <a class="btn btn-outline-primary flex-fill" href="guest_post.php?export_contract_pdf=1&<?= escapeHtml($query) ?>"><i class="fas fa-file-pdf me-2"></i><?= t('Download PDF') ?></a>
+                    <a class="btn btn-outline-primary flex-fill" href="guest_post.php?export_contract_pdf=1&<?= escapeHtml($query) ?>" target="_blank" rel="noopener"><i class="fas fa-file-pdf me-2"></i><?= t('Download PDF') ?></a>
                     <button type="button" class="btn btn-outline-secondary" onclick="window.print();" title="<?= t('Print') ?>"><i class="fas fa-print"></i></button>
                 </div>
             </div>
