@@ -362,7 +362,7 @@ return [
     'Waiting on you' => 'En attente de votre réponse',
     'Nothing owed' => 'Rien dû',
     'Renewal' => 'Renouvellement',
-    'Needs you' => 'Besoin de vous',
+    'Needs you' => 'Nécessite votre attention',
     'Nothing is waiting on you right now.' => 'Rien ne vous attend pour l’instant.',
     "You're all caught up" => 'Tout est à jour',
     'All tickets' => 'Tous les tickets',
