@@ -34,7 +34,7 @@ foreach ($cards_on ? billingSavedCards($session_client_id) : [] as $card) {
         <p><?= t('What we bill you regularly') ?></p>
     </div>
     <?php if ($cards_on && mysqli_num_rows($recurring)) { ?>
-        <a class="btn btn-outline-secondary" href="saved_payment_methods.php"><i class="fas fa-sync-alt me-2"></i>Autopay</a>
+        <a class="btn btn-outline-secondary" href="saved_payment_methods.php"><i class="fas fa-sync-alt me-2"></i><?= t('Autopay') ?></a>
     <?php } ?>
 </div>
 
@@ -58,8 +58,8 @@ foreach ($cards_on ? billingSavedCards($session_client_id) : [] as $card) {
                             <span class="itflow-portal-amount itflow-money"><?= escapeHtml(billingMoney($row['recurring_invoice_amount'], $row['recurring_invoice_currency_code'])) ?> <small class="fw-normal">/ <?= escapeHtml(i18n_portal_label(recurringInvoicePeriodWord($row['recurring_invoice_frequency']))) ?></small></span>
                             <?php if ($cards_on) { ?>
                                 <?= portalStateBadge($card
-                                    ? ['label' => 'Autopay · ' . $card['label'], 'icon' => 'fa-sync-alt', 'class' => 'itflow-portal-state-resolved']
-                                    : ['label' => 'Autopay off', 'icon' => 'fa-hand-paper', 'class' => 'itflow-portal-state-closed']) ?>
+                                    ? ['label' => t('Autopay · {card}', ['{card}' => $card['label']]), 'icon' => 'fa-sync-alt', 'class' => 'itflow-portal-state-resolved']
+                                    : ['label' => t('Autopay off'), 'icon' => 'fa-hand-paper', 'class' => 'itflow-portal-state-closed']) ?>
                             <?php } ?>
                         </span>
                     </a>

@@ -199,7 +199,7 @@ $reply_times = portalReplyTimes();
                 <?php if (kbClientHas($session_client_id)) { ?>
                     <!-- The Help articles that might answer it, as the subject is typed (js/portal.js) -->
                     <div class="itflow-portal-kb-suggest" data-portal-kb-suggest="ticketSubject" hidden>
-                        <div class="small fw-semibold mb-1"><i class="fas fa-fw fa-book me-1"></i>These might help</div>
+                        <div class="small fw-semibold mb-1"><i class="fas fa-fw fa-book me-1"></i><?= t('These might help') ?></div>
                         <ul class="itflow-portal-kb-suggest-list" data-portal-kb-suggest-list></ul>
                     </div>
                 <?php } ?>
@@ -218,7 +218,7 @@ $reply_times = portalReplyTimes();
                         <span class="input-group-text"><i class="fas fa-fw fa-thermometer-half"></i></span>
                         <select class="form-select select2" name="priority" required>
                             <?php foreach ($priorities as $priority => [$color, $hint]) { ?>
-                                <option value="<?= $priority ?>" data-color="<?= $color ?>" data-description="<?= escapeHtml($hint . (isset($reply_times[$priority]) ? ' - a reply ' . $reply_times[$priority] : '')) ?>"<?= $priority === 'Medium' ? ' selected' : '' ?>><?= i18n_ticket_priority_label($priority) ?></option>
+                                <option value="<?= $priority ?>" data-color="<?= $color ?>" data-description="<?= escapeHtml($hint . (isset($reply_times[$priority]) ? ' - ' . t('a reply {time}', ['{time}' => $reply_times[$priority]]) : '')) ?>"<?= $priority === 'Medium' ? ' selected' : '' ?>><?= i18n_ticket_priority_label($priority) ?></option>
                             <?php } ?>
                         </select>
                     </div>

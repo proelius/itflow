@@ -158,7 +158,7 @@ $reply_by = portalTicketReplyBy($ticket_id);
             <?php if ($reply_by) { ?>
                 <p class="itflow-portal-expect" data-reply-by>
                     <i class="fas fa-fw fa-clock"></i>
-                    <span>We'll reply by <strong><?= portalDateTime($reply_by['by']) ?></strong> - within <?= escapeHtml($reply_by['within']) ?> of when it was raised.</span>
+                    <span><?= t("We'll reply by {time} - within {within} of when it was raised.", ['{time}' => '<strong>' . portalDateTime($reply_by['by']) . '</strong>', '{within}' => escapeHtml($reply_by['within'])]) ?></span>
                 </p>
             <?php } ?>
         </section>

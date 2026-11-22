@@ -39,7 +39,7 @@ if ($q !== '') {
             $rows[] = $row;
         }
     }
-    $sections['tickets'] = ['label' => 'Tickets', 'icon' => 'fa-life-ring', 'total' => $total, 'rows' => $rows, 'all' => 'tickets.php?' . http_build_query(['tab' => 'all', 'q' => $q])];
+    $sections['tickets'] = ['label' => t('Tickets'), 'icon' => 'fa-life-ring', 'total' => $total, 'rows' => $rows, 'all' => 'tickets.php?' . http_build_query(['tab' => 'all', 'q' => $q])];
 
     // Documents shared with them - for those who see the company's IT
     if ($can_documents) {
@@ -56,7 +56,7 @@ if ($q !== '') {
                 $rows[] = $row;
             }
         }
-        $sections['documents'] = ['label' => 'Documents', 'icon' => 'fa-folder-open', 'total' => $total, 'rows' => $rows, 'all' => 'documents.php?' . http_build_query(['q' => $q])];
+        $sections['documents'] = ['label' => t('Documents'), 'icon' => 'fa-folder-open', 'total' => $total, 'rows' => $rows, 'all' => 'documents.php?' . http_build_query(['q' => $q])];
     }
 
     // Help - the articles shared with them
@@ -75,7 +75,7 @@ if ($q !== '') {
             // Nothing in Help - on the Knowledge Base's Not found list, as a search in Help is
             kbSearchMissSave($q, 'portal', $session_client_id);
         }
-        $sections['help'] = ['label' => 'Help', 'icon' => 'fa-book', 'total' => $total, 'rows' => $rows, 'all' => 'kb.php?' . http_build_query(['q' => $q])];
+        $sections['help'] = ['label' => t('Help'), 'icon' => 'fa-book', 'total' => $total, 'rows' => $rows, 'all' => 'kb.php?' . http_build_query(['q' => $q])];
     }
 }
 
@@ -84,25 +84,25 @@ $found = array_sum(array_column($sections, 'total'));
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1>Search</h1>
-        <p><?= $q === '' ? 'Your tickets' . ($can_documents ? ', documents' : '') . ($can_help ? ' and Help' : '') . ', all at once' : ($found ? $found . ' found for &ldquo;' . escapeHtml($q) . '&rdquo;' : 'Nothing found for &ldquo;' . escapeHtml($q) . '&rdquo;') ?></p>
+        <h1><?= t('Search') ?></h1>
+        <p><?= $q === '' ? ($can_documents ? ($can_help ? t('Your tickets, documents and Help, all at once') : t('Your tickets, documents, all at once')) : ($can_help ? t('Your tickets and Help, all at once') : t('Your tickets, all at once'))) : ($found ? t('{count} found for &ldquo;{search}&rdquo;', ['{count}' => $found, '{search}' => escapeHtml($q)]) : t('Nothing found for &ldquo;{search}&rdquo;', ['{search}' => escapeHtml($q)])) ?></p>
     </div>
     <form method="get" class="d-flex" role="search">
         <div class="input-group">
             <span class="input-group-text"><i class="fas fa-fw fa-search"></i></span>
-            <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="Search everything..." aria-label="Search tickets, documents and help" maxlength="200" <?= $q === '' ? 'autofocus' : '' ?>>
+            <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Search everything...') ?>" aria-label="<?= t('Search tickets, documents and help') ?>" maxlength="200" <?= $q === '' ? 'autofocus' : '' ?>>
         </div>
     </form>
 </div>
 
 <?php if ($q === '') { ?>
     <section class="itflow-portal-panel">
-        <?= emptyStateHtml(['title' => 'What are you looking for?', 'text' => 'Type a word or a ticket number - it looks through your tickets and what was said on them' . ($can_documents ? ', your documents' : '') . ($can_help ? ' and our Help articles' : '') . '.', 'icon' => 'fa-search', 'filtered' => false]) ?>
+        <?= emptyStateHtml(['title' => t('What are you looking for?'), 'text' => $can_documents ? ($can_help ? t('Type a word or a ticket number - it looks through your tickets and what was said on them, your documents and our Help articles.') : t('Type a word or a ticket number - it looks through your tickets and what was said on them, your documents.')) : ($can_help ? t('Type a word or a ticket number - it looks through your tickets and what was said on them and our Help articles.') : t('Type a word or a ticket number - it looks through your tickets and what was said on them.')), 'icon' => 'fa-search', 'filtered' => false]) ?>
     </section>
 <?php } elseif (!$found) { ?>
     <section class="itflow-portal-panel">
-        <?= emptyStateHtml(['title' => 'Nothing found', 'text' => 'Nothing mentions &ldquo;' . escapeHtml($q) . '&rdquo;. Try another word - or ask us.', 'icon' => 'fa-search', 'filtered' => false,
-            'actions' => [['label' => 'Ask Us', 'href' => portalAskUrl($q), 'icon' => 'fa-plus']]]) ?>
+        <?= emptyStateHtml(['title' => t('Nothing found'), 'text' => t('Nothing mentions &ldquo;{search}&rdquo;. Try another word - or ask us.', ['{search}' => escapeHtml($q)]), 'icon' => 'fa-search', 'filtered' => false,
+            'actions' => [['label' => t('Ask Us'), 'href' => portalAskUrl($q), 'icon' => 'fa-plus']]]) ?>
     </section>
 <?php } else { ?>
     <?php foreach ($sections as $key => $section) {
@@ -113,7 +113,7 @@ $found = array_sum(array_column($sections, 'total'));
             <div class="itflow-portal-panel-head">
                 <h2><i class="fas <?= $section['icon'] ?>"></i><?= $section['label'] ?> <span class="badge rounded-pill text-bg-secondary ms-1"><?= number_format(intval($section['total'])) ?></span></h2>
                 <?php if ($section['total'] > count($section['rows'])) { ?>
-                    <a class="small" href="<?= escapeHtml($section['all']) ?>">See all <?= $section['total'] ?></a>
+                    <a class="small" href="<?= escapeHtml($section['all']) ?>"><?= t('See all {count}', ['{count}' => $section['total']]) ?></a>
                 <?php } ?>
             </div>
             <ul class="itflow-portal-list">
@@ -126,12 +126,12 @@ $found = array_sum(array_column($sections, 'total'));
                                     <span class="itflow-portal-ticket-subject d-block"><?= escapeHtml($row['ticket_subject']) ?></span>
                                     <span class="itflow-portal-ticket-meta">
                                         <span><?= escapeHtml($row['ticket_prefix'] . $row['ticket_number']) ?></span>
-                                        <span>Opened <?= escapeHtml(date('M j, Y', strtotime($row['ticket_created_at']))) ?></span>
+                                        <span><?= t('Opened {date}', ['{date}' => escapeHtml(billingEmailDate($row['ticket_created_at']))]) ?></span>
                                     </span>
                                 </span>
                                 <span class="itflow-portal-ticket-side">
                                     <?= portalTicketStateHtml($row) ?>
-                                    <small title="<?= escapeHtml($updated) ?>"><?= $row['ticket_closed_at'] ? 'Closed ' : 'Updated ' ?><?= timeAgo($updated) ?></small>
+                                    <small title="<?= escapeHtml($updated) ?>"><?= ($row['ticket_closed_at'] ? t('Closed {when}', ['{when}' => timeAgo($updated)]) : t('Updated {when}', ['{when}' => timeAgo($updated)])) ?></small>
                                 </span>
                             </a>
                         <?php } elseif ($key === 'documents') {
@@ -146,7 +146,7 @@ $found = array_sum(array_column($sections, 'total'));
                                     </span>
                                 </span>
                                 <span class="itflow-portal-ticket-side">
-                                    <small title="<?= escapeHtml($updated) ?>">Updated <?= escapeHtml(date('M j, Y', strtotime($updated))) ?></small>
+                                    <small title="<?= escapeHtml($updated) ?>"><?= t('Updated {date}', ['{date}' => escapeHtml(billingEmailDate($updated))]) ?></small>
                                 </span>
                             </a>
                         <?php } else {
@@ -162,7 +162,7 @@ $found = array_sum(array_column($sections, 'total'));
                                     </span>
                                 </span>
                                 <span class="itflow-portal-ticket-side">
-                                    <small title="<?= escapeHtml($updated) ?>">Updated <?= escapeHtml(date('M j, Y', strtotime($updated))) ?></small>
+                                    <small title="<?= escapeHtml($updated) ?>"><?= t('Updated {date}', ['{date}' => escapeHtml(billingEmailDate($updated))]) ?></small>
                                 </span>
                             </a>
                         <?php } ?>

@@ -367,7 +367,7 @@ if (isset($_GET['approve_ticket_task'])) {
         task_ticket_id FROM task_approvals LEFT JOIN tasks on task_id = approval_task_id WHERE approval_id = $approval_id AND approval_task_id = $task_id AND approval_url_key = '$url_key' AND approval_status = 'pending' AND approval_scope = 'client'"));
 
     if (!$approval_row) {
-        flashAlert("That task isn't waiting for your approval", 'error');
+        flashAlert(t("That task isn't waiting for your approval"), 'error');
         redirect();
     }
 
@@ -445,7 +445,7 @@ if (isset($_GET['resolve_ticket'])) {
         // Only a ticket that isn't resolved yet, with its tasks done - as its page offers
         $resolvable = mysqli_fetch_row(mysqli_query($mysqli, "SELECT ticket_resolved_at FROM tickets WHERE ticket_id = $ticket_id LIMIT 1"));
         if (!$resolvable || $resolvable[0] !== null || ticketOpenTaskCount($ticket_id)) {
-            flashAlert("This ticket can't be resolved yet", 'error');
+            flashAlert(t("This ticket can't be resolved yet"), 'error');
             redirect("ticket.php?id=" . $ticket_id);
         }
 
@@ -528,7 +528,7 @@ if (isset($_GET['close_ticket'])) {
         // Only a resolved ticket closes - as its page offers
         $closable = mysqli_fetch_row(mysqli_query($mysqli, "SELECT ticket_resolved_at FROM tickets WHERE ticket_id = $ticket_id LIMIT 1"));
         if (!$closable || $closable[0] === null) {
-            flashAlert("Only a resolved ticket can be closed", 'error');
+            flashAlert(t('Only a resolved ticket can be closed'), 'error');
             redirect("ticket.php?id=" . $ticket_id);
         }
 

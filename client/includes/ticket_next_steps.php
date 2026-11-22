@@ -20,10 +20,10 @@ isset($company) || die("Direct file access is not allowed");
         </ol>
         <?php if (!empty($reply_times)) { ?>
             <hr>
-            <p class="small fw-semibold mb-1">How soon we reply</p>
+            <p class="small fw-semibold mb-1"><?= t('How soon we reply') ?></p>
             <ul class="list-unstyled small mb-0" data-reply-times>
                 <?php foreach (array_reverse($reply_times, true) as $priority => $within) { ?>
-                    <li class="d-flex justify-content-between gap-3"><span><?= escapeHtml($priority) ?></span><span class="text-body-secondary text-end"><?= escapeHtml($within) ?></span></li>
+                    <li class="d-flex justify-content-between gap-3"><span><?= escapeHtml(i18n_ticket_priority_label($priority)) ?></span><span class="text-body-secondary text-end"><?= escapeHtml($within) ?></span></li>
                 <?php } ?>
             </ul>
         <?php } ?>

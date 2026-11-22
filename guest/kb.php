@@ -22,6 +22,8 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/load_global_settings.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/session_init.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/inc_set_timezone.php';
 
+i18n_set_language(client_language());
+
 header("Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'");
 header('X-Frame-Options: DENY');
 header('X-Robots-Tag: noindex');
@@ -93,7 +95,7 @@ if ($open && isset($_GET['article'])) {
         ORDER BY kb_article_category_id = 0, category_order ASC, category_name ASC");
     $all_count = 0;
     while ($row = mysqli_fetch_assoc($sql)) {
-        $categories[intval($row['kb_article_category_id'])] = ['name' => $row['category_name'] ?? 'Other', 'icon' => categoryIcon($row['category_icon'] ?? '') ?: 'book', 'count' => intval($row['n'])];
+        $categories[intval($row['kb_article_category_id'])] = ['name' => $row['category_name'] ?? t('Other'), 'icon' => categoryIcon($row['category_icon'] ?? '') ?: 'book', 'count' => intval($row['n'])];
         $all_count += intval($row['n']);
     }
     $category = isset($_GET['category']) && isset($categories[intval($_GET['category'])]) ? intval($_GET['category']) : null;
@@ -142,13 +144,13 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
 
 ?>
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="<?= $dark ? 'dark' : 'light' ?>" data-lte-color-mode="off" data-lte-print="plain">
+<html lang="<?= escapeHtml(i18n_current_language()) ?>" data-bs-theme="<?= $dark ? 'dark' : 'light' ?>" data-lte-color-mode="off" data-lte-print="plain">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <meta name="color-scheme" content="<?= $dark ? 'dark' : 'light' ?>">
-    <title><?= escapeHtml($title . $company_name) ?> | Help Center</title>
+    <title><?= escapeHtml($title . $company_name . ' | ' . t('Help Center')) ?></title>
     <?php if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/uploads/favicon.ico')) { ?>
         <link rel="icon" href="/uploads/favicon.ico">
     <?php } ?>
@@ -169,9 +171,9 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
                 <span class="itflow-portal-brand-name"><?= escapeHtml($company_name) ?></span>
             <?php } ?>
         </a>
-        <span class="text-body-secondary fw-semibold border-start ps-3">Help Center</span>
+        <span class="text-body-secondary fw-semibold border-start ps-3"><?= t('Help Center') ?></span>
         <?php if (intval($config_client_portal_enable) === 1) { ?>
-            <a class="btn btn-sm btn-outline-secondary ms-auto" href="/login.php"><i class="fas fa-sign-in-alt me-2"></i>Sign in</a>
+            <a class="btn btn-sm btn-outline-secondary ms-auto" href="/login.php"><i class="fas fa-sign-in-alt me-2"></i><?= t('Sign in') ?></a>
         <?php } ?>
     </div>
 </header>
@@ -181,8 +183,8 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
 <?php if (!$open || (isset($_GET['article']) && !$article)) { ?>
 
     <section class="itflow-portal-panel mt-3">
-        <?= emptyStateHtml(['title' => $open ? "That article isn't here" : 'Nothing here', 'text' => $open ? 'It may have been taken down.' : '', 'icon' => 'fa-book', 'filtered' => false,
-            'actions' => $open ? [['label' => 'All articles', 'href' => 'kb.php', 'icon' => 'fa-arrow-left']] : []]) ?>
+        <?= emptyStateHtml(['title' => $open ? t("That article isn't here") : t('Nothing here'), 'text' => $open ? t('It may have been taken down.') : '', 'icon' => 'fa-book', 'filtered' => false,
+            'actions' => $open ? [['label' => t('All articles'), 'href' => 'kb.php', 'icon' => 'fa-arrow-left']] : []]) ?>
     </section>
 
 <?php } elseif ($article) {
@@ -190,14 +192,14 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
     $content = documentHtmlPurify($article['kb_article_content']);
     $category_id = intval($article['kb_article_category_id']); ?>
 
-    <a class="itflow-portal-back d-print-none" href="kb.php<?= $category_id ? '?category=' . $category_id : '' ?>"><i class="fas fa-chevron-left"></i><?= $category_id ? escapeHtml($article['category_name']) : 'Help Center' ?></a>
+    <a class="itflow-portal-back d-print-none" href="kb.php<?= $category_id ? '?category=' . $category_id : '' ?>"><i class="fas fa-chevron-left"></i><?= $category_id ? escapeHtml($article['category_name']) : t('Help Center') ?></a>
 
     <div class="itflow-portal-page-head">
         <div class="min-w-0">
             <h1><?= escapeHtml($article['kb_article_title']) ?></h1>
             <p>
                 <?= trim((string) $article['kb_article_summary']) !== '' ? escapeHtml($article['kb_article_summary']) . ' · ' : '' ?>
-                Updated <?= escapeHtml(date('M j, Y', strtotime($updated))) ?>
+                <?= t('Updated {date}', ['{date}' => escapeHtml(billingEmailDate($updated))]) ?>
             </p>
         </div>
     </div>
@@ -211,7 +213,7 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
     <?php $files = kbArticleFiles($article['kb_article_id']);
     if ($files) { ?>
         <section class="itflow-portal-panel mb-4">
-            <div class="itflow-portal-panel-head"><h2><i class="fas fa-paperclip me-2"></i>Files</h2></div>
+            <div class="itflow-portal-panel-head"><h2><i class="fas fa-paperclip me-2"></i><?= t('Files') ?></h2></div>
             <?= kbFilesListHtml($files, function ($id) { return "kb_file.php?file_id=$id"; }) ?>
         </section>
     <?php } ?>
@@ -222,7 +224,7 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
 
     <?php if ($related) { ?>
         <section class="itflow-portal-panel d-print-none">
-            <div class="itflow-portal-panel-head"><h2><i class="fas fa-<?= categoryIcon($article['category_icon'] ?? '') ?: 'book' ?> me-2"></i>More in <?= escapeHtml($article['category_name']) ?></h2></div>
+            <div class="itflow-portal-panel-head"><h2><i class="fas fa-<?= categoryIcon($article['category_icon'] ?? '') ?: 'book' ?> me-2"></i><?= t('More in {category}', ['{category}' => escapeHtml($article['category_name'])]) ?></h2></div>
             <ul class="itflow-portal-list">
                 <?php foreach ($related as $row) { ?>
                     <li>
@@ -240,21 +242,21 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
 
     <div class="itflow-portal-page-head">
         <div>
-            <h1>Help Center</h1>
-            <p>How-tos and answers from <?= escapeHtml($company_name) ?></p>
+            <h1><?= t('Help Center') ?></h1>
+            <p><?= t('How-tos and answers from {company}', ['{company}' => escapeHtml($company_name)]) ?></p>
         </div>
         <form method="get" class="d-flex" role="search">
             <?php if ($category !== null) { ?><input type="hidden" name="category" value="<?= $category ?>"><?php } ?>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-fw fa-search"></i></span>
-                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="Search help" aria-label="Search help" maxlength="200">
+                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Search help') ?>" aria-label="<?= t('Search help') ?>" maxlength="200">
             </div>
         </form>
     </div>
 
     <?php if (count($categories) > 1) { ?>
-        <nav class="itflow-portal-tabs" aria-label="Categories">
-            <a class="<?= $category === null ? 'active' : '' ?>" href="<?= escapeHtml(kbPublicListUrl(['category' => null, 'page' => null])) ?>"><i class="fas fa-list"></i>All <span class="badge rounded-pill"><?= $all_count ?></span></a>
+        <nav class="itflow-portal-tabs" aria-label="<?= t('Categories') ?>">
+            <a class="<?= $category === null ? 'active' : '' ?>" href="<?= escapeHtml(kbPublicListUrl(['category' => null, 'page' => null])) ?>"><i class="fas fa-list"></i><?= t('All') ?> <span class="badge rounded-pill"><?= $all_count ?></span></a>
             <?php foreach ($categories as $id => $c) { ?>
                 <a class="<?= $category === $id ? 'active' : '' ?>" href="<?= escapeHtml(kbPublicListUrl(['category' => $id, 'page' => null])) ?>"><i class="fas fa-<?= $c['icon'] ?>"></i><?= escapeHtml($c['name']) ?> <span class="badge rounded-pill"><?= $c['count'] ?></span></a>
             <?php } ?>
@@ -264,8 +266,8 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
     <section class="itflow-portal-panel">
         <?php if (!$total) { ?>
             <?= $q !== ''
-                ? emptyStateHtml(['thing' => 'articles', 'filtered' => true, 'match_text' => 'No article mentions &ldquo;' . escapeHtml($q) . '&rdquo;.', 'clear_url' => kbPublicListUrl(['q' => null, 'page' => null])])
-                : emptyStateHtml(['title' => 'Nothing here yet', 'text' => '', 'icon' => 'fa-book', 'filtered' => false]) ?>
+                ? emptyStateHtml(['thing' => 'articles', 'filtered' => true, 'match_title' => t('No articles match'), 'match_text' => t('No article mentions &ldquo;{search}&rdquo;.', ['{search}' => escapeHtml($q)]), 'clear_url' => kbPublicListUrl(['q' => null, 'page' => null])])
+                : emptyStateHtml(['title' => t('Nothing here yet'), 'text' => '', 'icon' => 'fa-book', 'filtered' => false]) ?>
         <?php } else { ?>
             <ul class="itflow-portal-list">
                 <?php foreach ($articles as $row) {
@@ -283,7 +285,7 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
                                 </span>
                             </span>
                             <span class="itflow-portal-ticket-side">
-                                <small title="<?= escapeHtml($updated) ?>">Updated <?= escapeHtml(date('M j, Y', strtotime($updated))) ?></small>
+                                <small title="<?= escapeHtml($updated) ?>"><?= t('Updated {date}', ['{date}' => escapeHtml(billingEmailDate($updated))]) ?></small>
                             </span>
                         </a>
                     </li>
@@ -291,10 +293,10 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
             </ul>
             <?php if ($pages > 1) { ?>
                 <div class="itflow-portal-pager">
-                    <span><?= $offset + 1 ?>-<?= min($offset + $per_page, $total) ?> of <?= $total ?></span>
+                    <span><?= t('{from}-{to} of {total}', ['{from}' => $offset + 1, '{to}' => min($offset + $per_page, $total), '{total}' => $total]) ?></span>
                     <div class="btn-group">
-                        <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(kbPublicListUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="Previous page"><i class="fas fa-chevron-left"></i></a>
-                        <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(kbPublicListUrl(['page' => $page + 1])) ?>" aria-label="Next page"><i class="fas fa-chevron-right"></i></a>
+                        <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(kbPublicListUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="<?= t('Previous page') ?>"><i class="fas fa-chevron-left"></i></a>
+                        <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(kbPublicListUrl(['page' => $page + 1])) ?>" aria-label="<?= t('Next page') ?>"><i class="fas fa-chevron-right"></i></a>
                     </div>
                 </div>
             <?php } ?>
@@ -309,7 +311,7 @@ $title = $article ? $article['kb_article_title'] . ' | ' : '';
     <div class="container d-flex flex-wrap justify-content-between gap-2">
         <span><?= escapeHtml($company_name) ?></span>
         <?php if (!$config_whitelabel_enabled) { ?>
-            <span>Powered by ITFlow</span>
+            <span><?= t('Powered by ITFlow') ?></span>
         <?php } ?>
     </div>
 </footer>

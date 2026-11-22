@@ -682,21 +682,21 @@ function kbFeedbackHtml($kb_article_id, $state, $action, $csrf_token, $ask_url =
     $hidden = '<input type="hidden" name="csrf_token" value="' . escapeHtml($csrf_token) . '">';
     $html = '<div class="itflow-portal-panel itflow-portal-panel-body itflow-kb-feedback d-print-none mb-4" id="kb-feedback">';
     if ($state === 'yes') {
-        $html .= '<i class="fas fa-check-circle text-success me-2"></i>Thanks - glad it helped.';
+        $html .= '<i class="fas fa-check-circle text-success me-2"></i>' . t('Thanks - glad it helped.');
     } elseif ($state === 'done') {
-        $html .= '<i class="fas fa-check-circle text-success me-2"></i>Thanks - we\'ll use that to make it better.';
+        $html .= '<i class="fas fa-check-circle text-success me-2"></i>' . t("Thanks - we'll use that to make it better.");
     } elseif ($state === 'no') {
         $html .= '<form method="post" action="' . escapeHtml($action) . '">' . $hidden
-            . '<label class="form-label fw-semibold" for="kbFeedbackComment">Sorry it didn\'t help. What were you looking for?</label>'
-            . '<textarea class="form-control" id="kbFeedbackComment" name="comment" rows="2" maxlength="500" required placeholder="What was missing, or what didn\'t work"></textarea>'
-            . '<div class="d-flex flex-wrap align-items-center gap-3 mt-2"><button type="submit" class="btn btn-sm btn-primary" name="kb_feedback_comment" value="' . $kb_article_id . '"><i class="fas fa-paper-plane me-1"></i>Send</button>'
-            . ($ask_url !== '' ? '<a href="' . escapeHtml($ask_url) . '">Or ask us in a ticket</a>' : '') . '</div></form>';
+            . '<label class="form-label fw-semibold" for="kbFeedbackComment">' . t("Sorry it didn't help. What were you looking for?") . '</label>'
+            . '<textarea class="form-control" id="kbFeedbackComment" name="comment" rows="2" maxlength="500" required placeholder="' . escapeHtml(t("What was missing, or what didn't work")) . '"></textarea>'
+            . '<div class="d-flex flex-wrap align-items-center gap-3 mt-2"><button type="submit" class="btn btn-sm btn-primary" name="kb_feedback_comment" value="' . $kb_article_id . '"><i class="fas fa-paper-plane me-1"></i>' . t('Send') . '</button>'
+            . ($ask_url !== '' ? '<a href="' . escapeHtml($ask_url) . '">' . t('Or ask us in a ticket') . '</a>' : '') . '</div></form>';
     } else {
         $html .= '<form method="post" action="' . escapeHtml($action) . '" class="d-flex flex-wrap align-items-center gap-2">' . $hidden
             . '<input type="hidden" name="kb_feedback" value="' . $kb_article_id . '">'
-            . '<span class="fw-semibold me-2">Was this helpful?</span>'
-            . '<button type="submit" class="btn btn-sm btn-outline-success" name="helpful" value="1"><i class="fas fa-thumbs-up me-1"></i>Yes</button>'
-            . '<button type="submit" class="btn btn-sm btn-outline-secondary" name="helpful" value="0"><i class="fas fa-thumbs-down me-1"></i>No</button></form>';
+            . '<span class="fw-semibold me-2">' . t('Was this helpful?') . '</span>'
+            . '<button type="submit" class="btn btn-sm btn-outline-success" name="helpful" value="1"><i class="fas fa-thumbs-up me-1"></i>' . t('Yes') . '</button>'
+            . '<button type="submit" class="btn btn-sm btn-outline-secondary" name="helpful" value="0"><i class="fas fa-thumbs-down me-1"></i>' . t('No') . '</button></form>';
     }
     return $html . '</div>';
 }

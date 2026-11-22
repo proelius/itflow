@@ -29,7 +29,7 @@ $sql = mysqli_query($mysqli, "SELECT kb_article_category_id, category_name, cate
     ORDER BY kb_article_category_id = 0, category_order ASC, category_name ASC");
 $all_count = 0;
 while ($row = mysqli_fetch_assoc($sql)) {
-    $categories[intval($row['kb_article_category_id'])] = ['name' => $row['category_name'] ?? 'Other', 'icon' => categoryIcon($row['category_icon'] ?? '') ?: 'book', 'count' => intval($row['n'])];
+    $categories[intval($row['kb_article_category_id'])] = ['name' => $row['category_name'] ?? t('Other'), 'icon' => categoryIcon($row['category_icon'] ?? '') ?: 'book', 'count' => intval($row['n'])];
     $all_count += intval($row['n']);
 }
 $category = isset($_GET['category']) && isset($categories[intval($_GET['category'])]) ? intval($_GET['category']) : null;
@@ -69,24 +69,24 @@ function kbPortalUrl(array $changes) {
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1>Help</h1>
-        <p>How-tos and answers from <?= escapeHtml($session_company_name) ?></p>
+        <h1><?= t('Help') ?></h1>
+        <p><?= t('How-tos and answers from {company}', ['{company}' => escapeHtml($session_company_name)]) ?></p>
     </div>
     <div class="d-flex flex-wrap align-items-center gap-2">
         <form method="get" class="d-flex" role="search">
             <?php if ($category !== null) { ?><input type="hidden" name="category" value="<?= $category ?>"><?php } ?>
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-fw fa-search"></i></span>
-                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="Search help..." aria-label="Search help" maxlength="200">
+                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Search help...') ?>" aria-label="<?= t('Search help') ?>" maxlength="200">
             </div>
         </form>
-        <a class="btn btn-outline-primary" href="ticket_add.php"><i class="fas fa-plus me-2"></i>Ask Us</a>
+        <a class="btn btn-outline-primary" href="ticket_add.php"><i class="fas fa-plus me-2"></i><?= t('Ask Us') ?></a>
     </div>
 </div>
 
 <?php if (count($categories) > 1) { ?>
-    <nav class="itflow-portal-tabs" aria-label="Categories">
-        <a class="<?= $category === null ? 'active' : '' ?>" href="<?= escapeHtml(kbPortalUrl(['category' => null, 'page' => null])) ?>"><i class="fas fa-list"></i>All <span class="badge rounded-pill"><?= number_format(intval($all_count)) ?></span></a>
+    <nav class="itflow-portal-tabs" aria-label="<?= t('Categories') ?>">
+        <a class="<?= $category === null ? 'active' : '' ?>" href="<?= escapeHtml(kbPortalUrl(['category' => null, 'page' => null])) ?>"><i class="fas fa-list"></i><?= t('All') ?> <span class="badge rounded-pill"><?= number_format(intval($all_count)) ?></span></a>
         <?php foreach ($categories as $id => $c) { ?>
             <a class="<?= $category === $id ? 'active' : '' ?>" href="<?= escapeHtml(kbPortalUrl(['category' => $id, 'page' => null])) ?>"><i class="fas fa-<?= $c['icon'] ?>"></i><?= escapeHtml($c['name']) ?> <span class="badge rounded-pill"><?= number_format(intval($c['count'])) ?></span></a>
         <?php } ?>
@@ -96,11 +96,11 @@ function kbPortalUrl(array $changes) {
 <section class="itflow-portal-panel">
     <?php if (!$total) { ?>
         <?php if ($q !== '') { ?>
-            <?= emptyStateHtml(['thing' => 'articles', 'filtered' => true, 'match_text' => 'No article mentions &ldquo;' . escapeHtml($q) . '&rdquo;.', 'clear_url' => kbPortalUrl(['q' => null, 'page' => null]),
-                'actions' => [['label' => 'Ask Us', 'href' => portalAskUrl($q), 'icon' => 'fa-plus']]]) ?>
+            <?= emptyStateHtml(['thing' => 'articles', 'filtered' => true, 'match_title' => t('No articles match'), 'match_text' => t('No article mentions &ldquo;{search}&rdquo;.', ['{search}' => escapeHtml($q)]), 'clear_url' => kbPortalUrl(['q' => null, 'page' => null]),
+                'actions' => [['label' => t('Ask Us'), 'href' => portalAskUrl($q), 'icon' => 'fa-plus']]]) ?>
         <?php } else { ?>
-            <?= emptyStateHtml(['title' => 'Nothing here yet', 'text' => 'How-tos and answers we share with you show here. Ask us anything in the meantime.', 'icon' => 'fa-book', 'filtered' => false,
-                'actions' => [['label' => 'Ask Us', 'href' => 'ticket_add.php', 'icon' => 'fa-plus']]]) ?>
+            <?= emptyStateHtml(['title' => t('Nothing here yet'), 'text' => t('How-tos and answers we share with you show here. Ask us anything in the meantime.'), 'icon' => 'fa-book', 'filtered' => false,
+                'actions' => [['label' => t('Ask Us'), 'href' => 'ticket_add.php', 'icon' => 'fa-plus']]]) ?>
         <?php } ?>
     <?php } else { ?>
         <ul class="itflow-portal-list">
@@ -118,7 +118,7 @@ function kbPortalUrl(array $changes) {
                             </span>
                         </span>
                         <span class="itflow-portal-ticket-side">
-                            <small title="<?= escapeHtml($updated) ?>">Updated <?= escapeHtml(date('M j, Y', strtotime($updated))) ?></small>
+                            <small title="<?= escapeHtml($updated) ?>"><?= t('Updated {date}', ['{date}' => escapeHtml(billingEmailDate($updated))]) ?></small>
                         </span>
                     </a>
                 </li>
@@ -126,10 +126,10 @@ function kbPortalUrl(array $changes) {
         </ul>
         <?php if ($pages > 1) { ?>
             <div class="itflow-portal-pager">
-                <span><?= $offset + 1 ?>-<?= min($offset + $per_page, $total) ?> of <?= $total ?></span>
+                <span><?= t('{from}-{to} of {total}', ['{from}' => $offset + 1, '{to}' => min($offset + $per_page, $total), '{total}' => $total]) ?></span>
                 <div class="btn-group">
-                    <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(kbPortalUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="Previous page"><i class="fas fa-chevron-left"></i></a>
-                    <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(kbPortalUrl(['page' => $page + 1])) ?>" aria-label="Next page"><i class="fas fa-chevron-right"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary<?= $page <= 1 ? ' disabled' : '' ?>" href="<?= escapeHtml(kbPortalUrl(['page' => $page - 1 > 1 ? $page - 1 : null])) ?>" aria-label="<?= t('Previous page') ?>"><i class="fas fa-chevron-left"></i></a>
+                    <a class="btn btn-sm btn-outline-secondary<?= $page >= $pages ? ' disabled' : '' ?>" href="<?= escapeHtml(kbPortalUrl(['page' => $page + 1])) ?>" aria-label="<?= t('Next page') ?>"><i class="fas fa-chevron-right"></i></a>
                 </div>
             </div>
         <?php } ?>

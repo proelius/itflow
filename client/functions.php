@@ -192,17 +192,17 @@ function portalNav() {
             ['label' => 'Invoices', 'icon' => 'fa-file-invoice-dollar', 'href' => '/client/invoices.php', 'pages' => ['invoices.php', 'invoice.php']],
         ];
         if ($cards) {
-            $children[] = ['label' => 'Pay Invoices', 'icon' => 'fa-hand-holding-usd', 'href' => '/client/unpaid_invoices.php', 'pages' => ['unpaid_invoices.php', 'pay.php']];
+            $children[] = ['label' => t('Pay Invoices'), 'icon' => 'fa-hand-holding-usd', 'href' => '/client/unpaid_invoices.php', 'pages' => ['unpaid_invoices.php', 'pay.php']];
         }
         $children[] = ['label' => 'Quotes', 'icon' => 'fa-comment-dollar', 'href' => '/client/quotes.php', 'pages' => ['quotes.php', 'quote.php']];
-        $children[] = ['label' => 'Recurring Invoices', 'icon' => 'fa-redo-alt', 'href' => '/client/recurring_invoices.php', 'pages' => ['recurring_invoices.php', 'recurring_invoice.php']];
+        $children[] = ['label' => t('Recurring Invoices'), 'icon' => 'fa-redo-alt', 'href' => '/client/recurring_invoices.php', 'pages' => ['recurring_invoices.php', 'recurring_invoice.php']];
         if (contractsReady() && intval(mysqli_fetch_row(mysqli_query($mysqli, "SELECT COUNT(*) FROM contracts WHERE " . portalContractScopeSql()))[0] ?? 0)) {
             $children[] = ['label' => 'Contracts', 'icon' => 'fa-file-contract', 'href' => '/client/contracts.php', 'pages' => ['contracts.php', 'contract.php']];
         }
         $children[] = ['label' => 'Payments', 'icon' => 'fa-receipt', 'href' => '/client/payments.php', 'pages' => ['payments.php', 'receipt.php']];
         $children[] = ['label' => 'Statement', 'icon' => 'fa-file-alt', 'href' => '/client/statement.php', 'pages' => ['statement.php']];
         if ($cards) {
-            $children[] = ['label' => 'Cards & Autopay', 'icon' => 'fa-credit-card', 'href' => '/client/saved_payment_methods.php', 'pages' => ['saved_payment_methods.php']];
+            $children[] = ['label' => t('Cards & Autopay'), 'icon' => 'fa-credit-card', 'href' => '/client/saved_payment_methods.php', 'pages' => ['saved_payment_methods.php']];
         }
         $nav['billing'] = ['label' => 'Billing', 'icon' => 'fa-file-invoice-dollar', 'children' => $children, 'pages' => array_merge(...array_column($children, 'pages'))];
     }
@@ -211,7 +211,7 @@ function portalNav() {
         $children = [
             ['label' => 'Devices', 'icon' => 'fa-desktop', 'href' => '/client/assets.php', 'pages' => ['assets.php', 'asset.php']],
             ['label' => 'Licenses', 'icon' => 'fa-cube', 'href' => '/client/licenses.php', 'pages' => ['licenses.php']],
-            ['label' => 'Domains & Certificates', 'icon' => 'fa-globe', 'href' => '/client/domains.php', 'pages' => ['domains.php', 'certificates.php']],
+            ['label' => t('Domains & Certificates'), 'icon' => 'fa-globe', 'href' => '/client/domains.php', 'pages' => ['domains.php', 'certificates.php']],
             ['label' => 'Documents', 'icon' => 'fa-folder-open', 'href' => '/client/documents.php', 'pages' => ['documents.php', 'document.php', 'document_add.php', 'file.php']],
         ];
         if (contactCan('contacts')) {
@@ -222,7 +222,7 @@ function portalNav() {
 
     // Help - the Knowledge Base articles shared with them, once there is one
     if (kbClientHas($session_client_id)) {
-        $nav['help'] = ['label' => 'Help', 'icon' => 'fa-book', 'href' => '/client/kb.php', 'pages' => ['kb.php', 'kb_article.php']];
+        $nav['help'] = ['label' => t('Help'), 'icon' => 'fa-book', 'href' => '/client/kb.php', 'pages' => ['kb.php', 'kb_article.php']];
     }
 
     // The links an admin set to show in the portal (Admin > Custom Links)
@@ -343,7 +343,7 @@ function portalReplyTimes() {
         $sla_id = intval(getTicketSlaId($session_client_id, $priority));
         $minutes = $sla_id ? intval(mysqli_fetch_row(mysqli_query($mysqli, "SELECT sla_response_minutes FROM slas WHERE sla_id = $sla_id"))[0] ?? 0) : 0;
         if ($minutes > 0) {
-            $times[$priority] = 'within ' . formatSlaMinutes($minutes);
+            $times[$priority] = t('within {time}', ['{time}' => formatSlaMinutes($minutes)]);
         }
     }
     return $times;

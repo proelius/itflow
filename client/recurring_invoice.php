@@ -78,24 +78,24 @@ $paper = [
                         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                         <input type="hidden" name="set_recurring_payment" value="1">
                         <input type="hidden" name="recurring_invoice_id" value="<?= $recurring_id ?>">
-                        <label class="form-label fw-semibold" for="autopayCard">Autopay</label>
+                        <label class="form-label fw-semibold" for="autopayCard"><?= t('Autopay') ?></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-fw fa-credit-card"></i></span>
                             <select class="form-select" id="autopayCard" name="saved_payment_id" data-autosubmit<?= !$usable && !$autopay ? ' disabled' : '' ?>>
-                                <option value="0">Off - I'll pay each invoice</option>
+                                <option value="0"><?= t("Off - I'll pay each invoice") ?></option>
                                 <?php foreach ($cards as $card) {
                                     if ($card['card']['expired'] && intval($card['saved_payment_id']) !== $autopay) {
                                         continue;
                                     } ?>
-                                    <option value="<?= intval($card['saved_payment_id']) ?>"<?= intval($card['saved_payment_id']) === $autopay ? ' selected' : '' ?>>Pay with <?= escapeHtml($card['card']['label']) ?><?= $card['card']['expired'] ? ' (expired)' : '' ?></option>
+                                    <option value="<?= intval($card['saved_payment_id']) ?>"<?= intval($card['saved_payment_id']) === $autopay ? ' selected' : '' ?>><?= t('Pay with {card}', ['{card}' => escapeHtml($card['card']['label'])]) ?><?= $card['card']['expired'] ? ' ' . t('(expired)') : '' ?></option>
                                 <?php } ?>
                             </select>
                         </div>
                         <div class="form-text">
                             <?php if ($usable) { ?>
-                                Charged on each invoice's due date, with a receipt by email.<?php if ($fee_rates) { ?> Each charge has a card fee added: <?= escapeHtml(billingCardFeeTerms($fee_rates, $currency)) ?>.<?php } ?>
+                                <?= t("Charged on each invoice's due date, with a receipt by email.") ?><?php if ($fee_rates) { ?> <?= t('Each charge has a card fee added: {terms}.', ['{terms}' => escapeHtml(billingCardFeeTerms($fee_rates, $currency))]) ?><?php } ?>
                             <?php } else { ?>
-                                <a href="saved_payment_methods.php">Add a card</a> to have these paid automatically.
+                                <?= t('{link} to have these paid automatically.', ['{link}' => '<a href="saved_payment_methods.php">' . t('Add a card') . '</a>']) ?>
                             <?php } ?>
                         </div>
                     </form>

@@ -32,10 +32,10 @@ $article = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT kb_article_id, kb_ar
     LIMIT 1"));
 
 if (!$article) { ?>
-    <a class="itflow-portal-back" href="kb.php"><i class="fas fa-chevron-left"></i>Help</a>
+    <a class="itflow-portal-back" href="kb.php"><i class="fas fa-chevron-left"></i><?= t('Help') ?></a>
     <section class="itflow-portal-panel">
-        <?= emptyStateHtml(['title' => "That article isn't here", 'text' => 'It may have been taken down, or isn\'t shared with you.', 'icon' => 'fa-book', 'filtered' => false,
-            'actions' => [['label' => 'All Help', 'href' => 'kb.php', 'icon' => 'fa-arrow-left']]]) ?>
+        <?= emptyStateHtml(['title' => t("That article isn't here"), 'text' => t("It may have been taken down, or isn't shared with you."), 'icon' => 'fa-book', 'filtered' => false,
+            'actions' => [['label' => t('All Help'), 'href' => 'kb.php', 'icon' => 'fa-arrow-left']]]) ?>
     </section>
     <?php
     require_once "includes/footer.php";
@@ -62,19 +62,19 @@ if ($category_id) {
 }
 ?>
 
-<a class="itflow-portal-back d-print-none" href="kb.php<?= $category_id ? '?category=' . $category_id : '' ?>"><i class="fas fa-chevron-left"></i><?= $category_id ? escapeHtml($article['category_name']) : 'Help' ?></a>
+<a class="itflow-portal-back d-print-none" href="kb.php<?= $category_id ? '?category=' . $category_id : '' ?>"><i class="fas fa-chevron-left"></i><?= $category_id ? escapeHtml($article['category_name']) : t('Help') ?></a>
 
 <div class="itflow-portal-page-head">
     <div class="min-w-0">
         <h1><?= escapeHtml($article['kb_article_title']) ?></h1>
         <p>
             <?= trim((string) $article['kb_article_summary']) !== '' ? escapeHtml($article['kb_article_summary']) . ' · ' : '' ?>
-            Updated <?= escapeHtml(date('M j, Y', strtotime($updated))) ?>
+            <?= t('Updated {date}', ['{date}' => escapeHtml(billingEmailDate($updated))]) ?>
         </p>
     </div>
     <div class="d-flex flex-wrap gap-2 d-print-none">
-        <button type="button" class="btn btn-outline-secondary" data-portal-print><i class="fas fa-print me-2"></i>Print</button>
-        <a class="btn btn-outline-secondary" href="<?= escapeHtml(portalAskUrl('Question about ' . $article['kb_article_title'])) ?>"><i class="fas fa-question-circle me-2"></i>Still Stuck? Ask Us</a>
+        <button type="button" class="btn btn-outline-secondary" data-portal-print><i class="fas fa-print me-2"></i><?= t('Print') ?></button>
+        <a class="btn btn-outline-secondary" href="<?= escapeHtml(portalAskUrl(t('Question about {title}', ['{title}' => $article['kb_article_title']]))) ?>"><i class="fas fa-question-circle me-2"></i><?= t('Still Stuck? Ask Us') ?></a>
     </div>
 </div>
 
@@ -84,25 +84,25 @@ if ($category_id) {
     </article>
 <?php } else { ?>
     <section class="itflow-portal-panel mb-4">
-        <?= emptyStateHtml(['title' => 'This article is empty', 'text' => '', 'icon' => 'fa-book', 'filtered' => false]) ?>
+        <?= emptyStateHtml(['title' => t('This article is empty'), 'text' => '', 'icon' => 'fa-book', 'filtered' => false]) ?>
     </section>
 <?php } ?>
 
 <?php $files = kbArticleFiles($kb_article_id);
 if ($files) { ?>
     <section class="itflow-portal-panel mb-4">
-        <div class="itflow-portal-panel-head"><h2><i class="fas fa-paperclip me-2"></i>Files</h2></div>
+        <div class="itflow-portal-panel-head"><h2><i class="fas fa-paperclip me-2"></i><?= t('Files') ?></h2></div>
         <?= kbFilesListHtml($files, function ($id) { return "kb_file.php?file_id=$id"; }) ?>
     </section>
 <?php } ?>
 
 <?php if (kbFeedbackReady()) { ?>
-    <?= kbFeedbackHtml($kb_article_id, kbFeedbackState($kb_article_id, $session_contact_id), 'post.php', $_SESSION['csrf_token'], portalAskUrl('Question about ' . $article['kb_article_title'])) ?>
+    <?= kbFeedbackHtml($kb_article_id, kbFeedbackState($kb_article_id, $session_contact_id), 'post.php', $_SESSION['csrf_token'], portalAskUrl(t('Question about {title}', ['{title}' => $article['kb_article_title']]))) ?>
 <?php } ?>
 
 <?php if ($related) { ?>
     <section class="itflow-portal-panel d-print-none">
-        <div class="itflow-portal-panel-head"><h2><i class="fas fa-<?= categoryIcon($article['category_icon'] ?? '') ?: 'book' ?> me-2"></i>More in <?= escapeHtml($article['category_name']) ?></h2></div>
+        <div class="itflow-portal-panel-head"><h2><i class="fas fa-<?= categoryIcon($article['category_icon'] ?? '') ?: 'book' ?> me-2"></i><?= t('More in {category}', ['{category}' => escapeHtml($article['category_name'])]) ?></h2></div>
         <ul class="itflow-portal-list">
             <?php foreach ($related as $row) { ?>
                 <li>

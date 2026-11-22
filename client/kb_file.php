@@ -16,7 +16,7 @@ require_once 'functions.php';
 $row = kbArticleFileRow($_GET['file_id'] ?? 0);
 if (!$row || !mysqli_num_rows(mysqli_query($mysqli, "SELECT 1 FROM kb_articles WHERE kb_article_id = " . intval($row['kb_article_file_kb_article_id']) . " AND " . kbClientSql($session_client_id)))) {
     http_response_code(404);
-    exit('File not found');
+    exit(t('File not found'));
 }
 
 kbFileSend($row, ($_GET['action'] ?? '') === 'view');
