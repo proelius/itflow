@@ -107,6 +107,26 @@ $paper = [
             </div>
         </div>
 
+        <?php
+        // The Swiss QR-bill - the same code as on the PDF and in the client portal, to scan from here (functions/qr_bill.php)
+        $owing = in_array($state['state'], ['open', 'overdue'], true) && invoiceCanPay($invoice, $state);
+        $qr_bill = $owing ? qrBillFor($invoice, $company, billingBillTo($client_id), $currency, $state['balance'], $number) : null;
+        if ($qr_bill) { ?>
+            <div class="card mb-3">
+                <div class="card-header"><h3 class="card-title mb-0"><i class="fas fa-fw fa-qrcode text-secondary me-2"></i><?= t('Pay by QR-bill') ?></h3></div>
+                <div class="card-body text-center">
+                    <?= qrBillSvg($qr_bill, 200) ?>
+                    <p class="small text-body-secondary mt-2 mb-3"><?= t('Scan it with your banking app, or enter the IBAN and the reference below.') ?></p>
+                    <div class="text-start small">
+                        <div class="text-body-secondary">IBAN</div>
+                        <div class="fw-semibold mb-2"><?= escapeHtml(qrBillIbanSpaced($qr_bill['iban'])) ?></div>
+                        <div class="text-body-secondary"><?= t('Reference') ?></div>
+                        <div class="fw-semibold"><?= escapeHtml(qrBillReferenceSpaced($qr_bill['reference'])) ?></div>
+                    </div>
+                </div>
+            </div>
+        <?php } ?>
+
         <?php if ($payments) { ?>
             <div class="card mb-3">
                 <div class="card-header"><h3 class="card-title mb-0"><i class="fas fa-fw fa-receipt text-secondary me-2"></i><?= t('Payments') ?></h3></div>
