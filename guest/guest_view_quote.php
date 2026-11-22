@@ -129,7 +129,7 @@ $paper = [
                 <?php } ?>
 
                 <div class="d-flex gap-2">
-                    <a class="btn btn-outline-primary flex-fill" href="guest_post.php?export_quote_pdf=<?= $quote_id ?>&url_key=<?= $query_key ?>"><i class="fas fa-file-pdf me-2"></i><?= t('Download PDF') ?></a>
+                    <a class="btn btn-outline-primary flex-fill" href="guest_post.php?export_quote_pdf=<?= $quote_id ?>&url_key=<?= $query_key ?>" target="_blank" rel="noopener"><i class="fas fa-file-pdf me-2"></i><?= t('Download PDF') ?></a>
                     <button type="button" class="btn btn-outline-secondary" onclick="window.print();" title="<?= t('Print') ?>"><i class="fas fa-print"></i></button>
                 </div>
             </div>
