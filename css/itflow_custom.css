@@ -7890,7 +7890,9 @@ a.itflow-billing-stat:hover {
     flex: 0 1 auto;
     align-items: center;
     gap: .6rem;
-    min-width: 0;
+    /* Never narrower than the mark: on a tight top bar the name gives way
+       first, instead of the mark spilling over the first menu entry */
+    min-width: 2.25rem;
     color: var(--bs-emphasis-color);
     font-weight: 600;
     text-decoration: none;
@@ -7910,6 +7912,7 @@ a.itflow-billing-stat:hover {
     font-size: .75rem;
 }
 .itflow-portal-brand-name {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
