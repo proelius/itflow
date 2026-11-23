@@ -223,6 +223,60 @@ function calendarWhenText($row, $start = null, $end = null) {
     return date('D, M j, g:i A', $s) . ' - ' . date('D, M j, Y g:i A', $e);
 }
 
+/** An event's time for an email in the current language - calendarWhenText() in English, spelled out by IntlDateFormatter in another. */
+function calendarEmailWhen($row) {
+    $lang = i18n_current_language();
+    if ($lang === 'en' || !class_exists('IntlDateFormatter') || empty($row['event_start'])) {
+        return calendarWhenText($row);
+    }
+    $locale = $lang === 'fr' ? 'fr_CH' : $lang;
+    $format = function ($pattern, $timestamp) use ($locale) {
+        $text = (new IntlDateFormatter($locale, IntlDateFormatter::NONE, IntlDateFormatter::NONE, date_default_timezone_get(), IntlDateFormatter::GREGORIAN, $pattern))->format($timestamp);
+        return $text === false ? date('Y-m-d H:i', $timestamp) : $text;
+    };
+    $s = strtotime($row['event_start']);
+    $e = strtotime($row['event_end'] ?: $row['event_start']) ?: $s;
+    if (!empty($row['event_all_day'])) {
+        if (date('Y-m-d', $s) >= date('Y-m-d', $e)) {
+            return $format('EEEE d MMMM y', $s) . ' ' . t('(all day)');
+        }
+        return $format('EEEE d MMMM', $s) . ' - ' . $format('EEEE d MMMM y', $e) . ' ' . t('(all day)');
+    }
+    if (date('Y-m-d', $s) === date('Y-m-d', $e)) {
+        return $format('EEEE d MMMM y, HH:mm', $s) . ($e > $s ? ' - ' . $format('HH:mm', $e) : '');
+    }
+    return $format('EEEE d MMMM y, HH:mm', $s) . ' - ' . $format('EEEE d MMMM y, HH:mm', $e);
+}
+
+/** How an event repeats, for an email in the current language - calendarRepeatText() in English. */
+function calendarEmailRepeat($row) {
+    if (i18n_current_language() === 'en' || !calendarEventRepeats($row)) {
+        return calendarRepeatText($row);
+    }
+    $n = max(1, intval($row['event_repeat_interval'] ?? 1));
+    $unit = (string) $row['event_repeat'];
+    if ($unit === 'Day') {
+        $text = $n === 1 ? t('Every day') : t('Every {n} days', ['{n}' => $n]);
+    } elseif ($unit === 'Week') {
+        $text = $n === 1 ? t('Every week') : t('Every {n} weeks', ['{n}' => $n]);
+    } elseif ($unit === 'Month') {
+        $text = $n === 1 ? t('Every month') : t('Every {n} months', ['{n}' => $n]);
+    } else {
+        $text = $n === 1 ? t('Every year') : t('Every {n} years', ['{n}' => $n]);
+    }
+    $by_day = calendarEventByDay($row);
+    if ($by_day !== '') {
+        [$ordinal, $code] = byDayParts($by_day);
+        $weekday = ['{weekday}' => t(BY_DAY_WEEKDAYS[$code])];
+        $rule = $ordinal === 1 ? t('the first {weekday}', $weekday) : ($ordinal === 2 ? t('the second {weekday}', $weekday) : ($ordinal === 3 ? t('the third {weekday}', $weekday) : ($ordinal === 4 ? t('the fourth {weekday}', $weekday) : t('the last {weekday}', $weekday))));
+        $text .= ' ' . ($unit === 'Year' ? t('on {rule} of {month}', ['{rule}' => $rule, '{month}' => i18n_current_language() === 'fr' ? mb_strtolower(t(date('F', strtotime($row['event_start'])))) : t(date('F', strtotime($row['event_start'])))]) : t('on {rule}', ['{rule}' => $rule]));
+    }
+    if (!empty($row['event_repeat_until'])) {
+        $text .= ' ' . t('until {date}', ['{date}' => i18n_date('M j, Y', strtotime($row['event_repeat_until']))]);
+    }
+    return $text;
+}
+
 /** Where an event is as one line - the site's name and address - or the location typed in. */
 function calendarWhereText($row) {
     if (!empty($row['location_name'])) {
@@ -1470,31 +1524,41 @@ function calendarSendInvites(array $event, $kind = 'invite', $attendees = null) 
     $item['status'] = $cancel ? 'CANCELLED' : 'CONFIRMED';
     $ics = icsCalendar(['method' => $cancel ? 'CANCEL' : 'REQUEST', 'invite' => true], [$item], $config_timezone);
 
-    $when = calendarWhenText($event);
-    $repeat = calendarRepeatText($event);
-    $where = calendarWhereText($event);
     $meeting = calendarMeetingUrl($event);
     $description = trim(html_entity_decode(strip_tags((string) $event['event_description']), ENT_QUOTES, 'UTF-8'));
-    $intro = [
-        'invite' => 'You are invited to the event below. The invitation is attached, so it can go straight into your calendar.',
-        'update' => 'The event below has changed. The attached invitation updates the one in your calendar.',
-        'cancel' => 'The event below has been cancelled. The attached cancellation takes it off your calendar.',
-    ][$kind] ?? '';
-    $subject_prefix = ['invite' => 'Invitation', 'update' => 'Updated', 'cancel' => 'Cancelled'][$kind] ?? 'Invitation';
+    $where = calendarWhereText($event);
 
-    $recipients = array_map(function ($attendee) use ($cancel) {
-        return ['email' => $attendee['email'], 'name' => (string) $attendee['name'], 'footnote' => $cancel ? 'You get this because you were invited to this event.' : 'You get this because you are invited to this event.'];
-    }, $attendees);
-    emailQueue($recipients, mb_substr("$subject_prefix: " . $event['event_title'] . ' - ' . $when, 0, 250), [
-        'kind' => ['invite' => 'Invitation', 'update' => 'Event changed', 'cancel' => 'Event cancelled'][$kind] ?? 'Invitation',
-        'tone' => $cancel ? 'secondary' : 'primary',
-        'preview' => "$when" . ($where !== '' ? " - $where" : ''),
-        'title' => (string) $event['event_title'],
-        'intro' => [$intro],
-        'summary' => array_filter(['When' => $when, 'Repeats' => (string) $repeat, 'Where' => $where]),
-        'note' => !$cancel ? $description : '',
-        'button' => $meeting && !$cancel ? ['label' => 'Join the meeting', 'url' => $meeting, 'show_url' => true] : null,
-    ], ['from' => $from, 'cal_str' => $ics]);
+    // Agents get it in English, everyone else in the client language - one email for each
+    $groups = [];
+    foreach ($attendees as $attendee) {
+        $groups[$attendee['kind'] === 'agent' ? 'en' : client_language()][] = $attendee;
+    }
+    foreach ($groups as $lang => $group) {
+        i18n_with($lang, function () use ($group, $event, $kind, $cancel, $from, $ics, $meeting, $description, $where) {
+            $when = calendarEmailWhen($event);
+            $repeat = calendarEmailRepeat($event);
+            $intro = [
+                'invite' => t('You are invited to the event below. The invitation is attached, so it can go straight into your calendar.'),
+                'update' => t('The event below has changed. The attached invitation updates the one in your calendar.'),
+                'cancel' => t('The event below has been cancelled. The attached cancellation takes it off your calendar.'),
+            ][$kind] ?? '';
+            $subject_prefix = ['invite' => t('Invitation'), 'update' => t('Updated'), 'cancel' => t('Cancelled')][$kind] ?? t('Invitation');
+
+            $recipients = array_map(function ($attendee) use ($cancel) {
+                return ['email' => $attendee['email'], 'name' => (string) $attendee['name'], 'footnote' => $cancel ? t('You get this because you were invited to this event.') : t('You get this because you are invited to this event.')];
+            }, $group);
+            emailQueue($recipients, mb_substr("$subject_prefix: " . $event['event_title'] . ' - ' . $when, 0, 250), [
+                'kind' => ['invite' => t('Invitation'), 'update' => t('Event changed'), 'cancel' => t('Event cancelled')][$kind] ?? t('Invitation'),
+                'tone' => $cancel ? 'secondary' : 'primary',
+                'preview' => "$when" . ($where !== '' ? " - $where" : ''),
+                'title' => (string) $event['event_title'],
+                'intro' => [$intro],
+                'summary' => array_filter([t('When') => $when, t('Repeats') => (string) $repeat, t('Where') => $where]),
+                'note' => !$cancel ? $description : '',
+                'button' => $meeting && !$cancel ? ['label' => t('Join the meeting'), 'url' => $meeting, 'show_url' => true] : null,
+            ], ['from' => $from, 'cal_str' => $ics]);
+        });
+    }
 
     $ids = array_filter(array_map(function ($attendee) {
         return intval($attendee['attendee_id'] ?? 0);
