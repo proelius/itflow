@@ -51,14 +51,14 @@ if ($can_invite && portalSignupOn() && intval(mysqli_fetch_row(mysqli_query($mys
         <form method="get" class="d-flex" role="search">
             <div class="input-group">
                 <span class="input-group-text"><i class="fas fa-fw fa-search"></i></span>
-                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Name, email, title or phone') ?>" aria-label="Search contacts" maxlength="200">
+                <input type="search" class="form-control" name="q" value="<?= escapeHtml($q) ?>" placeholder="<?= t('Search contacts...') ?>" title="<?= t('Name, email, title or phone') ?>" aria-label="<?= t('Search contacts') ?>" maxlength="200">
             </div>
         </form>
         <?php if ($can_invite) { ?>
-            <a class="btn btn-outline-primary" href="invite.php"><i class="fas fa-paper-plane me-2"></i><?= t('Invite people') ?></a>
+            <a class="btn btn-outline-primary" href="invite.php"><i class="fas fa-paper-plane me-2"></i><?= t('Invite People') ?></a>
         <?php } ?>
         <?php if ($manage) { ?>
-            <a class="btn btn-primary" href="contact.php?new=1"><i class="fas fa-user-plus me-2"></i><?= t('Add a person') ?></a>
+            <a class="btn btn-primary" href="contact.php?new=1"><i class="fas fa-user-plus me-2"></i><?= t('Add a Person') ?></a>
         <?php } ?>
     </div>
 </div>
@@ -93,7 +93,7 @@ if ($can_invite && portalSignupOn() && intval(mysqli_fetch_row(mysqli_query($mys
                             <form action="post.php" method="post" class="d-flex gap-1">
                                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                                 <input type="hidden" name="invite_id" value="<?= intval($invite['invite_id']) ?>">
-                                <button type="submit" class="btn btn-sm btn-outline-primary" name="portal_invite_resend" value="1" title="<?= escapeHtml(t('Email it again, with a new link')) ?>"><i class="fas fa-paper-plane"></i><span class="d-none d-md-inline ms-1"><?= t('Send again') ?></span></button>
+                                <button type="submit" class="btn btn-sm btn-outline-primary" name="portal_invite_resend" value="1" title="<?= escapeHtml(t('Email it again, with a new link')) ?>"><i class="fas fa-paper-plane"></i><span class="d-none d-md-inline ms-1"><?= t('Send Again') ?></span></button>
                                 <button type="submit" class="btn btn-sm btn-outline-danger confirm-link" name="portal_invite_cancel" value="1" title="<?= escapeHtml(t('Cancel the invite')) ?>"
                                     data-confirm-title="<?= t('Cancel the invite to {email}?', ['{email}' => escapeHtml($invite['invite_email'])]) ?>" data-confirm-text="<?= escapeHtml(t('Its link stops working. You can invite them again later.')) ?>" data-confirm-button="<?= escapeHtml(t('Cancel invite')) ?>"><i class="fas fa-times"></i><span class="d-none d-md-inline ms-1"><?= t('Cancel') ?></span></button>
                             </form>

@@ -29,7 +29,7 @@ $signature_pad_id = preg_replace('/[^A-Za-z0-9_-]/', '', (string) ($signature_pa
         <div class="col-12">
             <label class="form-label" for="<?= $signature_pad_id ?>Name"><?= t('Full name') ?> <strong class="text-danger">*</strong></label>
             <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-fw fa-user"></i></span>
+                <span class="input-group-text"><i class="fas fa-fw fa-user"></i></span>
                 <input type="text" class="form-control" id="<?= $signature_pad_id ?>Name" name="signer_name" maxlength="200" autocomplete="name" required
                     value="<?= escapeHtml((string) ($signature_pad['name'] ?? '')) ?>" data-signature-name>
             </div>
@@ -37,7 +37,7 @@ $signature_pad_id = preg_replace('/[^A-Za-z0-9_-]/', '', (string) ($signature_pa
         <div class="col-12">
             <label class="form-label" for="<?= $signature_pad_id ?>Title"><?= t('Job title') ?></label>
             <div class="input-group">
-                <span class="input-group-text"><i class="fa fa-fw fa-id-badge"></i></span>
+                <span class="input-group-text"><i class="fas fa-fw fa-id-badge"></i></span>
                 <input type="text" class="form-control" id="<?= $signature_pad_id ?>Title" name="signer_title" maxlength="200" autocomplete="organization-title"
                     value="<?= escapeHtml((string) ($signature_pad['title'] ?? '')) ?>">
             </div>

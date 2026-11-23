@@ -22,7 +22,7 @@ $upload = !empty($_GET['upload']);
 
 <div class="itflow-portal-page-head">
     <div>
-        <h1><?= $upload ? t('Upload a file') : t('New document') ?></h1>
+        <h1><?= $upload ? t('Upload a File') : t('New Document') ?></h1>
         <p><?= $upload ? t('A PDF, Word or text document to keep with your others') : t('Write something down for your team and ours - a how-to, a list, a record') ?></p>
     </div>
     <div class="btn-group" role="group" aria-label="<?= t('Write or upload') ?>">
@@ -39,7 +39,7 @@ $upload = !empty($_GET['upload']);
             <div class="mb-3">
                 <label class="form-label" for="documentName"><?= t('Name') ?> <strong class="text-danger">*</strong></label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="fa fa-fw fa-file-alt"></i></span>
+                    <span class="input-group-text"><i class="fas fa-fw fa-file-alt"></i></span>
                     <input type="text" class="form-control" id="documentName" name="document_name" placeholder="<?= $upload ? t('What the file is - &quot;Office floor plan&quot;') : t('In a few words - &quot;Setting up the printer&quot;') ?>" required maxlength="200" autofocus>
                 </div>
             </div>
@@ -47,7 +47,7 @@ $upload = !empty($_GET['upload']);
             <div class="mb-3">
                 <label class="form-label" for="documentDescription"><?= t('Description') ?></label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="fa fa-fw fa-align-left"></i></span>
+                    <span class="input-group-text"><i class="fas fa-fw fa-align-left"></i></span>
                     <input type="text" class="form-control" id="documentDescription" name="document_description" placeholder="<?= t('Optional - a line on what it is for') ?>" maxlength="255">
                 </div>
             </div>
@@ -70,7 +70,7 @@ $upload = !empty($_GET['upload']);
                     <textarea class="form-control tinymce" name="document_content" data-required></textarea>
                     <div class="invalid-feedback d-block" data-editor-required-note hidden><?= t('Write something in the document.') ?></div>
                 </div>
-                <button type="submit" class="btn btn-primary" name="client_add_document"><i class="fas fa-check me-2"></i><?= t('Save document') ?></button>
+                <button type="submit" class="btn btn-primary" name="client_add_document"><i class="fas fa-check me-2"></i><?= t('Save Document') ?></button>
             <?php } ?>
         </form>
     </div>

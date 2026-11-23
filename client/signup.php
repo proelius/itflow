@@ -18,8 +18,7 @@ i18n_set_language(client_language());
 require_once '../includes/load_global_settings.php';
 
 if (!portalSignupOpen()) {
-    header("Location: /login.php");
-    exit();
+    redirect("/login.php");
 }
 
 require_once __DIR__ . "/../includes/session_init.php";
@@ -106,7 +105,7 @@ if (empty($_SESSION['portal_signup_form'])) {
                         <span class="input-group-text"><i class="fas fa-fw fa-envelope"></i></span>
                         <input type="email" class="form-control" placeholder="<?= t('Your work email address') ?>" name="email" maxlength="200" autocomplete="email" aria-label="<?= t('Your work email address') ?>" required autofocus>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 mb-3" name="portal_signup" value="1"><i class="fas fa-paper-plane me-2"></i><?= t('Email me a link') ?></button>
+                    <button type="submit" class="btn btn-primary w-100 mb-3" name="portal_signup" value="1"><i class="fas fa-paper-plane me-2"></i><?= t('Email Me a Link') ?></button>
                 </form>
 
                 <p class="text-body-secondary small"><?= t('Have an account already? Sign in below - or choose Forgot password there.') ?></p>

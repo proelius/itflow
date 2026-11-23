@@ -58,7 +58,7 @@ function shareGuestGone($reason) {
 
 /** "Oct 17 at 9:00 AM" - a moment, for the person holding the link. */
 function shareGuestWhen($time) {
-    return t('{date} at {time}', ['{date}' => i18n_date('M j', strtotime((string) $time)), '{time}' => i18n_date('g:i A', strtotime((string) $time))]);
+    return i18n_date('M j, Y g:i A', strtotime((string) $time));
 }
 
 /** Why a link in this state no longer works, in words for the person holding it. */

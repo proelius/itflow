@@ -50,7 +50,7 @@ if (!$contract) { ?>
     <a class="itflow-portal-back" href="contracts.php"><i class="fas fa-chevron-left"></i><?= t('Contracts') ?></a>
     <section class="itflow-portal-panel">
         <?= emptyStateHtml(['title' => t('That contract isn\'t here'), 'text' => t('It may have been withdrawn, or the link is not quite right.'), 'icon' => 'fa-file-contract', 'filtered' => false,
-            'actions' => [['label' => t('All contracts'), 'href' => 'contracts.php', 'icon' => 'fa-arrow-left']]]) ?>
+            'actions' => [['label' => t('All Contracts'), 'href' => 'contracts.php', 'icon' => 'fa-arrow-left']]]) ?>
     </section>
     <?php
     require_once "includes/footer.php";
@@ -109,7 +109,7 @@ $terms = [
 </div>
 
 <?php if ($state['key'] === 'waiting') { ?>
-    <a class="btn btn-success w-100 mb-3 d-lg-none d-print-none" href="#sign"><i class="fas fa-file-signature me-2"></i><?= t('Read it through - you sign at the end') ?></a>
+    <a class="btn btn-success w-100 mb-3 d-lg-none d-print-none" href="#sign"><i class="fas fa-file-signature me-2"></i><?= t('Read It Through - You Sign at the End') ?></a>
 <?php } ?>
 
 <div class="row g-4">

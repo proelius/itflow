@@ -20,7 +20,7 @@ if (!$receipt) { ?>
     <a class="itflow-portal-back" href="payments.php"><i class="fas fa-chevron-left"></i><?= t('Payments') ?></a>
     <section class="itflow-portal-panel">
         <?= emptyStateHtml(['title' => t('That payment isn\'t here'), 'text' => t('It may have been removed, or the link is not quite right.'), 'icon' => 'fa-receipt', 'filtered' => false,
-            'actions' => [['label' => t('All payments'), 'href' => 'payments.php', 'icon' => 'fa-arrow-left']]]) ?>
+            'actions' => [['label' => t('All Payments'), 'href' => 'payments.php', 'icon' => 'fa-arrow-left']]]) ?>
     </section>
     <?php
     require_once "includes/footer.php";
@@ -61,7 +61,7 @@ $currency = $receipt['currency'];
     <div class="itflow-portal-panel-body">
         <dl class="itflow-portal-facts mb-4">
             <div><dt><?= t('Received from') ?></dt><dd><?= escapeHtml($session_client_name) ?></dd></div>
-            <div><dt><?= t('Date') ?></dt><dd><?= escapeHtml(i18n_date('F j, Y', strtotime($receipt['date']))) ?></dd></div>
+            <div><dt><?= t('Date') ?></dt><dd><?= escapeHtml(i18n_date('M j, Y', strtotime($receipt['date']))) ?></dd></div>
             <div><dt><?= t('Paid by') ?></dt><dd><?= escapeHtml($method) ?></dd></div>
             <?php if ($reference !== '') { ?>
                 <div><dt><?= t('Reference') ?></dt><dd class="font-monospace small"><?= escapeHtml($reference) ?></dd></div>

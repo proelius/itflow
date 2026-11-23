@@ -19,7 +19,7 @@ if (!$invoice || intval($invoice['client_id']) !== $session_client_id || $invoic
     <a class="itflow-portal-back" href="invoices.php"><i class="fas fa-chevron-left"></i><?= t('Invoices') ?></a>
     <section class="itflow-portal-panel">
         <?= emptyStateHtml(['title' => t('That invoice isn\'t here'), 'text' => t('It may have been replaced, or the link is not quite right.'), 'icon' => 'fa-file-invoice-dollar', 'filtered' => false,
-            'actions' => [['label' => t('All invoices'), 'href' => 'invoices.php', 'icon' => 'fa-arrow-left']]]) ?>
+            'actions' => [['label' => t('All Invoices'), 'href' => 'invoices.php', 'icon' => 'fa-arrow-left']]]) ?>
     </section>
     <?php
     require_once "includes/footer.php";
@@ -42,7 +42,7 @@ $cards = billingStripeProvider() !== null;
 $can_pay = $owing && $cards && billingOnlinePayAllowed($state['balance']);
 // The card fee on paying the balance by card, when the client pays one - autopay adds it too
 $fee_rates = $cards ? billingCardFeeFor($session_client_id) : null;
-$card_fee = billingCardFeeCents((int) round($state['balance'] * 100), $fee_rates) / 100;
+$card_fee = billingCardFeeCents(intval(round($state['balance'] * 100)), $fee_rates) / 100;
 
 // The other invoices still owed, to pay with this one
 $others = array_filter(billingClientOpenInvoices($session_client_id), function ($row) use ($invoice_id) {
@@ -130,19 +130,22 @@ $paper = [
                     <?php if ($autopay_card) { ?>
                         <div class="itflow-portal-note mb-3">
                             <i class="<?= escapeHtml($autopay_card['icon']) ?> fa-fw"></i>
-                            <span>Autopay will charge <?= escapeHtml($autopay_card['label']) ?><?= $card_fee > 0 ? ' ' . escapeHtml(billingMoney($state['balance'] + $card_fee, $currency)) . ', with a ' . escapeHtml(billingMoney($card_fee, $currency)) . ' card fee,' : '' ?> on <?= escapeHtml(date('M j', strtotime($invoice['invoice_due']))) ?> - nothing to do, unless you would rather pay now.</span>
+                            <?php $autopay_n = ['{method}' => escapeHtml($autopay_card['label']), '{total}' => escapeHtml(billingMoney($state['balance'] + $card_fee, $currency)), '{fee}' => escapeHtml(billingMoney($card_fee, $currency)), '{date}' => escapeHtml(i18n_date('M j', strtotime($invoice['invoice_due'])))]; ?>
+                            <span><?= $card_fee > 0
+                                ? t('Autopay will charge {method} {total}, with a {fee} card fee, on {date} - nothing to do, unless you would rather pay now.', $autopay_n)
+                                : t('Autopay will charge {method} on {date} - nothing to do, unless you would rather pay now.', $autopay_n) ?></span>
                         </div>
                     <?php } ?>
                     <?php if ($can_pay) { ?>
-                        <a class="btn btn-success btn-lg w-100" href="unpaid_invoices.php?select=<?= $invoice_id ?>"><i class="fas fa-credit-card me-2"></i>Pay <?= escapeHtml(billingMoney($state['balance'], $currency)) ?></a>
+                        <a class="btn btn-success btn-lg w-100" href="unpaid_invoices.php?select=<?= $invoice_id ?>"><i class="fas fa-credit-card me-2"></i><?= t('Pay {amount}', ['{amount}' => escapeHtml(billingMoney($state['balance'], $currency))]) ?></a>
                         <?php if ($card_fee > 0) { ?>
-                            <div class="small text-body-secondary text-center mt-2" title="<?= escapeHtml(billingCardFeeTerms($fee_rates, $currency)) ?>">Plus a <?= escapeHtml(billingMoney($card_fee, $currency)) ?> card fee</div>
+                            <div class="small text-body-secondary text-center mt-2" title="<?= escapeHtml(billingCardFeeTerms($fee_rates, $currency)) ?>"><?= t('Plus a {fee} card fee', ['{fee}' => escapeHtml(billingMoney($card_fee, $currency))]) ?></div>
                         <?php } ?>
                         <?php if ($others) { ?>
-                            <div class="text-center mt-2"><a class="small" href="unpaid_invoices.php">Or pay it with your <?= count($others) ?> other open <?= count($others) === 1 ? 'invoice' : 'invoices' ?></a></div>
+                            <div class="text-center mt-2"><a class="small" href="unpaid_invoices.php"><?= count($others) === 1 ? t('Or pay it with your {n} other open invoice', ['{n}' => 1]) : t('Or pay it with your {n} other open invoices', ['{n}' => count($others)]) ?></a></div>
                         <?php } ?>
                     <?php } elseif ($cards) { ?>
-                        <p class="small text-body-secondary mb-0">This invoice is too large to pay by card here - please pay it another way, or <a href="<?= escapeHtml(portalAskUrl("Paying invoice $number")) ?>">ask us</a>.</p>
+                        <p class="small text-body-secondary mb-0"><?= t('This invoice is too large to pay by card here - please pay it another way, or {link}.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl("Paying invoice $number")) . '">' . t('ask us') . '</a>']) ?></p>
                     <?php } else { ?>
                         <p class="small text-body-secondary mb-0"><?= t('To pay, use the payment details on the invoice, or {link} how.', ['{link}' => '<a href="' . escapeHtml(portalAskUrl("Paying invoice $number")) . '">' . t('ask us') . '</a>']) ?></p>
                     <?php } ?>

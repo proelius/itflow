@@ -91,7 +91,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
     <div class="d-flex align-items-center gap-3 min-w-0">
         <?= portalAvatarHtml((string) ($me['contact_name'] ?? ''), $session_contact_photo ? "/uploads/clients/$session_client_id/$session_contact_photo" : '', 'lg') ?>
         <div class="min-w-0">
-            <h1><?= t('Your account') ?></h1>
+            <h1><?= t('Your Account') ?></h1>
             <p><?= t('Your details, the emails you get from us and how you sign in') ?></p>
         </div>
     </div>
@@ -132,7 +132,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     <div class="col-sm-8 mb-3">
                         <label class="form-label" for="contactPhone"><?= t('Phone') ?></label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-fw fa-phone"></i></span>
+                            <span class="input-group-text"><i class="fas fa-fw fa-phone"></i></span>
                             <input type="hidden" name="phone_country_code" value="<?= escapeHtml($me['contact_phone_country_code'] ?? '') ?>">
                             <input type="tel" class="form-control" id="contactPhone" name="phone" maxlength="200" value="<?= escapeHtml($phone_input) ?>" data-itflow-phone="phone_country_code">
                         </div>
@@ -140,7 +140,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     <div class="col-sm-4 mb-3">
                         <label class="form-label" for="contactExtension"><?= t('Extension') ?></label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-fw fa-hashtag"></i></span>
+                            <span class="input-group-text"><i class="fas fa-fw fa-hashtag"></i></span>
                             <input type="text" class="form-control" id="contactExtension" name="extension" inputmode="numeric" maxlength="20" value="<?= escapeHtml($me['contact_extension'] ?? '') ?>">
                         </div>
                     </div>
@@ -148,12 +148,12 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                 <div class="mb-3">
                     <label class="form-label" for="contactMobile"><?= t('Mobile') ?></label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fa fa-fw fa-mobile-alt"></i></span>
+                        <span class="input-group-text"><i class="fas fa-fw fa-mobile-alt"></i></span>
                         <input type="hidden" name="mobile_country_code" value="<?= escapeHtml($me['contact_mobile_country_code'] ?? '') ?>">
                         <input type="tel" class="form-control" id="contactMobile" name="mobile" maxlength="200" value="<?= escapeHtml($mobile_input) ?>" data-itflow-phone="mobile_country_code">
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary" name="set_contact_phone"><i class="fas fa-check me-2"></i><?= t('Save numbers') ?></button>
+                <button type="submit" class="btn btn-primary" name="set_contact_phone"><i class="fas fa-check me-2"></i><?= t('Save Numbers') ?></button>
             </div>
         </form>
 
@@ -252,25 +252,25 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     <div class="mb-3">
                         <label class="form-label" for="currentPassword"><?= t('Your current password') ?></label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
+                            <span class="input-group-text"><i class="fas fa-fw fa-lock"></i></span>
                             <input type="password" class="form-control" id="currentPassword" name="current_password" autocomplete="current-password" required>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="newPassword"><?= t('New password') ?></label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
+                            <span class="input-group-text"><i class="fas fa-fw fa-lock"></i></span>
                             <input type="password" class="form-control" id="newPassword" name="new_password" minlength="<?= USER_PASSWORD_MIN ?>" autocomplete="new-password" required>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="confirmPassword"><?= t('The same again') ?></label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-fw fa-check-double"></i></span>
+                            <span class="input-group-text"><i class="fas fa-fw fa-check-double"></i></span>
                             <input type="password" class="form-control" id="confirmPassword" name="confirm_password" minlength="<?= USER_PASSWORD_MIN ?>" autocomplete="new-password" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary" name="portal_password_change"><i class="fas fa-check me-2"></i><?= t('Change password') ?></button>
+                    <button type="submit" class="btn btn-primary" name="portal_password_change"><i class="fas fa-check me-2"></i><?= t('Change Password') ?></button>
                 </form>
 
                 <ul class="itflow-portal-list border-top">
@@ -284,9 +284,9 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                             <span class="itflow-portal-ticket-meta"><span><?= $session_mfa_on ? t('Signing in asks for a code from your authenticator app') : t('A code from an app on your phone, as well as your password') ?></span></span>
                         </span>
                         <?php if (!$session_mfa_on && !$mfa_setup) { ?>
-                            <a class="btn btn-sm btn-primary text-nowrap" href="profile.php?mfa=setup#security"><?= t('Turn on') ?></a>
+                            <a class="btn btn-sm btn-primary text-nowrap" href="profile.php?mfa=setup#security"><?= t('Turn On') ?></a>
                         <?php } elseif ($session_mfa_on && !$mfa_required) { ?>
-                            <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" data-bs-toggle="collapse" data-bs-target="#mfaOffForm" aria-expanded="false" aria-controls="mfaOffForm"><?= t('Turn off two-step sign-in') ?></button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" data-bs-toggle="collapse" data-bs-target="#mfaOffForm" aria-expanded="false" aria-controls="mfaOffForm"><?= t('Turn Off') ?></button>
                         <?php } ?>
                     </li>
                 </ul>
@@ -308,14 +308,11 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                         <ol class="small ps-3 mb-2" start="3">
                             <li><?= t('Enter the 6-digit code it shows:') ?></li>
                         </ol>
-                        <div class="input-group mb-3">
-                            <span class="input-group-text"><i class="fas fa-fw fa-mobile-alt"></i></span>
-                            <input type="text" class="form-control form-control-lg font-monospace text-center itflow-mfa-code" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" name="verify_code" placeholder="000000" autocomplete="one-time-code" aria-label="<?= t('6-digit code') ?>" required autofocus>
-                        </div>
+                        <?= otpCodeInput('verify_code', ['label' => t('6-digit code'), 'class' => 'mb-3', 'submit' => true, 'autofocus' => true]) ?>
                         <div class="d-flex flex-wrap gap-2">
-                            <button type="submit" class="btn btn-primary" name="portal_mfa_enable"><i class="fas fa-check me-2"></i><?= t('Turn on') ?></button>
+                            <button type="submit" class="btn btn-primary" name="portal_mfa_enable"><i class="fas fa-check me-2"></i><?= t('Turn On') ?></button>
                             <?php if (!$portal_mfa_setup_needed) { ?>
-                                <a class="btn btn-light" href="profile.php"><?= t('Not now') ?></a>
+                                <a class="btn btn-light" href="profile.php"><?= t('Not Now') ?></a>
                             <?php } ?>
                         </div>
                     </form>
@@ -328,11 +325,11 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                         <div class="mb-3">
                             <label class="form-label" for="mfaOffPassword"><?= t('Your current password') ?></label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
+                                <span class="input-group-text"><i class="fas fa-fw fa-lock"></i></span>
                                 <input type="password" class="form-control" id="mfaOffPassword" name="current_password" autocomplete="current-password" required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-outline-danger" name="portal_mfa_disable"><i class="fas fa-times me-2"></i><?= t('Turn off two-step sign-in') ?></button>
+                        <button type="submit" class="btn btn-outline-danger" name="portal_mfa_disable"><i class="fas fa-times me-2"></i><?= t('Turn Off Two-step Sign-in') ?></button>
                     </form>
                 <?php } elseif ($session_mfa_on) { ?>
                     <div class="itflow-portal-panel-body border-top small text-body-secondary py-2"><?= t('{company} asks everyone to use it, so it stays on. Lost your phone? Ask us to reset it.', ['{company}' => escapeHtml($session_company_name)]) ?></div>
@@ -342,7 +339,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     <form class="itflow-portal-panel-body border-top d-flex align-items-center justify-content-between gap-2" action="post.php" method="post" data-portal-once>
                         <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
                         <span class="small text-body-secondary"><?= $remembered === 1 ? t('{count} browser skips the code for {days} day after signing in', ['{count}' => $remembered, '{days}' => intval($config_login_remember_me_expire)]) : t('{count} browsers skip the code for {days} days after signing in', ['{count}' => $remembered, '{days}' => intval($config_login_remember_me_expire)]) ?></span>
-                        <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap" name="portal_forget_browsers"><?= t('Forget them') ?></button>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap" name="portal_forget_browsers"><?= t('Forget Them') ?></button>
                     </form>
                 <?php } ?>
 
@@ -365,7 +362,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                     <div class="mb-3">
                         <label class="form-label" for="pinCurrentPassword"><?= t('Your current password') ?></label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fa fa-fw fa-lock"></i></span>
+                            <span class="input-group-text"><i class="fas fa-fw fa-lock"></i></span>
                             <input type="password" class="form-control" id="pinCurrentPassword" name="current_password" autocomplete="current-password" required>
                         </div>
                     </div>
@@ -373,7 +370,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                 <div class="mb-3">
                     <label class="form-label" for="contactPin"><?= empty($me['contact_pin']) ? t('New PIN') : t('Replace it with') ?></label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fa fa-fw fa-hashtag"></i></span>
+                        <span class="input-group-text"><i class="fas fa-fw fa-hashtag"></i></span>
                         <input type="text" class="form-control" id="contactPin" name="pin" minlength="4" maxlength="255" placeholder="<?= t('At least 4 characters') ?>" autocomplete="off" required>
                     </div>
                 </div>
@@ -399,7 +396,7 @@ $csrf = escapeHtml($_SESSION['csrf_token']);
                         </li>
                     <?php } ?>
                 </ul>
-                <div class="itflow-portal-panel-body border-top small text-body-secondary py-2"><?= t("Somewhere you don't recognise? Change your password and let us know.") ?></div>
+                <div class="itflow-portal-panel-body border-top small text-body-secondary py-2"><?= t("Somewhere you don't recognize? Change your password and let us know.") ?></div>
             <?php } ?>
         </section>
 

@@ -21,8 +21,7 @@ i18n_set_language(client_language());
 require_once '../includes/load_global_settings.php';
 
 if (intval($config_client_portal_enable) !== 1 || !portalInvitesReady()) {
-    header("Location: /login.php");
-    exit();
+    redirect("/login.php");
 }
 
 require_once __DIR__ . "/../includes/session_init.php";
@@ -67,8 +66,7 @@ if ($invite && $link['state'] === 'pending') {
                 ? t('Welcome, {first} - your account is ready. Sign in with your Microsoft 365 account below.', ['{first}' => $first])
                 : t('Welcome, {first} - your account is ready. Sign in with {email} and your new password.', ['{first}' => $first, '{email}' => $invite['invite_email']]);
             $_SESSION['login_message_type'] = 'success';
-            header("Location: /login.php");
-            exit();
+            redirect("/login.php");
         }
         // Used in the meantime - say so rather than show the form again
         $link = portalInviteByLink($invite_id, $token);
@@ -177,7 +175,7 @@ $title = $state === 'pending' ? ($signup ? t('Finish signing up') : t('Join {cli
                     <button type="submit" class="btn btn-primary w-100 mb-2"><i class="fas fa-check me-2"></i><?= $signup ? t('Create my account') : t('Join') ?></button>
                     <?php if (isset($methods['azure'])) { ?>
                         <div class="text-center small text-body-secondary my-2"><?= t('or, with no password here') ?></div>
-                        <button type="submit" class="btn btn-outline-secondary w-100 mb-3" name="method" value="azure" formnovalidate data-join-microsoft><i class="fab fa-microsoft me-2"></i><?= t('Use my Microsoft 365 account') ?></button>
+                        <button type="submit" class="btn btn-outline-secondary w-100 mb-3" name="method" value="azure" formnovalidate data-join-microsoft><i class="fab fa-microsoft me-2"></i><?= t('Use My Microsoft 365 Account') ?></button>
                     <?php } ?>
                 </form>
 
@@ -186,9 +184,9 @@ $title = $state === 'pending' ? ($signup ? t('Finish signing up') : t('Join {cli
                 <h1 class="h5 mb-1" data-join-state="<?= escapeHtml($state) ?>"><?= escapeHtml($title) ?></h1>
                 <p class="text-body-secondary small mb-3"><?= escapeHtml($notes[$state][1]) ?></p>
                 <?php if ($state === 'accepted') { ?>
-                    <a class="btn btn-primary w-100 mb-3" href="/login.php"><i class="fas fa-sign-in-alt me-2"></i><?= t('Sign in') ?></a>
+                    <a class="btn btn-primary w-100 mb-3" href="/login.php"><i class="fas fa-sign-in-alt me-2"></i><?= t('Sign In') ?></a>
                 <?php } elseif ($signup && portalSignupOpen()) { ?>
-                    <a class="btn btn-primary w-100 mb-3" href="/client/signup.php"><i class="fas fa-paper-plane me-2"></i><?= t('Ask for a new link') ?></a>
+                    <a class="btn btn-primary w-100 mb-3" href="/client/signup.php"><i class="fas fa-paper-plane me-2"></i><?= t('Ask for a New Link') ?></a>
                 <?php } ?>
 
             <?php } ?>

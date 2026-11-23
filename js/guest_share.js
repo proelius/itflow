@@ -225,6 +225,7 @@
                 gone(data.reason);
             } else if (data.error) {
                 error('code', data.error);
+                form.code.classList.add('is-invalid');
                 form.code.select();
             } else {
                 form.code.value = '';

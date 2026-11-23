@@ -15,7 +15,7 @@ $quote = billingRow('quote', intval($_GET['quote_id'] ?? 0), false);
 $url_key = (string) ($_GET['url_key'] ?? '');
 
 if (!$quote || (string) $quote['quote_url_key'] === '' || !hash_equals((string) $quote['quote_url_key'], $url_key)) {
-    echo '<div class="itflow-asset-empty mt-5"><i class="fas fa-comment-dollar fa-3x mb-3 opacity-50"></i><h1 class="h4">' . t('This quote link isn\'t working') . '</h1><p>' . t('It may have been mistyped or replaced. Ask whoever sent it for a new link.') . '</p></div>';
+    echo guestDeadEndHtml('fa-comment-dollar', t("This quote link isn't working"), t('It may have been mistyped or replaced. Ask whoever sent it for a new link.'));
     require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php';
     exit();
 }
@@ -74,7 +74,7 @@ $paper = [
 
                 <?php if ($awaiting) { ?>
                     <p class="small text-body-secondary mb-3">
-                        <?= $days_left === 0 ? t('Good until {date} - today is the last day.', ['{date}' => escapeHtml($quote['quote_expire'])]) : ($days_left === 1 ? t('Good until {date} - 1 day left.', ['{date}' => escapeHtml($quote['quote_expire'])]) : t('Good until {date} - {n} days left.', ['{date}' => escapeHtml($quote['quote_expire']), '{n}' => (string) $days_left])) ?>
+                        <?= $days_left === 0 ? t('Good until {date} - today is the last day.', ['{date}' => escapeHtml(billingEmailDate($quote['quote_expire']))]) : ($days_left === 1 ? t('Good until {date} - 1 day left.', ['{date}' => escapeHtml(billingEmailDate($quote['quote_expire']))]) : t('Good until {date} - {n} days left.', ['{date}' => escapeHtml(billingEmailDate($quote['quote_expire'])), '{n}' => (string) $days_left])) ?>
 
                         <?= t('Let us know whether to go ahead.') ?>
 
@@ -99,7 +99,7 @@ $paper = [
                         <span class="itflow-asset-icon bg-warning-subtle text-warning-emphasis" aria-hidden="true"><i class="fas fa-hourglass-end"></i></span>
                         <div>
                             <div class="fw-semibold"><?= t('This quote has run out') ?></div>
-                            <div class="small text-body-secondary"><?= t('It was good until {date} - ask us for an updated one.', ['{date}' => escapeHtml($quote['quote_expire'])]) ?></div>
+                            <div class="small text-body-secondary"><?= t('It was good until {date} - ask us for an updated one.', ['{date}' => escapeHtml(billingEmailDate($quote['quote_expire']))]) ?></div>
                         </div>
                     </div>
                 <?php } elseif (in_array($status, ['Accepted', 'Invoiced'], true)) { ?>
@@ -162,7 +162,7 @@ $paper = [
             <div class="modal-content">
                 <div class="modal-header bg-dark">
                     <h5 class="modal-title"><i class="fas fa-fw fa-file-upload me-2"></i><?= t('Send a Signed Copy or PO') ?></h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="<?= t('Close') ?>"></button>
                 </div>
                 <form action="guest_post.php" method="post" enctype="multipart/form-data" autocomplete="off">
                     <input type="hidden" name="quote_id" value="<?= $quote_id ?>">
@@ -176,7 +176,7 @@ $paper = [
                         <div class="form-text"><?= t('The signed quote, a purchase order - goes straight to us with {number}.', ['{number}' => escapeHtml($number)]) ?></div>
                     </div>
                     <div class="modal-footer">
-                        <button type="submit" name="guest_quote_upload_file" class="btn btn-primary text-bold"><i class="fas fa-upload me-2"></i><?= t('Send') ?></button>
+                        <button type="submit" name="guest_quote_upload_file" class="btn btn-primary fw-bold"><i class="fas fa-upload me-2"></i><?= t('Send') ?></button>
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="fas fa-times me-2"></i><?= t('Cancel') ?></button>
                     </div>
                 </form>
